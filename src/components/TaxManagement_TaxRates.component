@@ -1,0 +1,334 @@
+<apex:component controller="GlobalController">
+    <div class="row P10 tax-rate-container">
+        <div class="table-responsive">
+            <h2>Sales transaction manual tax rates</h2>
+
+            <div class="c-product-filter-section">
+                <div class="c-primary-input-container">
+                    <input class="c-input-search c-primary-input" ng-model="M_TAS.filterJson.SearchSalesTaxRates" ng-keyup="F_TAS.getFilteredTaxRates('SalesTaxRates')" type="text" placeholder="Search"/>
+                    <i class="bp-icons bp-font-18 bp-blue-font stroke-3 search-icon" ng-if="!M_TAS.filterJson.SearchSalesTaxRates">search</i>
+                    <a class="search-icon" ng-if="M_TAS.filterJson.SearchSalesTaxRates" ng-click="M_TAS.filterJson.SearchSalesTaxRates='';F_TAS.getFilteredTaxRates('SalesTaxRates')">X</a>
+                </div>
+                <div class="include-inactive">
+                    <label class="checkbox">
+                        <span class="chk_tick" ng-class="{'chked' : M_TAS.filterJson.IncludeInactiveSalesTaxRates == true}" 
+                                                ng-click="M_TAS.filterJson.IncludeInactiveSalesTaxRates = !M_TAS.filterJson.IncludeInactiveSalesTaxRates;F_TAS.getFilteredTaxRates('SalesTaxRates')">
+                            <i class="fa fa-check-square chksqure" ></i>
+                        </span>
+                    </label>
+                    <label class="inactive-lbl">Include inactive</label>  
+                </div>
+            </div>
+
+            <div class="bp-scrollable-table tax-rate-table adjust-table-width" id="salesTaxContainer" when-scrolled="F_TAS.loadMoreTaxRatesData('SalesTaxRates')">
+                <table class="bp-editable-table part-count-table bp-grey-back-table">
+                    <col width="15%" />
+                    <col width="11%" />
+                    <col width="14%" />
+                    <col width="12%" />
+                    <col width="12%" />
+                    <col width="12%" />
+                    <col width="12%" />
+                    <col width="9%" />
+                    <col width="3%" />
+                    <thead>
+                        <th class="bp-z-index1">TAX RATE NAME</th>
+                        <th class="bp-z-index1">CALC METHOD</th>
+                        <th class="bp-z-index1">RATE</th>
+                        <th class="bp-z-index1">MIN TAX</th>
+                        <th class="bp-z-index1">MAX TAX</th>
+                        <th class="bp-z-index1">FORMS LABEL</th>
+                        <th class="bp-z-index1">CATEGORY</th>
+                        <th class="bp-z-index1"></th>
+                        <th class="bp-z-index1"></th>
+                    </thead>
+                    <tbody>
+                        <tr class="bp-cursor-pointer" ng-repeat="taxRateRec in M_TAS.SalesTaxRates">
+                            <td class="first-column">{{taxRateRec.TaxName}}</td>
+                            <td>{{taxRateRec.RateType}}</td>
+                            <td>{{taxRateRec.TaxRateStr}}</td>
+                            <td>{{taxRateRec.MinimumTaxAmount | currency}}</td>
+                            <td ng-if="taxRateRec.MaximumTaxAmount != null && taxRateRec.MaximumTaxAmount != undefined && taxRateRec.MaximumTaxAmount != '-unlimited-' ">{{taxRateRec.MaximumTaxAmount | currency}}</td>
+                            <td ng-if="taxRateRec.MaximumTaxAmount == null || taxRateRec.MaximumTaxAmount == undefined || taxRateRec.MaximumTaxAmount == '-unlimited-'">-unlimited-</td>
+                            <td>{{taxRateRec.FormsLabel}}</td>
+                            <td>{{taxRateRec.CategoryName}}</td>
+                            <td>
+                                <div class="flex-container items-right">
+                                    <a class="button icon edit" ng-click="F_TAS.AddEditTaxRate('Sell',taxRateRec)">
+                                        <i class="bp-icons bp-font-14 bp-fw-100">edit</i>
+                                    </a>
+                                    <a class="button icon delete" ng-click="F_TAS.showDeleteConfirmationWindow(taxRateRec.Id, 'SellTaxRates')"><span class="button-text" aira-hidden="true">Delete</span></a>
+                                </div>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr ng-repeat="rec in M_TAS.dummyRecJSON" ng-if="M_TAS.isloadDummyState.SalesTaxRates">
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td></td>
+                        </tr>
+                        <tr ng-if="M_TAS.SalesTaxRates.length == 0" class="no-record-found">
+                            <td colspan="12">{{'Label_No_Records_Found' | translate}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="action-section">
+            <span class = "c-primary-btn-container">
+              <bp-ng-button name="Add new tax rate" class-value="c-ternary-btn c-btn-modal" action="setUnitStatus({$event: $event})" disabled-value="" ng-click="F_TAS.AddEditTaxRate('Sell')" ></bp-ng-button>
+            </span>
+        </div>
+
+    </div>
+
+    <div class="row P10 tax-rate-container">
+        <div class="table-responsive">
+            <h2>Purchase transaction manual tax rates</h2>
+
+            <div class="c-product-filter-section">
+                <div class="c-primary-input-container">
+                    <input class="c-input-search c-primary-input" ng-model="M_TAS.filterJson.SearchPurchaseTaxRates" ng-keyup="F_TAS.getFilteredTaxRates('PurchaseTaxRates')" type="text" placeholder="Search"/>
+                    <i class="bp-icons bp-font-18 bp-blue-font stroke-3 search-icon" ng-if="!M_TAS.filterJson.SearchPurchaseTaxRates">search</i>
+                    <a class="search-icon" ng-if="M_TAS.filterJson.SearchPurchaseTaxRates" ng-click="M_TAS.filterJson.SearchPurchaseTaxRates='';F_TAS.getFilteredTaxRates('PurchaseTaxRates')">X</a>
+                </div>
+                <div class="include-inactive">
+                    <label class="checkbox">
+                        <span class="chk_tick" ng-class="{'chked' : M_TAS.filterJson.IncludeInactivePurchaseTaxRates == true}" 
+                                                ng-click="M_TAS.filterJson.IncludeInactivePurchaseTaxRates = !M_TAS.filterJson.IncludeInactivePurchaseTaxRates;F_TAS.getFilteredTaxRates('PurchaseTaxRates')">
+                            <i class="fa fa-check-square chksqure" ></i>
+                        </span>
+                    </label>
+                    <label class="inactive-lbl">Include inactive</label>  
+                </div>
+            </div>
+
+            <div class="bp-scrollable-table tax-rate-table adjust-table-width" id="purchaseTaxContainer" when-scrolled="F_TAS.loadMoreTaxRatesData('PurchaseTaxRates')">
+                <table class="bp-editable-table part-count-table bp-grey-back-table">
+                    <col width="15%" />
+                    <col width="11%" />
+                    <col width="14%" />
+                    <col width="12%" />
+                    <col width="12%" />
+                    <col width="12%" />
+                    <col width="12%" />
+                    <col width="9%" />
+                    <col width="3%" />
+                    <thead>
+                        <th>TAX RATE NAME</th>
+                        <th>CALC METHOD</th>
+                        <th>RATE</th>
+                        <th>MIN TAX</th>
+                        <th>MAX TAX</th>
+                        <th>FORMS LABEL</th>
+                        <th>CATEGORY</th>
+                        <th></th>
+                        <th></th>
+                    </thead>
+                    <tbody>
+                        <tr class="bp-cursor-pointer" ng-repeat="taxRateRec in M_TAS.PurchaseTaxRates">
+                            <td class="first-column">{{taxRateRec.TaxName}}</td>
+                            <td>{{taxRateRec.RateType}}</td>
+                            <td>{{taxRateRec.TaxRateStr}}</td>
+                            <td>{{taxRateRec.MinimumTaxAmount | currency}}</td>
+                            <td ng-if="taxRateRec.MaximumTaxAmount != null && taxRateRec.MaximumTaxAmount != undefined && taxRateRec.MaximumTaxAmount != '-unlimited-' ">{{taxRateRec.MaximumTaxAmount | currency}}</td>
+                            <td ng-if="taxRateRec.MaximumTaxAmount == null || taxRateRec.MaximumTaxAmount == undefined || taxRateRec.MaximumTaxAmount == '-unlimited-'">-unlimited-</td>
+                            <td>{{taxRateRec.FormsLabel}}</td>
+                            <td>{{taxRateRec.CategoryName}}</td>
+                            <td>
+                                <div class="flex-container items-right">
+                                    <a class="button icon edit" ng-click="F_TAS.AddEditTaxRate('Purchase', taxRateRec)">
+                                        <i class="bp-icons bp-font-14 bp-fw-100">edit</i>
+                                    </a>
+                                    <a class="button icon delete" ng-click="F_TAS.showDeleteConfirmationWindow(taxRateRec.Id, 'PurchaseTaxRates')"><span class="button-text" aira-hidden="true">Delete</span></a>
+                                </div>
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr ng-repeat="rec in M_TAS.dummyRecJSON" ng-if="M_TAS.isloadDummyState.PurchaseTaxRates">
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td class="dummy-rec dummy-animation"> <span></span></td>
+                            <td></td>
+                        </tr>
+                        <tr ng-if="M_TAS.PurchaseTaxRates.length == 0" class="no-record-found">
+                            <td colspan="12">{{'Label_No_Records_Found' | translate}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="action-section">
+            <span class = "c-primary-btn-container">
+              <bp-ng-button name="Add new tax rate" class-value="c-ternary-btn c-btn-modal" action="setUnitStatus({$event: $event})" disabled-value="" ng-click="F_TAS.AddEditTaxRate('Purchase')"></bp-ng-button>
+            </span>
+        </div>
+
+    </div>
+    <div id="deleteRateModelWindow" class="modal fade-scale bp-model-dialog delete-tax-rate-model-window" role="dialog">
+        <div class="modal-dialog modalWidthControl">
+            <!-- Modal content-->
+            <div class="modal-content col-xs-12 P0">
+                <div class="modal-body">
+                    <div class="heading-text">Confirm delete tax rate</div>
+                    <div class="message-info">
+                        <span class="bp-bold-font">
+							<p>This will permanently delete this tax rate and may affect associated records and cannot be undone. Do you want to delete this tax rate?</p>
+						</span>
+                    </div>
+                    <div class="action-section">
+                        <div class = "c-modal-window-footer">
+                            <span class = "c-cancelBtn-btn-container MR10"> 
+                                <bp-ng-button name="Cancel" class-value="c-cancel-btn c-btn-modal" action="F_TAS.closeModalWindow('deleteRateModelWindow')" disabled-value="" ></bp-ng-button>
+                            </span>
+                            <span class = "c-primary-btn-container">
+                                <bp-ng-button name="Delete" class-value="c-ternary-btn c-btn-modal delete-btn-colour" action="F_TAS.deleteTaxRate()" disabled-value="" ></bp-ng-button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade CreateGroupModal  bp-cp-modal-dialog tax-rate-model-window" id="AddEditTaxRateModelWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <h1 class="heading-info H600" ng-if="!M_TAS.AddEditJson.Id && M_TAS.AddEditJson.TaxType == 'Sell'">New selling tax rate</h1>
+                        <h1 class="heading-info H600" ng-if="!M_TAS.AddEditJson.Id && M_TAS.AddEditJson.TaxType == 'Purchase'">New purchase  tax rate</h1>
+                        <h1 class="heading-info H600" ng-if="M_TAS.AddEditJson.Id && M_TAS.AddEditJson.TaxType == 'Sell'">Edit selling tax rate</h1>
+                        <h1 class="heading-info H600" ng-if="M_TAS.AddEditJson.Id && M_TAS.AddEditJson.TaxType == 'Purchase'">Edit purchase tax rate</h1>
+                        <div class="form">
+                            <div class="left">
+                                <div>
+                                    <p>Tax name</p>
+                                    <input type="text" class="bp-new-input" ng-model="M_TAS.AddEditJson.TaxName" maxlength="80" />
+                                </div>
+                                <div>
+                                    <p>Category</p>
+                                    <div class="bp-cell bp-customerdropdown price-level-drop-down-value bp-unitSearch-area customerDropDown searchInputArea selectableDropdown" ng-class="{'showingOverlay' : M_TAS.isCategoriesFocusedState}">
+                                        <input type="text" id="CategorieId" class="searchInput bp-new-input" placeholder="{{ 'Please_select' | translate }}" name="Price Level" ng-focus="F_TAS.showDropDownValue('Category')" ng-blur="M_TAS.isCategoriesFocusedState = false;M_TAS.selectedCategoriesIndex - 1" ng-model="M_TAS.AddEditJson.CategoryName" readonly="readonly" ng-disabled="" />
+                                        <i class="bp-icons bp-font-12 bp-blue-font bp-cursor-pointer stroke-5 downArrow" ng-click="F_TAS.openDropDwon('Categories','CategorieId')">arrowDown</i>
+                                        <div class="searchResultOverlay" id="autocompleteScrollDiv">
+                                            <ul>
+                                                <li ng-class="{'selected-row' : M_TAS.selectedCategoriesIndex == $index}" ng-repeat="categorieRec in M_TAS.categoriesList" ng-mousedown="F_TAS.ChangeCategories(categorieRec)">
+                                                    <div class="fullName">{{categorieRec.Name}}</div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p>Type</p>
+                                    <div class="bp-cell bp-customerdropdown price-level-drop-down-value bp-first-letter-capitalize bp-unitSearch-area customerDropDown searchInputArea selectableDropdown" ng-class="{'showingOverlay' : M_TAS.isRateTypeFocusedState}">
+                                        <input type="text" id="RateTypeInput" class="d-flex searchInput bp-new-input" placeholder="{{ 'Please_select' | translate }}" name="Price Level" ng-focus="F_TAS.showDropDownValue('Type')" ng-blur="M_TAS.isRateTypeFocusedState = false; M_TAS.selectedTaxTypeIndex - 1" ng-model="M_TAS.AddEditJson.RateType" readonly="readonly" ng-disabled="M_TAS.AddEditJson.Id || M_TAS.isTaxIncludingPricing || !M_TAS.IsEnhancedTaxCalculation" />
+                                        <i class="bp-icons bp-font-12 bp-blue-font bp-cursor-pointer bp-text-transform stroke-5 downArrow" ng-click="F_TAS.openDropDwon('Rate','RateTypeInput')">arrowDown</i>
+                                        <div class="searchResultOverlay" id="autocompleteScrollDiv">
+                                            <ul>
+                                                <li ng-class="{'selected-row' : M_TAS.selectedTaxTypeIndex == $index }" ng-repeat="rateTypeRec in M_TAS.rateTypeList" ng-mousedown="F_TAS.ChangeRateType(rateTypeRec)">
+                                                    <div class="fullName bp-first-letter-capitalize">{{rateTypeRec.RateType}}</div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-if="M_TAS.AddEditJson.RateType == 'Fixed rate'">
+                                    <p>Rate</p>
+                                    <div class="doller-sign-container">
+                                        <numbers-only class-value="bp-new-input small-input persent-input" precision-length="4" input-model-value="M_TAS.AddEditJson.TaxRate" />
+                                        <span class="rate-percent-sign">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="right">
+                                <div>
+                                    <p>Forms label</p>
+                                    <input type="text" class="bp-new-input" ng-model="M_TAS.AddEditJson.FormsLabel" maxlength="20" />
+                                </div>
+                                <div>
+                                    <p>Minimum tax</p>
+                                    <div class="doller-sign-container">
+                                        <span class="doller-sign">$</span>
+                                        <numbers-only class-value="bp-new-input" precision-length="2" ng-class-name="{'bp-redborder' : M_TAS.isValidateMinimum}" input-model-value="M_TAS.AddEditJson.MinimumTaxAmount" blur-value="F_TAS.validationMinimum(M_TAS.AddEditJson.MinimumTaxAmount,M_TAS.AddEditJson.MaximumTaxAmount); " />
+                                    </div>
+                                </div>
+                                <div>
+                                    <p>Maximum tax</p>
+                                    <div ng-class="{'doller-sign-container' : M_TAS.AddEditJson.MaximumTaxAmount != '-unlimited-'}" >
+                                        <span class="doller-sign" ng-if="M_TAS.AddEditJson.MaximumTaxAmount != '-unlimited-'">$</span>
+                                        <numbers-only class-value="bp-new-input" precision-length="2" ng-class-name="{'bp-redborder' : M_TAS.isValidateMaxmum }" blur-value="F_TAS.validationMaximum(M_TAS.AddEditJson.MinimumTaxAmount,M_TAS.AddEditJson.MaximumTaxAmount);" input-model-value="M_TAS.AddEditJson.MaximumTaxAmount" is-un-limited="M_TAS.isUnLimited" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bp-bg-grey arrow_box" ng-if="M_TAS.AddEditJson.RateType != 'Fixed rate'">
+                            <div class="table-responsive">
+                                <table class="bp-editable-table header-table part-count-table">
+                                    <col width="15%" />
+                                    <col width="15%" />
+                                    <col width="15%" />
+                                    <col width="55%" />
+                                    <tbody>
+                                        <tr>
+                                            <td></td>
+                                            <td class="H300 bp-first-letter-capitalize col-span-td" colspan="2">Taxable amounts</td>
+                                            <td>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <table class="bp-editable-table part-count-table">
+                                    <col width="15%" />
+                                    <col width="15%" />
+                                    <col width="15%" />
+                                    <col width="55%" />
+                                    <thead>
+                                        <th class="H201"> Rate </th>
+                                        <th class="H201"> {{'From' | translate}} </th>
+                                        <th class="H201"> To</th>
+                                        <th></th>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="rateTaxTableRec in M_TAS.AddEditJson.RateTable" ng-if="$index == 0 || ($index != 0 && M_TAS.AddEditJson.RateTable[$index-1].MaximumTaxableAmount != '-unlimited-')">
+                                            <td>
+                                                <div class="doller-sign-container MR13">
+                                                    <numbers-only class-value="bp-new-input persent-input" precision-length="4" input-model-value="rateTaxTableRec.TaxRate" />
+                                                    <span class="rate-percent-sign">%</span>
+                                                </div>
+                                            </td>
+                                            <td class="H300 bp-first-letter-capitalize">{{rateTaxTableRec.MinimumTaxableAmount | currency}}</td>
+                                            <td class="bp-first-letter-capitalize">
+                                                <div ng-class="{'doller-sign-container' : rateTaxTableRec.MaximumTaxableAmount != '-unlimited-'}">
+                                                    <span class="doller-sign" ng-if="rateTaxTableRec.MaximumTaxableAmount != '-unlimited-'">$</span>
+                                                    <numbers-only class-value="bp-new-input" precision-length="2" input-model-value="rateTaxTableRec.MaximumTaxableAmount" disabled-value="$index == 2" ng-class-name="{'bp-redborder' : rateTaxTableRec.isError}" input-keyup-value="F_TAS.ChangeFromValue(rateTaxTableRec.MaximumTaxableAmount,$index)" is-un-limited="M_TAS.isUnLimited" blur-value="F_TAS.RateTaxTableValueChange($index)" />
+                                                </div>
+                                            </td>
+                                            <td>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="flex-box-footer">
+                            <a class="button subtle" ng-click="F_TAS.hideAddEditTaxRateModelWindow()">Cancel</a>
+                            <a class="button primary" ng-disabled="!M_TAS.AddEditJson.TaxName || !M_TAS.AddEditJson.FormsLabel || M_TAS.isValidateMinimum || M_TAS.isValidateMaxmum" ng-click="F_TAS.saveTaxRate()">Save</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</apex:component>

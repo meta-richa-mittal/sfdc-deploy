@@ -1,0 +1,197 @@
+<apex:component controller="GlobalController">
+<full-page-modal id-value="import-file-modal-window" dnd-list="M_CS.HeaderCells" 
+	dnd-dragover="F_CS.dragoverCallbackParent(event, index, type, dropEffect, external, callback)"
+	dnd-drop="F_CS.dropCallbackParent(event, index, item, external, type)"
+	class-value="bp-full-page-modal" close-action="F_CS.cancelImportFileAction()">
+	<div class="import-file-main-container">
+		<h1>Map your count file</h1>
+		<div class="file-container">
+			<span class="file-label PB10 d-inline-block">Your data</span>
+			<div class="import-file-container" ng-if="!M_CS.isValidCSVFile">
+				<droplet class ="browse_droplet" ng-model="M_CS.FileUpload.interface" ng-class="{'uploading' : M_CS.FileUpload.interface.isUploading()}">
+					<div class="drop-area-container">
+						<i class="bp-icons bp-grey1-font bp-lh-20 stroke-3">csvFile</i>
+						<p>Drag &amp; drop your .csv count file here</p>
+						<p>or 
+							<droplet-upload-single  id="fileUpload" ng-model = "M_CS.FileUpload.interface" service-model ="M_CS.FileUpload.sectionName">
+	                        </droplet-upload-single>
+							<a class="bp-blue-font bp-cursor-pointer">upload from here</a>
+						</p>
+						<span class="bp-blue-font">Drop here</span>
+					</div>        
+                </droplet>
+                <div class="droplet-loading LoadingDiv" ng-show="M_CS.isDropLetLoading">
+		        <div class="loadingIconContainer">
+		            <c:BPLoading />
+		        </div>
+		    </div>
+			</div>
+			<div ng-if="M_CS.isValidCSVFile" class="uploaded-file-container-details">
+				<div class="file-details MT0">
+					<span class="bp-blue-font H400">{{M_CS.FileUpload.fileToBeUploaded.name}}</span>
+					<div class="pull-right">
+						<button class="button tertiary small" ng-click="F_CS.setImportFileData()">Remove</button>
+					</div>
+				</div>
+				<div class="file-details">
+					<span class="H400">First row contains data</span>
+					<div class="pull-right">
+						<label class="bp-switch">
+	                		<input type="checkbox" ng-model="M_CS.FirstRowContainsData" ng-click="F_CS.ReadFieldLabels()" />
+	                		<div class="bp-slider round"></div>
+	           			</label>
+	           		</div>
+				</div>
+				<div class="file-details">
+					<span class="H400">Automatically merge duplicate parts</span>
+					<div class="pull-right">
+						<label class="bp-switch">
+	                		<input type="checkbox" ng-model="M_CS.MergeDuplicateParts" />
+	                		<div class="bp-slider round"></div>
+	           			</label>
+	           		</div>
+				</div>
+				<div class="label-filed-container">
+					<span class="file-label">Your field labels</span>
+				
+				<div class="col-md-6 P0">
+				   	<ul class="drag-drop-list-container" id="dragListContainer">
+					    <!-- The dnd-draggable directive makes an element draggable and will
+					         transfer the object that was assigned to it. If an element was
+					         dragged away, you have to remove it from the original list
+					         yourself using the dnd-moved attribute -->
+					    <li ng-repeat="item in M_CS.HeaderCells track by $index"
+					        dnd-draggable="item"
+					        dnd-effect-allowed="move"
+					        dnd-selected="M_CS.dndList.selected = item"
+					        ng-class="{'selected': M_CS.dndList.selected === item}"
+					        data-toggle="tooltip" title="{{M_CS.TooltipValues[item]}}" data-html="true">
+					        {{item}}
+					    </li>
+					</ul>
+				</div>
+				</div>
+			</div>
+		</div>
+		<div class="file-label-contianer">
+			<span class="file-label PB10 d-inline-block">Blackpurl FIELD LABELS</span>
+			<div class="field-main-container right-mapping-container">
+				<ul>
+					<li ng-repeat="key in M_CS.keyArray"
+						dnd-list="M_CS.mappedFieldsJson[key]"
+						dnd-dragover="F_CS.dragoverCallback(event, index, type, dropEffect, external, callback)"
+						dnd-drop="F_CS.dropCallback(event, index, item, external, type)"
+						id="droppable-container-{{$index}}">
+						<span class="bp-field-label H400 bp-mapped-label">{{key}}</span>
+						<ul class="drag-drop-list-container" dnd-list="M_CS.mappedFieldsJson[key].MappedLabel"
+							dnd-dragover="F_CS.dragoverCallback(event, index, type, dropEffect, external, callback)"
+							dnd-drop="F_CS.dropCallback(event, index, item, external, type)">
+						   <li ng-repeat="item in M_CS.mappedFieldsJson[key].MappedLabel"
+						   		data-toggle="tooltip" title="{{M_CS.TooltipValues[item]}}" data-html="true"
+						        dnd-draggable="item"
+						        dnd-effect-allowed="move"
+						        dnd-selected="M_CS.dndList.selected = item"
+						        ng-class="{'selected': M_CS.dndList.selected === item}"
+						        class="M0_important dropped-element"
+						        dnd-dragstart="F_CS.dragstartCallback(event)"
+						        id="dropped-element-{{$index}}">
+						        {{item}}
+						    </li>
+						</ul>
+					
+					</li>
+				</ul>
+				<span class="optional-details">(optional)</span>
+			</div>
+		</div>
+		 <div class = "flex-box-footer add-edit-count-footer import-file-footer" ng-if="M_CS.isValidCSVFile" >
+		 <button class="button subtle" tabindex="2" ng-click="F_CS.cancelImportFileAction()">Cancel</button>
+		 <button class="button primary"
+		 	ng-disabled="F_CS.isSubmitActionDisabled()"
+		 	ng-click="F_CS.openImportFileModelWindow('processImportFileModalWindow')">
+		 	Submit
+		 </button>
+	 </div>
+	</div>
+	
+</full-page-modal>
+
+
+
+<div class="modal fade   demo-import-file-modal-window finalize-count-session" id="demoImportFileModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="edit-count-session-body">
+                    <h2 class="heading">How to map the fields</h2>
+		<p class="H301">Drag your fields from the left hand side to the right to match Blackpurl data.</p>                       
+                   	<div class="image-container">
+                   		<Span>
+                   			<img class="col-xs-12 P0" src="{!Application_Images}/Drag-drop-instructions.png"/>
+                   		</Span>
+                   	
+                   	</div>
+                   <div class="flex-box-footer add-edit-count-footer">
+                        <button class="button primary" ng-click="F_CS.openImportFileModelWindow('import-file-modal-window');F_CS.closeFullPageModal('demoImportFileModalWindow')">Okay, got it</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade  process-import-file-popup delete-all-user-model-window finalize-count-session" id="processImportFileModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="edit-count-session-body">
+                    <h2 class="heading" ng-if="M_CS.importFileProcessingStatus != 'Done' && !M_CS.isDuplicatePart">Process the count file import</h2>
+                    <h2 class="heading" ng-if="M_CS.importFileProcessingStatus == 'Done' && !M_CS.isDuplicatePart">All done! Your count file import is completed.</h2>
+                    <h2 class="heading" ng-if="M_CS.isDuplicatePart">Found on active count session</h2>
+					<p class="H301" ng-if="M_CS.importFileProcessingStatus != 'Done' && !M_CS.isDuplicatePart">
+						Please confirm your decision to process the count file import using the field mappings you have selected.
+					</p>
+					<p class="H301" ng-if="M_CS.isDuplicatePart">
+						The part has already been added to another count session <span class ="H300 display-contents">{{M_CS.duplicatePartOnCountSession}}</span>. Cannot add count here.
+					</p>
+					<p class="H301" ng-if="M_CS.importFileProcessingStatus == 'Done' && !M_CS.isDuplicatePart">
+						<span class="H300 PR4">{{M_CS.numberOfSuccessRecords}} records </span> were added to the count session.
+					</p>
+					<p class="H301 MT0" ng-if="M_CS.importFileProcessingStatus == 'Done' && !M_CS.isDuplicatePart">
+						<span class="H300 bp-red-font PR4">{{M_CS.numberOfIssueRecords}} issues </span> need to be resolve as a result of the import.
+					</p>
+                   <div class="flex-box-footer add-edit-count-footer">
+                   		<button class="button subtle" ng-if="M_CS.importFileProcessingStatus == 'Not started' && !M_CS.isDuplicatePart" tabindex="2" ng-click="F_CS.closeFullPageModal('processImportFileModalWindow')">Cancel</button>
+                        <button class="button primary" ng-if="M_CS.importFileProcessingStatus == 'Not started' && !M_CS.isDuplicatePart" 
+                        ng-click="F_CS.importFile()">Confirm</button>
+                        <button class="button primary" ng-if="M_CS.isDuplicatePart" 
+                        ng-click="F_CS.closeDuplicatePartFoundModal()">Ok</button>
+                        <div class="coinfirm-label" ng-if="M_CS.importFileProcessingStatus == 'In progress'">
+                        	<span class="H300" ng-if="M_CS.importFileProcessingStatus == 'In progress'">Processing [{{M_CS.numberOfSuccessfullyProcessed + M_CS.numberOfFailedRecords}}] records, 
+                        		
+                        	</span>
+                        	<span class="H300" ng-if="M_CS.importFileProcessingStatus == 'In progress'">Please wait.</span>
+                        </div>
+                        <button class="button tertiary" ng-if="M_CS.importFileProcessingStatus == 'Done'" ng-click="F_CS.openImportFileModelWindow('demoImportFileModalWindow'); F_CS.closeFullPageModal('processImportFileModalWindow'); F_CS.setImportFileData();">Import a new count file</button>
+                        <button class="button primary" ng-if="M_CS.importFileProcessingStatus == 'Done'" ng-click="(M_CS.numberOfIssueRecords > 0 ? F_CS.changeTabView('Issues to resolve') : F_CS.changeTabView('Counted parts')); F_CS.closeFullPageModal('processImportFileModalWindow'); F_CS.setImportFileData();">Done</button>
+                          <button class="button primary" ng-if="M_CS.importFileProcessingStatus == 'In progress'" 
+	                        ng-class="{'send-msg-animation' : M_CS.importFileProcessingStatus == 'In progress'}"
+	                        ></button>          
+                          <div class="bp-sendMsg-spinner" ng-if = "M_CS.importFileProcessingStatus == 'In progress'">
+                                      <div class="rect1"></div>
+                                      <div class="rect2"></div>
+                                      <div class="rect3"></div>
+                                    </div>
+                    
+                    
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</apex:component>

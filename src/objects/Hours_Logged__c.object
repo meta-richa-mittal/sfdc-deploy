@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>false</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>QB_Accounting_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>QB Accounting Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Xero_Accounting_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>Xero Accounting Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Accounting_Last_Sync_Time__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Last Sync Time</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Accounting_Response__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Response</label>
+        <length>10000</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Accounting_Sync_Token__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Sync Token</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Available_For_QB_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For QB Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_Xero_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For Xero Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Billed_Hours__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(Service_Order_Header__r.SO_Status__c = &apos;Invoiced&apos;, IF( OR(Service_Order_Header__r.Hrs_Logged__c = null, Service_Order_Header__r.Hrs_Logged__c = 0) , Calculated_Hours__c * Service_Order_Header__r.Hrs_Billed__c, (Calculated_Hours__c / Service_Order_Header__r.Hrs_Logged__c) * Service_Order_Header__r.Hrs_Billed__c) , 0)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Billed Hours</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Calculated_Hours__c</fullName>
+        <externalId>false</externalId>
+        <formula>ROUND(IF( 
+NOT(ISNULL(End_Date_Time__c )), 
+Job_Hours__c, 
+(((now() - Start_Date_Time__c) * 24) - (Paused_Hours__c)) 
+),2)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Calculated Hours</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Costing_Rate__c</fullName>
+        <description>Technicians costing rate</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Technicians costing rate</inlineHelpText>
+        <label>Costing Rate</label>
+        <precision>12</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Efficiency__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(OR(ISNULL(Calculated_Hours__c), Calculated_Hours__c  = 0) , Billed_Hours__c, (Billed_Hours__c +  WIP_Invoice_Hours__c) /  Calculated_Hours__c)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Efficiency</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Employee__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Employee</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Hours_Logged</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>End_Date_Time__c</fullName>
+        <externalId>false</externalId>
+        <label>End Date Time</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Is_Hours_Only__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Field to indicate if the start/end times are real or not OR if they were simply calculated based on an hours value that was entered.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Field to indicate if the start/end times are real or not OR if they were simply calculated based on an hours value that was entered.</inlineHelpText>
+        <label>Is Hours Only</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Removed__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Removed</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Job_Hours__c</fullName>
+        <externalId>false</externalId>
+        <formula>Total_Hours__c -  Paused_Hours__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Job Hours</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Migration_Id__c</fullName>
+        <externalId>true</externalId>
+        <label>Migration Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Notes_Required__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Notes Required</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Notes__c</fullName>
+        <description>The notes recorded in the Log Work action modal window.</description>
+        <externalId>false</externalId>
+        <label>Notes</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Old_Costing_Rate__c</fullName>
+        <externalId>false</externalId>
+        <label>Old Costing Rate</label>
+        <precision>12</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Old_Total_Cost__c</fullName>
+        <externalId>false</externalId>
+        <formula>Old_Total_Hours__c *  Old_Costing_Rate__c</formula>
+        <label>Old Total Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Old_Total_Hours__c</fullName>
+        <externalId>false</externalId>
+        <label>Old Total Hours</label>
+        <precision>7</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Original_Estimate__c</fullName>
+        <externalId>false</externalId>
+        <label>Original Estimate</label>
+        <length>50</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Paused_Date_Time__c</fullName>
+        <description>The time when the session was paused.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The time when the session was paused.</inlineHelpText>
+        <label>Paused Date Time</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Paused_Hours__c</fullName>
+        <description>Accumulated paused hours for the clocking session.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Accumulated paused hours for the clocking session.</inlineHelpText>
+        <label>Paused Hours</label>
+        <precision>9</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Previously_Logged__c</fullName>
+        <externalId>false</externalId>
+        <label>Previously Logged</label>
+        <length>50</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Remaining_Estimate__c</fullName>
+        <externalId>false</externalId>
+        <formula>TEXT(Remaining_Estimate_d__c) + &apos;d &apos; +  TEXT(Remaining_Estimate_h__c) + &apos;h &apos; +  TEXT(Remaining_Estimate_m__c) + &apos;m&apos;</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Remaining Estimate</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Remaining_Estimate_d__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Remaining Estimate d</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Remaining_Estimate_h__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Remaining Estimate h</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Remaining_Estimate_m__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Remaining Estimate m</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Service_Order_Header__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Service Order Header</label>
+        <referenceTo>Service_Order_Header__c</referenceTo>
+        <relationshipLabel>Hours Logged</relationshipLabel>
+        <relationshipName>Hours_Logged</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Start_Date_Time__c</fullName>
+        <externalId>false</externalId>
+        <label>Start Date Time</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Task__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Task</label>
+        <referenceTo>Task__c</referenceTo>
+        <relationshipLabel>Hours Logged</relationshipLabel>
+        <relationshipName>Hours_Logged</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Technician__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Technician</label>
+        <referenceTo>Technician__c</referenceTo>
+        <relationshipLabel>Hours Logged</relationshipLabel>
+        <relationshipName>Hours_Logged</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Time_Spent__c</fullName>
+        <externalId>false</externalId>
+        <formula>TEXT( Time_Spent_d__c) + &apos;d &apos; + TEXT( Time_Spent_h__c) + &apos;h &apos; + TEXT(Time_Spent_m__c) + &apos;m&apos;</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Time Spent</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Time_Spent_d__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Time Spent d</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Time_Spent_h__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Time Spent h</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Time_Spent_m__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Time Spent m</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Total_Cost__c</fullName>
+        <externalId>false</externalId>
+        <formula>Calculated_Hours__c *  Costing_Rate__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Total Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Hours__c</fullName>
+        <externalId>false</externalId>
+        <formula>(Time_Spent_d__c * 24) + Time_Spent_h__c + Time_Spent_m__c/60</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Total Hours</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>WIP_Invoice_Hours__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(NOT(Service_Order_Header__r.SO_Status__c = &apos;Invoiced&apos;) , IF( OR(Service_Order_Header__r.Hrs_Logged__c = null, Service_Order_Header__r.Hrs_Logged__c = 0) , Calculated_Hours__c * Service_Order_Header__r.Hrs_Billed__c, (Calculated_Hours__c / Service_Order_Header__r.Hrs_Logged__c) * Service_Order_Header__r.Hrs_Billed__c) , 0)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>WIP Invoice Hours</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Work_Performed_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Work Performed Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Last Modified By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Hours_Logged1</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Modified Date</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <label>Hours Logged</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>Billed_Hours__c</columns>
+        <columns>WIP_Invoice_Hours__c</columns>
+        <columns>Efficiency__c</columns>
+        <columns>Remaining_Estimate_d__c</columns>
+        <columns>Remaining_Estimate_h__c</columns>
+        <columns>Remaining_Estimate_m__c</columns>
+        <columns>Time_Spent_d__c</columns>
+        <columns>Time_Spent_h__c</columns>
+        <columns>Time_Spent_m__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <listViews>
+        <fullName>Async_Xero_Clocking_Entry</fullName>
+        <columns>NAME</columns>
+        <columns>Total_Cost__c</columns>
+        <columns>LAST_UPDATE</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Available_For_Xero_Sync__c</field>
+            <operation>equals</operation>
+            <value>1</value>
+        </filters>
+        <label>Async Xero Clocking Entry</label>
+    </listViews>
+    <nameField>
+        <displayFormat>HN-{00000000}</displayFormat>
+        <label>Hours Logged Number</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Hours Logged</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

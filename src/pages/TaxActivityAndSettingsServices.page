@@ -1,0 +1,68 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="TaxActivityAndSettingCtrl" sidebar="false" 
+	applyHtmlTag="false" applyBodyTag="false" contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('TaxActivityAndSettingsServices', ['$q', function ($q) {
+            return {
+                getTaxActivityReportByEntityName: function(entityJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getTaxActivityReportByEntityName}', entityJson);
+                },
+                getGeneralTaxSettings: function(entityJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getGeneralTaxSettings}');
+                },
+                getAutomaticTaxRateControls: function(entityJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getAutomaticTaxRateControls}');
+                },
+                getAccruedTaxControls: function(entityJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getAccruedTaxControls}');
+                },
+                getDefaultApplicableTaxSettings: function(entityJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getDefaultApplicableTaxSettings}');
+                },
+                saveTaxControlsAndSettings: function(taxSettingsJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.saveTaxControlsAndSettings}', taxSettingsJson);
+                },
+                getTaxRates: function(filterString) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getTaxRates}', filterString);
+                },
+                deleteTaxRate: function(taxRateId) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.deleteTaxRate}', taxRateId);
+                },
+                saveTaxRate: function(taxRateJSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.saveTaxRate}', taxRateJSONString);
+                },
+                getAllAccountTypeData: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getAllAccountTypeData}');
+                },
+                saveAccountType: function(accountTypeJsonStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.saveAccountType}', accountTypeJsonStr);
+                },
+                getTaxSettingMasterData: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getTaxSettingMasterData}');
+                },
+                getAllActiveSalesTaxWithExemptions: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getAllActiveSalesTaxWithExemptions}');
+                },
+                getAccountTypeDetailsById: function(accountTypeId) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getAccountTypeDetailsById}', accountTypeId);
+                },
+                getTaxCodes: function(filterString) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getTaxCodes}', filterString);
+                },
+                deleteTaxCode: function(taxCodeId) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.deleteTaxCode}', taxCodeId);
+                },
+                saveTaxCode: function(taxCodeJSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.saveTaxCode}', taxCodeJSONString);
+                },
+                getTaxCategories: function(entityJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.getTaxCategories}');
+                },
+                refreshAutomatedTaxRates: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxActivityAndSettingCtrl.refreshAutomatedTaxRates}');
+                }
+            }
+        }]);  
+        return Routing_AppJs_PK;
+    }); 
+</apex:page>

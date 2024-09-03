@@ -1,0 +1,22 @@
+<apex:component >
+    <!-- Google tag (gtag.js) -->
+    <script src="https://www.googletagmanager.com/gtag/js?id={!$Label.GA_Tag_Id}"></script>
+    <script>
+    	if($Global.loggedInUserProfileName != 'System Administrator') {
+	      	window.dataLayer = window.dataLayer || [];
+	      	let tagId = "{!$Label.GA_Tag_Id}";
+	      	
+	      	function gtag(){dataLayer.push(arguments);}
+	      	gtag('js', new Date());
+	      	gtag('config', tagId, {
+	     		send_page_view: false,
+	     		user_id: "{!$User.Id}",
+	      	});
+	      	gtag('set', 'user_properties', {
+			  	user_name : "{!$User.FirstName} {!$User.LastName}",
+	   			org_id : "{!$Organization.Id}",
+	   			org_name : "{!$Organization.Name}"
+			});
+		}
+    </script>
+</apex:component>

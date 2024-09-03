@@ -1,0 +1,31 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="BrandingLocationCtrl" sidebar="false" 
+    applyHtmlTag="false" applyBodyTag="false" contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('BrandingLocationService', ['$q', function ($q) {
+            return {
+                getBusinessDetailOfAllBrandingLocations : function() {
+                    return RemoteActionService($q, '{!$RemoteAction.BrandingLocationCtrl.getBusinessDetailOfAllBrandingLocations}');
+                },
+                 deleteBrandingLocation : function(Id) {
+                    return RemoteActionService($q, '{!$RemoteAction.BrandingLocationCtrl.deleteBrandingLocation}',Id);
+                },
+                 getDefaultBrandingLocation : function() {
+                    return RemoteActionService($q, '{!$RemoteAction.BrandingLocationCtrl.getDefaultBrandingLocation}');
+                },
+                 saveBrandingLocation : function(BrandingLocationJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.BrandingLocationCtrl.saveBrandingLocation}',BrandingLocationJson);
+                },getBrandingLocationRecordById: function(BrandingLocationId) {
+                    return RemoteActionService($q, '{!$RemoteAction.BrandingLocationCtrl.getBrandingLocationRecordById}',BrandingLocationId);
+                },
+                getBrandingLocationMasterData: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.BrandingLocationCtrl.getBrandingLocationMasterData}');
+                }, 
+                saveLogoDimensions : function(logoJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.BrandingLocationCtrl.saveLogoDimensions}',logoJson);
+                }
+            };
+        }]);  
+        return Routing_AppJs_PK;  
+    });
+</apex:page>

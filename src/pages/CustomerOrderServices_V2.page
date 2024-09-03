@@ -1,0 +1,743 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="CustomerOrderCtrl_V2" sidebar="false" applyHtmlTag="false" applyBodyTag="false" 
+    contentType="application/javascript" cache="true" expires="3888000">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('coCommonService', ['$q', function ($q) {
+            return {
+                getApplicableTaxList: function(){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getApplicableTaxList}');
+                },
+                saveCOSectionTaxInfo: function(taxInfoJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveCOSectionTaxDetails}', taxInfoJson);
+                },
+                getCOHeaderTotals: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCOHeaderTotals}', coHeaderId);
+                },
+                getTextHistory: function(customerId, coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getTextHistory}', customerId, coHeaderId);
+                },
+                getSupercededPartsByCOId : function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getSupercededPartsByCOId}', coHeaderId);
+                },
+                getCODepositByCOHeaderId: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCODepositByCOHeaderId}', coHeaderId);
+                },
+                getRefundMaxCreditAmount: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getRefundMaxCreditAmount}');
+                },
+                getCOSpecificSettings: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCOSpecificSettings}');
+                },
+                getCOInvoicesARBalance: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCOInvoicesARBalance}', coHeaderId);
+                },
+                deleteBulkCOItems: function(coItemsJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.deleteBulkCOItems}', coItemsJson);
+                }
+            }; 
+        }]);
+        
+        Routing_AppJs_PK.factory('cashDrawerService', ['$q', function ($q) {
+            return {
+                getDeviceInfoByDeviceUUID: function(uuid){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getDeviceInfoByDeviceUUID}', uuid);
+                },
+                getActiveCashDrawerList: function(){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActiveCashDrawerList}');
+                },
+                getAllActivePaymentTerminals: function(){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getAllActivePaymentTerminals}');
+                },
+                saveDeviceInfo: function(loggedInDeviceJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveDeviceInfo}', loggedInDeviceJson);
+                }, 
+                getBrandingLocationList: function(loggedInDeviceJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getBrandingLocationList}');
+                }
+                
+            }; 
+        }]);
+        
+        Routing_AppJs_PK.factory('coAppointmentService', ['$q', function ($q) {
+            return {
+                getAppointmentsBySectionId: function(sectionId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getAppointmentsBySectionId}', sectionId);
+                },
+                updateAppointmentsBySectionId: function(sectionId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateAppointmentsBySectionId}', sectionId);
+                }
+            }; 
+        }]);
+        
+        Routing_AppJs_PK.factory('BRPService', ['$q', function ($q) {
+            return {
+                getPartsLocator: function(partId, quantity, searchType) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getPartsLocator}', partId, quantity, searchType);
+                },
+                getCassonsInventoryByCassonsId: function(cassonsID) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCassonsInventoryByCassonsId}', cassonsID);
+                }
+            }; 
+        }]);
+        
+        Routing_AppJs_PK.factory('internalCommentService', ['$q', function ($q) {
+            return {
+                saveInternalComment: function(internalCommentJSON){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveInternalComment}', internalCommentJSON);
+                },
+                getInternalCommentList: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getInternalCommentList}', coHeaderId);
+                },
+                deleteInternalComment: function(internalCommentId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.deleteInternalComment}', internalCommentId);
+                },getBusinessName: function(){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getBusinessName}');
+                }
+                
+            }; 
+        }]);
+        
+        Routing_AppJs_PK.factory('documentService', ['$q', function ($q) {
+            return {
+                insertDefaultCOForms: function(coHeaderId, specificSectionId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.insertDefaultCOForms}', coHeaderId, specificSectionId);
+                },
+                getCOFormsBySectionId: function(specificSectionId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCOFormsBySectionId}', specificSectionId);
+                },
+                deleteCOForm: function(formId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.deleteCOForm}', formId);
+                },
+                getActiveFormsBySectionId: function(specificSectionId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActiveFormsBySectionId}', specificSectionId);
+                },
+                addFormsToSection: function(coHeaderId, specificSectionId, formJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addFormsToSection}', coHeaderId, specificSectionId, formJson);
+                },
+                getCOAttachmentsBySectionId: function(specificSectionId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getAttachmentList}', specificSectionId);
+                },
+                addAttachment: function(formJson, fileData){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addAttachment}', formJson, fileData);
+                },
+                deleteAttachment: function(attachmentId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.deleteAttachment}', attachmentId);
+                },
+                getActiveFormsCount: function(){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActiveFormsCount}');
+                },
+                getCOProfitability: function(coId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCOProfitability}', coId);
+                },
+                getAttachmentBodyByParentIdAndName: function(parentId, fileName){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getAttachmentBodyByParentIdAndName}', parentId, fileName);
+                },
+                getFormJson: function(coPrintFormJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getFormJson}', coPrintFormJson);
+                }
+            }; 
+        }]);
+       
+       Routing_AppJs_PK.factory('SOHeaderService', ['$q', function ($q) {
+            return {
+                getSOHeaderDetails: function(recordId, gridName){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getSOHeaderDetails}',recordId,gridName);
+                }, 
+                removeServiceOrderItem: function(SOHeaderId, SOItem_Id){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.removeLineItems}',SOItem_Id,SOHeaderId);
+                },
+                updateSOLineItem: function(SOLineItemJson, SOHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateSOLineItems}',SOLineItemJson,SOHeaderId);
+                },
+                getCOHeaderDetailsByGridName: function(COHeaderId, gridName){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCOHeaderDetailsByGridName}',COHeaderId,gridName);
+                },
+                addSOLineItem: function(lineItemId, soHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addLineItems}',lineItemId,soHeaderId);
+                },
+                createSOHeader: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.createSOHeader}', coHeaderId);
+                }, 
+                updateSOHeader: function(coHeaderId, jSONString){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveSOHeaderInfo}', coHeaderId, jSONString);
+                },
+                getSOMasterData: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getSOMasterData}', coHeaderId);
+                },
+                getActiveCOUList: function(customerId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActiveCOUList}', customerId);
+                },
+                getServiceWorksheetPrintDetail: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getServiceWorksheetPrintDetail}', coHeaderId);
+                },
+                saveWorkseetSelectionJson: function(coHeaderId, saveWorkseetSelectionJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveWorkseetSelectionJson}', coHeaderId, saveWorkseetSelectionJson);
+                }, 
+                removeHoursLoggedItem: function(SOHeaderId, HoursLogged_Id){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.deleteHoursLogged}', SOHeaderId, HoursLogged_Id);
+                },
+                addDeductibleAmount: function(deductibleJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addDeductibleAmount}', deductibleJson);
+                },
+                updateSOKHItem: function(SOKHItemJson, SOHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateSOKHLineItems}',SOKHItemJson,SOHeaderId);
+                },
+                splitSOKHItem: function(SOKHitemId, soHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.splitSOKHItem}',SOKHitemId,soHeaderId);
+                },
+                deleteServiceOrder: function(COHeaderId, soHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.deleteServiceOrder}', COHeaderId, soHeaderId);
+                },
+                removeMerchandiseSection: function(coHeaderId, removeMerchSection){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.removeMerchandiseSection}', coHeaderId, removeMerchSection);
+                },
+                moveLineItem: function(sectionFrom, sectionTo, idToMove, coheader){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.moveLineItem}', sectionFrom, sectionTo, idToMove, coheader);
+                },
+                getAlternatePartsList: function(partId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getAlternatePartsList}', partId);
+                },
+                addServiceOrderLineItems: function(partIds, soHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addServiceOrderLineItems}', partIds, soHeaderId);
+                },
+                addServiceJobForJobScheduling: function(EventJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addServiceJobForJobScheduling}', EventJson);
+                },
+                getServiceJobCategories: function(categoryType) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getServiceJobCategories}', categoryType);
+                },
+                calculateShopSupplies: function(soId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.calculateShopSupplies}', soId);
+                },
+                recalculateServiceKit: function(customerId, coHeaderId, sokhId, soHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.recalculateServiceKit}', customerId, coHeaderId, sokhId, soHeaderId);
+                },
+                refreshSOPricingAndTax: function(JSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.refreshSOPricingAndTax}', JSONString);
+                },
+                getCustomerApprovalData: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCustomerApprovalData}', coHeaderId);
+                },
+                refreshSOLIPricingAndTax: function(coHeaderId, soHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.refreshSOLIPricingAndTax}', coHeaderId, soHeaderId);
+                },
+                updateShopSupplies: function(soId, oldJobType, newJobType) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateShopSupplies}', soId, oldJobType, newJobType);
+                },
+                getActiveInternalServiceJobByUnitId: function(unitId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActiveSKUServiceJobByUnitId}', unitId);
+                },
+                getActiveInternalServiceJobByUnitId: function(unitId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActiveSKUServiceJobByUnitId}', unitId);
+                }<!-- ,
+                getUnassignedTechnicianList: function(soHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getUnassignedTechnicianList}', soHeaderId);
+                } -->,
+                getTechnicianList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getTechnicianList}');
+                },
+                assignOrUnassignTechnician: function(soHeaderId, technicianId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.assignOrUnassignTechnician}', soHeaderId, technicianId);
+                },
+                getAssignedTechnicianList: function(soHeaderId) {  
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getAssignedTechnicianList}', soHeaderId);
+                },
+                clockONTechnician: function(soHeaderId, technicianId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.clockONTechnician}', soHeaderId, technicianId);
+                },
+                clockOFFTechnician: function(soHeaderId, technicianId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.clockOFFTechnician}', soHeaderId, technicianId);
+                },
+                pauseTechnician: function(soHeaderId, technicianId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.pauseTechnician}', soHeaderId, technicianId);
+                },
+                resumeTechnician: function(soHeaderId, technicianId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.resumeTechnician}', soHeaderId, technicianId);
+                },
+                getHoursLogged: function(soHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getHoursLogged}', soHeaderId);
+                },
+                saveNotes: function(jSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveNotes}', jSONString);
+                },
+                saveUnitArrivalInfo: function(jSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveUnitArrivalInfo}', jSONString);
+                },
+                verifyTechnicianPin: function(technicianId,technicianPin) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.verifyTechnicianPin}', technicianId,technicianPin);
+                },
+                getMakeModelSubmodelList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getMakeModelSubmodelList}');
+                },
+                getSOJobStatus: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getSOJobStatus}');
+                },
+                moveHoursLog: function(sectionTo, idToMove){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.moveHoursLog}', sectionTo, idToMove);
+                },
+                addRemoveCOSalesperson: function(coSalespersonJsonStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addRemoveCOSalesperson}', coSalespersonJsonStr);
+                },
+                updateSOWorkStatus: function(soHeaderId, workStatus, workStatusName) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateNewSOWorkStatus}', soHeaderId, workStatus, workStatusName);
+                },
+                getCustomerOpenARBalance: function(customerId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCustomerOpenARBalance}', customerId);
+                },
+                getServiceJobSalesTaxAmount: function(soId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getServiceJobSalesTaxAmount}', soId);
+                }, 
+                saveServiceBulkDiscountPercent: function(soHeaderId, discountType, discountPct) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveServiceBulkDiscountPercent}', soHeaderId, discountType, discountPct);
+                }, 
+                updateBulkSOStatus: function(soHeaderIdsList, soStatusId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateBulkSOStatus}', soHeaderIdsList, soStatusId);
+                },
+                getGenericCOU: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getGenericCOU}');
+                }
+            };
+        }]); 
+        
+        Routing_AppJs_PK.factory('CheckoutServices', ['$q', function ($q) {
+            return {
+                getCOCheckoutInfo: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCOInvoiceItemList}',coHeaderId);
+                },
+                addPayment: function(paymentJSON, coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addPayment}',paymentJSON, coHeaderId);
+                },
+                updateCOInvoiceItem: function(coInvoiceItemJson, coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateCOInvoiceItem}',coInvoiceItemJson, coHeaderId);
+                },
+                closedInvoiceAction: function(coInvoiceItemJson, coHeaderId, currentCheckoutType){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.closedInvoiceAction}',coInvoiceItemJson, coHeaderId, currentCheckoutType);
+                },
+                finalizeInvoice: function(soHeaderId, coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.finalizeInvoice}',soHeaderId, coHeaderId);
+                },
+                closeCustomerOrder: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.closeCustomerOrder}', coHeaderId);
+                },
+                getActiveInvHeaderId: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActiveInvHeaderId}', coHeaderId);
+                },
+                validatePaymentDate: function(selectedPaymentDate) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.validatePaymentDate}', selectedPaymentDate);
+                },
+                validateInvoiceDateOnCheckout: function(invoiceDateValidateJSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.validateInvoiceDateOnCheckout}', invoiceDateValidateJSONString);
+                },
+                getActivePaymentMethodList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActivePaymentMethodList}');
+                },
+                validateInvoiceReOpening: function(invoiceId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.validateInvoiceReOpening}', invoiceId);
+                },
+                reOpenInvoice: function(invoiceId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.reOpenInvoice}', invoiceId);
+                },
+                getUnappliedCreditsFromAccounting: function(CustomerId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getUnappliedCreditsFromAccounting}', CustomerId);
+                },
+                processARCRDepositToAccounting: function(coDepositId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.processARCRDepositToAccounting}', coDepositId);
+                },
+                processARCRPaymentToAccounting: function(coInvPaymentId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.processARCRPaymentToAccounting}', coInvPaymentId);
+                },
+                getCOInvoiceItemList : function(coInvoiceHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCOInvoiceItemListOnly }', coInvoiceHeaderId);
+                },
+                getTaxDetailOnCheckout : function(coInvoiceHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getTaxDetailOnCheckout }', coInvoiceHeaderId);
+                },
+                getInvoiceTotalInfo : function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getInvoiceTotalInfo }', coHeaderId);
+                }
+            };
+        }]);
+        
+         Routing_AppJs_PK.factory('merchandiseService', ['$q', function ($q) {
+            return {
+                addPartsSmartItems: function(partsInfoJson, sectionName, sectionId, partImportFormat){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addPartsSmartItems_Updated}', partsInfoJson, sectionName, sectionId, partImportFormat);
+                },
+                saveCOLineItem: function(coHeaderId,lineItemJson,FeeId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveCOLineItem}',coHeaderId,lineItemJson,FeeId);
+                },
+                 deleteCOLineItem: function(lineItemId,coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.deleteCOLineItem}',lineItemId,coHeaderId);
+                },
+                 createMerchSection: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.createMerchSection}',coHeaderId);
+                },
+                insertKitHeaderInMerchGrid: function(lineItemId, coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.insertKitHeaderInMerchGrid}', lineItemId, coHeaderId);
+                },
+                splitCOKHItem: function(lineItemId, coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.splitCOKHItem}', lineItemId, coHeaderId);
+                },
+                updateCOKHLineItemsRecalculation: function(cokhJSON, coHeaderId, cokliJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateCOKHLineItemsRecalculation}', cokhJSON, coHeaderId, cokliJson);
+                },
+                insertKitHeaderInDealMerchGrid: function(lineItemId, dealId, coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.insertKitHeaderInDealMerchGrid}', lineItemId, dealId, coHeaderId);
+                },
+                recalculateMerchKit: function(cokhId, coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.recalculateMerchKit}', cokhId, coHeaderId);
+                },
+                getOutOfStockPartsInKit: function(kitHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getOutOfStockPartsInKit}', kitHeaderId);
+                },
+                oversoldKit: function(coHeaderId, kitHeaderJSON) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.oversoldKit}', coHeaderId, kitHeaderJSON);
+                },
+                saveCoHeaderInfo: function(coHeaderJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveCOHeaderInfo}', coHeaderJson);
+                },
+                getTransactionTypeLabelList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getTransactionTypeLabelList}');
+                },
+                getMerchandiseSalesTaxAmount: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getMerchandiseSalesTaxAmount}', coHeaderId);
+                },
+                saveNotesForCustomerForPartsSale: function(coHeaderId, notesJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveNotesForCustomerForPartsSale}', coHeaderId, notesJson);
+                }, 
+                saveMerchBulkDiscountPercent: function(coHeaderId, isPartDiscount, discountPct) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveMerchBulkDiscountPercent}', coHeaderId, isPartDiscount, discountPct);
+                }
+            };
+        }]);
+        
+        Routing_AppJs_PK.factory('CustomerService', ['$q', function ($q) {
+            return {
+                addCustomer: function(coHeaderId, CustomerId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addCustomer }',coHeaderId,CustomerId);
+                },
+                createCO: function(customerId, sellingGroup, isPreventMerchSectionCreation){ 
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.createCustomerOrder }', customerId, sellingGroup, isPreventMerchSectionCreation);
+                },
+                refreshCOPricingAndTax: function(JSONString, customerId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.refreshCOPricingAndTax }', JSONString, customerId);
+                },
+                refreshCOPricingAndTaxOnKit: function(JSONString, customerId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.refreshCOPricingAndTaxOnKit }', JSONString, customerId);
+                },
+                setCOStatusAsQuote: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.setCOStatusAsQuote }', coHeaderId);
+                },
+                activateQuoteCO: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.activateQuoteCO }', coHeaderId);
+                },
+                showHistoryOnSuppressPopup: function(partId , customerId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.showHistoryOnSuppressPopup}', partId ,customerId);
+                },
+                getActiveCustomerOrdersById: function(customerId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActiveCustomerOrdersById}', customerId);
+                },
+                deleteCustomerOrder: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.deleteCustomerOrder}', coHeaderId);
+                },
+                getBussinessProfileData: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getBussinessProfileData}'); 
+                },
+                saveCustomerPONumber: function(coHeaderId,customerPONumber) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveCustomerPONumber}', coHeaderId,customerPONumber); 
+                },
+                getOpenLeadsFromDP360: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getOpenLeadsFromDP360}'); 
+                },
+                createCustomerFromDP360: function(leadId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.createCustomerFromDP360}',leadId); 
+                },
+                createDealFromDP360: function(leadId,customerId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.createDealFromDP360}',leadId,customerId); 
+                },
+                updateDP360DealSalePrice: function(updateUnitPriceJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateDP360DealSalePrice}',updateUnitPriceJson); 
+                },
+                getActiveCOCountByCustomerId :  function(customerId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getActiveCOCountByCustomerId}', customerId);
+                },
+                validateChangeCustomerAction :  function(coHeaderId, isCustomerDeletedFromCO){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.validateChangeCustomerAction}', coHeaderId, isCustomerDeletedFromCO);
+                },
+                reactivateCustomerOrder :  function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.reactivateCustomerOrder}', coHeaderId);
+                },
+                getAllCustomerContacts: function(customerId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getAllCustomerContacts}', customerId);
+                },
+                saveCOContactAndShippingAddressInfo: function(coJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveCOContactAndShippingAddressInfo}', coJson);
+                }
+            };
+        }]);
+        Routing_AppJs_PK.factory('AttachmentService', ['$q', function ($q) {
+            return {
+                uploadAttachment: function(filename, fileData, recordId, description){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.uploadAttachment}',filename, fileData, recordId, description);
+                },
+                removeAttachment: function(recordId, soHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.removeAttachment}',recordId, soHeaderId);
+                }
+            };
+        }]);
+         
+        Routing_AppJs_PK.factory('SOClaimService', ['$q', function ($q) {
+            return {
+                getWizardInfo: function(SOHeaderId, wizardkey){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getWizardInfo}', SOHeaderId, wizardkey);
+                },
+                saveClaimResponse: function(SOHeaderId, ClaimResponseJson, isSaveExit){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveClaimResponse}', SOHeaderId, ClaimResponseJson, isSaveExit);
+                },
+                getServiceJobTotals: function(SOHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getServiceJobTotals}', SOHeaderId);
+                },
+                submitClaimRecords: function(soHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.submitClaimRecords}', soHeaderId);
+                },
+                finalizeClaimResponse: function(soHeaderId, claimResponseJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.finalizeClaimResponse}', soHeaderId, claimResponseJson);
+                },
+                saveVarianceLI: function(varianceLIJson){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveVarianceLI}', varianceLIJson);
+                },
+                getShopSuppliesConfiguration: function(){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getShopSuppliesConfiguration}');
+                },
+                getIndividualTaxesForSO: function(soHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getIndividualTaxesForSO}', soHeaderId);
+                }
+            };
+        }]);
+        
+        Routing_AppJs_PK.factory('CustomerApprovalService', ['$q', function ($q) {
+            return {
+                saveCustomerApproval: function(soHeaderId, JSONString){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveCustomerApproval}', soHeaderId, JSONString);
+                }
+            };
+        }]);
+        
+        Routing_AppJs_PK.factory('DealService', ['$q', function ($q) {
+            return {
+                getDealDetails: function(objectId, gridName){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getDealDetails}', objectId, gridName);
+                },
+                syncDealWithDP360: function(dealId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.syncDealWithDP360}', dealId);
+                },
+                getLeadUrlByLeadId: function(leadId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getLeadUrlByLeadId}', leadId);
+                },
+                getSalesTaxDetailsForDeal: function(dealId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getSalesTaxDetailsForDeal}', dealId);
+                },
+                createDeal: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.createDeal}', coHeaderId);
+                },
+                saveDealInfoDetails: function(coHeaderId, dealId, json){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveDealInfoDetails}', coHeaderId, dealId, json);
+                },
+                saveTemporaryUnit: function(dealId, jSONString){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveTemporaryUnit}', dealId, jSONString);
+                },
+                saveTemporaryOrderUnit: function(dealItemId, jSONString){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveTemporaryOrderUnit}', dealItemId, jSONString);
+                },
+                updateDealStatus: function(dealId, dealStatus){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateDealStatus}', dealId, dealStatus);
+                },
+                addUnitToDeal: function(dealItemId, unitId, dealId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.addUnitToDeal}', dealItemId, unitId, dealId);
+                },
+                removeUnitFromDeal: function(dealId, dealItemId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.removeUnitFromDeal}', dealId, dealItemId);
+                },
+                saveOptionFeesLineItem: function(dealId, dealItemId, jSONString){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveOptionFeesLineItem}', dealId, dealItemId, jSONString);
+                },
+                removeOptionFeesLineItem: function(dealItemId, lineItemId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.removeOptionFeesLineItem}', dealItemId, lineItemId);
+                },
+                updateTradeIn: function(dealId, jsonString){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateTradeIn}', dealId, jsonString);
+                },
+                updateUnitDetails: function(jsonString){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateUnitDetails}', jsonString);
+                },
+                createDealMerchAndServiceSetion: function(dealId, coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.createDealMerchAndServiceSetion}', dealId, coHeaderId);
+                },
+                createDealMerchSection: function(dealId, coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.createDealMerchSection}', dealId, coHeaderId);
+                },
+                createDealServiceSection: function(dealId, coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.createDealServiceSection}', dealId, coHeaderId);
+                },
+                setStatusForCommitAndInstallAction: function(dealId, coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.setStatusForCommitAndInstallAction}', dealId, coHeaderId);
+                },
+                moveDealMerchAndServiceLineItems: function(optionFeeRecId, coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.moveDealMerchAndServiceLineItems}', optionFeeRecId, coHeaderId);
+                },
+                resolveFulfillment: function(dealId, unresolvedFulfillmentObjJSON, chargeMethod, selectedUnitId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.resolveFulfillment}', dealId, unresolvedFulfillmentObjJSON, chargeMethod, selectedUnitId);
+                },
+                updateDealFinanceDetails: function(dealId, dealFinanceJSON){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateDealFinanceDetails}', dealId, dealFinanceJSON);
+                },
+                removeFAndIProductLineItem: function(dealId, fAndIProductId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.removeFAndIProductLineItem}', dealId, fAndIProductId);
+                },
+                saveDealFAndIProduct: function(dealId, dealFAndIProductJSON){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveDealFAndIProduct}', dealId, dealFAndIProductJSON);
+                },
+                updateDealFinanceStatus: function(coHeaderId, dealId, dealFinanceObjJson, financeStatus){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateDealFinanceStatus}', coHeaderId, dealId, dealFinanceObjJson, financeStatus);
+                },
+                recalculationOfDealKHLineItems: function(dealKHJSON, dealKHLineItemJSON){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.recalculationOfDealKHLineItems}', dealKHJSON, dealKHLineItemJSON);
+                },
+                insertOptionAndFeeLineItems: function(partId, coHeaderId, dealId, dealItemId, jSONString, isSuppress, isDuplicateCheck){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.insertOptionAndFeeLineItems}', partId, coHeaderId, dealId, dealItemId, jSONString, isSuppress, isDuplicateCheck);
+                },
+                getDealFinanceMasterData: function(){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getDealFinanceMasterData}');
+                },
+                removeDealFinancing: function(dealId,dealFiannceId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.removeDealFinancing}',dealId,dealFiannceId);
+                },
+                removeDeal: function(dealId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.removeDeal}', dealId);
+                },
+                stockInCOU: function(tradeInId, unitId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.stockInCOU}', tradeInId, unitId);
+                },
+                getSalesPersonList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getSalesPersonList}');
+                },
+                getCOInvoicePaymentsByCOInvoiceHedaerId: function(invHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCOInvoicePaymentsByCOInvoiceHedaerId}', invHeaderId);
+                },
+                saveDealItemInfo: function(dealItemInfoJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveDealItemInfo}', dealItemInfoJson);
+                },
+                saveDealItemTaxInfo: function(dealItemTaxInfoJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveDealItemTaxInfo}', dealItemTaxInfoJson);
+                },
+                getDealItemDetails: function(dealItemId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getDealItemDetails}', dealItemId);
+                },
+                getCoBuyer: function(customerId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getCoBuyer}',customerId);
+                },
+                getDealItemInternalServiceStatus: function(dealId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getDealItemInternalServiceStatus}', dealId);
+                },
+                getUnitCategoryList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getUnitCategoryList}');
+                },
+                getBillOfSaleFormData: function(dealId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getBillOfSaleFormData}',dealId);
+                }, 
+                validateDealReOpening: function(dealId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.validateDealReOpening}',dealId);
+                },
+                reOpenDeal: function(dealId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.reOpenDeal}',dealId);
+                },
+                getPriceAndCostOptionsListForTempUnit: function(dealItemId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getPriceAndCostOptionsListForTempUnit}',dealItemId);
+                },
+                savePriceAndCostOptionForTempUnit: function(dealItemId,jsonString) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.savePriceAndCostOptionForTempUnit}',dealItemId,jsonString);
+                },
+                deletePriceAndCostOptionForTempUnit: function(dupcId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.deletePriceAndCostOptionForTempUnit}',dupcId);
+                },
+                getDefaultFactoryOptionsByDealItemId: function(dealItemId,makeId,ModalId,subModalId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getDefaultFactoryOptionsByDealItemId}',dealItemId,makeId,ModalId,subModalId);
+                },
+                saveDealNotes: function(dealId, notesJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveDealNotes}',dealId, notesJson);
+                },
+                updateOptionFeeStatusAndDealStatus: function(coHeaderId) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateOptionFeeStatusAndDealStatus}', coHeaderId);
+                },
+                saveUnitStatus: function(unitId, Status) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.saveUnitStatus}', unitId, Status);
+                },                
+                toggleRideawayPricingEnabled: function(dealItemId, totalEnforceRideawayPrice, IsRideawayPricingEnabled){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.toggleRideawayPricingEnabled}', dealItemId, totalEnforceRideawayPrice, IsRideawayPricingEnabled);
+                },
+                updateStampDutyWhenRideawayPricingEnabled: function(dealItemId, stampDutyTotal) {
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateStampDutyWhenRideawayPricingEnabled}', dealItemId, stampDutyTotal);
+                },
+                updateStampDuty: function(dealItemId, stampDutyTotal){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateStampDuty}', dealItemId, stampDutyTotal);
+                },
+                updateRideawayPricing: function(dealItemId, unitJsonString){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.updateRideawayPricing}', dealItemId, unitJsonString);
+                },
+                getSalespersonsBySectionId: function(dealId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getSalespersonsBySectionId}', dealId);
+                },
+                setOptionFeeInstallFlag: function(dealId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.setOptionFeeInstallFlag}', dealId);
+                }                 
+            };
+        }]);
+        
+        Routing_AppJs_PK.factory('SpecialOrderService', ['$q', function ($q) {
+            return {
+                getSpecialOrders: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getSpecialOrders}', coHeaderId);
+                },
+                getPartPickListCOLIList: function(coHeaderId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getPartPickListCOLIList}', coHeaderId);
+                },
+                savePartPickListCOLI: function(recordJSON){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.savePartPickListCOLI}', recordJSON);
+                }
+            };
+        }]);
+        
+        Routing_AppJs_PK.factory('UserService', ['$q', function ($q) {
+            return {
+                checkDuplicateParts: function(partId,coHeaderId,jSONString ,isSuppress,isDuplicate,soHeaderId,customerId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.insertCOLineItems}',
+                        partId, coHeaderId,jSONString,isSuppress,isDuplicate,soHeaderId,customerId);
+                }
+            };
+        }]);
+        
+        Routing_AppJs_PK.factory('UnitImagesService', ['$q', function ($q) {
+            return {
+                getPrimaryUnitImage: function(recordId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getPrimaryUnitImage}', recordId);
+                },
+                getUnitImagesByUnitId: function(unitId){
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getUnitImagesByUnitId}', unitId);
+                }
+            }; 
+        }]);
+
+        Routing_AppJs_PK.factory('PartReallocateService', ['$q', function ($q) {
+            return {
+                getUnreceivedStockPartVODetails: function(partId) {
+	                return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.getUnreceivedStockPartVODetails}', partId);
+	            },
+                reallocateOnOrderPartToCO: function(reallocatePartJSON) {
+	                return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl_V2.reallocateOnOrderPartToCO}', reallocatePartJSON);
+	            }
+            }; 
+        }]);
+        
+        return Routing_AppJs_PK;  
+    }); 
+</apex:page>

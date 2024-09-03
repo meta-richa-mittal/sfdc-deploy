@@ -1,0 +1,24 @@
+<apex:component >
+    <apex:attribute name="Application" Description="" required="true" type="String"/>
+    <apex:attribute name="Application_Images" Description="" required="true" type="String"/>
+    <apex:attribute name="Assests" Description="" required="true" type="String"/>
+    
+    <!-- Need to minimised/optimised/callouts -->
+    <apex:stylesheet value="{!Assests}/css/ngDialog.min.css"/>
+    <apex:stylesheet value="{!Assests}/css/bootstrap.min.css"/>
+    <apex:stylesheet value="{!Assests}/css/font-awesome.min.css"/>
+    <apex:stylesheet value="{!Assests}/css/ngDialog.min.css"/>
+    <apex:stylesheet value="{!Assests}/css/hopscotch.css"/>
+    <apex:stylesheet value="{!Assests}/css/ngDialog-theme-default.min.css"/>
+    <apex:stylesheet value="{!Assests}/css/angular-ui-notification.min.css"/>
+    <apex:stylesheet value="{!Application}/css/common.css"/>
+    <apex:stylesheet value="{!Application}/css/Icons.css"/>
+    <!-- <apex:stylesheet value="{!Application}/css/jqueryUI.css"/> -->
+    <apex:stylesheet value="{!Application}/css/BpGlobalHeader.css"/>
+    <apex:stylesheet value="{!Application}/css/DatePicker.css"/> 
+    <apex:stylesheet value="{!Application}/css/global.css"/>
+     
+     <!-- Need to move it to the places where it is used -->
+    <apex:stylesheet value="{!Assests}/css/open-sans.css" />
+    <apex:stylesheet value="{!Assests}/css/barlow.css" />
+</apex:component>

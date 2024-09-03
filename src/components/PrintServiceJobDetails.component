@@ -1,0 +1,86 @@
+<apex:component controller="NewPrintMerchandiseCtrl" >
+	<!--  Service Job Section Starts Here -->
+            <div style="float:left"> 
+                <apex:repeat value="{!Services}" var="SoHeader">
+                <apex:outputPanel rendered="{! SoHeader.SOGridItems != null && SoHeader.SOGridItems.size != 0 }">
+                <div class="service-job-header">
+                	<span class="service-job-label">{!SoHeader.Name}</span>
+					<apex:outputPanel rendered="{!SoHeader.Salespersons != null}" layout="none">
+                        <apex:outputText styleClass="c-pull-right M0 sold-by" value="Sold by: {!SoHeader.Salespersons}"/>
+                    </apex:outputPanel>
+            	</div>
+                    
+                       <div style="float: left !important; width :700px !important;">
+	                        <table style= "margin-top:10px;font-size: 14px;font-family: Arial Unicode MS,sans-serif;">
+	                    				<col width="100px" />
+                                    <col width="200px" />
+	                                    <col width="150px" />
+                                    <col width="75px" /> 
+                                    <col width="75px" />                
+                                    <col width="75px" />                 
+	                   					 <thead>  
+	                                    <tr  >
+		                                    <th style="font-family: Arial Unicode MS,sans-serif;font-size: 14px;">Quantity</th>
+		                                    <th style="font-family: Arial Unicode MS,sans-serif;font-size: 14px;">Item/Description</th>
+		                                    <th style="font-family: Arial Unicode MS,sans-serif;font-size: 14px;">Location</th>
+		                                    <th style="font-family: Arial Unicode MS,sans-serif;font-size: 14px;">Status</th>
+		                                      <th style="font-family: Arial Unicode MS,sans-serif;font-size: 14px;"> Pulled</th>
+	                                     <th style="font-family: Arial Unicode MS,sans-serif;font-size: 14px;"> Pull</th>
+	                                     <th style="font-family: Arial Unicode MS,sans-serif;font-size: 14px;">    </th>
+	                                    </tr> 
+	                                    </thead>
+	                    
+	                    <tbody>
+	                        <apex:repeat value="{!SoHeader.SOGridItems}" var="soGrid">
+	                            
+	                            <apex:repeat value="{!soGrid.SOKH.SOLIList}" var="SoLi">
+	                                <apex:outputPanel rendered="{!SoLi.IsPart || SoLi.IsSublet}" layout="none">
+	                                <tr style="text-align: left;width:50px;padding-left:8px;">	
+	                                                   
+	                                                    <td>
+	                                                        <apex:outputText value="{0, number, ###}">
+	                                                            <apex:param value="{!SoLi.QtyNeeded}" />
+	                                                        </apex:outputText>
+	                                                    </td>
+	                                                    <td>{!SoLi.ItemDesc}</td>
+	                                                    <td >
+	                                                    	<apex:variable var="index" value="{!0}" />
+		                                                   <apex:repeat value="{!SoLi.AssignedLocations}" var="loc" > 
+		                                                   		<apex:outputText value="{!loc}" style="word-break: break-all"> </apex:outputText>
+		                                                   		<apex:variable var="index" value="{!index + 1}"/>
+		                                                   		<apex:outputText rendered="{!index < SoLi.AssignedLocations.size}">,</apex:outputText>
+		                                                   		
+		                                                   		<!-- <apex:outputText value="{!SoLi.AssignedLocations.size}"></apex:outputText> -->
+		                                                   </apex:repeat>  
+	                                               		</td>
+	                                                    <td>
+	                                                    <apex:outputPanel rendered="{!SoLi.IsPart && !SoLi.IsNonInventoryPart}">
+	                                                        <apex:outputText value="{!SoLi.Status}" >
+	                                                        </apex:outputText>
+	                                                    </apex:outputPanel>
+	                                                    <apex:outputPanel rendered="{!SoLi.IsPart && SoLi.IsNonInventoryPart}">
+	                                                        <apex:outputText value="{!IF(SoLi.Status == 'Invoiced' , 'Invoiced' , 'In Stock')}" >
+	                                                    </apex:outputText>
+	                                                </apex:outputPanel>
+															<apex:outputPanel rendered="{!SoLi.IsSublet}">
+																<apex:outputText value="{!SoLi.Status}" >
+																</apex:outputText>
+															</apex:outputPanel>
+	                                            </td>
+	                                            
+	                                            <td>{!SoLi.Pulled}</td>
+	                                                    <td>{!SoLi.ToPull}</td>
+	                                                     <td>______</td>
+	                                            </tr>
+	                             </apex:outputPanel>               
+	                            </apex:repeat>
+	                      </apex:repeat>
+	                    </tbody>
+	                    
+	                </table>
+              </div>  
+             </apex:outputPanel>
+        </apex:repeat> 
+             </div>
+                 
+</apex:component>

@@ -1,0 +1,19 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="CustomerOrderCtrl" sidebar="false" applyHtmlTag="false" applyBodyTag="false" 
+    contentType="application/javascript" cache="true" expires="3888000">
+        angular.module('angucomplete').factory('userService', ['$q', function ($q) {
+            return {
+            	searchText: function(textToSearch) { // used in angucomplete.js
+	           		return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl.getSearchResults}' ,textToSearch);
+	           	},
+	           	getSearchResult: function(textToSearch) { // used in WebsiteProductManagementCtrl.js, AutoComplete_V2.js (LIT STA), AutoComplete_V3.js, searchToAdd.js
+                    return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl.getSearchResult}', textToSearch);
+                },
+	           	addCustomer: function(coHeaderId, CustomerId) { // used in angucomplete.js
+	           		return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl.addCustomer }', coHeaderId, CustomerId);
+	           	},
+				getCampaignsByVIN: function(vin) { // used in BrpButton.js
+					return RemoteActionService($q, '{!$RemoteAction.CustomerOrderCtrl.getCampaignsByVIN }', vin);
+				}
+            };
+        }]);  
+</apex:page>

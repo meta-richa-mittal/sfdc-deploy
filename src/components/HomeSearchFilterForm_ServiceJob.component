@@ -1,0 +1,656 @@
+<apex:component >
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Customer');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Customer_Object_Display_Label'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Customer"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Customer" rel="homePageServiceJobCustomer"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobCustomer">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Customer_Object_Display_Label'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Customer');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Job_Type');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Helptext_Job_type'| translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobType" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Job_Type" id="Service_Job_Job_Type">
+                <option value="0">{{'Generic_Object_Label'| translate }}</option>
+                <option ng-repeat="jobTypeLabel in HomeSearchGrid.formMaterData.SJJobTypes" value="{{jobTypeLabel}}" ng-selected="HomeSearchGrid.filterFormJson.Service_Job_Job_Type === jobTypeLabel">{{jobTypeLabel}}</option>
+            </select>
+        </div>
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobType">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Helptext_Job_type'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Job_Type');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Job');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Job'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Job"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Job" rel="homePageServiceJobJob"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobJob">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Job'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Job');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Unit_Description');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Unit_Description'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Unit_Description"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Unit_Description" rel="homePageServiceJobUnitDescription"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobUnitDescription">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Unit_Description'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Unit_Description');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Technician');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Technician'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Technician"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Technician" rel="homePageServiceJobTechnician"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobTechnician">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Technician'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Technician');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_VIN');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Label_VIN'| translate }}</label>
+                <input type="text" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_VIN"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_VIN" rel="homePageServiceJobVIN"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobVIN">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Label_VIN'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_VIN');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Plate_Number');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Plate_number'| translate }}</label>
+                <input type="text" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Plate_Number"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Plate_Number" rel="homePageServiceJobPlateNumber" />
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobPlateNumber">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Plate_number'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Plate_Number');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Engine_Number');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Engine_number'| translate }}</label>
+                <input type="text" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Engine_Number"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Engine_Number" rel="homePageServiceJobEngineNumber" />
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobEngineNumber">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Engine_number'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Engine_Number');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Unit_Number');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Unit_number'| translate }}</label>
+                <input type="text" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Unit_Number"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Unit_Number" rel="homePageServiceJobUnitNumber" />
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobUnitNumber">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Unit_number'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Unit_Number');"></i>
+            </div>
+        </div>
+    </div>
+        
+    <div ng-show="HomeSearchGrid.showField('Service_Job_Scheduled');">
+        <div class="row P10">
+            <div class="col-md-5">
+                <label class="T3 labelWidth pull-left">{{'Scheduled'| translate }}</label>
+                <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobScheduled" 
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Scheduled.SelectedOption">
+                    <option ng-repeat="item in HomeSearchGrid.formMaterData.scheduledDateFilterOptions" value="{{item.optionValue}}">
+                        {{item.label}}
+                    </option> 
+                </select>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobScheduled">
+	            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Scheduled'| translate}}"></i> 
+	            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Scheduled');"></i>
+            </div>
+        </div>
+    </div>
+        
+    <div class="row P10" ng-show="HomeSearchGrid.filterFormJson.Service_Job_Scheduled.SelectedOption == '5'">  
+        <div class="col-md-7 modifiedField">
+            <label class="T3 col-md-12">{{'Between'| translate }}</label>
+            <div class="col-md-6 datepickerContatiner" style="padding-left: 0;">
+                <input type="text" class="date-picker" id="ServiceJobStartDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Scheduled.Value1" 
+                    date-format="HomeSearchGrid.dateFormat" data-range-start="ServiceJobStartDate" data-range-end="ServiceJobEndDate" datepicker = "datepicker" 
+                    autocomplete="off" readonly = "readonly" />
+            </div>
+            <div class="col-md-6 datepickerContatiner">
+                <input type="text" class="date-picker" id="ServiceJobEndDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Scheduled.Value2" 
+                    date-format="HomeSearchGrid.dateFormat" data-range-start="ServiceJobStartDate" data-range-end="ServiceJobEndDate" datepicker = "datepicker" 
+                    autocomplete="off" readonly = "readonly" />
+            </div>
+        </div>
+    </div>
+    
+    <div ng-show="HomeSearchGrid.showField('Service_Job_Invoice_Date');">
+        <div class="row P10">
+            <div class="col-md-5">
+                <label class="T3 labelWidth pull-left">{{'Invoice_Page_Invoice_Date'| translate }}</label>
+                <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobInvoiceDate" 
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Invoice_Date.SelectedOption">
+                    <option ng-repeat="item in HomeSearchGrid.formMaterData.dateFilterOptions" value="{{item.optionValue}}">
+                        {{item.label}}
+                    </option> 
+                </select>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobInvoiceDate">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Invoice_Page_Invoice_Date'| translate}}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Invoice_Date');"></i>
+            </div>
+        </div>
+    </div>
+        
+    <div class="row P10" ng-show="HomeSearchGrid.filterFormJson.Service_Job_Invoice_Date.SelectedOption == '5'">  
+        <div class="col-md-7 modifiedField">
+            <label class="T3 col-md-12">{{'Between'| translate }}</label>
+            <div class="col-md-6 datepickerContatiner" style="padding-left: 0;">
+                <input type="text" class="date-picker" id="ServiceJobInvoiceStartDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Invoice_Date.Value1" 
+                    date-format="HomeSearchGrid.dateFormat" data-range-start="ServiceJobStartDate" data-range-end="ServiceJobEndDate" datepicker = "datepicker" 
+                    autocomplete="off" readonly = "readonly" />
+            </div>
+            <div class="col-md-6 datepickerContatiner">
+                <input type="text" class="date-picker" id="ServiceJobIvoiceEndDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Invoice_Date.Value2" 
+                    date-format="HomeSearchGrid.dateFormat" data-range-start="ServiceJobStartDate" data-range-end="ServiceJobEndDate" datepicker = "datepicker" 
+                    autocomplete="off" readonly = "readonly" />
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Invoice_Number');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Invoice Number'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Invoice_Number"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Invoice_Number" rel="homePageServiceJobInvoiceNumber"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobInvoiceNumber">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Invoice Number'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Invoice_Number');"></i>
+            </div>
+        </div>
+    </div>
+        
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Hrs_Billed');">
+	    <div class="col-md-5">
+	        <label class="T3 labelWidth pull-left">{{'Hrs_Billed' | translate }}</label>
+	        <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobHrsBilled" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Billed.SelectedOption"
+	            id="Service_Job_Hrs_Billed">
+	            <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+	        </select>
+	    </div>
+	    
+	    <div class="col-md-5">
+	        <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+	            ng-model="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Billed.Value1" rel="homePageServiceJobHrsBilled"
+	            ng-show="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Billed.SelectedOption != '0'"/>
+	        
+	        <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+	            ng-model="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Billed.Value2" rel="homePageServiceJobHrsBilled"
+	            ng-show="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Billed.SelectedOption == '5'"/>
+	    </div>
+	    
+	    <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobHrsBilled">
+	        <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Hrs_Billed'| translate }}"></i> 
+	        <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Hrs_Billed');"></i>
+        </div>
+	</div>
+	
+	<div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Hrs_Logged');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Hrs_Logged' | translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobHrsLogged" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Logged.SelectedOption"
+                id="Service_Job_Hrs_Logged">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Logged.Value1" rel="homePageServiceJobHrsLogged"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Logged.SelectedOption != '0'"/>
+            
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Logged.Value2" rel="homePageServiceJobHrsLogged"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Hrs_Logged.SelectedOption == '5'"/>
+        </div>
+        
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobHrsLogged">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Hrs_Logged'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Hrs_Logged');"></i>
+        </div>
+    </div>
+    
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Parts_Total');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Parts_total' | translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobPartsTotal" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Parts_Total.SelectedOption"
+                id="Service_Job_Parts_Total">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Parts_Total.Value1" rel="homePageServiceJobPartsTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Parts_Total.SelectedOption != '0'"/>
+            
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Parts_Total.Value2" rel="homePageServiceJobPartsTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Parts_Total.SelectedOption == '5'"/>
+        </div>
+        
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobPartsTotal">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Parts_total'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Parts_Total');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Labor_Total');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Labor_total' | translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobLaborTotal" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Labor_Total.SelectedOption"
+                id="Service_Job_Labor_Total">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Labor_Total.Value1" rel="homePageServiceJobLaborTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Labor_Total.SelectedOption != '0'"/>
+            
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Labor_Total.Value2" rel="homePageServiceJobLaborTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Labor_Total.SelectedOption == '5'"/>
+        </div>
+        
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobLaborTotal">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Labor_total'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Labor_Total');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Sublet_Total');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Sublet_total' | translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobSubletTotal" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Sublet_Total.SelectedOption"
+                id="Service_Job_Sublet_Total">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Sublet_Total.Value1" rel="homePageServiceJobSubletTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Sublet_Total.SelectedOption != '0'"/>
+            
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Sublet_Total.Value2" rel="homePageServiceJobSubletTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Sublet_Total.SelectedOption == '5'"/>
+        </div>
+        
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobSubletTotal">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Sublet_total'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Sublet_Total');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Fees_Total');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Fees_total' | translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobFeesTotal" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Fees_Total.SelectedOption"
+                id="Service_Job_Fees_Total">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Fees_Total.Value1" rel="homePageServiceJobFeesTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Fees_Total.SelectedOption != '0'"/>
+            
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Fees_Total.Value2" rel="homePageServiceJobFeesTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Fees_Total.SelectedOption == '5'"/>
+        </div>
+        
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobFeesTotal">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Fees_total'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Fees_Total');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Tax_Total');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Tax_total' | translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobTaxTotal" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Tax_Total.SelectedOption"
+                id="Service_Job_Tax_Total">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Tax_Total.Value1" rel="homePageServiceJobTaxTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Tax_Total.SelectedOption != '0'"/>
+            
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Tax_Total.Value2" rel="homePageServiceJobTaxTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Tax_Total.SelectedOption == '5'"/>
+        </div>
+        
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobTaxTotal">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Tax_total'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Tax_Total');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Total');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Total' | translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobTotal" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Total.SelectedOption"
+                id="Service_Job_Total">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Total.Value1" rel="homePageServiceJobTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Total.SelectedOption != '0'"/>
+            
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Total.Value2" rel="homePageServiceJobTotal"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Total.SelectedOption == '5'"/>
+        </div>
+        
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobTotal">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Total'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Total');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Odometer_In');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Odometer_In' | translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobOdometerIn" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Odometer_In.SelectedOption"
+                id="Service_Job_Odometer_In">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Odometer_In.Value1" rel="homePageServiceJobOdometerIn"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Odometer_In.SelectedOption != '0'"/>
+            
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Odometer_In.Value2" rel="homePageServiceJobOdometerIn"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Odometer_In.SelectedOption == '5'"/>
+        </div>
+        
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobOdometerIn">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Odometer_In'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Odometer_In');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Odometer_Out');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Odometer_Out' | translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobOdometerOut" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Odometer_Out.SelectedOption"
+                id="Service_Job_Odometer_Out">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Odometer_Out.Value1" rel="homePageServiceJobOdometerOut"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Odometer_Out.SelectedOption != '0'"/>
+            
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                ng-model="HomeSearchGrid.filterFormJson.Service_Job_Odometer_Out.Value2" rel="homePageServiceJobOdometerOut"
+                ng-show="HomeSearchGrid.filterFormJson.Service_Job_Odometer_Out.SelectedOption == '5'"/>
+        </div>
+        
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobOdometerOut">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Odometer_Out'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Odometer_Out');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_SO_Type');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'SO_Type'| translate }}</label>
+                <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobSOType" 
+                        ng-model="HomeSearchGrid.filterFormJson.Service_Job_SO_Type" id="Service_Job_SO_Type">
+	                 <option value="0">{{'Generic_Object_Label'| translate }}</option>
+	                 <option value="Customer">{{'Customer'| translate }}</option>
+	                 <option value="Third-Party">{{'Third-Party'| translate }}</option>
+	                 <option value="Internal">{{'Internal'| translate }}</option>
+	                 <option value="Deal Service">{{'Deal Service'| translate }}</option>
+	                 <option value="Stock Unit">{{'Stock Unit'| translate }}</option>
+	                 <option value="Quote">{{'Quote'| translate }}</option>
+	                 <option value="Internal and Stock">{{'Internal_and_Stock'| translate }}</option>
+	             </select>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobSOType">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'SO_Type'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_SO_Type');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Provider');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Provider'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Provider"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Provider" rel="homePageServiceJobProvider"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobProvider">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Provider'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Provider');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Claim_Status');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Claim_status'| translate }}</label>
+                <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageServiceJobClaimStatus" 
+                        ng-model="HomeSearchGrid.filterFormJson.Service_Job_Claim_Status" id="Service_Job_Claim_Status">
+	                 <option value="0">{{'Generic_Object_Label'| translate }}</option>
+	                 <option value="Unsubmitted">{{'Unsubmitted'| translate }}</option>
+	                 <option value="Submitted">{{'Submitted'| translate }}</option>
+	                 <option value="Approved">{{'Approved'| translate }}</option>
+	             </select>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobClaimStatus">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Claim_status'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Claim_Status');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Make');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Make_Object_Display_Label'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Make"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Make" rel="homePageServiceJobMake"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobMake">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Make_Object_Display_Label'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Make');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Model');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Model_Object_Display_Label'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_Model"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Model" rel="homePageServiceJobModel"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobModel">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Model_Object_Display_Label'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Model');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_SubModel');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Submodel'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8 homeSearchFilterTextbox homeform-control" id="Service_Job_SubModel"
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_SubModel" rel="homePageServiceJobSubModel"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageServiceJobSubModel">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Submodel'| translate }}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_SubModel');"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Salesperson');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0">
+                <label class="T3 labelWidth pull-left">{{'Label_Salesperson'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Service_Job_Salesperson" 
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Salesperson" rel="homePageServiceJobSalesperson"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols " id="homePageServiceJobSalesperson">
+                     <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Label_Salesperson'| translate }}"></i> 
+                     <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Salesperson');"></i>
+              </div>
+        </div>
+    </div>
+    
+    
+    <div ng-show="HomeSearchGrid.showField('Service_Job_Date_Due_In');">
+        <div class="row P10">
+            <div class="col-md-5">
+                <label class="T3 labelWidth pull-left">{{'Date_Due_In'| translate }}</label>
+                <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageSJDateDueIn" 
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Date_Due_In.SelectedOption">
+                    <option ng-repeat="item in HomeSearchGrid.formMaterData.dateFilterOptions" value="{{item.optionValue}}">
+                        {{item.label}}
+                    </option> 
+                </select>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageSJDateDueIn">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Date_Due_In'| translate}}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Date_Due_In');"></i>
+            </div>
+        </div>
+    </div>
+    <div class="row P10" ng-show="HomeSearchGrid.filterFormJson.Service_Job_Date_Due_In.SelectedOption == '5'">  
+        <div class="col-md-7 modifiedField">
+            <label class="T3 col-md-12">{{'Between'| translate }}</label>
+            <div class="col-md-6 datepickerContatiner" style="padding-left: 0;">
+                <input type="text" class="date-picker" id="SJDDStartDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Date_Due_In.Value1" 
+                    date-format="HomeSearchGrid.dateFormat" data-range-start="SJDDStartDate" data-range-end="SJDDEndDate" datepicker = "datepicker" 
+                    autocomplete="off" readonly = "readonly" />
+            </div>
+            <div class="col-md-6 datepickerContatiner">
+                <input type="text" class="date-picker" id="SJDDEndDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Date_Due_In.Value2" 
+                    date-format="HomeSearchGrid.dateFormat" data-range-start="SJDDStartDate" data-range-end="SJDDEndDate" datepicker = "datepicker" 
+                    autocomplete="off" readonly = "readonly" />
+            </div>
+        </div>
+    </div>
+    <div ng-show="HomeSearchGrid.showField('Service_Job_Date_Promised');">
+        <div class="row P10">
+            <div class="col-md-5">
+                <label class="T3 labelWidth pull-left">{{'Date_Promised'| translate }}</label>
+                <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageSJDatePromised" 
+                    ng-model="HomeSearchGrid.filterFormJson.Service_Job_Date_Promised.SelectedOption">
+                    <option ng-repeat="item in HomeSearchGrid.formMaterData.dateFilterOptions" value="{{item.optionValue}}">
+                        {{item.label}}
+                    </option> 
+                </select>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageSJDatePromised">
+                <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Date_Promised'| translate}}"></i> 
+                <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Date_Promised');"></i>
+            </div>
+        </div>
+    </div>
+    <div class="row P10" ng-show="HomeSearchGrid.filterFormJson.Service_Job_Date_Promised.SelectedOption == '5'">  
+        <div class="col-md-7 modifiedField">
+            <label class="T3 col-md-12">{{'Between'| translate }}</label>
+            <div class="col-md-6 datepickerContatiner" style="padding-left: 0;">
+                <input type="text" class="date-picker" id="SJDPStartDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Date_Promised.Value1" 
+                    date-format="HomeSearchGrid.dateFormat" data-range-start="SJDPStartDate" data-range-end="SJDPEndDate" datepicker = "datepicker" 
+                    autocomplete="off" readonly = "readonly" />
+            </div>
+            <div class="col-md-6 datepickerContatiner">
+                <input type="text" class="date-picker" id="SJDPEndDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Date_Promised.Value2" 
+                    date-format="HomeSearchGrid.dateFormat" data-range-start="SJDPStartDate" data-range-end="SJDPEndDate" datepicker = "datepicker" 
+                    autocomplete="off" readonly = "readonly" />
+            </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Service_Job_Unit_Arrived');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Unit_Arrived'| translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageSJUnitArrived" ng-model="HomeSearchGrid.filterFormJson.Service_Job_Unit_Arrived"
+                id="Service_Job_Unit_Arrived">
+                <option value="0">{{'Generic_Object_Label'| translate }}</option>
+                <option >{{'Label_Yes'| translate }}</option>
+                <option >{{'Label_No'| translate }}</option>
+            </select>
+        </div>
+        <div class="col-md-2 controlBtn homePagecontrols" id="homePageSJUnitArrived">
+                 <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Unit_Arrived'| translate }}"></i> 
+                 <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Service_Job_Unit_Arrived');"></i>
+         </div>
+    </div>  
+</apex:component>

@@ -1,0 +1,87 @@
+<apex:component controller="GlobalController">
+    <div class="LoadingDiv" ng-show="AdminConfig.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="KenectIntegration">
+        <div class="settings_Header row">
+            <div class="col-lg-3 col-md-3">
+                <div class="fixedHeaderText bp-pointer-cursor" ng-click="AdminConfig.toogleSectionView('showKenect');">
+                    <span class="headerlabel">
+                    <i class="fa fa-angle-down" ng-show="AdminConfig.toggleObj.showKenect" ></i>
+                    <i class="fa fa-angle-right" ng-show="!AdminConfig.toggleObj.showKenect" ></i>
+                    <span class="divider">|</span>
+                    <span class="T2">Kenect</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div id="kenectIntegration_Setting" ng-show="AdminConfig.toggleObj.showKenect">
+            <div class="main_section row" >
+                <div class="form">
+                     <div class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label><span class="FC9">*</span>{{ 'KenectLocation_id' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <div class="searchInputArea feeSearchInputArea">
+                                <numbers-only
+                                            class-value = "form-control"
+                                            input-model-value = "AdminConfig.Kenect.LocationId"
+                                            include-negative = "false"
+                                            include-zero = "true"
+                                            place-holder-value=""
+                                            precision-length = '100'
+                                            include-blank = 'false'
+                                            ng-class-name = "{'redborder' : AdminConfig.KenectFieldValidation[AdminConfig.Kenect.LocationId] == true}"
+                                            disabled-value="AdminConfig.isKenectConfigurationCompleted()"
+                                            blur-value = "AdminConfig.validateKenectField(AdminConfig.Kenect.LocationId);"
+                                            force-precision-length ='false'
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label><span class="FC9">*</span>{{ 'KenectSMS_number' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <div class="searchInputArea feeSearchInputArea">
+                                <input type="text" 
+                            		   ng-blur="AdminConfig.validateKenectField(AdminConfig.Kenect.SMSNumber);"
+                            		   ng-class="{'redborder' : AdminConfig.KenectFieldValidation[AdminConfig.Kenect.SMSNumber] == true}"
+                                       ng-disabled="AdminConfig.isKenectConfigurationCompleted()"
+                             		   maxlength="20" class="searchInput form-control inputValueText"  
+                                       ng-model="AdminConfig.Kenect.SMSNumber"  />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div ng-if="!AdminConfig.isKenectConfigurationCompleted()" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Configure_integration' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <button class="btn btn-default greenBtn" ng-click="AdminConfig.configureKenectIntegration()" 
+                            ng-class="{'applyDisable' : !AdminConfig.isConfigureIntegrationBtnEnabledForKenect() }"
+                            ng-disabled= "!AdminConfig.isConfigureIntegrationBtnEnabledForKenect()">{{ 'Execute_script' | translate}}
+                            </button>
+                        </div>
+
+                        <div class="labelValueCenter ML22">
+                            <p ng-if="!AdminConfig.isConfigureIntegrationBtnEnabledForKenect()" class="redHover">{{ AdminConfig.CIBtnDisablementMessage }}</p>
+                        </div>
+                    </div>
+                    
+                    <div ng-if="AdminConfig.isKenectConfigurationCompleted()" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Configure_completed' | translate}}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</apex:component>

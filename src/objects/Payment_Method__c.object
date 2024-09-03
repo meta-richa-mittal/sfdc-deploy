@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>List</customSettingsType>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>Icon_Link__c</fullName>
+        <externalId>false</externalId>
+        <label>Icon Link</label>
+        <length>80</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Is_Active__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Active</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Only_Updeposited_Payment_Method__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Only Undeposited Payment Method</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Surcharge_Applicable__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Surcharge Applicable</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Order_Number__c</fullName>
+        <externalId>false</externalId>
+        <label>Order Number</label>
+        <precision>3</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Surcharge_Percentage__c</fullName>
+        <externalId>false</externalId>
+        <label>Surcharge Percentage</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Undeposited_Funds__c</fullName>
+        <description>This field is used to assign an Undeposited Funds GL account to each of the payment methods</description>
+        <externalId>false</externalId>
+        <label>Undeposited Funds</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>Payment Method</label>
+    <listViews>
+        <fullName>Detailed</fullName>
+        <columns>NAME</columns>
+        <columns>Is_Active__c</columns>
+        <columns>Order_Number__c</columns>
+        <columns>Icon_Link__c</columns>
+        <columns>Undeposited_Funds__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>Detailed</label>
+    </listViews>
+    <visibility>Public</visibility>
+</CustomObject>

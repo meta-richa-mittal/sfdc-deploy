@@ -1,0 +1,393 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0" controller="GlobalController">
+    <div class="content bp-wrapper-container fusion-mapping-container count-session-container-wrapper">
+        <div class="bp-subHeader bp-techScheduler-subHeader">
+            <div class="row container bp-top-header bp-tech-navigation-bar PB0">
+                <section class="bp-breadcrumb-container">
+                    <nav class="bp-breadcrumb-nav">
+                        <ul>
+                            <li><a ui-sref="homePage">{{'Label_Home' | translate}}</a></li>
+                            <li> <a class = "disable-link">{{'Other_tools' | translate}}</a></li>
+                            <li> <a ui-sref="PartCount">{{'Part_counting' | translate}}</a></li>
+                            <li> <a class="bp-breadcrumb-active">{{M_CS.countSessionDetails.Name}}</a></li>
+                        </ul>
+                    </nav>
+                </section>
+                <h1  class="col-xs-12  bp-hasEyebrow  P0">{{M_CS.countSessionDetails.Name}}</h1>
+                <section class="bp-nav-filter">
+                    <nav>
+                        <ul>
+                            <li>
+                                <label class="H200">Locations:</label>
+                                <span ng-repeat = "locationRec in M_CS.countSessionDetails.SelectedLocationNames track by $index">{{locationRec}}</span>
+                            </li>
+                            <li>
+                                <label class="H200">Vendors:</label>
+                                <span ng-repeat = "vendorRec in M_CS.countSessionDetails.SelectedVendorNames track by $index">{{vendorRec}}</span>
+
+                            </li>
+                            <li>
+                                <label class="H200">Categories:</label>
+                                <span ng-repeat = "catRec in M_CS.countSessionDetails.SelectedCategoryNames track by $index">{{catRec}}</span>
+                            </li>
+
+                        </ul>
+                    </nav>
+                </section>
+            </div>
+        </div>
+        <div class="count-session-main-container">
+            <aside>
+                <div class="b-flyout-card">
+                    <div class="b-pad-container">
+                        <h2 class="b-flyout-card-title">{{M_CS.countSessionDetails.CountSessionNumber}}</h2>
+                        <label class="b-status-tag in-progress bp-first-letter-capitalize">{{M_CS.countSessionDetails.Status}}</label>
+                        <span class="b-flyout-card-label">{{M_CS.countSessionDetails.Type}}</span>
+                        <time class="b-flyout-time"><i class = "cal-icon" ></i>{{M_CS.countSessionDetails.CountDate}}</time>
+                        <time class = "b-flyout-card-time date-display">Created on {{M_CS.countSessionDetails.CreatedOn}}</time>
+                    </div>
+                    <div class="b-pad-container b-pad-btn-container">
+                        <div class="cta-buttons two-in-row print-btn">
+                            <a class="button tertiary small" ng-click = "F_CS.printCountSession();">Print</a>
+                        </div>
+                        <div class="cta-buttons two-in-row">
+                            <a class="button tertiary small" ng-click="F_CS.exportCountSession()">Export</a>
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+            <article class = "tab-view-container">
+
+                <div class="part-count-tab-container">
+                    <div class="tab">
+                        <a ng-class = "{'active-tab': M_CS.activeCountSessionTabName == 'Counted parts'}" ng-click = "F_CS.changeTabView('Counted parts')">Counted parts <span class="badge badge-light">{{M_CS.sessionLineItemsListWrapper.TotalCountedParts}}</span></a>
+                        <a ng-class = "{'active-tab': M_CS.activeCountSessionTabName == 'Uncounted parts'}" ng-click = "F_CS.changeTabView('Uncounted parts')">Uncounted parts <span class="badge badge-light">{{M_CS.sessionLineItemsListWrapper.TotalUncountedParts}}</span></a>
+                        <a  ng-class = "{'active-tab': M_CS.activeCountSessionTabName == 'Issues to resolve'}" ng-click = "F_CS.changeTabView('Issues to resolve')">Issues to resolve <span class="badge badge-light">{{M_CS.sessionLineItemsListWrapper.TotalIssuesToResolve}}</span></a>
+                        <a ng-class = "{'active-tab': M_CS.activeCountSessionTabName == 'Adjustments'}" ng-click = "F_CS.changeTabView('Adjustments')">Adjustments <span class="badge badge-light">{{M_CS.sessionLineItemsListWrapper.TotalAdjustedParts}}</span></a>
+                    </div>
+                </div>
+
+                <c:CountSessionTableComponent />
+
+            </article>
+         <article class = "mobile-view-container">
+              <div class="part-count-tab-container ">
+                 <div class="tab mobile-tab">
+                     <a ng-class = "{'active-tab': M_CS.activeCountSessionTabName == 'Counted parts'}" ng-click = "F_CS.changeTabView('Counted parts')">Counted parts <span class="badge badge-light">{{M_CS.sessionLineItemsListWrapper.TotalCountedParts}}</span>
+                         <i class="bp-icons bp-font-14 bp-blue-font stroke-3" ng-if = "M_CS.activeCountSessionTabName != 'Counted parts'">expand</i>
+                         <i class="bp-icons bp-font-14 bp-blue-font stroke-3" ng-if = "M_CS.activeCountSessionTabName == 'Counted parts'">collapse</i>
+                     </a>
+                     <div ng-if = " M_CS.activeCountSessionTabName == 'Counted parts'">
+                         <c:CountSessionTableComponent />
+                     </div>
+                 </div>
+                 <div class="tab mobile-tab">
+                     <a ng-class = "{'active-tab': M_CS.activeCountSessionTabName == 'Uncounted parts'}"
+                     ng-click = "F_CS.changeTabView('Uncounted parts')">Uncounted parts <span class="badge badge-light">{{M_CS.sessionLineItemsListWrapper.TotalUncountedParts}}</span>
+                     <i class="bp-icons bp-font-14 bp-blue-font stroke-3" ng-if = "M_CS.activeCountSessionTabName != 'Uncounted parts'">expand</i>
+                     <i class="bp-icons bp-font-14 bp-blue-font stroke-3" ng-if = "M_CS.activeCountSessionTabName == 'Uncounted parts'">collapse</i>
+                     </a>
+                     <div ng-if = " M_CS.activeCountSessionTabName == 'Uncounted parts'">
+                         <c:CountSessionTableComponent />
+                     </div>
+                 </div>
+                 <div class="tab mobile-tab">
+                     <a ng-class = "{'active-tab': M_CS.activeCountSessionTabName == 'Issues to resolve'}" ng-click = "F_CS.changeTabView('Issues to resolve')">Issues to resolve <span class="badge badge-light">{{M_CS.sessionLineItemsListWrapper.TotalIssuesToResolve}}</span>
+                     <i class="bp-icons bp-font-14 bp-blue-font stroke-3"  ng-if = "M_CS.activeCountSessionTabName != 'Issues to resolve'">expand</i>
+                     <i class="bp-icons bp-font-14 bp-blue-font stroke-3" ng-if = "M_CS.activeCountSessionTabName == 'Issues to resolve'">collapse</i>
+                     </a>
+                     <div ng-if = " M_CS.activeCountSessionTabName == 'Issues to resolve'">
+                         <c:CountSessionTableComponent />
+                     </div>
+                 </div>
+                 <div class="tab mobile-tab" ng-class = "{'border-bottom': M_CS.activeCountSessionTabName == 'Adjustments'}">
+                     <a ng-class = "{'active-tab': M_CS.activeCountSessionTabName == 'Adjustments'}" ng-click = "F_CS.changeTabView('Adjustments')">Adjustments <span class="badge badge-light">{{M_CS.sessionLineItemsListWrapper.TotalAdjustedParts}}</span>
+                     <i class="bp-icons bp-font-14 bp-blue-font stroke-3" ng-if = "M_CS.activeCountSessionTabName != 'Adjustments'">expand</i>
+                     <i class="bp-icons bp-font-14 bp-blue-font stroke-3" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'">collapse</i>
+                     </a>
+                     <div ng-if = " M_CS.activeCountSessionTabName == 'Adjustments'">
+                         <c:CountSessionTableComponent />
+                        </div>
+                                 </div>
+            </div>
+            </article>
+        </div>
+    </div>
+    <div>
+        <toast message = "M_CS.sessionLineItemsListWrapper.TotalAdjustment" text-val = "Total" type = "M_CS.activeCountSessionTabName"></toast>
+    </div>
+    <footer class="count-session-footer" ng-if = "M_CS.countSessionDetails.Status != 'Closed'">
+        <button class = "button subtle" ng-click = "F_CS.loadPreviousState()">Save and close</button>
+        <button class = "button primary" ng-disabled = "!GroupOnlyPermissions['Part inventory count']['finalize count'] || F_CS.isFinalizeDisable()" ng-click = "F_CS.FinalizeCountSession()">Finalize count</button>
+    </footer>
+    <div class="modal fade  edit-count-session" id="EditCountSession" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="edit-count-session-body">
+                        <h2 class="heading" ng-if = "!M_CS.EditCountSessionRec.IsAlreadyCounted">Record part count</h2>
+                        <h2 class="heading" ng-if = "M_CS.EditCountSessionRec.IsAlreadyCounted">Edit part count</h2>
+                        <div class="count-session-card-container">
+                            <a class="bp-blue-font" target="_blank" ui-sref = "ViewPart({Id: M_CS.EditCountSessionRec.PartId})">{{M_CS.EditCountSessionRec.PartNumber}} - {{M_CS.EditCountSessionRec.Description}}</a>
+                            <span>{{M_CS.EditCountSessionRec.VendorName}}</span>
+                            <ul>
+                                <li>
+                                    <label>Qty available:</label>
+                                    <sapn>{{M_CS.EditCountSessionRec.QtyAvailable}}</sapn>
+                                </li>
+                                <li>
+                                    <label>Selected to count:</label>
+                                    <sapn ng-if = "M_CS.EditCountSessionRec.IsSelectedPart">YES</sapn>
+                                    <sapn ng-if = "!M_CS.EditCountSessionRec.IsSelectedPart">NO</sapn>
+                                </li>
+                                <li>
+                                    <label>Already counted:</label>
+                                    <sapn ng-if = "M_CS.EditCountSessionRec.IsAlreadyCounted">YES</sapn>
+                                    <sapn ng-if = "!M_CS.EditCountSessionRec.IsAlreadyCounted">NO</sapn>
+                                </li>
+                            </ul>
+                        </div>
+                                       <div class="count-filter-container" >
+                                          <ul class="count-filter-ul add-edit-counted-part-popup">
+                                              <li ng-if = "M_CS.LocationList.length > 0 && (M_CS.selectedStr || M_CS.selectedStr == '')">
+                                                  <span class="H300">{{'Locations'| translate }}</span>
+                                                      <div class="multi-select-dropdown-wrapper">
+                                                          <multi-select result-list = "M_CS.LocationList" type = "Locations" selected-drop-down-str = "M_CS.selectedStr"/>
+                                                      </div>
+                                              </li>
+                                              <li>
+                                          <span class="H300">{{'Counted_quantity'| translate }}</span>
+                                              <div class="multi-select-dropdown-wrapper">
+                                                  <numbers-only id-value = "CountQty"
+                                                            class-value = "bp-input-text"
+                                                            input-model-value = "M_CS.EditCountSessionRec.CountedQty"
+                                                            include-negative = "false"
+                                                            include-zero = "true"
+                                                            blur-value = "F_CS.setFocus();"
+                                                            precision-length="2"
+                                                            />
+
+                                                 <!--  <input class="bp-input-text" type="text" ng-model = "M_CS.EditCountSessionRec.CountedQty"/>  -->
+                                              </div>
+                                              </li>
+                                          </ul>
+                                      </div>
+
+                                      <div class="flex-box-footer add-edit-count-footer">
+                                        <button class="button subtle" ng-click="F_CS.closeEditCountSessionPopup();" tabindex="2">Cancel</button>
+                                        <button class="button tertiary bp-first-letter-capitalize d-inline-block" ng-if = "M_CS.EditCountSessionRec.IsAlreadyCounted" ng-click = "F_CS.deleteCountSessionLineItem(M_CS.EditCountSessionRec.Id)">Delete Count</button>
+                                         <button class="button primary bp-first-letter-capitalize d-inline-block" ng-if = "!M_CS.EditCountSessionRec.IsAlreadyCounted" ng-click = "F_CS.saveCountSessionLineItem()">Add Count</button>
+                                      <button class="button primary bp-first-letter-capitalize d-inline-block" ng-if = "M_CS.EditCountSessionRec.IsAlreadyCounted" ng-click = "F_CS.saveCountSessionLineItem()">Save Count</button>
+                                    </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <div class="modal fade   finalize-count-session " id="FinalizeCountSession" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="edit-count-session-body">
+                        <h2 class="heading">Finalize count session</h2>
+                        <cite class="flex-alert warning">
+                           <i class="icon"></i>
+                           <p class="flex-alert-text">
+                               <strong>Finalizing a count session will update all of the counted parts.</strong>
+                               <span class="message">This action may take time to complete depending on the number of parts being adjusted.</span>
+                           </p>
+                       </cite>
+                       <table class="bp-editable-table">
+                            <col width="40%" />
+                            <col width="30%" />
+                            <col width="30%" />
+                            <thead>
+                                <tr>
+                                    <th>Summary</th>
+                                    <th class="text-right">Parts</th>
+                                    <th class="text-right">Net value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Counted</td>
+                                    <td class="text-right H300">{{M_CS.sessionLineItemsListWrapper.TotalCountedParts}}</td>
+                                    <td class="text-right H300 ">{{M_CS.sessionLineItemsListWrapper.TotalCountedCost | currency}} </td>
+                                </tr>
+                                <tr>
+                                    <td>Uncounted</td>
+                                    <td class="text-right H300">{{M_CS.sessionLineItemsListWrapper.TotalUncountedParts}}</td>
+                                    <td class="text-right H300">{{M_CS.sessionLineItemsListWrapper.TotalUncountedCost | currency}}</td>
+                                </tr>
+                                <tr>
+                                    <td>Adjusted</td>
+                                    <td class="text-right H300">{{M_CS.sessionLineItemsListWrapper.TotalAdjustedParts}}</td>
+                                    <td class="text-right H300" ng-class="{'bp-red-font': M_CS.sessionLineItemsListWrapper.TotalAdjustment < 0}">{{M_CS.sessionLineItemsListWrapper.TotalAdjustment | currency}}</td>
+                                </tr>
+                            </tbody>
+                       </table>
+
+                       <div class="bp-modal-content-text">
+                               <label class="bp-small-switch">
+                                <input type="checkbox" ng-model = "M_CS.finalizeCountJSON.IsAdjustUncountedPartsToZeroQty"/>
+                                <div class="bp-slider round"></div>
+                            </label>
+                            <label class="bp-first-letter-capitalize bp-switchLabel">Adjust the {{M_CS.sessionLineItemsListWrapper.TotalUncountedParts}} uncounted parts to a zero quantity</label>
+                       </div>
+                       <div class="date-container">
+                               <label class="date-label">Count date</label>
+                               <i class = "cal-icon"></i>
+                               <span>{{M_CS.finalizeCountJSON.CountDate}}</span>
+                       </div>
+                        <div class="date-container">
+                            <div class="multi-select-dropdown-wrapper" ng-if = "M_CS.AdjustmentCategoriesList">
+                                <label class="date-label">Adjustment category</label>
+                               <multi-select result-list = "M_CS.AdjustmentCategoriesList" type = "AdjustmentCategories" selected-drop-down-str = "M_CS.selectedStr" />
+                           </div>
+                        </div>
+                       <div class="flex-box-footer add-edit-count-footer">
+                            <button class="button subtle" tabindex="2" ng-click = "F_CS.closeFinalizeCountSessionPopup()">Cancel</button>
+                            <button class="button primary" ng-click = "F_CS.saveFinalizeCountSession()">Finalize now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade finalize-count-session  resolve-count-issue-modal-window  bp-cp-modal-dialog" id="resolveCountIssueModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="edit-count-session-body">
+                        <h2 class="heading MB5">Resolve count issue</h2>
+                       <p>
+                              <span class = "bp-red-font" ng-if = "M_CS.resolveCountSessionIssueList.Issue == 'Duplicate part'">Duplicate count</span>
+                               <span class = "bp-red-font" ng-if = "M_CS.resolveCountSessionIssueList.Issue == 'Invalid part'">Invalid part#</span>
+                               <span class = "bp-red-font" ng-if = "M_CS.resolveCountSessionIssueList.Issue == 'Missing vendor'">Multiple vendors for this part #</span>
+                       </p>
+                       <p class="MT11 MB5">
+                               <span class="H300 line-height-medium">{{M_CS.resolveCountSessionIssueList.PartNumber}} - </span>
+                                   <span ng-if = "M_CS.resolveCountSessionIssueList.Issue == 'Duplicate part'" class="PL2 line-height-medium">
+                                       {{M_CS.resolveCountSessionIssueList.Description}}
+                                   </span>
+                                   <span class="PL2 line-height-medium" ng-if = "M_CS.resolveCountSessionIssueList.Issue != 'Duplicate part'">
+                                       description -unknown-
+                                   </span>
+                       </p>
+                       <div class="edit-count-session-container">
+                               <div class="first-container">
+                                   <p>
+                                   <span>Vendor:</span>
+                                   <span class="H301 line-height-large bp-set-text-ellipses PL2 " ng-if = "M_CS.resolveCountSessionIssueList.Issue == 'Duplicate part'">{{::M_CS.resolveCountSessionIssueList.VendorName}}</span>
+                                <span class=" H301 line-height-large PL2 bp-red-font" ng-if = "M_CS.resolveCountSessionIssueList.Issue == 'Missing vendor'">Multiple vendors found</span>
+                                <span class="H301 line-height-large PL2" ng-if = "M_CS.resolveCountSessionIssueList.Issue == 'Invalid part'">- Unknown -</span>
+                                   </p>
+                                   <p>
+                                   <span>Location:</span>
+                                   <span class = "PL2 bp-set-text-ellipses">{{M_CS.resolveCountSessionIssueList.Locations}}</span>
+                                   </p>
+                               </div>
+                               <div class="second-container">
+                                   <p ng-if = "M_CS.alreadyCountedQty">
+                                       <span>
+                                           Existing count:
+                                       </span>
+                                       <span class="PL16 qty-value">{{M_CS.alreadyCountedQty}}</span>
+
+                                   </p>
+                                   <p>
+                                       <span>This count:</span>
+                                       <span class="PL16 qty-value">{{M_CS.resolveCountSessionIssueList.CountedQty}}</span>
+                                   </p>
+
+                               </div>
+                       </div>
+                         <div class="col-xs-12 col-md-9 col-lg-8 P0 MT22" ng-if="M_CS.resolveCountSessionIssueList.Issue != 'Duplicate part'">
+                              <div class="left" ng-if="M_CS.resolveCountSessionIssueList.Issue == 'Missing vendor'">
+                                <label class="H201">Which part would you like to record your count under?</label>
+                                <autocompletev2 ng-if="!M_CS.isShowPartCardDetails" id="autocompletev2Id" template-name="Entity" section-name="Part Count Section" section-id="issue-resolve"
+                                default-value="M_CS.resolveCountSessionPartNumber"/>
+                            </div>
+                             <div class="left" ng-if="M_CS.resolveCountSessionIssueList.Issue == 'Invalid part'">
+                                <label class="H201">Which part would you like to record your count under?</label>
+                                <autocompletev2 ng-if="!M_CS.isShowPartCardDetails" id="autocompletev2Id" template-name="Entity" section-name="Part Count Section" section-id="issue-resolve"
+                                default-value="M_CS.invalidPartDefaultValue"/>
+                            </div>
+                             <div ng-if="M_CS.resolveCountSessionIssueList.Issue != 'Duplicate part' && M_CS.isShowPartCardDetails" class="part-card-details">
+                                 <i class="bp-icons bp-grey-font bp-cursor-pointer pull-left itemSvg kitItemSvg">part</i>
+                                     <div ng-if = "M_CS.exsitingPartList">
+                                         <a class = "bp-blue-font H400 bp-pointer-cursor" target="_blank" ui-sref="ViewPart({Id: M_CS.exsitingPartList.PartId})">{{M_CS.exsitingPartList.PartNumber}} - {{M_CS.exsitingPartList.Description}}</a>
+                                         <label class="PR4 text-small">{{M_CS.exsitingPartList.VendorName}}</label>
+                                         <span class="PR4 text-small">- {{M_CS.exsitingPartList.QtyAvailable}}</span>
+                                         <span ng-if="M_CS.exsitingPartList.Locations" class="bp-set-text-ellipses text-small">- {{M_CS.exsitingPartList.Locations}}</span>
+                                     </div>
+                             </div>
+                         </div>
+                     <div ng-if="M_CS.resolveCountSessionIssueList.Issue == 'Duplicate part' || M_CS.exsitingPartList.IsAlreadyCounted">
+                                  <cite class="flex-alert blue-label">
+                                       <i class="icon">i</i>
+                                       <p class="flex-alert-text">
+                                               <span class="message">
+                                               The part selected has already been counted and has a quantity of {{M_CS.alreadyCountedQty}}, this count has a quantity of {{M_CS.resolveCountSessionIssueList.CountedQty}}.
+                                               </span>
+                                           <strong>The result of the merge would be a count quantity of
+
+                                           <numbers-only id-value = "CountQty"
+                                                            class-value = "bp-input-text updated-counted-qty-container"
+                                                            input-model-value = "M_CS.exsitingPartList.CountedQty"
+                                                            include-negative = "false"
+                                                            include-zero = "false"
+                                                            precision-length = "2"
+                                                            />
+                                                            </strong>
+                                       </p>
+                                   </cite>
+                             </div>
+
+
+                     <div class="flex-box-footer add-edit-count-footer">
+                             <button class="button subtle"  tabindex="2" ng-click = "F_CS.closeResolveModelWindowPopup()">Cancel</button>
+                             <button class="button primary bp-first-letter-capitalize d-inline-block" ng-click = "F_CS.mergeCount()" ng-if="M_CS.resolveCountSessionIssueList.Issue == 'Duplicate part' || M_CS.exsitingPartList.IsAlreadyCounted">Merge count</button>
+                             <button class="button primary bp-first-letter-capitalize d-inline-block" ng-click = "F_CS.mergeCount()" 
+                             	ng-if="M_CS.resolveCountSessionIssueList.Issue != 'Duplicate part' && !M_CS.exsitingPartList.IsAlreadyCounted"
+                             	ng-disabled="!M_CS.exsitingPartList || !M_CS.exsitingPartList.PartId">Record count</button>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade finalize-count-session  resolve-count-issue-modal-window delete-all-user-model-window bp-cp-modal-dialog" id="deleteAllUserCoinfirmPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="edit-count-session-body">
+                        <h2 class="heading MB5">Delete all issues</h2>
+                        <p class = "MT22">
+                            Are you sure you want to delete all unresolved issues?
+                        </p>
+                     <div class="flex-box-footer add-edit-count-footer">
+                             <button class="button subtle"  tabindex="2" ng-click="F_CS.closeFullPageModal('deleteAllUserCoinfirmPopup')">Cancel</button>
+                             <button class="button alert bp-first-letter-capitalize d-inline-block" ng-click = "F_CS.deleteAllIssues()">Yes, delete</button>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+     <c:ImportFileComponent />
+    <div class="LoadingDiv" ng-show="M_CS.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+</apex:page>

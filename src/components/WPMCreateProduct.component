@@ -1,0 +1,35 @@
+<apex:component >
+	<div class="create-product-main-container" ng-class="{'create-product-from-selected-container': M_WPM.isCreateProductFromSelectedCLicked}">
+   		<h1 class="c-heading">Create new products from parts</h1>
+   		<p class="c-sub-heading" ng-if="!M_WPM.isCreateProductFromSelectedCLicked">Search and select Blackpurl parts to create new products on your website.</p>
+   		<p class="c-sub-heading" ng-if="M_WPM.isCreateProductFromSelectedCLicked">Confirm the title for each new product on your website.</p>
+   		<c:WPMCreateProductFilterSection />
+   		
+   		<div ng-if="!M_WPM.isCreateProductFromSelectedCLicked">
+   			<c:WPMCreateProductFilteredPartTable />
+   		</div>
+   		
+   		<div ng-if="M_WPM.isCreateProductFromSelectedCLicked">
+   			<c:WPMCreateProductSelectedPartTable />
+   		</div>
+   		
+   		<div class="c-footer">
+   			<span class="check-box-container" ng-if="M_WPM.isCreateProductFromSelectedCLicked && !M_WPM.isPublishingProducts">
+				<bp-ng-check-box ng-if="!M_WPM.isPublishingProducts" value="M_WPM.createProductPublishAsDraft" select-unselect-click="F_WPM.toggleCreateProductPublishAsDraftCheckBox()" 
+					check-box-label="Publish as draft" 
+					id-value="CreateProductPublishAsDraft">
+				</bp-ng-check-box>
+			</span>
+			<span ng-if="M_WPM.isCreateProductFromSelectedCLicked && M_WPM.isPublishingProducts" class="loading-text">We’re publishing your changes, don’t refresh the page</span>
+			<span class="pos-rel" ng-if="M_WPM.isCreateProductFromSelectedCLicked">
+				<bp-ng-button name="{{M_WPM.isPublishingProducts ? 'Publishing' : ('Publish ' + M_WPM.createProductSelectedPartListCount + ((M_WPM.createProductSelectedPartListCount == 1) ? ' product' : ' products'))}}" 
+				class-value="c-ternary-btn c-btn order-1 {{M_WPM.isPublishingProducts ? 'c-green-dark-btn' : ''}}" action="F_WPM.publishProducts()"></bp-ng-button>
+				<i class="c-input-white-loading-icon adjust-position" ng-if="M_WPM.isPublishingProducts">
+					<svg class="input-white-spiner" width="85px" height="85px" viewBox="0 0 66 66" xmlns="https://www.w3.org/2000/svg">
+						<circle class="input-white-spiner-path" fill="none" stroke-width="10" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+					</svg>
+				</i>
+			</span>
+		</div>
+   	</div>
+</apex:component>

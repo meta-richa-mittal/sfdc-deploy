@@ -1,0 +1,45 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="AppointmentCtrl" sidebar="false" applyHtmlTag="false" applyBodyTag="false" 
+    contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('AppointmentService', ['$q', function ($q) {
+            return {
+                getCustomerRecByCustomerId: function(customerId) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.getCustomerRecByCustomerId}', customerId);
+                }, 
+                saveAppointment: function(appointmentDetailJSON) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.saveAppointment}', appointmentDetailJSON);
+                }, 
+                getUnitById: function(unitId) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.getUnitById}', unitId);
+                },
+                deleteAppointmentById: function(appointmentRecId) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.deleteAppointmentById}', appointmentRecId);
+                },
+                getJobTypeList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.getJobTypeList}');
+                },
+                getTechnicianListWithAvailableHours: function(appointmentDetailJSON) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.getTechnicianListWithAvailableHours}', appointmentDetailJSON);
+                },
+                getTimeSlotAndStateForTechnician: function(timeSloatJSON) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.getTimeSlotAndStateForTechnician}', timeSloatJSON);
+                },
+                getEventSchedulingListByEventId: function(eventID) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.getEventSchedulingListByEventId}', eventID);
+                },
+                updateEventSchedulingRecord: function(eventID,eventSchedulingJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.updateEventSchedulingRecord}', eventID,eventSchedulingJson);
+                },
+                deleteEventScheduling : function(eventID) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.deleteEventScheduling}', eventID);
+                },
+                reshuffleSchedulingForNewEvent  : function(eventSchedulingJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.AppointmentCtrl.reshuffleSchedulingsForNewEvent}',eventSchedulingJson);
+                }     
+            };  
+        }]);  
+        
+        return Routing_AppJs_PK;  
+    }); 
+</apex:page>

@@ -1,0 +1,86 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="UnitOrderingCtrl" sidebar="false" applyHtmlTag="false" applyBodyTag="false" 
+    contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('UnitOrderingService', ['$q', function ($q) {
+            return {
+                getVendorsList: function(){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getVendorsList }');
+                },
+                setUnitPurchaseFlagForVendor: function(vendorId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.SetUnitPurchaseFlagForVendor }', vendorId);
+                },
+                getActiveOrderListForVendor: function(vendorId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getActiveOrderList }', vendorId);
+                },
+                applySortingOnActiveOrderList: function(vendorId, sortJson){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.applySortingOnActiveOrderList }', vendorId, sortJson);
+                },
+                getOrderHistoryForVendor: function(filterJson, sortJson){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.applySortingOnOrderHistoryList }', filterJson, sortJson);
+                },
+                getVendorDetails: function(vendorId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getVendorDetails }', vendorId);
+                },
+                removeOrderUnit: function(unitId, vendorId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.removeOrderUnit }', unitId, vendorId);
+                },
+                getUnitDetails: function(unitId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getUnitDetails }', unitId);
+                },
+                saveUnitDetails: function(jsonString){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.saveUnitDetails }', jsonString);
+                },
+                getUnitCategoryList: function(jsonString){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getUnitCategoryList }');
+                },
+                savePriceAndCost: function(unitId,jsonString){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.savePriceAndCost }',unitId, jsonString);
+                },
+                removePriceAndCost: function(unitId,priceAndItemId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.removePriceAndCost }',unitId, priceAndItemId);
+                },
+                getBasePriceAndCostByMMSId: function(makeId,modalId,subModelId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getBasePriceAndCostByMMSId }',makeId, modalId,subModelId);
+                },
+                getDefaultFactoryOptionsByUnitId : function(unitId,makeId,modalId,subModelId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getDefaultFactoryOptionsByUnitId }',unitId,makeId, modalId,subModelId);
+                },
+                getAllPurchaseTaxList: function(vendorPurchaseTaxId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getAllPurchaseTaxList }',vendorPurchaseTaxId);
+                },
+                createBulkUnits: function(unitId,noOfUnit){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.createBulkUnits }',unitId,noOfUnit);
+                },
+                getRequiredUnitListForOrder: function(){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getRequiredUnitListForOrder }');
+                },
+                removeOrderUnitExistOnCO: function(unitId, vendorId){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.removeOrderUnitExistOnCO }', unitId, vendorId);
+                }
+            };
+        }]);
+        
+        Routing_AppJs_PK.factory('UnitReceivingServices', ['$q', function ($q) {
+            return {
+                saveUnitReceiving: function(jsonString){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.receiveUnit}', jsonString);
+                },
+                validateUnitInvoiceNumberForQB: function(jsonUnit){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.validateUnitInvoiceNumberForQB }',jsonUnit);
+                },
+                checkDuplicateVIN: function(vin){
+                    return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.checkDuplicateVIN }', vin);
+                },
+                getVehicleSpecification: function(vin) {
+                	 return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.getVehicleSpecification }', vin);
+                },
+                setUnitsPurchaseTax: function(unitIdSetJson, purchaseTaxId) {
+                	 return RemoteActionService($q, '{!$RemoteAction.UnitOrderingCtrl.setUnitsPurchaseTax }', unitIdSetJson, purchaseTaxId);
+                }
+            };
+        }]);
+        
+        return Routing_AppJs_PK;
+    }); 
+</apex:page>

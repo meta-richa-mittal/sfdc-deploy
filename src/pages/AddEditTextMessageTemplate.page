@@ -1,0 +1,56 @@
+<apex:page sidebar="false" showheader="false" standardstylesheets="false" controller="GlobalController">
+<full-page-modal id-value="full-page-modal-window" class-value="bp-full-page-modal add-edit-text-message-template" close-action="AddEditF_TMT.closeAction()">
+   <div class="add-edit-text-template-container">
+       <h1 class="bp-first-letter-capitalize" ng-if = "!AddEditM_TMT.AddEditJsonList.Id">
+            New text template
+       </h1>
+       <h1 class="bp-first-letter-capitalize" ng-if = "AddEditM_TMT.AddEditJsonList.Id">
+            Edit {{AddEditM_TMT.AddEditJsonList.Name}}
+       </h1>
+       <div class="inner-section-container">
+           <div class="section">
+               <label>Template name</label>
+               <input ng-class = "{'bp-redborder' : AddEditM_TMT.isError }" type="text" placeholder="Template name" ng-model = "AddEditM_TMT.AddEditJsonList.Name"/>
+           </div>
+           <div class="section template-section">
+                <label>Message<span> type [ to select a variable</span></label>
+                <div class="use-cases">
+                    <div class="use-case">
+                      <div class="demo-input">
+                        <textarea ng-change = "AddEditF_TMT.updateTemplateVariableList()" class="show-custom-ui-textarea input" maxlength="5000"  placeholder="Type your message here" rows="9" ng-model = "AddEditM_TMT.AddEditJsonList.Message"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                <span class="template-counter" ng-bind = "AddEditF_TMT.bindTextAreaLength()"></span>
+            </div>
+            <footer>
+    			<div class="g-search-box-ctas"  ng-click="AddEditF_TMT.closeAction()">
+    				<button class="button subtle"  tabindex="2">Cancel</button>
+    			</div>
+    			<button class=" button primary" ng-disabled = "!AddEditM_TMT.AddEditJsonList.Name || !AddEditM_TMT.AddEditJsonList.Message"  ng-click="AddEditF_TMT.saveSMSTemplate()">Save</button>
+            </footer>
+            
+            <div class="desc-container">
+                <div class="c-label">
+                    <label>Variables</label>
+                </div>
+                <div class="desc-section">
+                    <ul>
+                        <li ng-repeat = "templateRec in AddEditM_TMT.defaultTemplateVariableList">
+                            <span class="var-label">{{templateRec.Label}}</span>
+                            <span class="var-desc" ng-if = "templateRec.Description"> = {{templateRec.Description}}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+       </div>
+   </div>
+   <div class="LoadingDiv" ng-show="AddEditM_TMT.isLoading">
+    <div class="loadingIconContainer">
+        <c:BPLoading />
+    </div>
+</div>
+
+
+</full-page-modal>  
+</apex:page>

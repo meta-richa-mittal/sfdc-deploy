@@ -1,0 +1,2 @@
+// Not is use. For Account_Type__c - trigger is AccountTypesTrigger and for Applicable_Taxes__c - trigger is ApplicableTaxTrigger
+trigger AccountTypeTrigger on Applicable_Taxes__c (before insert, before update) {}

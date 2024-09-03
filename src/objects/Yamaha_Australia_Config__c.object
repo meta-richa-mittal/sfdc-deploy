@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>Hierarchy</customSettingsType>
+    <description>This setting is used for Yamaha Australia vendor order export file.</description>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>Dealer_Code__c</fullName>
+        <description>Dealer’s Account Number with Yamaha. Max length is 6 characters.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Dealer’s Account Number with Yamaha. Max length is 6 characters.</inlineHelpText>
+        <label>Dealer Code</label> 
+        <length>6</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Sales_Person_Code__c</fullName>
+        <description>Dealer Sales Representative. Max length is 3 characters.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Dealer Sales Representative. Max length is 3 characters.</inlineHelpText>
+        <label>Sales Person Code</label>
+        <length>3</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>User_ID__c</fullName>
+        <description>User Id is used to log on to YDC system. Max length is 10 characters.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>User Id is used to log on to YDC system. Max length is 10 characters.</inlineHelpText>
+        <label>User ID</label>
+        <length>10</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>Yamaha Australia Config</label>
+    <visibility>Public</visibility>
+</CustomObject>

@@ -1,0 +1,186 @@
+<apex:page sidebar="false" showheader="false" standardstylesheets="false" controller="GlobalController">
+   <div class="content">
+      <div class="bp-subHeader bp-techScheduler-subHeader">
+         <div class="row container bp-top-header bp-tech-navigation-bar PB0">
+            <section class="bp-breadcrumb-container">
+               <nav class="bp-breadcrumb-nav">
+                  <ul>
+                     <li>
+                        <a ui-sref="homePage">Home</a>
+                     </li>
+                     <li>
+                        <a class="bp-breadcrumb-active">BRP lookup</a>
+                     </li>
+                  </ul>
+               </nav>
+            </section>
+            <h1 class="col-xs-6  bp-hasEyebrow M0 P0">BRP lookup</h1>
+            <div class="col-xs-11  bp-blue-navBar P0 bp-tech-nav">
+               <ul class="nav nav-tabs subHeaderMenuItem">
+                  <li ng-click="F_DealerLookup.getDealerData();M_DealerLookup.searchArticleNumber = '';M_DealerLookup.articleResult = null">
+                     <a ng-class="{'activeAdmin' : M_DealerLookup.selectedLookkupType=='DEALER'}">Dealer lookup</a>
+                  </li>
+                  <li ng-click="M_DealerLookup.selectedLookkupType = 'ARTICLE';M_DealerLookup.noArticleFound = false;M_DealerLookup.searchArticleNumber = '';M_DealerLookup.articleResult = null;F_DealerLookup.removeDealerSElected();">
+                     <a ng-class="{'activeAdmin' : M_DealerLookup.selectedLookkupType=='ARTICLE'}">Article lookup</a>
+                  </li>
+
+               </ul>
+            </div>
+         </div>
+      </div>
+      <div class="content-container search-dealer-container g-search-box">
+         <fieldset class="g-search-box-field brp-main-container" ng-show=" M_DealerLookup.selectedLookkupType=='DEALER' && M_DealerLookup.apiVersion == 'v2'">
+            <h4 class="compo-title">Search for a BRP dealer</h4>
+            <input type="text" id="GLAccount" class="g-search-box-input" placeholder="{{ 'Start_searching' | translate }}" autocomplete="off"
+               ng-focus="M_DealerLookup.showDropDown = true" ng-blur="M_DealerLookup.showDropDown = false; M_DealerLookup.currentDropDownIndex = -1"
+               ng-model="M_DealerLookup.searchDealerName" ng-keyup="F_DealerLookup.keyPressNavigationOnDropdownElements($event, 'dealerlookup', 'dealer', M_DealerLookup.dealerLookUpList)"
+            />
+            <i class="bp-icons bp-font-18 bp-blue-font stroke-3 dealer-search-icon" ng-if="!M_DealerLookup.selectedDealerLookUpJSON.Company" ng-click="M_DealerLookup.showDropDown = true">search</i>
+            <a class="dealer-close-search" ng-if="M_DealerLookup.selectedDealerLookUpJSON.Company" ng-click="F_DealerLookup.removeDealerSElected()">X</a>
+            <a class="g-search-box-button cross-icon" ng-click="M_DealerLookup.searchDealerName = ''" ng-class="{'remove-background-img': M_DealerLookup.selectedDealerLookUpJSON.CompanyName__c}"
+               ng-if="M_DealerLookup.selectedDealerLookUpJSON.CompanyName__c">X</a>
+            <div class="g-search-box-droplet" id="dealerlookup" ng-class="{'active': M_DealerLookup.showDropDown}">
+               <a ng-repeat="dealerLookUpRec in M_DealerLookup.dealerLookUpList | filter:M_DealerLookup.searchDealerName" ng-class="{'selected-row': $index == M_DealerLookup.currentDropDownIndex}"
+                  id="dealer_{{$index}}" ng-mousedown="F_DealerLookup.selectDealerLookUp(dealerLookUpRec)">
+                  <strong>{{dealerLookUpRec.Company}}</strong>
+                  <p>
+                     <span>{{dealerLookUpRec.AddressLine1}}</span>
+                     <span>-{{dealerLookUpRec.City}}</span>
+                     <span>{{dealerLookUpRec.Postcode}}</span>
+                     <span>{{dealerLookUpRec.StateOrProvince}}</span>
+                     <span>{{dealerLookUpRec.Country}}</span>
+                  </p>
+               </a>
+            </div>
+            <p class="no-article" ng-if="M_DealerLookup.searchDealerName && (M_DealerLookup.dealerLookUpList|filter:M_DealerLookup.searchDealerName).length == 0">
+            No results for {{M_DealerLookup.searchDealerName}}</p>
+         </fieldset>
+         <fieldset class="g-search-box-field brp-main-container" ng-show=" M_DealerLookup.selectedLookkupType=='DEALER' && M_DealerLookup.apiVersion == 'v4'">
+            <h4 class="compo-title">Search for a BRP dealer</h4>
+            <input type="text" class="g-search-box-input" placeholder="Search for a dealer" autocomplete="off" ng-blur="F_DealerLookup.getDealerDataOnBlur()"
+               ng-keyup="F_DealerLookup.keyPressGetDealerData($event)" ng-model="M_DealerLookup.searchDealer" maxlength="10" ng-disabled="M_DealerLookup.selectedDealerLookUpJSON.Company"/>
+            <i class="bp-icons bp-font-18 bp-blue-font stroke-3 dealer-search-icon" ng-if="!M_DealerLookup.selectedDealerLookUpJSON.Company" ng-click="F_DealerLookup.getDealerData()">search</i>
+            <a class="dealer-close-search" ng-if="M_DealerLookup.selectedDealerLookUpJSON.Company" ng-click="F_DealerLookup.removeDealerSElected()">X</a>
+            <p class="no-article" ng-if="M_DealerLookup.searchDealer && M_DealerLookup.noDealerFound"> No results for {{M_DealerLookup.searchDealerName}}</p>
+         </fieldset>
+         <fieldset class="g-search-box-field brp-main-container" ng-show=" M_DealerLookup.selectedLookkupType=='ARTICLE'">
+            <h4 class="compo-title">Search for a BRP article</h4>
+            <input type="text" class="g-search-box-input" placeholder="Search for an article" autocomplete="off" ng-blur="F_DealerLookup.getArticleDataOnBlur()"
+               ng-keyup="F_DealerLookup.keyPressGetArticleData($event)" ng-model="M_DealerLookup.searchArticleNumber" />
+            <i class="bp-icons bp-font-18 bp-blue-font stroke-3 dealer-search-icon" ng-if="!M_DealerLookup.articleResult" ng-click="F_DealerLookup.getArticleData()">search</i>
+            <a class="dealer-close-search" ng-if="M_DealerLookup.articleResult" ng-click="M_DealerLookup.articleResult = null;M_DealerLookup.searchArticleNumber = '';M_DealerLookup.previousSearchArticleNumber = ''">X</a>
+            <p class="no-article" ng-if="M_DealerLookup.searchArticleNumber && M_DealerLookup.noArticleFound"> No results for {{M_DealerLookup.searchArticleNumber}}</p>
+         </fieldset>
+      </div>
+      <div ng-if="M_DealerLookup.articleResult" class="grid g-result-container content-container brp-main-container">
+         <div class="grid-row">
+            <section class="grid-col m-col-12 t-col-6 brp-section-container">
+               <div class="grid-row no-bdr">
+                  <div class="grid-col m-col-3">
+                  <strong>Article #</strong>
+                  </div>
+                  <div class="grid-col m-col-9">
+                  <span class="bp-bold-font">{{::M_DealerLookup.articleResult.article_no}}</span>
+               </div>
+               </div>
+               <div class="grid-row no-bdr">
+                  <div class="grid-col m-col-3">
+                  <strong>Published</strong>
+                  </div>
+                  <div class="grid-col m-col-9">
+                  <span>{{::M_DealerLookup.articleResult.last_publish_date}}</span>
+               </div>
+               </div>
+               <div class="grid-row no-bdr">
+                  <div class="grid-col m-col-3">
+                  <strong>Description</strong>
+                  </div>
+                  <div class="grid-col m-col-9">
+                  <span>{{::M_DealerLookup.articleResult.article_descr}}</span>
+               </div>
+               </div>
+               <div class="grid-row no-bdr">
+                  <div class="grid-col m-col-3">
+                     &nbsp;
+                  </div>
+                  <div class="grid-col m-col-9">
+                     <button class="bp-btn bp-btn-normal bp-btn-small view-article" ng-click="F_DealerLookup.openPdfInNewWindow(M_DealerLookup.articleResult.article_no)">View article</button>
+                  </div>
+               </div>
+            </section>
+         </div>
+      </div>
+
+
+      <div ng-if="M_DealerLookup.selectedDealerLookUpJSON.Company" class="grid g-result-container content-container brp-main-container">
+         <div class="grid-row">
+            <h4 class="compo-title grid-col m-col-12">{{::M_DealerLookup.selectedDealerLookUpJSON.Company}}</h4>
+            <section class="grid-col m-col-12 t-col-6 brp-section-container">
+               <div class="grid-col m-col-6">
+                  <strong>Party ID</strong>
+                  <span class="bp-bold-font">{{::M_DealerLookup.selectedDealerLookUpJSON.PartyId}}</span>
+               </div>
+               <div class="grid-col m-col-6">
+                  <strong>Telephone</strong>
+                  <span>{{::M_DealerLookup.selectedDealerLookUpJSON.Telephone}}</span>
+               </div>
+               <div class="grid-col m-col-6">
+                  <strong>Fax</strong>
+                  <span>{{::M_DealerLookup.selectedDealerLookUpJSON.Fax}}</span>
+               </div>
+               <div class="grid-col m-col-6">
+                  <strong>Website</strong>
+                  <a class="bp-blue-font bp-bold-font">{{::M_DealerLookup.selectedDealerLookUpJSON.Website}}</a>
+               </div>
+               <div class="grid-col m-col-6">
+                  <strong>Email</strong>
+                  <a class="bp-blue-font bp-bold-font">{{::M_DealerLookup.selectedDealerLookUpJSON.Email}}</a>
+               </div>
+            </section>
+            <section class="grid-col m-col-12 t-col-6  brp-section-container">
+               <div class="grid-col m-col-6">
+                  <strong>Address line 1</strong>
+                  <span>{{::M_DealerLookup.selectedDealerLookUpJSON.AddressLine1}}</span>
+               </div>
+               <div class="grid-col m-col-6">
+                  <strong>Address line 2</strong>
+                  <span>{{::M_DealerLookup.selectedDealerLookUpJSON.AddressLine2}}</span>
+               </div>
+               <div class="grid-col m-col-6">
+                  <strong>City</strong>
+                  <span>{{::M_DealerLookup.selectedDealerLookUpJSON.City}}</span>
+               </div>
+               <div class="grid-col m-col-6">
+                  <strong>Postcode</strong>
+                  <span>{{::M_DealerLookup.selectedDealerLookUpJSON.Postcode}}</span>
+               </div>
+               <div class="grid-col m-col-6">
+                  <strong>State or Province</strong>
+                  <span>{{::M_DealerLookup.selectedDealerLookUpJSON.StateOrProvince}}</span>
+               </div>
+               <div class="grid-col m-col-6">
+                  <strong>Country ID</strong>
+                  <span>{{::M_DealerLookup.selectedDealerLookUpJSON.Country}}</span>
+               </div>
+            </section>
+
+            <hr class="line-break no-margin" />
+            <h4 class="compo-title grid-col m-col-12 product-title">Product Lines</h4>
+            <section class="grid-col m-col-12 t-col-6  brp-section-container">
+               <ul>
+                  <li ng-repeat="productRec in M_DealerLookup.selectedDealerLookUpJSON.ProductLineList">
+                     <span>- {{::productRec.Name}}</span>
+                  </li>
+               </ul>
+            </section>
+
+
+         </div>
+      </div>
+      <div class="LoadingDiv" ng-if="M_DealerLookup.isLoading">
+         <div class="loadingIconContainer">
+            <c:BPLoading />
+         </div>
+      </div>
+   </div>
+</apex:page>
