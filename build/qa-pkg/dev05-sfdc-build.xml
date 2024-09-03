@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="CICD JOB - Validate Deployment, Run APEX Tests and do SFDC Deployment" basedir=".." xmlns:sf="antlib:com.salesforce">
+
+	<import file="../build.xml"/>
+	<loadproperties srcFile="qa-pkg/qa-build.properties"/>
+
+  	<record name="logfile.txt" action="start" append="false" />
+	<target name="deployOnly" depends="copySFDCToDeploy">
+		<echo level="info">${sfdc.deploy.msg}</echo>
+		<sf:deploy
+			username="${env.SF_USERNAME}"
+			password="${env.SF_PASSWORD}"
+			serverurl="${sf.serverurl}"
+			pollWaitMillis="${sf.pollWaitMillis}"
+			deployRoot="${SFDC_changesToDeploy}"
+			ignoreWarnings="true">
+		</sf:deploy>
+	</target>
+  	<record name="logfile.txt" action="stop"/>
+
+	<target name="copySFDCToDeploy" depends="cleanSFDCDeploy">
+		<echo level="info">${copy.sfdc.application.msg}</echo>
+		<sync todir="${SFDC_changesToDeploy}" verbose="true">
+			<fileset dir="${env.WORKSPACE}/src/" includes="**" />
+		</sync>
+		<echo level="info">${copy.success.msg}</echo>
+	</target>
+
+	<target name="cleanSFDCDeploy" depends="deployInformation">
+		<echo level="info">${clean.sfdc.msg}</echo>
+		<delete failonerror="false">
+			<fileset dir="${SFDC_changesToDeploy}" includes="**/*" />
+		</delete>
+		<mkdir dir="${SFDC_changesToDeploy}"/>
+	</target>
+</project>

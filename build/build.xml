@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Blackpurl CICD Project - Retrieve and Deploy SFDC metadata with GIT" basedir=".." xmlns:sf="antlib:com.salesforce" default="deployInformation">
+
+	<property environment="env"/>
+	<property file="build.properties"/>
+
+	<taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce">
+        <classpath>
+            <pathelement location="${env.WORKSPACE}/${ant.sf.lib.path}" />        	
+        </classpath>
+    </taskdef>
+	
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<pathelement location="${env.WORKSPACE}/${ant.lib.path}" />
+		</classpath>
+	</taskdef>
+
+	<property name="SFDC_changesToDeploy" value="${env.WORKSPACE}/build/deploy/src" />
+	<property name="SR_changesToDeploy" value="${env.WORKSPACE}/build/deploy/src" />
+	<property name="SR_ZIP_FOLDER" value="${env.WORKSPACE}/ng_blackpurl_min" />
+
+	<property name="SR_APPLICATION" value="${SR_changesToDeploy}/staticresources/Application.zip" />
+	<property name="SR_APPLICATION_IMAGES" value="${SR_changesToDeploy}/staticresources/Application_Images.zip" />
+	<property name="SR_ASSETS" value="${SR_changesToDeploy}/staticresources/Assests.zip" />
+	<property name="SR_LOCALE" value="${SR_changesToDeploy}/staticresources/Locale.zip" />
+
+	<target name="deployInformation" depends="bp_banner">
+		<echo level="info"> Running Job         - ${env.JOB_NAME} - ${env.BUILD_NUMBER}</echo>
+		<echo level="info"> Using Git branch    - ${env.BRANCH_NAME}</echo>
+		<echo level="info"> Running Number      - ${env.run_number}</echo>
+		<echo level="info"> Action Run by    	- ${env.RUN_BY}</echo>
+		<echo level="info"> SFDC User Name   	- ${env.SF_USERNAME}</echo>
+		<echo level="info"> Test Only Mode   	- ${sf.checkOnly}</echo>
+		<echo level="info"> Apex Test Level  	- ${sf.testLevel}</echo>
+		<echo level="info"> SF Max Poll      	- ${sf.maxPoll}</echo>
+		<echo level="info"> SF Poll Wait     	- ${sf.pollWaitMillis}</echo>
+	</target>
+
+	<target name="bp_banner">
+		<echo level="info">╔═══════════════════════════════════════════════════════════╗</echo>
+		<echo level="info">║   ____  _        _    ____ _  ______  _   _ ____  _       ║</echo>
+		<echo level="info">║  | __ )| |      / \  / ___| |/ /  _ \| | | |  _ \| |      ║</echo>
+		<echo level="info">║  |  _ \| |     / _ \| |   | ' /| |_) | | | | |_) | |      ║</echo>
+		<echo level="info">║  | |_) | |___ / ___ \ |___| . \|  __/| |_| |  _ /| |___   ║</echo>
+		<echo level="info">║  |____/|_____/_/   \_\____|_|\_\_|    \___/|_| \_\_____|  ║</echo>
+		<echo level="info">║                                                           ║</echo>
+		<echo level="info">║    | Continuous Intergration | Continuous Delivery |      ║</echo>
+		<echo level="info">║                      by Blackpurl                         ║</echo>
+		<echo level="info">╚═══════════════════════════════════════════════════════════╝</echo>
+	</target>
+
+	<target name="success_banner">
+		<echo level="info">╔═════════════════════════════════════════════════════════════════╗</echo>
+		<echo level="info">║  _____ _   _ _____  _____  _____ _____ ___________ _   _ _      ║</echo>
+		<echo level="info">║ /  ___| | | /  __ \/  __ \|  ___/  ___/  ___|  ___| | | | |     ║</echo>
+		<echo level="info">║ \ `--.| | | | /  \/| /  \/| |__ \ `--.\ `--.| |_  | | | | |     ║</echo>
+		<echo level="info">║  `--. \ | | | |    | |    |  __| `--. \`--. \  _| | | | | |     ║</echo>
+		<echo level="info">║ /\__/ / |_| | \__/\| \__/\| |___/\__/ /\__/ / |   | |_| | |____ ║</echo>
+		<echo level="info">║ \____/ \___/ \____/ \____/\____/\____/\____/\_|    \___/\_____/ ║</echo>
+		<echo level="info">║                                                                 ║</echo>
+		<echo level="info">╚═════════════════════════════════════════════════════════════════╝</echo>
+	</target>
+
+	<target name="failed_banner">
+		<echo level="info">╔═══════════════════════════════════════════════╗</echo>
+		<echo level="info">║	______ ___  _____ _      ___________  	   ║</echo>
+		<echo level="info">║	|  ___/ _ \|_   _| |    |  ___|  _  \  	   ║</echo>
+		<echo level="info">║	| |_ / /_\ \ | | | |    | |__ | | | | 	   ║</echo>
+		<echo level="info">║	|  _||  _  | | | | |    |  __|| | | | 	   ║</echo>
+		<echo level="info">║	| |  | | | |_| |_| |____| |___| |/ /  	   ║</echo>
+		<echo level="info">║	\_|  \_| |_/\___/\_____/\____/|___/        ║</echo>
+		<echo level="info">║                                               ║</echo>
+		<echo level="info">╚═══════════════════════════════════════════════╝</echo>
+	</target>
+
+	<!-- Writes a Default package.xml file for full deploy -->
+	<target name="generateDefaultPackageXML">
+		<echo file="${default.package.xml.path}/src/package.xml">
+			<![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+			<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+				<types>
+					<members>*</members>
+					<name>ApexClass</name>
+				</types>
+				<types>
+					<members>*</members>
+					<name>ApexComponent</name>
+				</types>
+				<types>
+					<members>*</members>
+					<name>ApexPage</name>
+				</types>
+				<types>
+					<members>*</members>
+					<name>ApexTrigger</name>
+				</types>
+				<types>
+					<members>BlackPurl</members>
+					<name>CustomApplication</name>
+				</types>
+				<types>
+					<members>*</members>
+					<name>CustomLabels</name>
+				</types>
+				<types>
+					<members>*</members>
+					<name>CustomMetadata</name>
+				</types>
+				<types>
+					<members>*</members>
+					<members>Account</members>
+					<members>Activity</members>
+					<members>Activity_History_Template__mdt</members>
+					<members>Contact</members>
+					<members>Country_Area_Code__mdt</members>
+					<members>Event</members>
+					<members>HomeSearch_Grid_Column__mdt</members>
+					<members>HomeSearch_Setting__mdt</members>
+					<members>Reconciliation_Payment__mdt</members>
+					<members>Search_Configuration__mdt</members>
+					<members>Summary_Block__mdt</members>
+					<members>Summary_Card__mdt</members>
+					<members>User</members>
+					<name>CustomObject</name>
+				</types>
+				<types>
+					<members>*</members>
+					<name>CustomTab</name>
+				</types>
+				<types>
+					<members>Admin</members>
+					<name>Profile</name>
+				</types>
+				<types>
+					<members>*</members>
+					<name>StaticResource</name>
+				</types>
+				<types>
+					<members>Account</members>
+					<members>CO_Deposit__c</members>
+					<members>CO_Invoice_Header__c</members>
+					<members>CO_Invoice_Payment__c</members>
+					<members>CO_Line_Item__c</members>
+					<members>Customer_Owned_Unit__c</members>
+					<members>Labour_Code__c</members>
+					<members>Service_Order_Header__c</members>
+					<members>Vendor_Order_Line_Item__c</members>
+					<name>Workflow</name>
+				</types>
+				<version>38.0</version>
+			</Package>]]>
+       </echo>
+	</target>
+
+
+<!-- To clean underneath-->
+	<target name="validateOnly">
+		<mkdir dir="${SFDC_changesToDeploy}"/>
+		<echo level="info">Cleaning last changes in ${SFDC_changesToDeploy} folder.</echo>
+		<delete>
+			<fileset dir="${SFDC_changesToDeploy}">
+				<include name="**/*"/>
+			</fileset>
+		</delete>
+		<echo level="info">Copying latest changes to ${SFDC_changesToDeploy} folder.</echo>
+		<copy todir="${SFDC_changesToDeploy}">
+			<fileset dir="${env.WORKSPACE}/src"/>
+		</copy>
+		<echo level="info">Copied data successfully</echo>
+	</target>
+
+	<target name="exampleCommands">
+		<echo level="info">Copied data successfully</echo>
+		<exec executable="/bin/sh" outputproperty="build_workspace">
+			<arg value="-c" />
+			<arg value="pwd" />
+		</exec>
+		<echo message="WORKSPACE: ${env.WORKSPACE}"/>
+		<echo message="BUILD_LABEL: ${BUILD_LABEL}"/>
+		<echo message="BUILD_NUMBER: ${env.BUILD_NUMBER}"/>
+		<exec executable="sh">
+			<arg value="ls -lrt" />
+		</exec>
+	</target>
+
+	<target name="fetchChangesFull">
+		<mkdir dir="${SFDC_changesToDeploy}"/>
+		<echo level="info">Cleaning last changes in ${SFDC_changesToDeploy} folder.</echo>
+		<delete>
+			<fileset dir="${SFDC_changesToDeploy}">
+				<include name="**/*"/>
+			</fileset>
+		</delete>
+		<echo level="info">Copying latest changes to ${SFDC_changesToDeploy} folder.</echo>
+		<copy todir="${SFDC_changesToDeploy}">
+			<fileset dir="${env.WORKSPACE}/src"/>
+		</copy>
+		<echo level="info">Copied data successfully</echo>
+	</target>
+
+	<target name="deployEmptyCheckOnly">
+		<echo level="info">Testing the deploy</echo>
+		<sf:deploy
+          checkOnly="true"
+          logType="Debugonly"
+          username="${sfdc.username}"
+          password="${sfdc.password}"
+          serverurl="${sfdc.serverurl}"
+          deployRoot="${basedir}/src"
+          pollWaitMillis="${sfdc.pollWaitMillis}"
+          maxPoll="${sfdc.maxPoll}" 
+          testLevel="NoTestRun"
+          allowMissingFiles="false"
+          autoUpdatePackage="false"
+          rollbackOnError="true"
+          ignoreWarnings="true"/>
+	</target>
+
+	<target name="dir.check">
+		<echo>Directory path check: ${directory}</echo>
+		<condition property="dir.exists">
+			<available file="${directory}" type="dir"/>
+		</condition>
+	</target>
+</project>
