@@ -1,4 +1,0 @@
-<apex:page controller="AutomatedPriceFileErrorLogExportCtrl" contentType="text/csv#Error Log.csv" cache="true" showChat="false" 
-        showHeader="false" sidebar="false" applyBodyTag="false" applyHtmlTag="false" >
-    <apex:outputText value="{!fileContent}" escape="false"/>
-</apex:page>
