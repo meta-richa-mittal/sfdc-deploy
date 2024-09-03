@@ -4,7 +4,6 @@
 	<import file="../build.xml"/>
 	<loadproperties srcFile="qa-pkg/qa-build.properties"/>
 
-  	<record name="logfile.txt" action="start" append="false" />
 	<target name="deployOnly" depends="copySFDCToDeploy">
 		<echo level="info">${sfdc.deploy.msg}</echo>
 		<sf:deploy
@@ -16,7 +15,6 @@
 			ignoreWarnings="true">
 		</sf:deploy>
 	</target>
-  	<record name="logfile.txt" action="stop"/>
 
 	<target name="copySFDCToDeploy" depends="cleanSFDCDeploy">
 		<echo level="info">${copy.sfdc.application.msg}</echo>
