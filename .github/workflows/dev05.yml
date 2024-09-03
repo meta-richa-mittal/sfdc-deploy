@@ -41,7 +41,7 @@ jobs:
         run: echo "result=hello" >> "$GITHUB_OUTPUT"
       - name: Build with Ant
         id: sfdc_deploy_step
-        run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly >> "$GITHUB_OUTPUT"
+        run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly
             #echo "result1=${{ job.status }}" >> "$GITHUB_OUTPUT"
   Post_Slack_Message:
       if: ${{ success() || failure() }}
