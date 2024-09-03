@@ -41,7 +41,7 @@ jobs:
         run: echo "result=hello" >> "$GITHUB_OUTPUT"
       - name: Build with Ant
         id: sfdc_deploy_step
-        run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly
+        run: (ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly 2>&1) | tee /tmp/logs.out
             #echo "result1=${{ job.status }}" >> "$GITHUB_OUTPUT"
   Post_Slack_Message:
       if: ${{ success() || failure() }}
@@ -53,7 +53,7 @@ jobs:
           uses: slackapi/slack-github-action@v1.27.0
           with:
             channel-id: 'C07KLJKAF6G'
-            slack-message: "GitHub build result: ${{needs.Dev05_Org_Refresh.outputs.output1}} - ${{needs.Dev05_Org_Refresh.outputs.output2}} - ${{ job.status }}"
+            slack-message: "GitHub build result: ${{needs.Dev05_Org_Refresh.outputs.output1}} - ${{needs.Dev05_Org_Refresh.outputs.output2}} - ${{ job.status }} /tmp/gradle.out"
         #- env:
           #OUTPUT1: ${{needs.job1.outputs.output1}}
           #run: echo "$OUTPUT1"
