@@ -1,0 +1,60 @@
+# This workflow will build a Java project with Ant
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-ant
+
+name: 9. Dev05 Org Refresh
+
+on:
+  workflow_dispatch:
+
+env:
+  SF_USERNAME: ${{ vars.DEV05_USERNAME }}
+  SF_PASSWORD: ${{ secrets.DEV05_PASSWORD }}
+  WORKSPACE: ${{ github.workspace }}
+  JOB_NAME: ${{ github.job }}
+  BUILD_NUMBER : ${{ github.run_number }}
+  BRANCH_NAME: ${{ github.ref }}
+  RUN_BY: ${{ github.actor }}
+  SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+jobs:
+  Dev05_Org_Refresh:
+    name: Dev05 Org Refresh
+    runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.test_step.outputs.result }}
+      output2: ${{ steps.sfdc_deploy_step.outputs.result1 }}
+    steps:
+      - name: Valdiate Branch
+        if: env.BRANCH_NAME != 'refs/heads/develop'
+        run: |
+          echo "Branch Name is ${{ env.BRANCH_NAME }}. Please select develop branch to deploy this."
+          exit 1
+      - name: Checkout Code from Github
+        uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      - name: Test Output
+        id: test_step
+        run: echo "result=hello" >> "$GITHUB_OUTPUT"
+      - name: Build with Ant
+        id: sfdc_deploy_step
+        run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly >> "$GITHUB_OUTPUT"
+            #echo "result1=${{ job.status }}" >> "$GITHUB_OUTPUT"
+  Post_Slack_Message:
+      if: ${{ success() || failure() }}
+      needs: Dev05_Org_Refresh
+      name: Post to a Slack channel
+      runs-on: ubuntu-latest
+      steps:
+        - name: Slack
+          uses: slackapi/slack-github-action@v1.27.0
+          with:
+            channel-id: 'C07KLJKAF6G'
+            slack-message: "GitHub build result: ${{needs.Dev05_Org_Refresh.outputs.output1}} - ${{needs.Dev05_Org_Refresh.outputs.output2}} - ${{ job.status }}"
+        #- env:
+          #OUTPUT1: ${{needs.job1.outputs.output1}}
+          #run: echo "$OUTPUT1"
+            
