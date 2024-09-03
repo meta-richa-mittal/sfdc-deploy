@@ -25,9 +25,9 @@ jobs:
       output2: ${{ steps.sfdc_deploy_step.outputs.result1 }}
     steps:
       - name: Valdiate Branch
-        if: env.BRANCH_NAME != 'refs/heads/develop'
+        if: env.BRANCH_NAME != 'refs/heads/main'
         run: |
-          echo "Branch Name is ${{ env.BRANCH_NAME }}. Please select develop branch to deploy this."
+          echo "Branch Name is ${{ env.BRANCH_NAME }}. Please select main branch to deploy this."
           exit 1
       - name: Checkout Code from Github
         uses: actions/checkout@v3
