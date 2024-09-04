@@ -60,6 +60,12 @@ jobs:
           with:
             channel-id: 'C07KLJKAF6G'
             slack-message: "GitHub build result: ${{needs.Dev05_Org_Refresh.outputs.output1}} - ${{needs.Dev05_Org_Refresh.outputs.output2}} - ${{ job.status }} /tmp/logs.out"
+        - name: Upload to slack step
+          uses: adrey/slack-file-upload-action@master
+          with:
+            token: SLACK_BOT_TOKEN
+            path: log.txt
+            channel: 'C07KLJKAF6G'
         #- env:
           #OUTPUT1: ${{needs.job1.outputs.output1}}
           #run: echo "$OUTPUT1"
