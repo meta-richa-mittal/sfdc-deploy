@@ -45,6 +45,7 @@ jobs:
             #echo "result1=${{ job.status }}" >> "$GITHUB_OUTPUT"
       - name: Upload log job 1
         uses: actions/upload-artifact@v4
+        if: ${{ success() || failure() }}
         with:
           name: log_deploy
           path: log.txt
