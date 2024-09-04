@@ -41,8 +41,13 @@ jobs:
         run: echo "result=hello" >> "$GITHUB_OUTPUT"
       - name: Build with Ant
         id: sfdc_deploy_step
-        run: (ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly 2>&1) | tee /tmp/logs.out
+        run: (ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly) > log.txt
             #echo "result1=${{ job.status }}" >> "$GITHUB_OUTPUT"
+      - name: Upload log job 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: log_deploy
+          path: log.txt
   Post_Slack_Message:
       if: ${{ success() || failure() }}
       needs: Dev05_Org_Refresh
