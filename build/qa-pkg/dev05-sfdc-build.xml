@@ -32,4 +32,5 @@
 		</delete>
 		<mkdir dir="${SFDC_changesToDeploy}"/>
 	</target>
+	<record name="logfile.txt" action="start" />
 </project>
