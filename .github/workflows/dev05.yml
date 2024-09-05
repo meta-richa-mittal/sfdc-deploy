@@ -21,8 +21,7 @@ jobs:
     name: Dev05 Org Refresh
     runs-on: ubuntu-latest
     outputs:
-      output1: ${{ steps.test_step.outputs.result }}
-      output2: ${{ steps.sfdc_deploy_step.outputs.result1 }}
+      deploy_status: ${{ steps.test_step.outputs.deploy_status }}
     steps:
       - name: Valdiate Branch
         if: env.BRANCH_NAME != 'refs/heads/main'
@@ -36,13 +35,10 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Test Output
-        id: test_step
-        run: echo "result=hello" >> "$GITHUB_OUTPUT"
       - name: Build with Ant
         id: sfdc_deploy_step
         run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly
-            #echo "result1=${{ job.status }}" >> "$GITHUB_OUTPUT"
+            echo "deploy_status=${{ job.status }}" >> "$GITHUB_OUTPUT"
       - name: Upload log job 1
         uses: actions/upload-artifact@v4
         if: ${{ success() || failure() }}
@@ -59,7 +55,7 @@ jobs:
           uses: slackapi/slack-github-action@v1.27.0
           with:
             channel-id: 'C07KLJKAF6G'
-            slack-message: "GitHub build result: ${{needs.Dev05_Org_Refresh.outputs.output1}} - ${{needs.Dev05_Org_Refresh.outputs.output2}} - ${{ job.status }} /tmp/logs.out"
+            slack-message: "GitHub build result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}} - ${{needs.Dev05_Org_Refresh.outputs.output2}} - ${{ job.status }} /tmp/logs.out"
         - name: Upload to slack step
           uses: adrey/slack-file-upload-action@master
           with:
