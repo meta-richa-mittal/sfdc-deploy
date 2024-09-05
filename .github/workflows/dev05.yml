@@ -1,4 +1,4 @@
-# This workflow will build a Java project with Ant
+ # This workflow will build a Java project with Ant
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-ant
 
 name: Dev05 Org Refresh
@@ -55,16 +55,30 @@ jobs:
       name: Post to a Slack channel
       runs-on: ubuntu-latest
       steps:
+        #- name: Download log job 1
+          #uses: actions/download-artifact@v4
+          #with:
+            #name: log_deploy
+        - name: Read log file
+          id: read_file
+          shell: bash
+          run: |
+            #value=`cat logfile.txt`
+            #echo The result is $value
+            echo "artifact='$(yarn run logfile.txt)'" >> "$GITHUB_OUTPUT"
+            #echo "file_content=$value" >> $GITHUB_OUTPUT
         - name: Execute Javascript
           uses: amochkin/action-javascript@v1
           id: ex_js
           with:
+            input_1: ${{ steps.read_file.outputs.artifact }}
             js: |
-              var a = 5;
+              /*var a = 5;
               for(var i=0;i<5;i++) {
                 a++;
-              }
-              console.log(a);
+              }*/
+              console.log(input_1);
+              
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
           with:
