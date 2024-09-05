@@ -65,7 +65,8 @@ jobs:
           run: |
             #value=`cat logfile.txt`
             #echo The result is $value
-            echo "artifact='$(yarn run logfile.txt)'" >> "$GITHUB_OUTPUT"
+            echo "file_content=`cat logfile.txt`" >> "$GITHUB_OUTPUT"
+            #echo "artifact='$(yarn run logfile.txt)'" >> "$GITHUB_OUTPUT"
             #echo "file_content=$value" >> $GITHUB_OUTPUT
         - name: Execute Javascript
           uses: amochkin/action-javascript@v1
