@@ -70,11 +70,7 @@ jobs:
           env:
             key_value: ${{ steps.read_file.outputs.contents }}
           run: |
-            $values = $key_value -split "\n"
-            foreach ($value in $values)
-            {
-              echo $value
-            }
+            echo $key_value
         - name: Slack Success Msg
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status == 'success' }}
           uses: slackapi/slack-github-action@v1.27.0
