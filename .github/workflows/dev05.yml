@@ -64,8 +64,8 @@ jobs:
           uses: andstor/file-reader-action@v1
           with:
             path: "logfile.txt"
-        - name: Display content
-          run: echo "${{ steps.read_file.outputs.contents }}"
+        #- name: Display content
+          #run: echo "${{ steps.read_file.outputs.contents }}"
         #- name: Perform operation
           #env:
             #key_value: ${{ steps.read_file.outputs.contents }}
@@ -78,8 +78,8 @@ jobs:
             string: ${{ steps.read_file.outputs.contents }}
             start: "*********** DEPLOYMENT FAILED ***********"
             end: "*********** DEPLOYMENT FAILED ***********"
-        - name: release package
-          run: echo "${{ steps.split2.outputs.substring }}"
+        #- name: release package
+          #run: echo "${{ steps.split2.outputs.substring }}"
         - name: Slack Success Msg
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status == 'success' }}
           uses: slackapi/slack-github-action@v1.27.0
@@ -91,5 +91,5 @@ jobs:
           uses: slackapi/slack-github-action@v1.27.0
           with:
             channel-id: ${{ vars.SLACK_CHANNEL_ID }}
-            slack-message: "GitHub Build Result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}\nFailure Reason: ${{ steps.read_file.outputs.contents }}"
+            slack-message: "GitHub Build Result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}\nFailure Reason: ${{ steps.split2.outputs.substring }}"
             
