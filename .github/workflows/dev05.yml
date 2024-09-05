@@ -21,7 +21,7 @@ jobs:
     name: Dev05 Org Refresh
     runs-on: ubuntu-latest
     outputs:
-      deploy_status: ${{ steps.sfdc_deploy_step.outputs.deploy_status }}
+      output1: ${{ steps.sfdc_deploy_step.outputs.deploy_status }}
     steps:
       - name: Valdiate Branch
         if: env.BRANCH_NAME != 'refs/heads/main'
@@ -38,7 +38,7 @@ jobs:
       - name: Build with Ant
         id: sfdc_deploy_step
         run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly
-            echo "deploy_status=${{ job.status }}" >> "$GITHUB_OUTPUT"
+            echo "output1=${{ job.status }}" >> "$GITHUB_OUTPUT"
       - name: Upload log job 1
         uses: actions/upload-artifact@v4
         if: ${{ success() || failure() }}
@@ -55,5 +55,5 @@ jobs:
           uses: slackapi/slack-github-action@v1.27.0
           with:
             channel-id: 'C07KLJKAF6G'
-            slack-message: "GitHub build result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}"
+            slack-message: "GitHub build result: ${{needs.Dev05_Org_Refresh.outputs.output1}}"
             
