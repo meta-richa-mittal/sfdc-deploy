@@ -63,30 +63,21 @@ jobs:
           id: read_file
           uses: andstor/file-reader-action@v1
           with:
-            path: "logfile.txt"
-        #- name: Display content
-          #run: echo "${{ steps.read_file.outputs.contents }}"
-        #- name: Perform operation
-          #env:
-            #key_value: ${{ steps.read_file.outputs.contents }}
-          #run: |
-            #echo $key_value
-        - name: Split
+            path: "logfile.txt"]
+        - name: Search for smallest error
           uses: meta-richa-mittal/get-deploy-error@v1.9
           id: split2
           with:
             string: ${{ steps.read_file.outputs.contents }}
             start: "*********** DEPLOYMENT FAILED ***********"
             end: "*********** DEPLOYMENT FAILED ***********"
-        #- name: release package
-          #run: echo "${{ steps.split2.outputs.substring }}"
-        - name: Slack Success Msg
+        - name: Slack success notification
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status == 'success' }}
           uses: slackapi/slack-github-action@v1.27.0
           with:
             channel-id: ${{ vars.SLACK_CHANNEL_ID }}
             slack-message: "GitHub Build Result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}"
-        - name: Slack Failure 
+        - name: Slack failure notification
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status != 'success' }}
           uses: slackapi/slack-github-action@v1.27.0
           with:
