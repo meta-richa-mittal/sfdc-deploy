@@ -61,6 +61,9 @@ jobs:
             name: log_deploy
         - name: Read log file
           run: ls -R logfile.txt
+               while IFS= read -r line; do
+               echo "Text read from file - $line"
+               done < logfile.txt
           #id: read_file
           #shell: bash
           #run: |
