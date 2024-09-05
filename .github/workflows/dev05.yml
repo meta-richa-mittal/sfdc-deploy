@@ -21,7 +21,7 @@ jobs:
     name: Dev05 Org Refresh
     runs-on: ubuntu-latest
     outputs:
-      deploy_status: ${{ steps.sfdc_deploy_step.outputs.deploy_status }}
+      deploy_status: ${{ steps.update_job_status_var.outputs.deploy_status }}
     steps:
       - name: Valdiate Branch
         if: env.BRANCH_NAME != 'refs/heads/main'
@@ -39,9 +39,10 @@ jobs:
         id: sfdc_deploy_step
         run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly
       - name: Update job status variable
+        id: update_job_status_var
         if: ${{ success() || failure() }}
         run:
-            echo "deploy_status=Hello" >> "$GITHUB_OUTPUT"
+            echo "deploy_status=${{ job.status }}" >> "$GITHUB_OUTPUT"
       - name: Upload log job 1
         uses: actions/upload-artifact@v4
         if: ${{ success() || failure() }}
