@@ -72,7 +72,7 @@ jobs:
           #run: |
             #echo $key_value
         - name: Split
-          uses: meta-richa-mittal/get-deploy-error@v1.6
+          uses: meta-richa-mittal/get-deploy-error@v1.7
           id: split2
           with:
             string: ${{ steps.read_file.outputs.contents }}
