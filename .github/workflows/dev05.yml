@@ -65,13 +65,13 @@ jobs:
           with:
             path: "logfile.txt"
         - name: Slack Success Msg
-          if: "${{needs.Dev05_Org_Refresh.outputs.deploy_status}} == 'success'"
+          if: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}} == "success"
           uses: slackapi/slack-github-action@v1.27.0
           with:
             channel-id: 'C07KLJKAF6G'
             slack-message: "GitHub Build Result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}"
         - name: Slack Failure 
-          if: "${{needs.Dev05_Org_Refresh.outputs.deploy_status}} == 'failure'"
+          if: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}} == "failure"
           uses: slackapi/slack-github-action@v1.27.0
           with:
             channel-id: 'C07KLJKAF6G'
