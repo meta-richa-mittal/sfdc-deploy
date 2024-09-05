@@ -5,8 +5,8 @@
 	<loadproperties srcFile="qa-pkg/qa-build.properties"/>
 
 	<target name="deployOnly" depends="copySFDCToDeploy">
-		<record name="logfile.txt" action="start" />
 		<echo level="info">${sfdc.deploy.msg}</echo>
+		<record name="logfile.txt" action="start" />
 		<sf:deploy
 			username="${env.SF_USERNAME}"
 			password="${env.SF_PASSWORD}"
