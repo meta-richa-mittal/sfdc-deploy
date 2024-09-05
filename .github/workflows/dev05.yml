@@ -55,17 +55,14 @@ jobs:
       name: Post to a Slack channel
       runs-on: ubuntu-latest
       steps:
-        - name: Download log job 1
-          uses: actions/download-artifact@v4
+        - name: Execute Javascript
+          uses: amochkin/action-javascript@v1
+          id: ex_js
           with:
-            name: log_deploy
-        - name: Read log file
-          id: read_file
-          shell: bash
-          run: |
-            value=`cat logfile.txt`
-            echo The result is $value
-            #echo "file_content=$value" >> $GITHUB_OUTPUT
+            js: |
+              output("Hello World!", "output_1")
+        - name: Print output
+          run: echo ${{ steps.ex_js.outputs.output_1 }}
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
           with:
