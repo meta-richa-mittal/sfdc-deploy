@@ -63,7 +63,7 @@ jobs:
           id: read_file
           uses: andstor/file-reader-action@v1
           with:
-            path: "logfile.txt"]
+            path: "logfile.txt"
         - name: Search for smallest error
           uses: meta-richa-mittal/get-deploy-error@v1.9
           id: search_error
