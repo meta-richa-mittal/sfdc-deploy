@@ -72,19 +72,14 @@ jobs:
           #run: |
             #echo $key_value
         - name: Split
-          uses: bhowell2/github-substring-action@1.0.2
-          id: split1
-          with:
-              value: ${{ steps.read_file.outputs.contents }}
-              index_of_str: "*********** DEPLOYMENT FAILED ***********"
-        - name: Split
-          uses: bhowell2/github-substring-action@1.0.2
+          uses: spassai/get-between-action@1.0
           id: split2
           with:
-              value: ${{ steps.split1.outputs.substring }}
-              index_of_str: "*********** DEPLOYMENT FAILED ***********"
+            string: ${{ steps.read_file.outputs.contents }}
+            start: "*********** DEPLOYMENT FAILED ***********"
+            end: "*********** DEPLOYMENT FAILED ***********"
         - name: release package
-          run: echo "${{ steps.split2.outputs.substring.length }}"
+          run: echo "${{ steps.split2.outputs.substring }}"
         - name: Slack Success Msg
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status == 'success' }}
           uses: slackapi/slack-github-action@v1.27.0
