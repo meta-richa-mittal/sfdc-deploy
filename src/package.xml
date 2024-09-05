@@ -2,11 +2,19 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>*</members>
-        <name>ApexClass</name>
-    </types>
-    <types>
-        <members>*</members>
-        <members>CO_Line_item__c</members>
+        <members>Account</members>
+        <members>Activity</members>
+        <members>Activity_History_Template__mdt</members>
+        <members>Contact</members>
+        <members>Country_Area_Code__mdt</members>
+        <members>Event</members>
+        <members>HomeSearch_Grid_Column__mdt</members>
+        <members>HomeSearch_Setting__mdt</members>
+        <members>Reconciliation_Payment__mdt</members>
+        <members>Search_Configuration__mdt</members>
+        <members>Summary_Block__mdt</members>
+        <members>Summary_Card__mdt</members>
+        <members>User</members>
         <name>CustomObject</name>
     </types>
     <version>38.0</version>
