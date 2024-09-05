@@ -60,7 +60,11 @@ jobs:
           id: ex_js
           with:
             js: |
-              console.log('Hello World!')
+              var a = 5;
+              for(var i=0;i<5;i++) {
+                a++;
+              }
+              console.log(a);
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
           with:
