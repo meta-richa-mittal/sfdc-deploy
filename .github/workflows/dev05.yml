@@ -55,10 +55,10 @@ jobs:
       name: Post to a Slack channel
       runs-on: ubuntu-latest
       steps:
-        #- name: Download log job 1
-          #uses: actions/download-artifact@v4
-          #with:
-            #name: log_deploy
+        - name: Download log job 1
+          uses: actions/download-artifact@v4
+          with:
+            name: log_deploy
         - name: Read log file
           id: read_file
           shell: bash
@@ -72,13 +72,13 @@ jobs:
           uses: amochkin/action-javascript@v1
           id: ex_js
           with:
-            input_1: ${{ steps.read_file.outputs.artifact }}
+            #input_1: ${{ steps.read_file.outputs.artifact }}
             js: |
               /*var a = 5;
               for(var i=0;i<5;i++) {
                 a++;
               }*/
-              console.log(input_1);
+              console.log(${{ steps.read_file.outputs.artifact }});
               
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
