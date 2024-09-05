@@ -60,13 +60,15 @@ jobs:
           with:
             name: log_deploy
         - name: Read log file
+          id: read_file
           shell: bash
           run: |
             value=`cat logfile.txt`
-            echo The result is $value
+            #echo The result is $value
+            echo "file_content=$value" >> $GITHUB_OUTPUT
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
           with:
             channel-id: 'C07KLJKAF6G'
-            slack-message: "GitHub Build Result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}\nFailure Reason: $value"
+            slack-message: "GitHub Build Result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}\nFailure Reason: ${{ steps.vars.outputs.file_content }}"
             
