@@ -60,9 +60,7 @@ jobs:
           id: ex_js
           with:
             js: |
-              output("Hello World!", "output_1")
-        - name: Print output
-          run: echo ${{ steps.ex_js.outputs.output_1 }}
+              console.log('Hello World!')
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
           with:
