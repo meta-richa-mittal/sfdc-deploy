@@ -38,7 +38,7 @@ jobs:
       - name: Build with Ant
         id: sfdc_deploy_step
         run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly
-            echo "output1=${{ job.status }}" >> "$GITHUB_OUTPUT"
+            echo "deploy_status=${{ job.status }}" >> "$GITHUB_OUTPUT"
       - name: Upload log job 1
         uses: actions/upload-artifact@v4
         if: ${{ success() || failure() }}
