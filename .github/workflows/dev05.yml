@@ -60,29 +60,12 @@ jobs:
           with:
             name: log_deploy
         - name: Read log file
-          run: ls -R logfile.txt
-               while IFS= read -r line; do
-               echo "Text read from file - $line"
-               done < logfile.txt
-          #id: read_file
-          #shell: bash
-          #run: |
-            #value=`cat logfile.txt`
-            #echo The result is $value
-            #echo "file_content=`cat logfile.txt`" >> "$GITHUB_OUTPUT"
-            #echo "artifact='$(yarn run logfile.txt)'" >> "$GITHUB_OUTPUT"
-            #echo "file_content=$value" >> $GITHUB_OUTPUT
-        - name: Execute Javascript
-          uses: amochkin/action-javascript@v1
-          id: ex_js
+          id: read_file
+          uses: andstor/file-reader-action@v1
           with:
-            #input_1: ${{ steps.read_file.outputs.artifact }}
-            js: |
-              /*var a = 5;
-              for(var i=0;i<5;i++) {
-                a++;
-              }
-              console.log(${{ steps.read_file.outputs.file_content }});*/
+            path: "logfile.txt"
+        - name: File contents
+          run: echo "${ steps.read_file.outputs.contents }"
               
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
