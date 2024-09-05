@@ -64,6 +64,14 @@ jobs:
           run: |
             value=`cat logfile.txt`
             echo The result is $value
+        - name: Read File
+          id: package
+          uses: jaywcjlove/github-action-read-file@main
+          with:
+            path: file.txt
+        
+        - name: Echo File
+          run: echo "${{ steps.package.outputs.content }}"
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
           with:
