@@ -84,7 +84,7 @@ jobs:
               value: ${{ steps.split1.outputs.substring }}
               index_of_str: "*********** DEPLOYMENT FAILED ***********"
         - name: release package
-          run: echo "${{ steps.split2.outputs.substring }}"
+          run: echo "${{ steps.split2.outputs.substring.length }}"
         - name: Slack Success Msg
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status == 'success' }}
           uses: slackapi/slack-github-action@v1.27.0
