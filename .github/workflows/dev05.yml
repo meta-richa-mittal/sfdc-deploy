@@ -68,7 +68,7 @@ jobs:
           id: package
           uses: jaywcjlove/github-action-read-file@main
           with:
-            path: file.txt
+            path: logfile.txt
         
         - name: Echo File
           run: echo "${{ steps.package.outputs.content }}"
