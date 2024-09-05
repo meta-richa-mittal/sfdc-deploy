@@ -60,7 +60,7 @@ jobs:
           with:
             name: log_deploy
         - name: Read log file
-          run: ls -R artifact
+          run: ls -R logfile.txt
           #id: read_file
           #shell: bash
           #run: |
