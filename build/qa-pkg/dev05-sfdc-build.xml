@@ -16,6 +16,7 @@
 			ignoreWarnings="true">
 		</sf:deploy>
 	</target>
+	<record name="logfile.txt" action="stop"/>
 
 	<target name="copySFDCToDeploy" depends="cleanSFDCDeploy">
 		<echo level="info">${copy.sfdc.application.msg}</echo>
