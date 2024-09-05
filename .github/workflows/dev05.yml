@@ -60,12 +60,13 @@ jobs:
           with:
             name: log_deploy
         - name: Read log file
-          id: read_file
-          shell: bash
-          run: |
+          run: ls -R artifact
+          #id: read_file
+          #shell: bash
+          #run: |
             #value=`cat logfile.txt`
             #echo The result is $value
-            echo "file_content=`cat logfile.txt`" >> "$GITHUB_OUTPUT"
+            #echo "file_content=`cat logfile.txt`" >> "$GITHUB_OUTPUT"
             #echo "artifact='$(yarn run logfile.txt)'" >> "$GITHUB_OUTPUT"
             #echo "file_content=$value" >> $GITHUB_OUTPUT
         - name: Execute Javascript
@@ -77,8 +78,8 @@ jobs:
               /*var a = 5;
               for(var i=0;i<5;i++) {
                 a++;
-              }*/
-              console.log(${{ steps.read_file.outputs.file_content }});
+              }
+              console.log(${{ steps.read_file.outputs.file_content }});*/
               
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
