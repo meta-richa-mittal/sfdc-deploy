@@ -55,7 +55,7 @@ jobs:
       name: Post to a Slack channel
       runs-on: ubuntu-latest
       steps:
-        - name: Download log job 1
+        - name: Download log job
           uses: actions/download-artifact@v4
           with:
             name: log_deploy
@@ -74,6 +74,6 @@ jobs:
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status != 'success' }}
           uses: slackapi/slack-github-action@v1.27.0
           with:
-            channel-id: 'C07KLJKAF6G'
+            channel-id: ${{ vars.SLACK_CHANNEL_ID }}
             slack-message: "GitHub Build Result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}\nFailure Reason: ${{ steps.read_file.outputs.contents }}"
             
