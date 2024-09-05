@@ -78,7 +78,7 @@ jobs:
               for(var i=0;i<5;i++) {
                 a++;
               }*/
-              console.log(${{ steps.read_file.outputs.artifact }});
+              console.log(${{ steps.read_file.outputs.file_content }});
               
         - name: Slack
           uses: slackapi/slack-github-action@v1.27.0
