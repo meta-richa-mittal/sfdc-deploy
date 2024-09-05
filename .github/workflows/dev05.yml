@@ -70,5 +70,5 @@ jobs:
           uses: slackapi/slack-github-action@v1.27.0
           with:
             channel-id: 'C07KLJKAF6G'
-            slack-message: "GitHub Build Result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}\nFailure Reason: ${{ steps.vars.outputs.file_content }}"
+            slack-message: "GitHub Build Result: ${{needs.Dev05_Org_Refresh.outputs.deploy_status}}\nFailure Reason: ${{ steps.read_file.outputs.file_content }}"
             
