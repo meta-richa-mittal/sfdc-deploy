@@ -66,6 +66,15 @@ jobs:
             path: "logfile.txt"
         - name: Display content
           run: echo "${{ steps.read_file.outputs.contents }}"
+        - name: Perform operation
+          env:
+            key_value: ${{ steps.read_file.outputs.contents }}
+        - run: |
+            $values = $env:key_value -split "\n"
+            foreach ($value in $values)
+            {
+              echo $value
+            }
         - name: Slack Success Msg
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status == 'success' }}
           uses: slackapi/slack-github-action@v1.27.0
