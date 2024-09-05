@@ -72,13 +72,13 @@ jobs:
           #run: |
             #echo $key_value
         - name: Split
-          uses: winterjung/split@v2
+          uses: bhowell2/github-substring-action@1.0.2
           id: split
           with:
-              msg: ${{ steps.read_file.outputs.contents }}
-              separator: '\n'
+              value: ${{ steps.read_file.outputs.contents }}
+              index_of_str: "*********** DEPLOYMENT FAILED ***********"
         - name: release package
-          run: echo "${{ steps.split.outputs._0 }}"
+          run: echo "${{ steps.split.outputs.substring }}"
         - name: Slack Success Msg
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status == 'success' }}
           uses: slackapi/slack-github-action@v1.27.0
