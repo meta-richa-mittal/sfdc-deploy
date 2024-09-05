@@ -69,7 +69,7 @@ jobs:
         - name: Perform operation
           env:
             key_value: ${{ steps.read_file.outputs.contents }}
-        - run: |
+          run: |
             $values = $env:key_value -split "\n"
             foreach ($value in $values)
             {
