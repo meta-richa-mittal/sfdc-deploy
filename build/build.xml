@@ -25,7 +25,6 @@
 	<property name="SR_ASSETS" value="${SR_changesToDeploy}/staticresources/Assests.zip" />
 	<property name="SR_LOCALE" value="${SR_changesToDeploy}/staticresources/Locale.zip" />
 
-	<record name="logfile.txt" action="stop"/>
 	<target name="deployInformation" depends="bp_banner">
 		<echo level="info"> Running Job         - ${env.JOB_NAME} - ${env.BUILD_NUMBER}</echo>
 		<echo level="info"> Using Git branch    - ${env.BRANCH_NAME}</echo>
