@@ -628,16 +628,6 @@ CASE( LEN(Work_Number__c) , 8 , MID(Work_Number__c, 0, 4) + &quot; &quot; +MID(W
         <type>Date</type>
     </fields>
     <fields>
-        <fullName>LastName__c</fullName>
-        <externalId>false</externalId>
-        <label>LastName</label>
-        <length>255</length>
-        <required>false</required>
-        <trackFeedHistory>false</trackFeedHistory>
-        <type>Text</type>
-        <unique>false</unique>
-    </fields>
-    <fields>
         <fullName>Last_Visit_Order__c</fullName>
         <externalId>false</externalId>
         <label>Last Visit Order</label>
