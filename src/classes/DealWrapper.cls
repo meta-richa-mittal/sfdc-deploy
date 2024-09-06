@@ -14,7 +14,6 @@ public class DealWrapper {
     public List<UserSettingCtrl.UserWrapper> UserList;
     public List<DealUnresolvedFulfillmentWrapper> DealUnresolvedFulfillmentList;
     public List<CODeposit> DealDepositList;
-    public DealFinanceWrapper DealFinanceObj;
     public SO_KLI_Recalculation.Errorhandler error;
     
     // Constructor
