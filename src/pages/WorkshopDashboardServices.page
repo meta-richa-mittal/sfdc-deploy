@@ -1,0 +1,28 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="DashboardCtrl" sidebar="false" applyHtmlTag="false" applyBodyTag="false" 
+    contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+         Routing_AppJs_PK.factory('DashboardService', ['$q', function ($q) {
+            return { 
+                getServiceJobs: function(filterJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.DashboardCtrl.getServiceJobs}', filterJson);
+                },
+                getRefreshMinutes: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.DashboardCtrl.getRefreshMinutes}');
+                },
+                getFormattedTodaysDate: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.DashboardCtrl.getFormattedTodaysDate}');
+                },
+                getJobTypeList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.DashboardCtrl.getJobTypeList}');
+                },
+                getSOJobStatus: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.DashboardCtrl.getSOJobStatus}');
+                }
+            }; 
+        }]);
+        
+        
+        return Routing_AppJs_PK;  
+    }); 
+</apex:page>

@@ -1,0 +1,88 @@
+<apex:component >
+    <apex:attribute name="companyLogo" type="String" description="Business Logo" required="true"/>
+    <apex:attribute name="isDisplayTaxInvoice" type="boolean" description="DisplayTaxInvoice" required="true"/>
+    <apex:attribute name="headerText" type="String" description="Header Text" required="true"/>
+    <apex:attribute name="headerText1" type="String" description="Header Text" required="true"/>
+    <apex:attribute name="companyName" type="String" description="Company Name" required="true"/>
+    <apex:attribute name="address1" type="String" description="address1" required="true"/>
+    <apex:attribute name="address2" type="String" description="address2" required="true"/>
+    <apex:attribute name="city" type="String" description="City" required="true"/>
+    <apex:attribute name="state" type="String" description="State" required="true"/>
+    <apex:attribute name="postalCode" type="String" description="PostalCode" required="true"/>
+    <apex:attribute name="formattedBusinessPhone" type="String" description="FormattedBusinessPhone" required="true"/>
+    <apex:attribute name="businessEmail" type="String" description="BusinessEmail" required="true"/>
+    <apex:attribute name="taxId" type="String" description="TaxId" required="true"/>
+    <apex:attribute name="country" type="String" description="Country" required="true"/>
+    <apex:attribute name="LogoHeight" type="String" description="LogoHeight" required="true"/>
+    <apex:attribute name="LogoWidth" type="String" description="LogoWidth" required="true"/>
+    
+    <div class="header-section c-pull-left" style="width: 710px;">    
+        <table style="width: 100%; table-layout: fixed;" cellspacing = "0px;">
+            <col width="50%" /> 
+            <col width="50%" />
+            <tbody> 
+                <tr>
+                    <td>
+                         <section class="logo-container c-pull-left">
+                            <apex:outputPanel rendered="{!companyLogo != null}">
+                            <div class="header" style="float: left;width: 100%;height: 100%;">
+                               <img src="{!companyLogo}" width="{!LogoWidth}px" height="{!LogoHeight}px"  />
+                            </div>
+                            </apex:outputPanel>
+                         </section> 
+                         
+                    </td>
+                    <td>
+                        <section class="c-pull-right store-info">
+                            <apex:outputPanel rendered="{!(!isDisplayTaxInvoice)}">
+                                <apex:outputText styleClass="c-pull-right tax-heading" value="{!headerText}"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!isDisplayTaxInvoice}">
+                                <apex:outputText styleClass="c-pull-right tax-heading" value="{!headerText1}"/>
+                            </apex:outputPanel>
+                            <p class="company-name c-pull-left">
+                                <apex:outputText value="{!companyName}">
+                                </apex:outputText>
+                            </p>
+                            <p class="company-address c-pull-left">
+                                <apex:outputText value="{!address1}">
+                                </apex:outputText>
+                                <apex:outputText rendered="{!address2 != null}" value=", {!address2}"></apex:outputText>
+                            </p>
+                            <p class="company-address c-pull-left">
+                                <apex:outputText value="{!city}">
+                                </apex:outputText>,&nbsp;
+                                <apex:outputText value="{!state}">
+                                </apex:outputText>,&nbsp;
+                                <apex:outputText value="{!postalCode}">
+                                </apex:outputText>
+                            </p>
+                            <p class="company-address c-pull-left">
+                                <apex:outputPanel rendered="{!formattedBusinessPhone != null}">
+                                    <apex:outputText value="P: "></apex:outputText>
+                                    <apex:outputText value="{!formattedBusinessPhone}">
+                                    </apex:outputText>
+                                </apex:outputPanel>
+                            </p>
+                            <p class="company-address c-pull-left">
+                                <apex:outputPanel rendered="{!businessEmail != null}">
+                                    <apex:outputText value="E: "></apex:outputText>
+                                    <apex:outputText value="{!businessEmail}">
+                                    </apex:outputText>
+                                </apex:outputPanel>
+                            </p>
+                            <p class="tax-id-info c-pull-left">
+                                <apex:outputPanel rendered="{!taxId != ''}">
+                                    <apex:outputText rendered="{!country != 'Australia'}"  value="Tax ID: "></apex:outputText>
+                                    <apex:outputText rendered="{!country == 'Australia'}" value="ABN: "></apex:outputText>
+                                    <apex:outputText value="{!taxId}">
+                                    </apex:outputText>
+                                </apex:outputPanel>
+                            </p>
+                        </section> 
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</apex:component>

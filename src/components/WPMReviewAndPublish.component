@@ -1,0 +1,57 @@
+<apex:component controller="GlobalController">
+    <h1 class="c-heading">Review &amp; publish changes</h1>
+				<label class="c-heading-label">Carefully review the {{M_WPM.countReviewAndPublishListChecked}} product changes you've made.  Deselect a product line before publishing to discard changes.</label>
+				<div class="pos-rel">
+                <div class="c-table-gradient modile-view-grid"></div>
+                <div class="c-table-container  pos-rel c-scroll-table">
+                 <table class="c-table-respoinsive review-and-publish-table">
+						<col width="3%" />
+						<col width="27%" />
+						<col width="20%" />
+						<col width="15%" />
+						<col width="25%" />
+						<col width="15%" />
+						<thead>
+							<tr>
+								<th class="pos-rel select-all-checkbox-th"><bp-ng-check-box select-unselect-click="F_WPM.toggleReviewPublishCheckBox()" select-key="isCheckBoxSelected" value="M_WPM.selectAllReviewAndPublishChanges" class-value="M_WPM.checkboxClassName" selected-list="M_WPM.reviewAndPublishList" ></bp-ng-check-box></th>
+								<th>Website product</th>
+								<th>Variant options</th>
+								<th>Vendor</th>
+								<th>Blackpurl part</th>
+								<th>Ignore product</th>
+							</tr> 
+						</thead>
+						<tbody>
+							<tr ng-repeat="prodRec in M_WPM.reviewAndPublishList" ng-if="M_WPM.reviewAndPublishList.length > 0" ng-class="{'c-selected-row': prodRec.isCheckBoxSelected}">
+								<td class="pos-rel select-checkbox-td">
+									<bp-ng-check-box value="prodRec.isCheckBoxSelected" select-unselect-click="F_WPM.toggleReviewPublishCheckBox($index)"></bp-ng-check-box>
+								</td>
+								<td>
+									<a ng-if="prodRec.ProductURL" href="{{prodRec.ProductURL}}" target="_blank">{{prodRec.Title}}</a>
+									<span ng-if="!prodRec.ProductURL">{{prodRec.Title}}</span>
+								</td>
+								<td>{{::prodRec.VariantOptions}}</td>
+								<td>{{::prodRec.ProductVendor}}</td>
+								<td class="pos-rel" >
+									<auto-completev3 index="{{$index}}"  is-error="prodRec.isError" list-data="M_WPM.PardIdList" template-name="PartAutoComplete" default-value="prodRec.PartCodeDesc" section-name="WPMSReviewection" ng-if="!prodRec.IsIgnored" section-id="WPMSReviewection"  /> 
+								   <!--  <autocompletev2 unit-index="{{$index}}" id="autocompletev2ProductSectioId" template-name="PartAutoComplete" default-value="prodRec.PartCodeDesc" section-name="Merchandise Section" ng-if="!prodRec.IsIgnored" section-id="MerchandiseSectionWrapperId"  /> -->
+								</td>
+								<td class="last-child"> <bp-ng-slider value="{{prodRec.IsIgnored}}" ng-class-name= "{'c-checkd-slider':prodRec.IsIgnored}" on-click-fun="F_WPM.toggleReviewAndPublishSlider($index)" field-value="Ignore"></bp-ng-slider>  </td>
+							</tr>
+						</tbody>
+					</table> 
+				</div>
+			</div>
+				<div class="c-footer">
+					<span ng-if="M_WPM.reviewAndPublishBtnPayload.primaryBtn.isLoading" class="loading-text">We’re publishing your changes, don’t refresh the page</span>
+					<span class="pos-rel">
+					<bp-ng-button ng-if="M_WPM.selectAllReviewAndPublishChanges"  name="{{M_WPM.reviewAndPublishBtnPayload.primaryBtn.Name}}" class-value="{{M_WPM.reviewAndPublishBtnPayload.primaryBtn.ClassName}}" action="F_WPM.saveReviewAndPublishChanges();" disabled-value=""></bp-ng-button>
+						<i class="c-input-white-loading-icon adjust-position" ng-if="M_WPM.reviewAndPublishBtnPayload.primaryBtn.isLoading">
+							<svg class="input-white-spiner" width="85px" height="85px" viewBox="0 0 66 66" xmlns="https://www.w3.org/2000/svg">
+								<circle class="input-white-spiner-path" fill="none" stroke-width="10" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+							</svg>
+						</i>
+					</span>
+					<bp-ng-button ng-if="!M_WPM.selectAllReviewAndPublishChanges"  name="{{M_WPM.reviewAndPublishBtnPayload.primaryBtn.Name}}" class-value="{{M_WPM.reviewAndPublishBtnPayload.primaryBtn.ClassName}}" action="F_WPM.setDefaultState();F_WPM.hideModalWindow('website-product-full-page-modal')" disabled-value=""></bp-ng-button>
+				</div>
+</apex:component>

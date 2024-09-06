@@ -1,0 +1,522 @@
+<apex:component Controller="GlobalSearchCtrl">
+    <script>
+        var newGlobalSearchModule = angular.module('globalSearchModule', []);
+        newGlobalSearchModule.factory('globalSearchservice', function($q) {
+            return {
+                getGlobalSearchResult: function(globalSearchQueryJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.GlobalSearchCtrl.getGlobalSearchResult}', globalSearchQueryJson);
+                }
+            }
+        });
+        newGlobalSearchModule.controller('globalSearchController', function($scope, $q, $timeout, globalSearchservice, $filter, $state, $rootScope) {
+            $scope.globalSearchModal = {};
+            const PAUSE_TIMER = 500;
+            var searchTimer = null;
+            var newUrl = window.location.origin;
+            var isGlobalSearchRemovedFromSkippableMethod = false;
+            var availableFilters = ["contacts","customers","customer-invoices","customer-orders","fees","kits","labours","parts","vendors","vendor-invoices","vendor-orders","vendor-products","vendor-receivings","vendor-returns","vendor-credits","inventory-units","customer-units","order-units"];
+            const totalNoOfFilters = availableFilters.length;
+            var filterNameToSearchKeywordMap = {
+                "contacts": "Contact",
+                "customer-invoices": "Customer Invoices",
+                "customer-orders": "Customer Orders",
+                "customers": "Customers",
+                "fees": "Fees",
+                "kits": "Kits",
+                "labours": "Labor Codes",
+                "parts": "Parts",
+                "vendor-orders": "Vendor Orders",
+                "vendor-receivings": "Vendor Receivings",
+                "vendor-invoices": "Vendor Invoices",
+                "vendor-returns": "Vendor Return",
+                "vendor-credits": "Vendor Credit",
+                "vendors": "Vendors",
+                "vendor-products": "Vendor Product",
+                "Contact": "Contact",
+                "Customer": "Customers",
+                "Vendor": "Vendors",
+                "Part": "Parts",
+                "Fee": "Fees",
+                "Kit": "Kits",
+                "Unit": "Inventory Unit",
+                "Labour": "Labor Codes",
+                "Customer Invoice": "Customer Invoices",
+                "Customer Order": "Customer Orders",
+                "Vendor Invoice": "Vendor Invoices",
+                "Vendor Order": "Vendor Orders",
+                "Vendor Product": "Vendor Product",
+                "Vendor Receiving": "Vendor Receivings",
+                "Vendor Return": "Vendor Return",
+                "Vendor Credit": "Vendor Credit",
+                "inventory-units": "Inventory Unit",
+                "Inventory Unit": "Inventory Unit",
+                "customer-units": "Customer Unit",
+                "Customer Unit": "Customer Unit",
+                "order-units": "Order Unit",
+                "Order Unit": "Order Unit"
+            };
+            var filterNameToSearchKeywordKeyMap = {
+                "contacts": "",
+                "customer-invoices": "Customer Invoice",
+                "customer-orders": "CO",
+                "customers": "Customer",
+                "fees": "Fee",
+                "kits": "Kit",
+                "labours": "Labor",
+                "parts": "Part",
+                "vendor-orders": "VO",
+                "vendor-receivings": "VR",
+                "vendor-invoices": "VI",
+                "vendor-returns": "Vendor Return",
+                "vendor-credits": "Vendor Credit",
+                "vendors": "Vendor",
+                "vendor-products": "Vendor Product",
+                "Contact": "",
+                "Customer": "Customer",
+                "Vendor": "Vendor",
+                "Part": "Part",
+                "Fee": "Fee",
+                "Kit": "Kit",
+                "Labour": "Labor",
+                "Customer Invoice": "Customer Invoice",
+                "Customer Order": "CO",
+                "Vendor Invoice": "VI",
+                "Vendor Order": "VO",
+                "Vendor Product": "Vendor Product",
+                "Vendor Receiving": "VR",
+                "Vendor Return": "Vendor Return",
+                "Vendor Credit": "Vendor Credit",
+                "inventory-units": "Inventory Unit",
+                "Inventory Unit": "Inventory Unit",
+                "customer-units": "Customer Unit",
+                "Customer Unit": "Customer Unit",
+                "order-units": "Order Unit",
+                "Order Unit": "Order Unit"
+            };
+            var mapTypeToObjectNameMap = {
+                1: 'Customer',
+                2: 'Vendor',
+                3: 'Part',
+                4: 'Kit',
+                5: 'Fee',
+                6: 'Labour',
+                7: 'Vendor Product',
+                8: 'Customer Order',
+                9: 'Customer Invoice',
+                10: 'Vendor Order',
+                11: 'Vendor Receiving',
+                12: 'Vendor Invoice',
+                13: 'Vendor Product',
+                14: 'Fee',
+                15: 'Vendor Product',
+                16: 'Vendor Product',
+                18: 'Inventory Unit',
+                19: 'Vendor Product',
+                20: 'Vendor Product',
+                21: 'Vendor Product',
+                22: 'Vendor Return',
+                23: 'Vendor Product',
+                24: 'Vendor Credit',
+                25: 'Customer Unit',
+                26: 'Order Unit'
+            }
+            
+            const gs = document.querySelector('#bpdaGlobalSearch');
+            var gsAllResultItems = [];
+            var totalRecords;
+            var isFilterCachingDisable = true;
+            if(!isFilterCachingDisable) {
+                var isInsideSeeAllResultModal = false;
+                var currentSelectedFilters = window.localStorage.getItem('selected-filters');
+            }
+            const openButton = document.querySelector('#open-global-search');
+            openButton.addEventListener('click', () => {
+                gs.showResultModal()
+            });
+            gs.addEventListener('bpda-global-search-selected', (e) => {
+                selectResult(e.detail.result);
+            });
+            gs.addEventListener('bpda-global-search-changed', (e) => {
+                gs.query = gsQueryFunction;
+                gs.queryAllResults = gsAllResultsQueryFunction;
+            });
+            gs.addEventListener('bpda-global-search-return-clicked', async (e) => {
+                if(!isFilterCachingDisable) {
+                    await gs.updateComplete;
+                    gs.selectedFilters = e.detail.previousSelectedFilters;
+                }
+            });
+            gs.addEventListener('bpda-global-search-opened', (e) => {
+                if(currentSelectedFilters && !isFilterCachingDisable) {
+                    gs.selectedFilters = JSON.parse(currentSelectedFilters);
+                }
+                document.body.style.overflow = 'hidden';
+                if(!isGlobalSearchRemovedFromSkippableMethod) {
+                    setOfSkippableMethods = setOfSkippableMethods.filter(function(item) {
+                        return item != 'GlobalSearchCtrl.getGlobalSearchResult';
+                    });
+                    isGlobalSearchRemovedFromSkippableMethod = true;
+                }
+            });
+            gs.addEventListener('bpda-global-search-closed', (e) => {
+                document.body.style.overflow = 'visible';
+                if(isGlobalSearchRemovedFromSkippableMethod) {
+                    setOfSkippableMethods.splice(0, 0, 'GlobalSearchCtrl.getGlobalSearchResult');
+                    isGlobalSearchRemovedFromSkippableMethod = false;
+                }
+                if(!isFilterCachingDisable) {
+                    isInsideSeeAllResultModal = false;
+                    currentSelectedFilters = JSON.stringify(gs.selectedFilters);
+                    window.localStorage.setItem('selected-filters', currentSelectedFilters);
+                }
+            });
+            gs.addEventListener('bpda-global-search-filters-changed', (e) => {
+                if(!isInsideSeeAllResultModal && !isFilterCachingDisable) {
+                    currentSelectedFilters = JSON.stringify(e.detail);
+                    window.localStorage.setItem('selected-filters', currentSelectedFilters);
+                }
+            });
+            hotkeys('ctrl+g,cmd+g', function (event, handler){
+                event.preventDefault();
+                switch (handler.key) {
+                    case 'ctrl+g': gs.showResultModal();
+                        break;
+                    case 'cmd+g': gs.showResultModal();
+                        break;
+                }
+            });
+            const gsQueryFunction = async (queryString) => {
+                if(queryString.trim().length < 2) return [];
+                return await searchSuggestion(queryString);
+            };
+            const gsAllResultsQueryFunction = async (queryString, category, fromIndex, toIndex) => {
+                if(!isFilterCachingDisable) {
+                    isInsideSeeAllResultModal = true;
+                }
+                if(fromIndex == 0) gsAllResultItems = [];
+                gsAllResultItems = gsAllResultItems.concat(await searchSuggestion(queryString, fromIndex, toIndex, category));
+                return {
+                    items: gsAllResultItems.slice(fromIndex, toIndex),
+                    hasMoreResults: (gsAllResultItems.length < totalRecords),
+                };
+            };
+            var searchSuggestion = function(searchText, from, to, category) {
+                return new Promise(function(resolve, reject) {
+                    let endTime =  new Date().getTime();
+                    if (searchText.length >= 5 && (searchTimer && startTime && (endTime - startTime) < 70)) { // compare the start and end time to validate rapid entry for search query greater than 4
+                        $timeout.cancel(searchTimer); // stop earlier execution
+                        startTime = new Date().getTime();
+                        searchTimer = $timeout(function() { // create a new execution for updated search text
+                            getGlobalSearchResult(resolve, reject, searchText, ((from) ? from : 0), ((to) ? to : 5), category);
+                        }, 70);
+                    } else {
+                        if (searchTimer) {
+                            $timeout.cancel(searchTimer);
+                        }
+                        startTime = new Date().getTime();
+                        searchTimer = $timeout(function() {
+                            getGlobalSearchResult(resolve, reject, searchText, ((from) ? from : 0), ((to) ? to : 5), category);
+                        }, PAUSE_TIMER);
+                    }
+                });
+            }
+            function getGlobalSearchResult(resolve, reject, searchText, FromIndex, ToIndex, category) {
+                var promises = [];
+                var selectedFilters = gs.__selectedFilters;
+                if(gs.__selectedFilters.length == 0) {
+                    selectedFilters = ["contacts", "customers", "customer-invoices", "customer-orders", "fees", "kits", "labours", "parts", "vendors", "vendor-invoices", "vendor-orders", "vendor-products", "vendor-receivings", "vendor-returns", "vendor-credits","inventory-units","customer-units","order-units"];
+                }
+                if(!category) {
+                    for (var i=0; i<selectedFilters.length; i++){
+                        var globalSearchQueryJson = {
+                            "GlobalSearchText": (searchText) ? searchText.trim() : '',
+                            "GlobalSearchKeyword": filterNameToSearchKeywordMap[selectedFilters[i]],
+                            "GlobalSearchKeywordKey": filterNameToSearchKeywordKeyMap[selectedFilters[i]],
+                            FromIndex,
+                            "ToIndex": (selectedFilters.length == 1) ? 20 : ToIndex
+                        }
+                        promises.push(globalSearchservice.getGlobalSearchResult(JSON.stringify(globalSearchQueryJson)));
+                    }
+                } else {
+                    var globalSearchQueryJson = {
+                        "GlobalSearchText": (searchText) ? searchText.trim() : '',
+                        "GlobalSearchKeyword": getGlobalSearchKeyword(((category) ? [category] : availableFilters), ','),
+                        "GlobalSearchKeywordKey": getGlobalSearchKeyword(((category) ? [category] : availableFilters), ',', true),
+                        FromIndex,
+                        "ToIndex": ((ToIndex) ? ToIndex : 10)
+                    }
+                    promises.push(globalSearchservice.getGlobalSearchResult(JSON.stringify(globalSearchQueryJson)));
+                }
+                $q.all(promises).then(function(gsSearchResult) {
+                    if(searchText != gs.__queryString || (gs.__selectedFilters.length == 0 && selectedFilters.length != totalNoOfFilters) || (gs.__selectedFilters.length != 0 && selectedFilters.length != gs.__selectedFilters.length)) return;
+                    var results = [];
+                    for(var i=0; i<gsSearchResult.length; i++) {
+                        totalRecords = gsSearchResult[i].TotalRecords;
+                        results = results.concat(gsSearchResult[i].searchRecords);
+                    }
+                    resolve(formatGlobalSearchResult(results));
+                }).catch(function(error) {
+                    resolve([]);
+                    commonHandleErrorAndExecption(error);
+                });
+            }
+            function getGlobalSearchKeyword(filterList, separtor, isGlobalSearchKeywordKey) {
+                var formattedString = '';
+                if(filterList && filterList.length > 0) {
+                    for (var i=0; i<filterList.length; i++){
+                        if(i != filterList.length-1) {
+                            formattedString = ''+ formattedString + ((isGlobalSearchKeywordKey) ? filterNameToSearchKeywordKeyMap[filterList[i]] : filterNameToSearchKeywordMap[filterList[i]]) + separtor;
+                        } else {
+                            formattedString = ''+ formattedString + ((isGlobalSearchKeywordKey) ? filterNameToSearchKeywordKeyMap[filterList[i]] : filterNameToSearchKeywordMap[filterList[i]]);
+                        }
+                    }
+                }
+                return formattedString;
+            }
+            function formatGlobalSearchResult(result) {
+                var formattedArray = [];
+                result.forEach(function(key, index) {
+                    var obj = {};
+                    obj.ObjectName = (key.ObjectName == 'Contact') ? key.ObjectName : mapTypeToObjectNameMap[key.Type];
+                    obj.Id = key.Id;
+                    obj.result = key;
+                    obj.ItemName = ((obj.ObjectName == 'Inventory Unit' || obj.ObjectName == 'Order Unit') && !key.ItemName) ? 'VIN Unknown' : key.ItemName;
+                    obj.Type = key.Type;
+                    if(obj.ObjectName == 'Contact') {
+                        obj.AdditionalInfoLabel1 = 'Email';
+                        obj.AdditionalInfoLabel2 = 'Phone';
+                        obj.AdditionalInfoLabel4 = key.AdditionalInfoLabel3;
+                        obj.AdditionalInfo1 = key.AdditionalInfo1;
+                        obj.AdditionalInfo2 = key.AdditionalInfo2;
+                        obj.AdditionalInfo4 = key.AdditionalInfo3;
+                    } else if(obj.ObjectName == 'Customer' || obj.ObjectName == 'Vendor') {
+                        obj.AdditionalInfoLabel1 = 'Email';
+                        obj.AdditionalInfoLabel2 = 'Phone';
+                        obj.AdditionalInfoLabel3 = 'Mobile';
+                        obj.AdditionalInfo1 = key.AdditionalInfo1;
+                        obj.AdditionalInfo2 = key.AdditionalInfo2;
+                        obj.AdditionalInfo3 = key.AdditionalInfo3;
+                        obj.AdditionalInfo4 = key.AdditionalInfo4;
+                    } else if(obj.ObjectName == 'Part') {
+                        obj.AdditionalInfoLabel1 = 'Price';
+                        obj.AdditionalInfoLabel2 = 'Available';
+                        obj.AdditionalInfoLabel3 = 'On order';
+                        obj.AdditionalInfoLabel4 = 'Location';
+                        obj.AdditionalInfoLabel5 = 'Vendor';
+                        obj.AdditionalInfo1 = checkAndReturnCurrencyFormat(key.AdditionalInfo4, $filter);
+                        obj.AdditionalInfo2 = convertStringNumberToDecimal(key.AdditionalInfo2);
+                        obj.AdditionalInfo3 = convertStringNumberToDecimal(key.AdditionalInfo5);
+                        obj.AdditionalInfo4 = key.AdditionalInfo3;
+                        obj.AdditionalInfo5 = key.AdditionalInfo1;
+                    } else if(obj.ObjectName == 'Inventory Unit' || obj.ObjectName == 'Order Unit') {
+                        obj.AdditionalInfoLabel1 = 'Type';
+                        obj.AdditionalInfoLabel2 = key.AdditionalInfoLabel2;
+                        obj.AdditionalInfoLabel3 = key.AdditionalInfoLabel4;
+                        obj.AdditionalInfo1 = key.AdditionalInfo1;
+                        obj.AdditionalInfo2 = key.AdditionalInfo2;
+                        obj.AdditionalInfo3 = key.AdditionalInfo4;
+                        obj.AdditionalInfo4 = key.AdditionalInfo5;
+                    } else if(obj.ObjectName == 'Customer Unit') {
+                        obj.AdditionalInfoLabel1 = key.AdditionalInfoLabel1;
+                        obj.AdditionalInfoLabel2 = key.AdditionalInfoLabel2;
+                        obj.AdditionalInfoLabel3 = key.AdditionalInfoLabel4;
+                        obj.AdditionalInfo1 = !key.AdditionalInfo1 ? 'VIN Unknown' : key.AdditionalInfo1;
+                        obj.AdditionalInfo2 = key.AdditionalInfo2;
+                        obj.AdditionalInfo3 = key.AdditionalInfo4;
+                        obj.AdditionalInfo4 = key.AdditionalInfo5;
+                    } else if(obj.ObjectName == 'Kit') {
+                        obj.AdditionalInfoLabel1 = 'Type';
+                        obj.AdditionalInfoLabel2 = 'Price';
+                        obj.AdditionalInfo1 = key.AdditionalInfo1;
+                        obj.AdditionalInfo2 = checkAndReturnCurrencyFormat(key.AdditionalInfo2, $filter);
+                    } else if(obj.ObjectName == 'Labour') {
+                        obj.AdditionalInfoLabel1 = 'Hours';
+                        obj.AdditionalInfoLabel2 = 'Rate';
+                        obj.AdditionalInfo1 = key.AdditionalInfo1;
+                        obj.AdditionalInfo2 = key.AdditionalInfo2;
+                    } else if(obj.ObjectName == 'Fee') {
+                        obj.AdditionalInfoLabel1 = 'Type';
+                        obj.AdditionalInfoLabel2 = 'Price';
+                        obj.AdditionalInfo1 = key.AdditionalInfo2;
+                        obj.AdditionalInfo2 = checkAndReturnCurrencyFormat(key.AdditionalInfo1, $filter);
+                    } else if(obj.ObjectName == 'Vendor Product') {
+                        obj.AdditionalInfoLabel1 = 'Type';
+                        obj.AdditionalInfoLabel2 = 'Price';
+                        obj.AdditionalInfoLabel4 = 'Vendor';
+                        obj.AdditionalInfo1 = key.ObjectName;
+                        obj.AdditionalInfo2 = checkAndReturnCurrencyFormat(key.AdditionalInfo2, $filter);
+                        obj.AdditionalInfo4 = key.AdditionalInfo1;
+                    } else if(obj.ObjectName == 'Customer Order') {
+                        obj.AdditionalInfoLabel1 = 'Deal';
+                        obj.AdditionalInfoLabel2 = 'Service';
+                        obj.AdditionalInfoLabel3 = 'P&A';
+                        obj.AdditionalInfoLabel4 = 'Status';
+                        obj.AdditionalInfoLabel5 = 'Customer';
+                        obj.AdditionalInfo1 = key.AdditionalInfo2;
+                        obj.AdditionalInfo2 = key.AdditionalInfo3;
+                        obj.AdditionalInfo3 = key.AdditionalInfo4;
+                        obj.AdditionalInfo4 = key.AdditionalInfo5;
+                        obj.AdditionalInfo5 = key.AdditionalInfo1;
+                    } else if(obj.ObjectName == 'Customer Invoice') {
+                        obj.AdditionalInfoLabel1 = 'Date';
+                        obj.AdditionalInfoLabel2 = 'Total';
+                        obj.AdditionalInfoLabel4 = 'Customer';
+                        obj.AdditionalInfo1 = key.AdditionalInfo3;
+                        obj.AdditionalInfo2 = checkAndReturnCurrencyFormat(key.AdditionalInfo2, $filter);
+                        obj.AdditionalInfo4 = key.AdditionalInfo1;
+                    } else if(obj.ObjectName == 'Vendor Order') {
+                        obj.AdditionalInfoLabel1 = 'Total';
+                        obj.AdditionalInfoLabel2 = 'Status';
+                        obj.AdditionalInfoLabel3 = 'Ordered';
+                        obj.AdditionalInfoLabel4 = 'Vendor';
+                        obj.AdditionalInfo1 = checkAndReturnCurrencyFormat(key.AdditionalInfo3, $filter);
+                        obj.AdditionalInfo2 = key.AdditionalInfo4;
+                        obj.AdditionalInfo3 = key.AdditionalInfo5;
+                        obj.AdditionalInfo4 = key.AdditionalInfo1;
+                    } else if(obj.ObjectName == 'Vendor Receiving') {
+                        obj.AdditionalInfoLabel1 = 'Total';
+                        obj.AdditionalInfoLabel2 = 'Status';
+                        obj.AdditionalInfoLabel3 = 'Packing slip#';
+                        obj.AdditionalInfoLabel4 = 'Vendor';
+                        obj.AdditionalInfo1 = checkAndReturnCurrencyFormat(key.AdditionalInfo3, $filter);
+                        obj.AdditionalInfo2 = key.AdditionalInfo4;
+                        obj.AdditionalInfo3 = key.AdditionalInfo2;
+                        obj.AdditionalInfo4 = key.AdditionalInfo1;
+                    } else if(obj.ObjectName == 'Vendor Invoice') {
+                        obj.AdditionalInfoLabel1 = 'Total';
+                        obj.AdditionalInfoLabel2 = 'Status';
+                        obj.AdditionalInfoLabel3 = 'Invoice#';
+                        obj.AdditionalInfoLabel4 = 'Vendor';
+                        obj.AdditionalInfo1 = checkAndReturnCurrencyFormat(key.AdditionalInfo2, $filter);
+                        obj.AdditionalInfo2 = key.AdditionalInfo3;
+                        obj.AdditionalInfo3 = key.AdditionalInfo4;
+                        obj.AdditionalInfo4 = key.AdditionalInfo1;
+                    } else if(obj.ObjectName == 'Vendor Return') {
+                        obj.AdditionalInfoLabel1 = 'Total';
+                        obj.AdditionalInfoLabel2 = 'Status';
+                        obj.AdditionalInfoLabel3 = 'RMA#';
+                        obj.AdditionalInfoLabel4 = 'Vendor';
+                        obj.AdditionalInfo1 = checkAndReturnCurrencyFormat(key.AdditionalInfo2, $filter);
+                        obj.AdditionalInfo2 = key.AdditionalInfo4;
+                        obj.AdditionalInfo3 = key.AdditionalInfo5;
+                        obj.AdditionalInfo4 = key.AdditionalInfo1;
+                    } else if(obj.ObjectName == 'Vendor Credit') {
+                        obj.AdditionalInfoLabel1 = 'Total';
+                        obj.AdditionalInfoLabel2 = 'Status';
+                        obj.AdditionalInfoLabel3 = 'Credit memo#';
+                        obj.AdditionalInfoLabel4 = 'Vendor';
+                        obj.AdditionalInfo1 = checkAndReturnCurrencyFormat(key.AdditionalInfo3, $filter);
+                        obj.AdditionalInfo2 = key.AdditionalInfo4;
+                        obj.AdditionalInfo3 = key.AdditionalInfo2;
+                        obj.AdditionalInfo4 = key.AdditionalInfo1;
+                    }
+                    formattedArray.push(obj);
+                });
+                return formattedArray;
+            }
+            function selectResult(result) {
+                if (result.Type == 1) {
+                    loadState($state, 'ViewCustomer', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 2) {
+                    loadState($state, 'ViewVendor', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 3) {
+                    loadState($state, 'ViewPart', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 4) {
+                    loadState($state, 'ViewKit', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 5) {
+                    loadState($state, 'ViewFee', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 6) {
+                    loadState($state, 'ViewLabour', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 7) {
+                    loadState($state, 'User');
+                } else if (result.Type == 8) {
+                    loadState($state, 'CustomerOrder_V2', {
+                        Id: result.Id,
+                        myParams: {isLoadCOAgain : true}
+                    });
+                } else if (result.Type == 9) {
+                    loadState($state, 'CustomerOrder_V2', {
+                        Id: result.Id,
+                        myParams: {isLoadCOAgain : true}
+                    });
+                } else if (result.Type == 10) {
+                    loadState($state, 'VendorOrder', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 11) {
+                    loadState($state, 'VendorOrderReceiving', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 12) {
+                    loadState($state, 'VendorOrderInvoicing', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 13) {
+                    window.open(newUrl + '/apex/BlackPurlHome?pageName=CategoryMgmt', '_self');
+                } else if (result.Type == 14) {
+                    window.open(newUrl + '/apex/BlackPurlHome?pageName=SystemSettings', '_self');
+                } else if (result.Type == 15) {
+                    window.open(newUrl + '/apex/BlackPurlHome?pageName=SystemSettings', '_self');
+                } else if (result.Type == 16 || result.Type == 19 || result.Type == 20 || result.Type == 21) {
+                    loadState($state, 'ViewVendor', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 17) {
+                    loadState($state, 'CustomerOrder_V2', {
+                        Id: result.Id,
+                        myParams: {isLoadCOAgain : true}
+                    });
+                } else if (result.Type == 18 || result.Type == 25 || result.Type == 26) {
+                    loadState($state, 'ViewUnit', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 22) {
+                    loadState($state, 'ReturnVO', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 24) {
+                    loadState($state, 'ReturnVendorCredit', {
+                        Id: result.Id
+                    });
+                } else if (result.Type == 23) {
+                    loadState($state, 'User');
+                }
+            }
+        });
+    </script>
+    <bpda-global-search id="bpdaGlobalSearch" ng-controller="globalSearchController"
+        available-filters='[
+            "customers",
+            "customer-orders",
+            "parts",
+            "inventory-units",
+            "contacts",
+            "customer-invoices",
+            "customer-units",
+            "vendor-orders",
+            "order-units",
+            "vendor-receivings",
+            "vendor-invoices",
+            "vendor-returns",
+            "vendor-credits",
+            "vendors",
+            "kits",
+            "fees",
+            "vendor-products",
+            "labours"
+        ]'
+    ></bpda-global-search>
+    <bp-icon-button color="secondary" icon="search" id="open-global-search"></bp-icon-button>
+</apex:component>

@@ -1,0 +1,63 @@
+<apex:component controller="GlobalController">
+    <bp-ng-modal-window id-val="brpUnitInfoModal" mobal-window-payload="BRPUnitInfoModalWindowPayload" cancel-btn-action="hideBRPModalWindow()" class="BRPVehicleInfo">
+        <div class="brp-vehicle-info">
+            <div class="vehicle-info-content">
+                <div>
+                    <div class="vehicle-info-items">
+                        <h4 class="key">VIN : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.serial_no}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.model_code">
+                        <h4 class="key">Model code : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.model_code}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.product_line">
+                        <h4 class="key">Product line : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.product_line}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.product_type">
+                        <h4 class="key">Product type : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.product_type}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.color_code_description">
+                        <h4 class="key">Color : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.color_code_description}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.max_no_of_passengers">
+                        <h4 class="key">No of passengers : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.max_no_of_passengers}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.inventory_type">
+                        <h4 class="key">Inventory type : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.inventory_type}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.brands.length > 0">
+                        <h4 class="key">Brands : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.brands.join(', ')}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.last_change_date">
+                        <h4 class="key">Last change date : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.last_change_date}}</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.engine_code">
+                        <h4 class="key">Engine code : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.engine_code}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.engine_code_description">
+                        <h4 class="key">Engine code description : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.engine_code_description}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.engine_displacement">
+                        <h4 class="key">Engine displacement : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.engine_displacement}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.engine_power">
+                        <h4 class="key">Engine power : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.engine_power}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.gross_weight_vehicle_rating">
+                        <h4 class="key">Gross weight vehicle rating : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.gross_weight_vehicle_rating}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.net_weight">
+                        <h4 class="key">Net weight : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.net_weight}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.weight_unit">
+                        <h4 class="key">Weight unit : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.weight_unit}}</span>
+                    </div>
+                    <div class="vehicle-info-items" ng-if="BRPUnitInfoModalWindowPayload.status.length > 0">
+                        <h4 class="key">Status : </h4><span class="value">{{BRPUnitInfoModalWindowPayload.status.join(', ')}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </bp-ng-modal-window>
+</apex:component>

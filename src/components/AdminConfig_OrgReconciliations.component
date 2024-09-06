@@ -1,0 +1,119 @@
+<apex:component controller="GlobalController">
+    <div class="LoadingDiv" ng-show="AdminConfig.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="OrgReconciliations">
+        <div class="settings_Header row">
+            <div class="col-lg-3 col-md-3">
+                <div class="fixedHeaderText bp-pointer-cursor" ng-click="AdminConfig.toogleSectionView('showOrgReconciliations');">
+                    <span class="headerlabel">
+                    <i class="fa fa-angle-down" ng-show="AdminConfig.toggleObj.showOrgReconciliations" ></i>
+                    <i class="fa fa-angle-right" ng-show="!AdminConfig.toggleObj.showOrgReconciliations" ></i>
+                    <span class="divider">|</span>
+                    <span class="T2">ORG RECONCILIATIONS</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div id="OrgReconciliations_Setting" ng-show="AdminConfig.toggleObj.showOrgReconciliations">
+            <div class="main_section row" >
+                <div class="form">
+                    <div class="row margin8">
+                        <div class="col-md-8 bp-warning-template ML22 brp-info-banner">
+                            <span class="bp-warning-icon">
+                                <i class="bp-icons bp-font-20 bp-yellow-font bp-lh-20 stroke-3">warning</i>
+                            </span>
+                            <div class="bp-warning-msg">    
+                                <span>{{ 'All_values_shown_are_only_valid_as_of_the_date_time_when_they_were_obtained_any_subsequent_back_dated_entries_would_not_be_reflected_in_these_values_they_also_do_not_take_into_consideration_any_unresolved_accounting_sync_failures_which_may_have_been_present_at_the_time_they_were_obtained' | translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row org-reconciliation-row">
+                        <label>{{ 'Reconciliation_date' | translate}}</label>
+                        <div class="datePickerWrappercontainer">
+                            <input type="text" class="date-picker date-picker-white-bg" id="fromDate" placeholder="Select date" 
+                               ng-model="AdminConfig.selectedDate" date-format="AdminConfig.dateFormat"  ng-change = "AdminConfig.getAccountingReconciliationByDate()"
+                               end-date = "AdminConfig.FromDateOptions.maxDate" datepicker = "datepicker" autocomplete="off" readonly = "readonly" 
+                             />
+                            
+                            <a ng-href="{{AdminConfig.orgReconciliation.accountingTabURL}}" target="_blank">
+                                <button class="btn btn-default greenBtn margin8">{{ 'View_org_reconciliations' | translate}}</button>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row margin8">
+                        <div class="col-md-12 MR8">
+                            <div ng-if="AdminConfig.orgReconciliation.AccountingReconciliationListByDate.length == 0">
+                                <div class="col-md-11 margin8 blue-back">
+                                    <label class="labelSize">{{ 'There_is_no_data_available_for_the_selected_date' | translate}}</label>
+                                </div>
+                            </div>
+                            <div ng-if="AdminConfig.orgReconciliation.AccountingReconciliationListByDate.length > 0">
+                                <div class="form table-responsive price-level-table-container">
+                                    <div class="row margin8 MB0 ">
+                                        <table class="bp-editable-table price-level-table">
+                                            <col width="12%"  />
+                                            <col width="10%"  />
+                                            <col width="22%"  />
+                                            <col width="12%"  />
+                                            <col width="12%"  />
+                                            <col width="12%"  />
+                                            <col width="10%"  />
+                                            <col width="10%"  />
+                                            <thead>
+                                                <tr>
+                                                    <th class="H300 line-height-medium">
+                                                        Date/Time
+                                                    </th>
+                                                    <th class="H300 line-height-medium">
+                                                        Type
+                                                    </th>
+                                                    <th class="H300 line-height-medium">
+                                                        GL Name
+                                                    </th>
+                                                    <th class="H300 line-height-medium">
+                                                        BP Records
+                                                    </th>
+                                                    <th class="H300 line-height-medium">
+                                                        BP Balance
+                                                    </th>
+                                                    <th class="H300 line-height-medium">
+                                                        GL Balance
+                                                    </th>
+                                                    <th class="H300 line-height-medium">
+                                                        Variance
+                                                    </th>
+                                                    <th class="H300 line-height-medium">
+                                                        Variance Change
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr ng-repeat = "reconciliationRec in AdminConfig.orgReconciliation.AccountingReconciliationListByDate | orderBy:['Type','GLName']"> 
+                                                    <td>{{reconciliationRec.ReconciliationDateTime}}</td>
+                                                    <td><a ng-href="{{reconciliationRec.RecordLink}}" target="_blank">{{reconciliationRec.Type}}</a></td>
+                                                    <td>{{reconciliationRec.GLName}}</td>
+                                                    <td>{{reconciliationRec.BPRecords}}</td>
+                                                    <td>{{reconciliationRec.BPBalance | currency}}</td>
+                                                    <td>{{reconciliationRec.GLBalance | currency}}</td>
+                                                    <td>{{reconciliationRec.Variance | currency}}</td>
+                                                    <td ng-class="{'bp-bold-font': reconciliationRec.VarianceChange != 0}">{{reconciliationRec.VarianceChange | currency}}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>      
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</apex:component>

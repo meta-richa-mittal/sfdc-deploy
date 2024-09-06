@@ -1,0 +1,7 @@
+<apex:component controller="AdditionalFormCtrl">
+    <apex:repeat value="{!ImageList}" var="image">
+        <div class="page-size">
+            <img src="/servlet/servlet.FileDownload?file={!image.Id}" width="90%" height="90%" />
+        </div>
+    </apex:repeat>
+</apex:component>

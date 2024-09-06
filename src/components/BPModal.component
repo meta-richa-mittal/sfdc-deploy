@@ -1,0 +1,2324 @@
+<apex:component controller="GlobalController">
+    <!-- Start: remove unit popup -->
+    <div class="modal fade bp-model-dialog CreateGroupModal RemoveDealUnitPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id = "RemoveDealUnitPopup">
+        <div class="modal-dialog removeModal-width" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close" ng-click="F_CO.closeRemoveUnitFromDealModal()">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth" ng-click = "F_CO.closeRemoveUnitFromDealModal()">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body modal-body-align">
+                    <div class="userGroupInfoArea">
+                        <div class="heading text-uppercase">{{ 'Remove_Deal_Unit' | translate }}</div>
+                        <div class="warning-text-alignment">
+                            <span class="bp-red-font bp-font-14"
+                                ng-if="F_CO.isMultipleUnitsAddedOnDeal() || F_CO.isSingleStockUnitAddedOnDeal() || F_CO.isSingleTempUnitAddedOnDeal()">
+                            {{ 'Text_Remove_Unit_From_More_Than_One_Unit_Subsection' | translate }}
+                            </span>
+                            <span class="bp-red-font bp-font-14"
+                                ng-if="F_CO.isSingleStockUnitAddedOnDeal()">
+                            {{ 'Text_Remove_Unit_From_Single_Unit_Subsection' | translate }}
+                            </span>                          
+                        </div>
+                        <div class="warning-text-alignment">
+                            <span class="bp-dark-grey2-font bp-font-14">
+                            {{ 'Text_Confirm_Decision' | translate }}
+                            </span>
+                        </div>
+                        <div class="formBtn">
+<!--                             <button id="replace-unit-btn" class="bp-btn bp-btn-secondaryCTA bp-btn-medium button-fix-width bp-font-14"
+                                ng-if="F_CO.isSingleTempUnitAddedOnDeal()"
+                                ng-click="F_CO.replaceUnitFromPopup()">
+                            {{ 'Replace_unit' | translate }}
+                            </button>
+ -->                            <button id="replace-unit-btn" class="bp-btn bp-btn-secondaryCTA bp-btn-medium button-fix-width bp-font-14"
+                                ng-click="F_CO.closeRemoveUnitFromDealModal()">
+                            {{ 'Cancel_Label' | translate }}
+                            </button>
+                            <button id="remove-dealunit-btn" class="bp-btn bp-btn-normal bp-btn-medium button-fix-width button-fix-margin"
+                                ng-click="F_CO.removeUnitFromDeal()">
+                            {{ 'Ok_Label' | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End: remove unit popup -->
+    <!-- START: Print/Email Document Modal window -->
+    <div class="modal fade bp-model-dialog CreateGroupModal print-modal-popup" ng-class="{'print-modal-popup-large' : F_CO.isPrintPopupContainExcessTab()}" id="print-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close bp-close-but CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close" ng-click = "F_CO.hidePrintpopUpModalWindow()" >
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <div class="heading">{{ 'Print_Document_Message' | translate }}</div>
+                        <div class = "navigationWrapper" ng-if = "!M_CO.showInvoicePreviewPopup">
+                            <ul class="nav card-header-tabs Bp_Home_datatwo  col-xs-12" id="">
+                                <li class="col-xs-3 Bp_Home_listActiveList" ng-click="F_CO.setCurrentActiveTab(documentType.Name)" ng-if="F_CO.isTabVisible(documentType.Name)"
+                                    ng-repeat="documentType in M_CO.printDocumentTypeList">
+                                    <a class="col-sm-12 col-xs-12" ng-class="{'BP_Home_IsActive' : documentType.IsActive}">
+                                        <p class="Bp_Home_tabtext bp-text-lowerCase"> {{(documentType.Name == 'Merchandise') ? 'Parts':documentType.Name}}</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="tab-content-print" ng-if = "!M_CO.showInvoicePreviewPopup">
+                        	<div class = "scroll-adjust-print-modal">
+                            <div class = "MerchandiseSectionPrint" ng-if="F_CO.isCurrentTabActive('Merchandise')">
+                                <div class="print-document-selection" ng-click="F_CO.togglePrintItemCheckbox($index)" ng-repeat="printItem in M_CO.printDocumentTypeList[M_CO.CurrentActiveTabIndex].PrintItems">
+                                    <span class="chk_tick">
+                                    <i class="bp-icons bp-font-12 bp-blue-font bp-text-transform stroke-3 tickiconWidth" ng-if="printItem.IsSelected" >check</i>
+                                    </span>
+                                    <label class="align-with-checkbox bp-first-letter-capitalize">{{printItem.Label}}</label>
+                                </div>
+                            </div>
+                            <div ng-show = "F_CO.isCurrentTabActive('Service')" class="service-print" id="service-print">
+                                <div class="two-column-Block col-xs-6 worksheet">
+                                    <p class="text-left subheading" ng-click="F_CO.selectAllServiceType('Worksheet')">{{ 'Worksheet_for' | translate }}</p>
+                                    <div ng-repeat = "printItem in M_CO.ServiceTypeWorksheet track by $index" class="so-wrapper-div MB10">
+                                        <p class="text-left">{{printItem.UnitName}}</p>
+                                        <div ng-repeat = "listOfJobs in printItem.SOInfoWrapperList track by $index">
+                                            <div class="print-document-selection">
+                                                <span class="chk_tick" ng-click='F_CO.worksheetIsSelected($index, listOfJobs.SOHeaderId)'>
+                                                <i class="bp-icons bp-font-12 bp-blue-font bp-text-transform stroke-3 tickiconWidth" ng-if="listOfJobs.IsSOHeaderSelected" >check</i>
+                                                </span>
+                                                <label  class="align-with-checkbox bp-text-lowerCase">{{listOfJobs.Name}}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="two-column-Block col-xs-6 left-border review">
+                                    <p class="text-left subheading" ng-click="F_CO.selectAllServiceType('Job')">{{ 'Job_review_for' | translate }}</p>
+                                    <div ng-repeat = "printItem in M_CO.ServiceTypeJobReview track by $index" class="so-wrapper-div MB10">
+                                        <p class="text-left">{{printItem.UnitName}}</p>
+                                        <div ng-repeat = "listOfJobs in printItem.SOInfoWrapperList track by $index">
+                                            <div class="print-document-selection">
+                                                <span class="chk_tick" ng-click='F_CO.jobReviewIsSelected($index, listOfJobs.SOHeaderId)'>
+                                                <i class="bp-icons bp-font-12 bp-blue-font bp-text-transform stroke-3 tickiconWidth" ng-if="listOfJobs.IsSOHeaderSelected" >check</i>
+                                                </span>
+                                                <label  class="align-with-checkbox bp-text-lowerCase">{{listOfJobs.Name}}</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class = "MerchandiseSectionPrint" ng-if="F_CO.isCurrentTabActive('Deal')">
+                                <div class="print-document-selection"  ng-click="F_CO.togglePrintItemCheckbox($index)"
+                                    ng-repeat="printItem in M_CO.printDocumentTypeList[M_CO.CurrentActiveTabIndex].PrintItems"
+                                    ng-if="(M_CO.coHeaderRec.OrderStatus != 'Quote' || printItem.Label != 'Print deposit receipt')">
+                                    <span class="chk_tick">
+                                    <i class="bp-icons bp-font-12 bp-blue-font bp-text-transform stroke-3 tickiconWidth" ng-if="printItem.IsSelected" >check</i>
+                                    </span>
+                                    <label class="align-with-checkbox">{{printItem.Label}}</label>
+                                </div>
+                            </div>
+                            <div class = "MerchandiseSectionPrint" ng-if="F_CO.isCurrentTabActive('Documents')">
+                                <div class="print-document-selection" ng-if="printItem.IsVisible" ng-click="F_CO.togglePrintItemCheckbox($index)" ng-repeat="printItem in M_CO.printDocumentTypeList[M_CO.CurrentActiveTabIndex].PrintItems">
+                                    <span class="chk_tick">
+                                    <i class="bp-icons bp-font-12 bp-blue-font bp-text-transform stroke-3 tickiconWidth" ng-if="printItem.IsSelected" >check</i>
+                                    </span>
+                                    <label class="align-with-checkbox">{{printItem.Label}}</label>
+                                </div>
+                            </div>
+                            <div ng-show = "F_CO.isCurrentTabActive('Receipts')" class="service-print" ng-class="{'MerchandiseSectionPrint': !F_CO.isActiveInvoiceHeaderIdExists()}">
+                                <div class="" ng-class="{'two-column-Block col-xs-6 worksheet': F_CO.isActiveInvoiceHeaderIdExists()}">
+                                    <div  class="so-wrapper-div print-document-selection" ng-if="M_CO.printDocumentTypeList[M_CO.CurrentActiveTabIndex].PrintItems[0].IsVisible &&  (M_CO.printDocumentTypeList[M_CO.CurrentActiveTabIndex].PrintItems[0].Label != 'Invoice preview' || F_CO.isActiveInvoiceHeaderIdExists())" ng-click="F_CO.togglePrintItemCheckbox(0)">
+                                    <span class="chk_tick">
+                                    <i class="bp-icons bp-font-12 bp-blue-font bp-text-transform stroke-3 tickiconWidth" ng-if="M_CO.printDocumentTypeList[M_CO.CurrentActiveTabIndex].PrintItems[0].IsSelected" >check</i>
+                                            </span>
+                                            <label class="align-with-checkbox text-left">{{M_CO.printDocumentTypeList[M_CO.CurrentActiveTabIndex].PrintItems[0].Label}}</label>
+                                    </div>
+                                </div>
+                                <div class="two-column-Block col-xs-6 left-border review" ng-if="F_CO.isActiveInvoiceHeaderIdExists()">
+                                    <p class="text-left subheading" >Invoice preview for</p>
+                                    <div  class="so-wrapper-div print-document-selection" ng-repeat="printItem in M_CO.printDocumentTypeList[M_CO.CurrentActiveTabIndex].PrintItems"  ng-if="$index != 0 && printItem.IsVisible &&  (printItem.Label != 'Invoice preview' || F_CO.isActiveInvoiceHeaderIdExists())" ng-click="F_CO.togglePrintItemCheckbox($index)">
+                                        <span class="chk_tick">
+                                            <i class="bp-icons bp-font-12 bp-blue-font bp-text-transform stroke-3 tickiconWidth" ng-if="printItem.IsSelected" >check</i>
+                                    </span>
+                                            <label class="align-with-checkbox text-left">{{printItem.Label}}
+                                                <p ng-if = "printItem.TransactionTypeLabel" class="CM0">{{printItem.TransactionTypeLabel}}</p>
+                                            </label>
+                                            
+                                </div>
+                            </div>
+                        	</div>
+                        </div>
+                        </div>
+                        <div class="tab-content-print" ng-if = "M_CO.showInvoicePreviewPopup">
+                            <div class = "MerchandiseSectionPrint">
+                                <div class="print-document-selection" ng-click="F_CO.togglePrintReceiptItemCheckbox($index)" ng-repeat = "receiptPinItem in M_CO.printReceiptInvoiceList">  
+                                    <span class="chk_tick">
+                                    <i class="bp-icons bp-font-12 bp-blue-font bp-text-transform stroke-3 tickiconWidth" ng-if="receiptPinItem.isSelected" >check</i>
+                                    </span>
+                                    <label class="align-with-checkbox">{{receiptPinItem.Name}}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="change-due-amount" ng-if="CheckoutInfoModel.ChangeDue > 0 && CheckoutInfoModel.BalanceDue == 0 && M_CO.isComingFromFinalizeCheckout">
+                            <div>{{ 'Change_Due' | translate }}</div>
+                            <div>{{CheckoutInfoModel.ChangeDue | currency}}</div>
+                        </div>
+                           <div ng-if ="M_CO.isBrandingLocationEnable" class="cash-drawer branding-location-print-container" >
+                         	<i class="bp-icons bp-font-20 stroke-3 MT-5">branding</i>
+                             	<span class="bp-dark-grey2-font cash-drawer-info">Branding: <strong>{{M_CO.selectedBusinessLocationName}}</strong></span>
+                                        <a class="bp-blue-font bp-bold-font" ng-click = "F_CO.showBrandingLocationModalWindow()">change</a>
+                                    <div class="change-cash-drawer-modal-window" ng-if = "M_CO.showBrandingLocation">
+                                        <div class="chnage-cash-drawer-container">
+                                            <label>Change Branding for this work station</label>
+                                            <div class="col-xs-12 P0">
+                                               <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                                                   <span class = "bp-autocomplete-image-icon">
+                                                       <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer MT-3 stroke-5" ng-click = "F_CO.setFocusOnInput('BrandingLocationId')">arrowDown</i>
+                                                    </span>
+                                                                 <input  type="text" id="BrandingLocationId" class="bp-autocomplete-input bp-cursor-pointer 
+                                                                    bp-input-text " placeholder="{{'Please_select' | translate }}"
+                                                                    autocomplete="off" ng-focus = "M_CO.showBrandingLocationList = true"
+                                                                    ng-blur="M_CO.showBrandingLocationList = false"
+                                                                     ng-model="M_CO.BusinessLocationName"
+                                                                     readonly="readonly"
+                                                                     ng-keyup="F_CO.keyPressNavigationOnDropdownElements($event, 'brandingLocationDropdownDiv', 'BL', M_CO.allBrandingLocationList)" />                       
+                                                                 <div class = "bp-autocomplete-dropdown-wrapper"  ng-if = "M_CO.showBrandingLocationList" id="brandingLocationDropdownDiv">
+                                                                     <ul>
+                                                                         <li ng-mousedown="F_CO.selectBrandingLocation(BLRec)"
+                                                                         ng-class="{'selected-row': $index == M_CO.currentDropDownIndex}"
+                                                                            ng-repeat="BLRec in M_CO.allBrandingLocationList track by $index" id="BL_{{$index}}">
+                                                                             <div class="form-group-info col-xs-12 P0">
+                                                                                 <span >{{BLRec.BusinessLocationName}}</span>
+                                                                             </div>
+                                                                         </li> 
+                                                                     </ul>
+                                                                      <ul ng-if = "M_CO.allBrandingLocationList.length == 0">
+                                                                         <li id="cashDrawerNoResults"  class="BP_angucomplete-row-NoResults-Msg">
+                                                                             <div class="">{{'No_Results_Found' | translate}}</div>
+                                                                         </li>
+                                                                     </ul>
+                                                                 </div>
+                                                              </div>         
+                                                    </div>
+                                            <button class="bp-btn bp-btn-normal" ng-click="F_CO.saveBrandingLocationInfo()">CONFIRM</button>
+                                            <a class="cancel-change-cash-drawer" ng-click = "F_CO.hideChangeBLModalWindow()">Cancel</a>
+                                        </div>
+                                    </div>
+                               </div>
+                                     
+                               
+                        <div class="button-group-print">
+                            <div class="button-div">
+                                <button class="btn bp-btn-normal" ng-disabled = "!(F_CO.isAnyCheckBoxSelected())  || (M_CO.isBrandingLocationEnable && !M_CO.selectedBusinessLocationName)" ng-Click="F_CO.getSelectedDocument()">
+                                <span class = "align-button-label">
+                                        <i class="bp-icons bp-font-18 bp-fw-100 MR10">print</i>
+                                <span>{{ 'Print_Selected' | translate }}</span>
+                                </span>
+                                </button>
+                            </div>
+                            <div class="button-div" ng-if = "!M_CO.showInvoicePreviewPopup">
+                                <button class="btn bp-btn-normal" ng-disabled = "!(F_CO.isAnyCheckBoxSelected()) || (M_CO.isBrandingLocationEnable && !M_CO.selectedBusinessLocationName)" ng-click="F_CO.openMessagePopUp('sendEmail',true)" >
+                                <span class = "align-button-label">
+                                        <i class="bp-icons bp-font-18 bp-fw-100 MR10">emailSend</i>
+                                <span>{{ 'Email_Selected' | translate }}</span>
+                                </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END: Print/Email Document Modal window -->
+    <!-- Start: Customer approval popup -->
+    <div class="modal fade bp-model-dialog customer-approval CreateGroupModal print-modal-popup" id="approvalmodal" tabindex="-1" role="dialog"  aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close bp-close-but CreateGroupModalCloseIcon CreateGroupModal CloseIcon" data-dismiss="modal" aria-label="Close" ng-click = "F_CO.hideCustomerApprovalModalWindow()" >
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <h3 class="heading customer-approval-msg-heading">{{ 'Approval_Message' | translate }}</h3>
+                        <div class="tab-content-print" >
+                            <div id="servicejob">
+                                <div class = "row row-flex row-flex-wrap flexGrid" >
+                                    <p class="bp-dark-grey1-font bp-font-16" ng-if="M_CO.CustomerApproval.isNoUnitSelectedForApproval"> No Unit is selected for customer approval.</p>
+                                    <div class="two-column-Block col-xs-6 worksheet MB10" ng-if="M_CO.CustomerApproval.UnitList[$index].SOInfoWrapperList.length > 0" ng-repeat = "listOfJobs in M_CO.CustomerApproval.UnitList track by $index"
+                                        ng-class="{'align-even-unit' :  {{$index}} % 2 == 1  }">
+                                        <p class="text-left subheading cust-approval-subheading line-height-large bp-dark-grey1-font" ng-click="F_CO.selectAllServiceType('Worksheet')">{{ 'Approval_for' | translate }}</p>
+                                        <div class="so-wrapper-div " >
+                                            <p class="text-left unit-name">{{listOfJobs.UnitName}} </p>
+                                            <div ng-repeat = "jobs in listOfJobs.SOInfoWrapperList track by $index">
+                                                <div class="print-document-selection" >
+                                                    <span class="chk_tick" ng-click="F_CO.toggleSelectedServiceJobForCustomerApproval($index,jobs.SOHeaderId)">
+                                                    <i class="bp-icons bp-font-12 bp-blue-font bp-text-transform stroke-3 tickiconWidth" ng-if="jobs.IsSOHeaderSelected">check</i>
+                                                    </span>
+                                                    <label  class="align-with-checkbox align-unit-name bp-text-lowerCase">{{jobs.Name}}</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="button-group-print" ng-if="!M_CO.CustomerApproval.isNoUnitSelectedForApproval">
+                            <div class="button-div">
+                                <button class="btn bp-btn-normal" ng-Click="F_CO.getCustomerApprovalForSelectedDocument()">
+                                <span class = "align-button-label">
+                                <span>{{ 'Get_Approval' | translate }}</span>
+                                </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End:Customer approval popup -->
+    <div class="modal fade-scale bp-model-dialog serviceJobStatusChangeModel" id="serviceJobStatusChange" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class = "modal-body P0">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth" data-dismiss="modal">close</i>
+                    <div class="content bp-wrapper-container">
+                        <h2 class = "jobStatusTitle text-center text-uppercase">{{ 'Change_job_status' | translate }}</h2>
+                        <div class = "statusLogWrapper PB0">
+                            <div class = "col-xs-6 P0">
+                                <div ng-if = "M_CO.changeStatusList.length" ng-repeat="statusConfig in M_CO.changeStatusList">
+                                    <div class = "statusLog" ng-if="$index <= 7">
+                                        <span class="statusTitle {{statusConfig.TextColor.toLowerCase()}} {{statusConfig.BgColor.toLowerCase()}}">
+                                        {{statusConfig.Name}}
+                                        </span>
+                                        <span class="chk_tick" id="isInstall" ng-click = "F_CO.changeServiceJobStatus(statusConfig)"
+                                            ng-class = "{'disableCheck': F_CO.IsServiceJobStatusDisabled(statusConfig.Name.toLowerCase()) || F_CO.disableServiceJobStatusChkbox(statusConfig.Name.toLowerCase())}">
+                                        <i ng-if="M_CO.SOHeaderList[M_CO.selectedSOHeaderIndex].SOInfo.newWorkStatus.toLowerCase() == statusConfig.Name.toLowerCase()" class="bp-icons bp-font-11 bp-blue-font bp-text-transform stroke-3 doneIcon">check</i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="bp-info-tooltip-svg ML50" ng-if="F_CO.CompleteCheckboxDisableMessage.length > 0 && M_CO.changeStatusList.length <= 7">
+    								<span class="bp-info-tooltip-svg-circle">
+    									<span class="bp-info-tooltip-svg-text">i</span>
+    								</span>
+    								<span class="job-status-tooltip-text">{{F_CO.CompleteCheckboxDisableMessage}}</span>
+								</div>
+                            </div>
+                            <div class = "col-xs-5 P0"  >
+                                <div ng-if = "M_CO.changeStatusList.length" ng-repeat="statusConfig in M_CO.changeStatusList">
+                                    <div class = "statusLog" ng-if="$index > 7">
+                                        <span class="statusTitle {{statusConfig.TextColor.toLowerCase()}} {{statusConfig.BgColor.toLowerCase()}}" >
+                                            {{statusConfig.Name}}
+                                        </span>
+                                        <span class="chk_tick" id="isInstall" ng-click = "F_CO.changeServiceJobStatus(statusConfig)"
+                                            ng-class = "{'disableCheck': F_CO.IsServiceJobStatusDisabled(statusConfig.Name.toLowerCase()) || F_CO.disableServiceJobStatusChkbox(statusConfig.Name.toLowerCase())}">
+                                        <i ng-if="M_CO.SOHeaderList[M_CO.selectedSOHeaderIndex].SOInfo.newWorkStatus.toLowerCase() == statusConfig.Name.toLowerCase()" class="bp-icons bp-font-11 bp-blue-font bp-text-transform stroke-3 doneIcon">check</i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="bp-info-tooltip-svg ML50" ng-if="F_CO.CompleteCheckboxDisableMessage.length > 0 && M_CO.changeStatusList.length > 7">
+    								<span class="bp-info-tooltip-svg-circle">
+    									<span class="bp-info-tooltip-svg-text">i</span>
+    								</span>
+    								<span class="job-status-tooltip-text">{{F_CO.CompleteCheckboxDisableMessage}}</span>
+								</div>
+                                <div class="MT-5" ng-if = "M_CO.SOHeaderList[M_CO.selectedSOHeaderIndex].SOInfo.WorkStatus.toLowerCase() == 'job complete' || M_CO.SOHeaderList[M_CO.selectedSOHeaderIndex].SOInfo.WorkStatus.toLowerCase() == 'ready to invoice' || M_CO.SOHeaderList[M_CO.selectedSOHeaderIndex].SOInfo.WorkStatus.toLowerCase() == 'invoiced'">
+                                    <span class = "bp-font-16 bp-reOpenStatus bp-bold-font">{{M_CO.reOpenStatus.title}}</span>
+                                    <div class = "statusLog">
+                                        <span class="statusTitle {{M_CO.changeStatusCssConfig[M_CO.reOpenStatus.status.toLowerCase()]}}">
+                                        {{M_CO.reOpenStatus.status}}
+                                        </span>
+                                        <span class="chk_tick" ng-class ="{'disableCheck':M_CO.SOHeaderList[M_CO.selectedSOHeaderIndex].SOInfo.WorkStatus.toLowerCase() == 'invoiced'}" ng-click = "F_CO.reOpenServiceJob(M_CO.selectedSOHeaderIndex,M_CO.reOpenStatus.status)">
+                                        <i ng-if="M_CO.SOHeaderList[M_CO.selectedSOHeaderIndex].SOInfo.newWorkStatus.toLowerCase() == M_CO.reOpenStatus.status.toLowerCase()" class="bp-icons bp-font-11 bp-blue-font bp-text-transform stroke-3 doneIcon">check</i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bp-status-btn-save-wrapper bp-changeJobStatusSave col-xs-offset-7">
+                            <button class="bp-btn bp-btn-normal" data-dismiss="modal" ng-click="F_CO.updateSOWorkStatus(M_CO.selectedSOHeaderIndex);">{{M_CO.reOpenStatus.btnLabel}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Deal financing Status Change Dialog -->
+    <div class="modal fade-scale bp-model-dialog serviceJobStatusChangeModel" id="dealFinancingStatusChange" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class = "modal-body P0">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth" data-dismiss="modal">close</i>
+                    <div class="content bp-wrapper-container">
+                        <h2 class = "jobStatusTitle text-center text-uppercase">{{ 'Change_status' | translate }}</h2>
+                        <div class = "statusLogWrapper">
+                            <div class = "col-xs-12" >
+                                <div class = "col-xs-6">
+                                    <div ng-if = "M_CO.changeDFStatusList.length" ng-repeat="status in M_CO.changeDFStatusList">
+                                <div class = "statusLog">
+                                    <span class="statusTitle {{M_CO.changeDFStatusCssConfig[status]}}">
+                                    {{status}}
+                                    </span>
+                                    <span class="chk_tick" id="isInstall" ng-click = "F_CO.DealFinance.ChangeDFStatus(status)"
+                                        ng-class = "{'disableCheck': F_CO.DealFinance.isStatusDisabled(status)}">
+                                            <i ng-if="M_CO.DealFinance.Status == status" class="bp-icons bp-font-11 bp-blue-font bp-text-transform stroke-3 doneIcon">check</i>
+                                    </span>
+                                </div>
+                            </div>
+                            </div>
+                            <div class = "col-xs-5" ng-if="F_CO.DealFinance.validateDealFinanceStatus()"><span class="bp-red-font H201">{{F_CO.DealFinance.validateDealFinanceStatus()}}</span></div>
+                            </div>
+                            <div class = "col-xs-12" >
+                                <div class = "col-xs-7"></div>
+                            <div class="bp-status-btn-save-wrapper col-xs-5">
+                                <button class="bp-btn bp-btn-normal" ng-click="F_CO.updateDealFinanceStatus();F_CO.DealFinance.closeChangeDFStatusDialog();">{{ 'Save_Label' | translate }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="modal fade-scale bp-model-dialog viewAttachedImage" id="ViewImage" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class = "modal-body P0">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth" data-dismiss="modal">close</i>
+                    <div>
+                        <img class="img-view" ng-src="{{M_CO.atchmntImgURL}}" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade-scale unresolvedFulfillmentPopup CreateGroupModal bp-model-dialog unresolvedFulfillmentPopup bp-dark-grey2-font"
+        ng-class="{'add-to-deal-invoice': M_CO.Deal.resolvedFulFillment.ActionRequired == 'Add to Deal','remove-from-deal-invoice':M_CO.Deal.resolvedFulFillment.ActionRequired == 'Remove from Deal','update-to-deal-invoice':M_CO.Deal.resolvedFulFillment.ActionRequired == 'Update Deal'}"
+        id="unresolvedFulfillmentPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close bp-close-but CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close" >
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class = "modal-body">
+                    <div class="userGroupInfoArea">
+                        <h2 class="heading text-center">{{ 'Label_Action_Required' | translate }} </h2>
+                        <div class="unresolvedfulfillmentoption" ng-show="M_CO.Deal.resolvedFulFillment.ActionRequired == 'Add to Deal'" id="unresolvedfullfillment1">
+                            <div class="unresolvedfullfillmentline">
+                                <div class="align-text-vertical padd-text-right bp-font-14 bp-lh-17">{{ 'Add_the_item_to_unit' | translate }}</div>
+                                <div class="bp-cell bp-unitSearch-area searchInputArea selectableDropdown unit-sku-list" ng-class="{'showingOverlay' : M_CO.setBotrderOnSpan == 'unit'}">
+                                    <input type="text" id="selectedsku1" class="searchInput" placeholder="Choose Unit"
+                                        ng-model="M_CO.dealStockIdValue[0].Value" readonly="readonly"
+                                        ng-focus="F_CO.showresolveFulfillmentDropdown ('unit')"
+                                        ng-disabled = "M_CO.dealStockIdValueJson.length == 1 || M_CO.Deal.resolvedFulFillment.DealServiceLineItemId"
+                                        ng-keyup="F_CO.keyBoardavigation($event, M_CO.dealStockIdValueJson, 'autocompleteScrollDivSkuList');"
+                                        ng-blur="F_CO.hideresolveFulfillmentDropdown()"/>
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow" ng-click = "F_CO.setFocusOnInput('selectedsku1')">arrowDown</i>
+                                    <div class="searchResultOverlay" id="autocompleteScrollDivSkuList">
+                                        <ul>
+                                            <li ng-repeat="sku in M_CO.dealStockIdValueJson" ng-mousedown="F_CO.selectResolveUnit(sku)" ng-class="{'selected-row': $index == M_CO.unreslovedList.autocompleteScrollDivSkuListCurrentIndex}">
+                                                <div class="fullName"
+                                                    id="autocompleteScrollDivSkuList{{$index}}"
+                                                    >{{sku.Value}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="unresolvedfullfillmentline">
+                                <div class="bp-cell bp-unitSearch-area searchInputArea selectableDropdown uni" ng-class="{'showingOverlay' : M_CO.setBotrderOnSpan == 'invoiceitem'}">
+                                    <input type="text" id="selectedinvoiceoption1" class="searchInput" 
+                                        ng-model="M_CO.Deal.resolvedFulFillment.ChargeMethod" readonly="readonly" placeholder="Choose Unit"
+                                        ng-focus="F_CO.showresolveFulfillmentDropdown ('invoiceitem')" 
+                                        ng-keyup="F_CO.keyBoardavigation($event, M_CO.InvoicingOptionList, 'autocompleteScrollDivInvoiceList');"
+                                        ng-blur="F_CO.hideresolveFulfillmentDropdown()"
+                                        />
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow" ng-click = "F_CO.setFocusOnInput('selectedinvoiceoption1')">arrowDown</i>
+                                    <div class="searchResultOverlay PR0" id="autocompleteScrollDivInvoiceList">
+                                        <ul>
+                                            <li ng-repeat="invoiceoption in M_CO.InvoicingOptionList" ng-class="{'selected-row': $index == M_CO.unreslovedList.autocompleteScrollDivInvoiceListCurrentIndex}">
+                                                <div class="fullName"
+                                                    id="autocompleteScrollDivInvoiceList{{$index}}"
+                                                    ng-mousedown="F_CO.selectchargedMethod(invoiceoption)">{{invoiceoption.label}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="align-text-vertical padd-text-left bp-font-14 bp-lh-17">{{ 'the_customer_for_the_item' | translate }}</div>
+                            </div>
+                        </div>
+                        <div class="unresolvedfulfillmentoption" ng-show="M_CO.Deal.resolvedFulFillment.ActionRequired == 'Remove from Deal'" id="unresolvedfullfillment2">
+                            <div class="unresolvedfullfillmentline align-text-vertical">
+                                <div class="align-text-vertical bp-font-14 bp-lh-17">
+                                    {{ 'Remove_the_item_from_stock_unit' | translate }} {{M_CO.Deal.resolvedFulFillment.RelatedStockIds}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="unresolvedfulfillmentoption" ng-show="M_CO.Deal.resolvedFulFillment.ActionRequired == 'Update Deal'" id="unresolvedfullfillment3">
+                            <div class="unresolvedfullfillmentline">
+                                <div class="align-text-vertical padd-text-right bp-font-14 bp-lh-17">
+                                    {{ 'Apply_the_quantity' | translate }} 
+                                    <sapn class = "PLR2" ng-if = "M_CO.Deal.resolvedFulFillment.ActualQty < M_CO.Deal.resolvedFulFillment.UpdatedQty"> {{ 'increase' | translate }}</sapn>
+                                    <span class = "PLR2" ng-if = 'M_CO.Deal.resolvedFulFillment.ActualQty > M_CO.Deal.resolvedFulFillment.UpdatedQty'>{{ 'decrease' | translate }}</span> {{ 'to_the_options_on_unit' | translate }}
+                                </div>
+                                <div class="bp-cell bp-unitSearch-area searchInputArea selectableDropdown unit-sku-list" ng-class="{'showingOverlay' :  M_CO.setBotrderOnSpan == 'unit'}">
+                                    <input type="text" id="selectedsku3" class="searchInput" placeholder="Choose Unit"
+                                        ng-model="M_CO.dealStockIdValue[0].Value" readonly="readonly"
+                                        ng-focus="F_CO.showresolveFulfillmentDropdown ('unit')"
+                                        ng-disabled = "M_CO.dealStockIdValueJson.length == 1 || M_CO.Deal.resolvedFulFillment.DealServiceLineItemId"
+                                        ng-keyup="F_CO.keyBoardavigation($event, M_CO.dealStockIdValueJson, 'autocompleteScrollDivSkuList');"
+                                        ng-blur="F_CO.hideresolveFulfillmentDropdown()" />
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow" ng-click = "F_CO.setFocusOnInput('selectedsku3')">arrowDown</i>
+                                    <div class="searchResultOverlay" id="autocompleteScrollDivSkuList">
+                                        <ul>
+                                            <li ng-repeat="sku in M_CO.dealStockIdValueJson"  ng-class="{'selected-row': $index == M_CO.unreslovedList.autocompleteScrollDivSkuListCurrentIndex}">
+                                                <div class="fullName" 
+                                                    ng-mousedown="F_CO.selectResolveUnit(sku)"
+                                                    id="autocompleteScrollDivSkuList{{$index}}" >{{sku.Value}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="unresolvedfullfillmentline">
+                                <div class="align-text-vertical padd-text-left-29 padd-text-right bp-font-14 bp-lh-17">{{ 'Label_And' | translate }}</div>
+                                <div class="bp-cell bp-unitSearch-area searchInputArea selectableDropdown uni" ng-class="{'showingOverlay' : M_CO.setBotrderOnSpan  == 'invoiceitem'}">
+                                    <input type="text" id="selectedinvoiceoption3" class="searchInput" 
+                                        ng-model="M_CO.Deal.resolvedFulFillment.ChargeMethod" readonly="readonly" placeholder="Choose Unit"
+                                        ng-focus="F_CO.showresolveFulfillmentDropdown ('invoiceitem')" 
+                                        ng-keyup="F_CO.keyBoardavigation($event, M_CO.InvoicingOptionList, 'autocompleteScrollDivInvoiceList');"
+                                        ng-blur="F_CO.hideresolveFulfillmentDropdown()"
+                                        />
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow" ng-click = "F_CO.setFocusOnInput('selectedinvoiceoption3')">arrowDown</i>
+                                    <div class="searchResultOverlay PR0" id="autocompleteScrollDivInvoiceList">
+                                        <ul>
+                                            <li ng-repeat="invoiceoption in M_CO.InvoicingOptionList" ng-class="{'selected-row': $index == M_CO.unreslovedList.autocompleteScrollDivInvoiceListCurrentIndex}">
+                                                <div class="fullName" 
+                                                    ng-mousedown="F_CO.selectchargedMethod(invoiceoption)"
+                                                    id="autocompleteScrollDivInvoiceList{{$index}}" >{{invoiceoption.label}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="align-text-vertical padd-text-left bp-font-14 bp-lh-17">{{ 'the_customer_for_the_item' | translate }}</div>
+                            </div>
+                        </div>
+                        <div class="align-text-vertical">
+                            <button type="button" class="bp-btn bp-btn-secondaryCTA bp-btn-medium btn-custom-width bp-font-14" ng-click = "F_CO.hideUnresolvedFullfilmentPopUp();">
+                            {{ 'Cancel_Label' | translate }}
+                            </button>
+                            <button type="button" class="bp-btn bp-btn-normal bp-btn-medium btn-custom-width bp-font-14" ng-click = "F_CO.resolveFulfillmentData(M_CO.Deal.resolvedFulFillment,M_CO.dealStockIdValue[0])">
+                            {{ 'Label_Apply' | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade-scale bp-model-dialog  CreateGroupModal checkout-modal-popup AddDepositPopup" id="AddDepositPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body checkout-popup">
+                    <div class="userGroupInfoArea">
+                    	<label class="model-name-heading">Add deposit</label>
+                        <div class="heading text-left">{{ 'CHOOSE_A_PAYMENT_METHOD' | translate }} </div>
+                        <div class="banner-main-container" ng-if="M_CO.unappliedCreditsFromAccountingList && M_CO.Deposit.selectPaymentMethodName == 'AR Credit' && !M_CO.isShowUnappliedCreditsDropDwon">
+                            <div class="c-sub-heading banner-container orange-banner" >
+                                <i class="bp-icons bp-beer-font bp-font-18 MT-5">warningFilled</i>
+                                <div>
+                                    <p>No unapplied credits returned, please select a different payment method.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class = "P0 payment-methods">
+                            <ul class = " P0 payment-container ">
+                                <div class="preferred-payment-container" ng-if="M_CO.IsPreferredPaymentEnabled">
+                                    <div class="preferred-payment" ng-class="{'active': M_CO.Deposit.selectPaymentMethodName == M_CO.PreferredPaymentLabel, 'bp-disabled': M_CO.Deposit.selectedPaymentType == 'Financing'}" ng-click="F_CO.Deposit.selectPaymentMethod(M_CO.PreferredPaymentLabel)" ng-disabled="M_CO.Deposit.selectPaymentMethodName == M_CO.PreferredPaymentLabel">
+                                        <img class="preferred-payment-img" src="{!Application_Images}/pp-logo.png" />
+                                     </div>
+                                </div>
+                            	  <li ng-repeat = "paymentRec in M_CO.ActivePaymentMethodList" ng-click="F_CO.Deposit.selectPaymentMethod(paymentRec.Name);">
+                            	  	<div class="box"
+                                            ng-class="{'active': M_CO.Deposit.selectPaymentMethodName == paymentRec.Name, 'bp-disabled': M_CO.Deposit.selectedPaymentType == 'Financing' }" ng-if="F_CO.showCheckOutPAymentMethodBox(paymentRec.Name,'deposite');">
+                                            <div><i class="bp-icons bp-font-18 bp-white-font bp-lh-27">{{paymentRec.IconLink}}</i></div>
+                                            <h3>{{paymentRec.Name}}</h3>
+                                   </div>
+                            	  </li>
+                                <li ng-repeat = "paymentRec in M_CO.Deposit.PaymentMethod track by $index">
+                                    <div class="box" ng-if = "paymentRec.MethodName != 'Store Credit' && paymentRec.MethodName != 'Financing'" ng-click = "F_CO.Deposit.selectPaymentMethod(paymentRec.MethodName)" ng-class="{'active': M_CO.Deposit.selectPaymentMethodName == paymentRec.MethodName, 'bp-disabled': M_CO.Deposit.selectedPaymentType == 'Financing'}">
+                                        <div>
+                                            <i ng-if = "paymentRec.MethodName == 'Direct Deposit'" class="bp-icons bp-font-18 bp-white-font">deposit</i>
+                                        </div>
+                                        <h3>{{::paymentRec.MethodName}}</h3>
+                                    </div>
+                                    <div class="box" ng-if = "paymentRec.MethodName == 'Store Credit'  && M_CO.Deposit.refundFlag" ng-click = "F_CO.Deposit.selectPaymentMethod(paymentRec.MethodName)" ng-class="{'active': M_CO.Deposit.selectPaymentMethodName == paymentRec.MethodName, 'bp-disabled': M_CO.Deposit.selectedPaymentType == 'Financing'}">
+                                        <div>
+                                            <i ng-if = "paymentRec.MethodName == 'Store Credit'" class="bp-icons bp-font-18 bp-white-font">store</i>
+                                        </div>
+                                        <h3>{{::paymentRec.MethodName}}</h3>
+                                    </div>
+                                    <div class="box" ng-if = "paymentRec.MethodName == 'Store Credit'  && !M_CO.Deposit.refundFlag && M_CO.coHeaderRec.CustomerStoreCredit > 0" ng-click = "F_CO.Deposit.selectPaymentMethod(paymentRec.MethodName)" ng-class="{'active': M_CO.Deposit.selectPaymentMethodName == paymentRec.MethodName, 'bp-disabled': M_CO.Deposit.selectedPaymentType == 'Financing'}">
+                                        <div>
+                                            <i ng-if = "paymentRec.MethodName == 'Store Credit'" class="bp-icons bp-font-18 bp-white-font">store</i>
+                                        </div>
+                                        <h3>{{::paymentRec.MethodName}}</h3>
+                                        <p class="bp-white-font bp-font-12">{{M_CO.coHeaderRec.CustomerStoreCredit | currency}}</p>
+                                    </div>
+                                    <div class="box" ng-if = "paymentRec.MethodName == 'Financing' && M_CO.Deal.DealInfo.DealType == 'Financed' && M_CO.Deposit.depositType == 'Deal' && ((!M_CO.Deposit.selectedPaymentType) || (M_CO.Deposit.selectedPaymentType && M_CO.Deposit.selectedPaymentType == 'Financing'))" ng-click = "F_CO.Deposit.selectPaymentMethod(paymentRec.MethodName)" ng-class="{'active': M_CO.Deposit.selectPaymentMethodName == paymentRec.MethodName, 'bp-bg-opactity': ((!M_CO.Deposit.refundFlag && F_CO.Deposit.balanceOwingFromTheFinanceCompany() == 0) || (M_CO.Deposit.refundFlag && F_CO.DealFinance.dealTotalDepositFromFinanced() == 0) || (M_CO.Deal.DealInfo && M_CO.Deal.DealInfo.DealType=='Financed' && M_CO.Deal.DealFinanceObj.Status != 'Approved' && M_CO.Deal.DealFinanceObj.Status != 'Funded') || (!M_CO.Deposit.selectedPaymentType))}">
+                                        <div>
+                                            <i class="bp-icons bp-font-18 bp-white-font">dealFinancing</i>
+                                        </div>
+                                        <h3>{{'Finance_Company' | translate}}</h3>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-xs-12 P0 payment-input-wrap">
+                            <div class="form-input payment-input col-xs-12 col-sm-9  P0 pull-left new-input-style text-left"  ng-if="M_CO.unappliedCreditsFromAccountingList && M_CO.isShowUnappliedCreditsDropDwon && M_CO.Deposit.selectPaymentMethodName == 'AR Credit'">
+                                <label class="print-item-label">Which credit would you like to use?</label>
+                                <div class="bp-cell  searchInputArea " ng-class = "{'showingOverlay' : M_CO.isShowUnappliedCreditsList }">
+                                    <input  type="text" id="UnappliedCredits" class="bp-input-text searchInput" placeholder="{{ 'Please_select' | translate }}"
+                                        autocomplete="off" ng-focus = "F_CO.showUnappliedCreditsList()" ng-blur = "F_CO.hideUnappliedCreditsList();"
+                                        ng-model="M_CO.selectedUnappliedCredits"
+                                        ng-click = "F_CO.showUnappliedCreditsList()" readonly = "readonly"
+                                        />
+                                        <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow" ng-click = "F_CO.showUnappliedCreditsList()">arrowDown</i>
+                                    <div class="searchResultOverlay" id="UnappliedCreditsDropDownDiv">
+                                        <ul>
+                                            <li ng-repeat="UnappliedCreditsRec in M_CO.unappliedCreditsFromAccountingList"
+                                                ng-mousedown="F_CO.selectUnappliedCredits(UnappliedCreditsRec,'Deposite')"
+                                                id="UnappliedCredits{{$index}}">
+                                                <div class="fullName text-capitalize">{{UnappliedCreditsRec.FormattedName}}</div>
+                                            </li>  
+                                        </ul> 
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="payment-input col-xs-12 col-sm-9  P0 pull-left"
+                                ng-class="{typing0: !M_CO.Deposit.depositAmout, typing: M_CO.Deposit.depositAmout, typing1: M_CO.Deposit.paymentMethod}">
+                                <div class="input-wrap P0 col-xs-12 text-left M0 pull-left" ng-if="!M_CO.Deposit.appliedSurchargeDetails.IsSurchargeApplicable">
+                                    {{ 'Currency_Symbol' | translate }}
+                                    <numbers-only id-value = "depositAmount"
+                                        class-value = ""
+                                        min-value = "0"
+                                        input-model-value = "M_CO.Deposit.deposit_Amount" 
+                                        include-negative = "false"  
+                                        include-zero = "false"
+                                        place-holder-value ="0.00"
+                                        precision-length = "2"
+                                        disabled-value="M_CO.Deposit.selectPaymentMethodName == 'AR Credit' || (!M_CO.Deposit.refundFlag && M_CO.Deposit.selectPaymentMethodName == 'Financing')"
+                                        input-keyup-value = "M_CO.checkoutPaymentByEnter($event,'Deposit')"/>
+                                </div>
+                                <div class="surcharge-payment-wrap" ng-if="M_CO.Deposit.appliedSurchargeDetails.IsSurchargeApplicable">
+                                    <span class="bp-red-font surcharge-warning">{{'Warning_additional_surcharge_is_being_added' | translate}}</span>
+                                    </div>
+                                <div class="surcharge-payment-wrap" ng-if="M_CO.Deposit.appliedSurchargeDetails.IsSurchargeApplicable">
+                                    <span>Amount paid</span>
+                                    <div class="checkout-payment-input-small">$
+                                        <numbers-only id-value = "depositWithoutSurchargeAmount"
+                                            class-value = ""
+                                            min-value = "0"
+                                            input-model-value = "M_CO.Deposit.AmountDepositingWithoutSurcharge" 
+                                            include-negative = "false"  
+                                            include-zero = "false"
+                                            place-holder-value ="0.00"
+                                            precision-length = "2"
+                                            disabled-value="M_CO.Deposit.selectPaymentMethodName == 'AR Credit' || (!M_CO.Deposit.refundFlag && M_CO.Deposit.selectPaymentMethodName == 'Financing')"
+                                            input-keyup-value = "M_CO.checkoutPaymentByEnter($event,'Deposit')"
+                                            blur-value = "F_CO.Deposit.calculateDepositWithSurcharge(M_CO.Deposit.AmountDepositingWithoutSurcharge)"
+                                            />
+                                    </div>
+                                </div>
+                                <div class="surcharge-payment-wrap" ng-if="M_CO.Deposit.appliedSurchargeDetails.IsSurchargeApplicable">
+                                    <div class="checkout-payment-input-small surcharge-per" ng-if="GroupOnlyPermissions['Modify payment method surcharge']['enabled']">
+                                        <numbers-only blur-value="F_CO.Deposit.calculateDepositWithSurcharge(M_CO.Deposit.AmountDepositingWithoutSurcharge)" class-value="" precision-length="2" include-negative="false" min-value="0" default-value="0"
+                                            input-model-value="M_CO.Deposit.appliedSurchargeDetails.SurchargePercentage" max-value="100" />
+                                    
+                                    %</div>
+                                    <span class="surcharge-per-label" ng-if="!GroupOnlyPermissions['Modify payment method surcharge']['enabled']">{{M_CO.Deposit.appliedSurchargeDetails.SurchargePercentage}}%</span>
+                                    <span>surcharge</span>
+                                    <span class="surcharge-val">{{M_CO.Deposit.SurchargeAmount | currency}}</span>
+                                </div>
+                                <div class="surcharge-payment-wrap MB10" ng-if="M_CO.Deposit.appliedSurchargeDetails.IsSurchargeApplicable">
+                                    <span>Total payment</span>
+                                    <span class="surcharge-val bp-bold-font">{{M_CO.Deposit.deposit_Amount | currency}}</span>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 P0 pull-left text-left" ng-if="(!M_CO.Deposit.refundFlag && M_CO.Deal.DealInfo && M_CO.Deal.DealInfo.DealStatus !== 'Invoiced') || (M_CO.Deposit.refundFlag && M_CO.Deposit.TotalCustomerDepositAmount > 0 && M_CO.Deposit.TotalDealDepositAmount > 0)">
+                                <p class="bp-font-16 bp-bold-font bp-dark-grey2-font M0">{{ 'Where_would_you_like_to_add_this_deposit_to' | translate }}?</p>
+                            </div>
+                            <div class="col-xs-12 P0 pull-left text-left deposit-section-select-box" ng-show="(!M_CO.Deposit.refundFlag && M_CO.Deal.DealInfo && M_CO.Deal.DealInfo.DealStatus !== 'Invoiced') || (M_CO.Deposit.refundFlag && M_CO.Deposit.TotalCustomerDepositAmount > 0 && M_CO.Deposit.TotalDealDepositAmount > 0)">
+                                <label class="bp-radio bp-font-16 bp-semibold-font bp-dark-grey2-font">
+                                <input type="radio" ng-model="M_CO.Deposit.depositType" value="Deal" name="Deposit" ng-change="F_CO.Deposit.setDepositAmount()"
+                                    ng-disabled="M_CO.Deposit.selectPaymentMethodName == 'Financing' || M_CO.Deposit.selectedPaymentType"/>
+                                {{ 'Deal_section' | translate }}
+                                </label>
+                                <label class="bp-radio bp-font-16 bp-semibold-font bp-dark-grey2-font">
+                                <input type="radio" ng-model="M_CO.Deposit.depositType" value="Customer" name="Deposit" ng-change="F_CO.Deposit.setDepositAmount()"
+                                    ng-disabled="M_CO.Deposit.selectPaymentMethodName == 'Financing' || M_CO.Deposit.selectedPaymentType"/>
+                                {{ 'Customer_Order' | translate }}
+                                </label>
+                            </div>
+                            <div class = "cash-dreawer-fotter-container">
+	                            <div class = "cash-drawer-container">
+                                    <div class="reference-number-container cash-drawer col-xs-12 P0" ng-class="{'add-top-margin' : M_CO.Deal.DealInfo && M_CO.Deal.DealInfo.DealStatus !== 'Invoiced'}" ng-if="M_CO.Deposit.selectPaymentMethodName != M_CO.PreferredPaymentLabel">
+                                        <span>Reference &nbsp;#</span>
+                                        <input type="text"
+                                            id ="Deposit_ReferenceNumber"
+                                            class="bp-input-text"
+                                            ng-model="M_CO.Deposit.ReferenceNumber"
+                                            autocomplete="off"/>
+                                    </div>
+                                    <div class="cash-drawer col-xs-12 P0" ng-class="{'add-top-margin' : M_CO.Deal.DealInfo && M_CO.Deal.DealInfo.DealStatus !== 'Invoiced'}" ng-if="M_CO.IsPreferredPaymentEnabled &&  M_CO.Deposit.selectPaymentMethodName == M_CO.PreferredPaymentLabel">
+                                        <i class="bp-icons bp-font-24 stroke-3 MT-5">terminal</i>
+                                        <span class="cash-drawer-info bp-red-font H300" ng-if="!M_CO.terminalList.length">{{'No_terminals_defined' | translate}}</span>
+                                        <span class="bp-dark-grey2-font cash-drawer-info">{{M_CO.selectedTerminal}}</span>
+                                        <a class="bp-blue-font bp-bold-font" ng-if = "F_CO.checkTerminalPermission() && GroupOnlyPermissions['Set cash drawer']['enabled']" ng-click = "F_CO.showChangeTerminalModalWindowPopup()">change</a>
+                                        <div ng-if = "M_CO.showChangeTerminalModalWindow" class="change-cash-drawer-modal-window deposit-cash-drawer">
+                                            <div class="chnage-cash-drawer-container text-left">
+                                                <label>Change terminal for this work station</label>
+                                                <div class="col-xs-12 P0">
+                                                    <div class = "bp-autocomplete-Wrapper autocomplete_v2 text-left">
+                                                        <span class = "bp-autocomplete-image-icon">
+                                                        <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer stroke-5 MT-3"
+                                                            ng-click = "M_CO.showTerminalList = !M_CO.showTerminalList;F_CO.setFocusOnInput('depositTerminal');" 
+                                                            ng-blur="M_CO.showTerminalList = false;F_CO.hideDropdown();">arrowDown</i>
+                                                        </span>
+                                                        <input  type="text" id="depositTerminal" class="bp-autocomplete-input bp-cursor-pointer 
+                                                            bp-input-text " placeholder="{{'Please_select' | translate }}"
+                                                            autocomplete="off" ng-keyup="F_CO.keyPressNavigationOnDropdownElements($event, 'depositTerminalDropdownDiv', 'depositTerminal', M_CO.terminalList)"
+                                                            ng-model="M_CO.terminalName" ng-click = "M_CO.showTerminalList = !M_CO.showTerminalList"
+                                                            ng-blur="M_CO.showTerminalList = false; F_CO.hideDropdown();"  
+                                                            readonly="readonly" />                       
+                                                        <div class = "bp-autocomplete-dropdown-wrapper" ng-show="M_CO.showTerminalList" id="depositTerminalDropdownDiv">
+                                                            <ul>
+                                                                <li ng-repeat="terminalRec in M_CO.terminalList track by $index" id="depositTerminal_{{$index}}"
+                                                                    ng-class="{'selected-row': $index == M_CO.currentDropDownIndex}"
+                                                                    ng-mousedown="F_CO.selectTerminal(terminalRec)">
+                                                                    <div class="form-group-info col-xs-12 P0">
+                                                                        <span >{{terminalRec.Nickname}}</span>
+                                                                    </div>
+                                                                </li>
+                                                            </ul>
+                                                            <ul ng-If="M_CO.terminalList.length == 0">
+                                                                <li id="TerminalNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                                                    <div class="">{{'No_Results_Found' | translate}}</div>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button class="bp-btn bp-btn-normal" ng-click="F_CO.saveDeviceInfo()">CONFIRM</button>
+                                                <a class="cancel-change-cash-drawer text-left" ng-click = "M_CO.showChangeTerminalModalWindow = false;">Cancel</a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="cash-drawer col-xs-12 P0" ng-class="{'add-top-margin' : M_CO.Deal.DealInfo && M_CO.Deal.DealInfo.DealStatus !== 'Invoiced'}" >
+                                        <i class="bp-icons bp-font-20 stroke-3 MT-5">cashDrawer</i>
+                                    <span class="bp-dark-grey2-font cash-drawer-info">{{M_CO.selectedcashDrawer}}</span>
+                                    <a class="bp-blue-font bp-bold-font" ng-if = "F_CO.checkCashDrawerPermission() && GroupOnlyPermissions['Set cash drawer']['enabled']" ng-click = "F_CO.showChangeCashDrawerModalWindow()">change</a>
+                                    <div ng-if = "M_CO.showChangeModalWindow" class="change-cash-drawer-modal-window deposit-cash-drawer">
+                                        <div class="chnage-cash-drawer-container text-left">
+                                            <label>Change cash drawer for this work station</label>
+                                            <div class="col-xs-12 P0">
+                                                <div class = "bp-autocomplete-Wrapper autocomplete_v2 text-left">
+                                                    <span class = "bp-autocomplete-image-icon">
+                                                    <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer stroke-5 MT-3" 
+                                                        ng-click = "M_CO.showCashDrawerList = !M_CO.showCashDrawerList;F_CO.setFocusOnInput('depositCashDrawer');" 
+                                                        ng-blur="M_CO.showCashDrawerList = false;F_CO.hideDropdown();">arrowDown</i>
+                                                    </span>
+                                                    <input  type="text" id="depositCashDrawer" class="bp-autocomplete-input bp-cursor-pointer 
+                                                        bp-input-text " placeholder="{{'Please_select' | translate }}"
+                                                        autocomplete="off" ng-keyup="F_CO.keyPressNavigationOnDropdownElements($event, 'depositCashDrawerDropdownDiv', 'depositCashDrawer', M_CO.cashDrawerList)"
+                                                        ng-model="M_CO.cashDrawerName" ng-click = "M_CO.showCashDrawerList = !M_CO.showCashDrawerList"
+                                                        ng-blur="M_CO.showCashDrawerList = false; F_CO.hideDropdown();"  
+                                                        readonly="readonly" />                       
+                                                    <div class = "bp-autocomplete-dropdown-wrapper" ng-show="M_CO.showCashDrawerList" id="depositCashDrawerDropdownDiv">
+                                                        <ul>
+                                                            <li ng-repeat="cashDrawerRec in M_CO.cashDrawerList track by $index" id="depositCashDrawer_{{$index}}"
+                                                                ng-class="{'selected-row': $index == M_CO.currentDropDownIndex}"
+                                                                ng-mousedown="F_CO.selectCashDrawer(cashDrawerRec)">
+                                                                <div class="form-group-info col-xs-12 P0">
+                                                                    <span >{{cashDrawerRec.CashDrawerName}}</span>
+                                                                </div>
+                                                            </li>
+                                                        </ul>
+                                                        <ul ng-If="M_CO.cashDrawerList.length == 0">
+                                                            <li id="cashDrawerNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                                                <div class="">{{'No_Results_Found' | translate}}</div>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button class="bp-btn bp-btn-normal" ng-click="F_CO.saveDeviceInfo()">CONFIRM</button>
+                                            <a class="cancel-change-cash-drawer text-left" ng-click = "M_CO.showChangeModalWindow = false;">Cancel</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                               
+		                            <div class="cash-drawer col-xs-12 P0 payment-date" >
+                                        <i class="bp-icons bp-font-20 stroke-3 MT-3">calendar</i>
+	                             <div class="date-picker-confirm collapsible">
+                                                    <input id="togglePicker3" type="checkbox" class="picker-toggle" ng-model="M_CO.togglePicker"/>
+                                                    <div class="date-picker-field">
+                                                      <span class="date-display">Payment date: <em>{{M_CO.Deposit.paymentDate == M_CO.todayDate ? 'Today' : M_CO.Deposit.paymentDate.replace('/', '-').replace('/', '-')}}</em></span>
+                                                      <label ng-if="GroupOnlyPermissions['Backdating']['enabled']" for="togglePicker3" class="open-date-picker bp-blue-font bp-bold-font">change</label>
+                                                      <label for="togglePicker3" class="close-date-picker bp-blue-font bp-bold-font">done</label>
+                                                    </div>
+                                            
+                                                <div class="expanded-date-picker">
+                                                  <!--- Option 1 : display only instant change or view only -->
+                                                  <div class="date-picker-field">
+                                            
+                                                    <span class="date-display">Selected date: <em>{{ M_CO.Deposit.tempPaymentDate == M_CO.todayDate ? 'Today' : M_CO.Deposit.tempPaymentDate.replace('/', '-').replace('/', '-')}}</em></span>
+                                                  </div>
+                                                  <!--- Option 2 : input to display instant change or edit on view only -->
+                                                  <input type="hidden" class="date-picker alt-field prevent-invalid-input" name="depositPaymentDate"
+                                                   id="depositPaymentDate" date-format="M_CO.dateFormat" placeholder="{{M_CO.dateFormat}}" 
+                                                    required = "required" autocomplete="off"  end-date = "M_CO.depositPaymentDate.maxDate"
+														/>
+                                                  <div ng-model="M_CO.Deposit.tempPaymentDate" class="date-calendar" data-inputFieldID="#depositPaymentDate" date-format="M_CO.dateFormat"  
+                                                    datepicker= "datepicker" end-date = "M_CO.depositPaymentDate.maxDate">
+                                                  </div>
+                                                     <cite class="hint text-left">Cannot select the date in future</cite>
+                                                  <cite class="" ng-class="{'server-error': M_CO.datePickerErrorMessage}">{{M_CO.datePickerErrorMessage}}</cite>
+                                                  <div class="action-buttons">
+                                                    <!-- do Data saving action on this click -->
+                                                    <button class="button confirm" ng-click="F_CO.confirmBackDatingAction ('depositPaymentDate')">Confirm</button>
+                                                  </div>
+                                                </div>
+                                                <!-- expaded-date-picker -->
+                                            
+                                              </div>
+                             </div>
+		                           </div>
+                        </div>
+                        <div class="form-input confirmDepositBut">
+                            <a class="cancel-change-cash-drawer" ng-if="M_CO.Deposit.selectPaymentMethodName!=M_CO.PreferredPaymentLabel" ng-click="F_CO.Deposit.closeAddDepositPopup()"><span>{{'cancel' | translate}} </span></a>
+                            <button class="bp-btn  bp-btn-normal" ng-if = "!M_CO.Deposit.refundFlag && M_CO.Deposit.selectPaymentMethodName!=M_CO.PreferredPaymentLabel"  ng-disabled = "!M_CO.Deposit.deposit_Amount || !M_CO.Deposit.paymentMethod" ng-click = "F_CO.Deposit.addDeposit()">{{ 'CONFIRM_DEPOSIT' | translate }}</button>
+                            <button class="bp-btn  bp-btn-normal" ng-if = "M_CO.Deposit.refundFlag && M_CO.Deposit.selectPaymentMethodName!=M_CO.PreferredPaymentLabel"  ng-disabled = "!M_CO.Deposit.deposit_Amount || !M_CO.Deposit.paymentMethod" ng-click = "M_CO.Deposit.isReverseDeposit = true; F_CO.Deposit.addDeposit()">{{ 'REFUND_DEPOSIT' | translate }}</button>
+                            
+                            <div class="preferred-payment-btns" ng-if="M_CO.Deposit.selectPaymentMethodName==M_CO.PreferredPaymentLabel">
+                                <a class="cancel-change-cash-drawer" ng-click="F_CO.Deposit.closeAddDepositPopup()"><span>{{'cancel' | translate}} </span></a>
+                                <button class="bp-btn bp-btn-secondaryCTA" ng-class="{'bp-bg-opactity': !M_CO.terminalList.length}" ng-click="F_CO.Deposit.addDeposit('Preferred Payments With Terminal')" ng-disabled="!M_CO.Deposit.deposit_Amount || !M_CO.Deposit.paymentMethod">{{ 'Card_terminal' | translate }}</button>
+                                <button class="bp-btn bp-btn-secondaryCTA" ng-click="F_CO.Deposit.addDeposit('Preferred Payments Without Card')" ng-disabled="!M_CO.Deposit.deposit_Amount || !M_CO.Deposit.paymentMethod">{{ 'Card_not_present' | translate }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="modal fade-scale bp-model-dialog CreateGroupModal RemoveDealUnitPopup DealServiceJob" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id = "ReversePaymentPopup">
+        <div class="modal-dialog removeModal-width" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close" ng-click="F_CO.closeReversePaymentConfirmationPopup()">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth" ng-click = "F_CO.closeReversePaymentConfirmationPopup()">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body modal-body-align">
+                    <div class="userGroupInfoArea">
+                        <div class="heading text-uppercase" >{{ 'Reverse_payment' | translate }}</div>
+                        <div class="warning-text-alignment" >
+                            <span class="bp-dark-grey2-font bp-font-14">
+                            {{ 'Are_you_sure_you_want_to_reverse_this_payment' | translate }}?
+                            </span>
+                            <p class="text-center bp-font-14 bp-dark-grey2-font">
+                                {{ 'This_action_is_not_reversible' | translate }}
+                            </p>
+                        </div>
+                        <div class="formBtn">
+                            <button id="replace-unit-btn" class="bp-btn bp-btn-secondaryCTA bp-btn-medium  button-fix-width bp-font-14"
+                                ng-click = "F_CO.closeReversePaymentConfirmationPopup()" >
+                            {{ 'Cancel_Label' | translate }}
+                            </button>
+                            <button id="remove-dealunit-btn" class="bp-btn bp-btn-normal bp-btn-medium  button-fix-width button-fix-margin"
+                                ng-click = "F_CO.Deposit.ReverseDeposit(F_CO.Deposit.DepositRec)">
+                            {{ 'YES_Reverse' | translate }}
+                            </button>
+                        </div>
+                        <div class="reverse-deposit-cash-drawer">
+                            <i class="bp-icons bp-font-20 stroke-3">cashDrawer</i>
+                            <span class="bp-dark-grey2-font cash-drawer-info">{{M_CO.selectedcashDrawer}}</span>
+                            <a class="bp-blue-font bp-bold-font" ng-if = "F_CO.checkCashDrawerPermission()" ng-click = "F_CO.showChangeCashDrawerModalWindow()">change</a>
+                            <div ng-if = "M_CO.showChangeModalWindow" class="change-cash-drawer-modal-window">
+                                <div class="chnage-cash-drawer-container">
+                                    <label>Change cash drawer for this work station</label>
+                                    <div class="col-xs-12 P0">
+                                        <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                                            <span class = "bp-autocomplete-image-icon">
+                                                <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer MT-3 stroke-5" ng-click = "F_CO.setFocusOnInput('cashDrawer')">arrowDown</i>
+                                            </span>
+                                            <input  type="text" id="cashDrawer" class="bp-autocomplete-input bp-cursor-pointer bp-input-text "
+                                                placeholder="{{'Please_select' | translate }}" autocomplete="off" 
+                                                ng-keyup="F_CO.keyPressNavigationOnDropdownElements($event, 'cashDrawerDropdownDiv', 'cashDrawer', M_CO.cashDrawerList)"
+                                                ng-model="M_CO.cashDrawerName" ng-focus = "M_CO.showCashDrawerList = true;"
+                                                ng-blur="M_CO.showCashDrawerList = false; F_CO.hideDropdown();"  
+                                                readonly="readonly" />   
+                                            <div class = "bp-autocomplete-dropdown-wrapper" ng-if="M_CO.showCashDrawerList" id="cashDrawerDropdownDiv">
+                                                <ul>
+                                                    <li ng-repeat="cashDrawerRec in M_CO.cashDrawerList track by $index" id="cashDrawer_{{$index}}"
+                                                        ng-class="{'selected-row': $index == M_CO.currentDropDownIndex}"
+                                                        ng-mousedown="F_CO.selectCashDrawer(cashDrawerRec)">
+                                                        <div class="form-group-info col-xs-12 P0 text-left">
+                                                            <span >{{cashDrawerRec.CashDrawerName}}</span>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                                <ul ng-If="M_CO.showCashDrawerList.length == 0">
+                                                    <li id="cashDrawerNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                                        <div class="text-left">{{'No_Results_Found' | translate}}</div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="bp-btn bp-btn-normal" ng-click="F_CO.saveDeviceInfo()">CONFIRM</button>
+                                    <a class="cancel-change-cash-drawer text-left" ng-click="F_CO.hideChangeCashDrowerModalWindow()">Cancel</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade-scale bp-cp-modal-dialog addSupersededPartPopup bp-table dialog-opacity in" id="SupersededPart" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-backdrop fade in"></div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" ng-click="F_CO.closeSupersededPart()">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-top-15 bp-fw-100">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="heading-text text-uppercase">{{ 'Related_Part_selection' | translate }}</div>
+                        <div class="subheading lh21 bp-font-14 MT18 MB20">
+                            <div ng-if="M_CO.alternatePartsData.lineItem.QtyOrder == 0">
+                                <div class="message-info">
+                                    <span class="bp-dark-grey2-font">
+                                        <p>{{ 'The_selected_part_has_fulfilled_the_customer_need_of' | translate }} 
+                                            <span class="bp-blue-font" ng-if = "M_CO.alternatePartsData.SectionType == 'ServiceOrder'">{{ 'Label_Quantity' | translate }} {{M_CO.alternatePartsData.lineItem.QtyNeeded}}</span>
+                                            <span class="bp-blue-font" ng-if = "M_CO.alternatePartsData.SectionType == 'Merchandise'">{{ 'Label_Quantity' | translate }}{{M_CO.alternatePartsData.lineItem.Qty}}</span>
+                                        </p>
+                                        <p>{{ 'Below_is_a_list_of_related_parts' | translate }}:</p>
+                                    </span>
+                                </div>
+                            </div>
+                            <div ng-if="M_CO.alternatePartsData.lineItem.QtyOrder != 0">
+                                <div class="message-info">
+                                    <span class="bp-dark-grey2-font">
+                                        <p>{{ 'The_selected_part_cannot_fulfill_the_customer_need_of' | translate }} 
+                                            <span class="bp-blue-font" ng-if = "M_CO.alternatePartsData.SectionType == 'ServiceOrder'">{{ 'Label_Quantity' | translate }} {{M_CO.alternatePartsData.lineItem.QtyNeeded}}</span>
+                                            <span class="bp-blue-font" ng-if = "M_CO.alternatePartsData.SectionType == 'Merchandise'">{{ 'Label_Quantity' | translate }} {{M_CO.alternatePartsData.lineItem.Qty}}</span>
+                                        </p>
+                                        <p>{{ 'Select_from_this_list_of_related_parts' | translate }}:</p>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row M0 printBarCodeLabelTabelWrapper">
+                            <table class="table feeGrid">
+                                <thead>
+                                    <tr>
+                                        <th class="tableHeadText firstChild bp-bold-font bp-grey-font">{{ 'ITEM_DESCRIPTION_Label' | translate }}</th>
+                                        <th class="tableHeadText secondChild bp-bold-font bp-grey-font">{{ 'Vendor_Object_Display_Label' | translate }}</th>
+                                        <th class="tableHeadText thirdChild bp-bold-font bp-grey-font">{{ 'RELATIONSHIP' | translate }}</th>
+                                        <th class="tableHeadText text-center fourthChild bp-bold-font bp-grey-font">{{ 'Part_Object_Status_Available' | translate }}</th>
+                                        <th class="tableHeadText text-right fifthChild bp-bold-font bp-grey-font">{{ 'Label_Price' | translate }}</th>
+                                        <th class="tableHeadText sixthChild bp-bold-font"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="alterPart in M_CO.alternatePartsList">
+                                        <td class="text-left  firstChild bp-light-blue1-font bp-bold-font">{{alterPart.ItemDesc}}</td>
+                                        <td class="text-left secondChild bp-dark-grey2-font">{{alterPart.Vendor}}</td>
+                                        <td class="text-left thirdChild bp-dark-grey2-font">{{alterPart.RelationShip}}</td>
+                                        <td class="text-center fourthChild bp-dark-grey2-font">{{alterPart.Available}}</td>
+                                        <td class="text-right fifthChild bp-dark-grey2-font">{{alterPart.Price | currency}}</td>
+                                        <td class="text-left sixthChild bp-dark-grey2-font">
+                                            <span class="chk_tick" id="isInstall" ng-class="{'chked': alterPart.IsSelected }" ng-click="F_CO.selectAlternatePart($index)">
+                                            <i class="bp-icons bp-font-11 bp-blue-font bp-text-transform stroke-3 doneIcon">check</i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="action-section">
+                                <button class="bp-btn bp-btn-normal bp-btn-medium text-uppercase" data-dismiss="modal" ng-click="F_CO.addAlternateParts()" ng-disabled="F_CO.disableAlternatePartButton()">
+                                {{ 'Label_Select' | translate }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End: View related/alternate parts section -->
+    <!-- Start: Duplicate part Modal Window -->
+    <div class="modal fade-scale bp-cp-modal-dialog DuplicatePartWarningModal bp-table dialog-opacity" id="DuplicatePartWarningModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button class="close" ng-click="F_CO.DuplicatePartclosePopup();" type="button">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-top-15 bp-fw-100">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="heading-text text-uppercase">{{'duplicate_item' | translate}}</div>
+                        <div class="helper-text">
+                            <span class="bp-red-font">
+                                <p><span class="text-uppercase">{{'warning' | translate}}</span> - <span class="text-lowercase">{{'this_item_already_exists_in_this_order' | translate}}</span></p>
+                            </span>
+                        </div>
+                        <div class="row M0 moreDetailsSection">
+                            <ul>
+                                <li class="text-left" ng-repeat="DuplicateSection in M_CO.DuplicateSectionList">
+                                    <div ng-if="$index === 0" class="bp-font-16 bp-light-blue1-font bp-bold-font partDesc">{{M_CO.DuplicatePartList[0].Item}}</div>
+                                    <div class="bp-dark-grey2-font">
+                                        <span class="bp-bold-font bp-first-letter-capitalize bp-set-text-ellipses">{{DuplicateSection.SectionName | translate}}</span>
+                                        <span class="text-capitalize pull-right">{{'quantity' | translate}}: {{DuplicateSection.Qty}}</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="supressPartCheck pull-left" ng-click="M_CO.isSupressTrue  = !M_CO.isSupressTrue;">
+                            <span class="chk_tick">
+                            <i class="bp-icons bp-font-11 bp-blue-font bp-text-transform stroke-3" ng-if="M_CO.isSupressTrue">check</i>
+                            </span>
+                            <label class="bp-first-letter-capitalize pull-left">{{'dont_warn_me_about_this_item_again' | translate}}</label>
+                        </div>
+                        <div class="action-section">
+                            <button class=" bp-btn bp-btn-secondaryCTA bp-btn-medium text-uppercase" ng-click="F_CO.DuplicatePartclosePopup();">{{'Cancel_Label' | translate}}</button>
+                            <button class="bp-btn bp-btn-normal bp-btn-medium text-uppercase" ng-click="F_CO.AddDuplicatePart();">{{'add_item' | translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End: Duplicate part Modal Window -->
+    <!-- Start: active customer order modal window -->
+    <div class="modal fade-scale bp-cp-modal-dialog addSupersededPartPopup  bp-table dialog-opacity activeOrderModalWindow" id="ActiveOrder" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-top-15 bp-fw-100">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="bp-grey-font heading-text  text-uppercase ">
+                            <p translate="Active_order_for" translate-values="{{ { customer_name :  M_CO.ActiveOrders[0].AdditionalInfo1 } }}"></p>
+                        </div>
+                        <div class="subheading lh21 bp-font-14 MT18 MB20">
+                            <div >
+                                <div class="message-info">
+                                    <span class="bp-dark-grey2-font">
+                                        <span translate="We_have_found_active_orders" translate-values="{{ { orders_length: M_CO.activeCustomerOrderCount } }}"></span>
+                                        <span ng-if = "M_CO.activeCustomerOrderCount > 1">{{'Orders' | translate}}</span> <span ng-if = "M_CO.activeCustomerOrderCount == 1">{{'Label_Order' | translate}}</span>
+                                        <span ng-if = "M_CO.coHeaderRec.COType != 'Internal Service'">{{'for_this_customer' | translate}}.</span>
+                                        <span ng-if = "M_CO.coHeaderRec.COType == 'Internal Service'">{{'for_this_unit' | translate}}.</span>
+                                        <p>{{'Would_you_like_to_use_existing_order_or_create_a_new_one' | translate}}?</p>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row M0 printBarCodeLabelTabelWrapper activeOrder activeOrderHeader">
+                            <ul class="feeGrid" >
+                                <li class="text-left bp-font-12">
+                                    <div class="tableHeadText firstChild bp-bold-font bp-grey-font text-uppercase">{{'Co_number' | translate}}</div>
+                                    <div class="tableHeadText secondChild bp-bold-font bp-grey-font text-uppercase">{{'Type_and_total' | translate}}</div>
+                                    <div class="tableHeadText thirdChild bp-bold-font bp-grey-font text-uppercase" ng-class = "{'PL10' : M_CO.ActiveOrders.length > 5 }">{{'Last_modified' | translate}}</div>
+                                    <div class="tableHeadText fourthChild "></div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="row M0 printBarCodeLabelTabelWrapper activeOrder activateScrollOnActiveOrder" when-scrolled='F_CO.loadMoreActiveCustomerOrder()'>
+                            <ul class="feeGrid " >
+                                <li ng-repeat="order in M_CO.ActiveOrders" ng-if = "M_CO.coHeaderRec.COType != 'Internal Service'">
+                                    <div class="text-left  firstChild bp-light-blue1-font bp-bold-font">{{order.ItemName}}</div>
+                                    <div class="text-left secondChild bp-dark-grey2-font">
+                                        <span class="bp-black bp-bold-font pull-left MR10" ng-if="order.AdditionalInfo5 == 'Quote'">{{'Quote_Label' | translate}}</span>
+                                        <span ng-if="order.AdditionalInfo2 " class = "pull-left">
+                                        <span class="AdditionalInfoLabel">{{order.AdditionalInfoLabel2}}:</span>
+                                        <span class="bp-bold-font AdditionalInfo">{{order.AdditionalInfo2}}</span>
+                                        </span>
+                                        <span ng-if="order.AdditionalInfo2 && (order.AdditionalInfo3 || order.AdditionalInfo4)" class = "pull-left PR2">, </span>
+                                        <span ng-if="order.AdditionalInfo3" class = "pull-left">
+                                        <span class="AdditionalInfoLabel">{{order.AdditionalInfoLabel3}}:</span>
+                                        <span class="bp-bold-font AdditionalInfo">{{order.AdditionalInfo3}}</span>
+                                        </span>
+                                        <span ng-if="order.AdditionalInfo3 && order.AdditionalInfo4" class = "pull-left PR2">, </span>
+                                        <span ng-if="order.AdditionalInfo4"  class = "pull-left">
+                                        <span class="AdditionalInfoLabel">Parts &amp; accessories:</span>
+                                        <span class="bp-bold-font AdditionalInfo">{{order.AdditionalInfo4}}</span>
+                                        </span>
+                                    </div>
+                                    <div class="text-left thirdChild bp-dark-grey2-font">{{order.LastModifiedDate}}</div>
+                                    <div class="text-left fourthChild bp-dark-grey2-font">
+                                        <button class="bp-btn bp-btn-normal bp-btn-medium text-uppercase" ng-click="F_CO.openCustomerOrder(order.Id)">
+                                        {{'Use' | translate}}
+                                        </button>
+                                    </div>
+                                </li>
+                                
+                                 <li ng-repeat="order in M_CO.ActiveOrders" ng-if = "M_CO.coHeaderRec.COType == 'Internal Service'">
+                                    <div class="text-left  firstChild bp-light-blue1-font bp-bold-font">{{order.CONumber}}</div>
+                                    <div class="text-left secondChild bp-dark-grey2-font">
+                                        <span class = "pull-left">
+                                        	<span class="AdditionalInfoLabel pull-left" ng-if="order.JobType">{{order.JobType}}:</span>
+                                        	<span class="bp-bold-font AdditionalInfo pull-left PR2" ng-if="order.Total">{{order.Total | currency}}<span ng-if = "order.Concern">,</span></span>
+                                        	<span class="AdditionalInfoLabel ellipses-width bp-set-text-ellipses pull-left" ng-if="order.Concern">{{order.Concern}}</span>
+                                        </span>
+                                    </div>
+                                    <div class="text-left thirdChild bp-dark-grey2-font">{{order.LastModifiedDate}}</div>
+                                    <div class="text-left fourthChild bp-dark-grey2-font">
+                                        <button class="bp-btn bp-btn-normal bp-btn-medium text-uppercase" ng-click="F_CO.openCustomerOrder(order.COHeaderId)">
+                                        GO TO
+                                        </button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="action-section">
+                            <button class="bp-btn bp-btn-secondaryCTA text-uppercase" ng-if = "M_CO.coHeaderRec.COType != 'Internal Service'" ng-click="M_CO.isLoading = true; F_CO.CustomerSaveCallback()" >
+                            {{'Skip_and_create_new_order' | translate}}
+                            </button>
+                             <button class="bp-btn bp-btn-secondaryCTA text-uppercase" ng-if = "M_CO.coHeaderRec.COType == 'Internal Service'" ng-click="M_CO.isLoading = true; F_CO.saveServiceJobInfo(0,false,true)" >
+                            {{'Skip_and_create_new_order' | translate}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End: active customer order modal window -->
+    <div id="documentFormModalWindow" class="modal fade modal-container document-form-modal-window disable-modal-scroll" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content col-xs-12 P0">
+                <div class="modal-body">
+                    <header>
+                        <label class="line-height-normal M0 text-uppercase">{{'Add_forms' | translate}}</label>
+                    </header>
+                    <section class="section-container">
+                        <ul>
+                            <li ng-repeat="activeForm in M_CO.documents.activeFormList">
+                                <div>
+                                    <input class="dummy-checkbox-input check-box-input" type="checkbox"  id="checkbox_{{$index}}" ng-model="activeForm.isSelected"/>
+                                    <label class="label-as-checkbox" for="checkbox_{{$index}}"></label>
+                                </div>
+                                <div class="form-desc">
+                                    <a class="pull-left bp-blue-font document-form-modal-hyper-text">
+                                        <i ng-if="activeForm.IsManualUpload" class="bp-icons bp-font-18 bp-cursor-pointer pull-left manualUpload MT-5">userFilled</i>
+                                        <span class = "bp-blue-font H400" ng-class = "{'PL8' : activeForm.IsManualUpload }">{{activeForm.Description}}</span>
+                                    </a>
+                                    <p>{{activeForm.FormName}}</p>
+                                </div>
+                            </li>
+                        </ul>
+                        <div class="button-container">
+                            <button class="medium secondary" ng-click="F_CO.addSelectedFormsToSpecificSection(M_CO.documents.sectionIdWhereToAddDoc, M_CO.documents.sectionNameWhereToAddDoc)">{{'Add_selected' | translate}}</button>
+                            <button class="link-subtle H300" ng-click="F_CO.hideDocumentFormModalWindow()">{{'Cancel_Label' | translate}}</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="attachment-modal-window" class="modal fade modal-container document-form-modal-window" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content col-xs-12 P0">
+                <div class="modal-body">
+                    <header>
+                        <label class="line-height-xlarge  M0">{{'ADD_ATTACHMENTS' | translate}}</label>
+                    </header>
+                    <section class="section-container">
+                        <div>
+                            <label class="H400 bp-first-letter-capitalize">{{'Label_Name' | translate}}</label>
+                            <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                                <input type="text" id="form-rec" class = "bp-autocomplete-input H300" placeholder="{{'Label_Name' | translate}}"  
+                                    ng-model = "M_CO.documents.attachmentJson.Name"  
+                                    ng-class="{'bp-redborder' : M_CO.attachmentValidationModal['Name']['isError'] == true}"
+                                    data-toggle="tooltip" title="{{M_CO.attachmentValidationModal['Name']['ErrorMessage']}}"
+                                    ng-blur="F_CO.validateAttachmentModalData()"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="H400 bp-first-letter-capitalize">{{'Add_description' | translate}}</label>
+                            <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                                <input type="text" id="form-rec" maxlength="50" class = "bp-autocomplete-input H300" placeholder="Please enter a description"  
+                                    ng-model = "M_CO.documents.attachmentJson.Description"
+                                    ng-class="{'bp-redborder' : M_CO.attachmentValidationModal['Description']['isError'] == true}"
+                                    data-toggle="tooltip" title="{{M_CO.attachmentValidationModal['Description']['ErrorMessage']}}"
+                                    ng-blur="F_CO.validateAttachmentModalData()"/>
+                                <span class="char-count">{{M_CO.documents.attachmentJson.Description.length}}/50</span>
+                            </div>
+                        </div>
+                        <div class="button-container">
+                            <button class="medium secondary" ng-click="F_CO.addAttachmentToSection()">{{'Save_Label' | translate}}</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Start: Cash Sale Oversold Confirmation Modal -->
+    <div id="OversoldPopUp" class="modal fade OversoldPopUp" role="dialog" ng-controller="">
+        <div class="modal-dialog modal-dialog_Oversold">
+            <div class="modal-content col-md-12">
+                <div class="modal-body popupContainerOversold">
+                    <div class="popupinside">
+                        <div class="OversoldHeading">
+                            <p>{{'Your_needs_exceed_the_amount_available_in_stock' | translate}}</p>
+                        </div>
+                        <div  class="M0 OversoldPartDetails" ng-if="!M_CO.IsNewLineItemInserted || (M_CO.recentlyAddedLineItem && M_CO.recentlyAddedLineItem.length == 1)">
+                            <h3 class="M0" ng-if="!M_CO.IsNewLineItemInserted">{{M_CO.recentlyUpdatedLineItem.Item}}</h3>
+                            <h3 class="M0" ng-if="M_CO.IsNewLineItemInserted">{{M_CO.recentlyAddedLineItem[0].Item}}</h3>
+                            <div class="AvailableInventoryAndPrice">
+                                <p class="M0 AvailableInventoryLabel text-capitalize">{{'Available_inventory' | translate}}:</p>
+                                <p class="M0 AvailableInventoryValue" ng-if="!M_CO.IsNewLineItemInserted">{{M_CO.recentlyUpdatedLineItem.ActualAvailableParts}}</p>
+                                <p class="M0 AvailableInventoryValue" ng-if="M_CO.IsNewLineItemInserted">{{M_CO.recentlyAddedLineItem[0].AvailableQty}}</p>
+                                <p class="M0 AvailableInventoryAndPriceDivider">|</p>
+                                <p class="M0 priceLabel">{{'Label_Price' | translate}}:</p>
+                                <p class="M0 priceValue" ng-if="!M_CO.IsNewLineItemInserted">{{M_CO.recentlyUpdatedLineItem.Price | currency}}</p>
+                                <p class="M0 priceValue" ng-if="M_CO.IsNewLineItemInserted">{{M_CO.recentlyAddedLineItem[0].Price | currency}}</p>
+                            </div>
+                        </div>
+                        <div class="OversoldAvailableInventoryAndPriceBorderBottom" ng-if="!M_CO.IsNewLineItemInserted || (M_CO.recentlyAddedLineItem && M_CO.recentlyAddedLineItem.length == 1)"></div>
+                        <div class="OversoldActionHeading">
+                            <p>{{'Switch_to_customer_sale_create_special_order_message' | translate}}</p>
+                        </div>
+                        <div class="OversoldActionsContainer">
+                            <button id="createSpecialOrderActionBtn" type="button" class="btn btn-default OversoldActionBtn text-uppercase" ng-click="F_CO.openSelectCustomerSectionForSpecialOrder();">
+                            {{'Create_special_order' | translate}}
+                            </button>
+                            <button id="oversoldActionBtn" type="button" class="btn btn-default OversoldActionBtn OversoldActionBtnMR text-uppercase" 
+                                ng-click="F_CO.forceOversoldAction();" ng-if="GroupOnlyPermissions['Oversell inventory'].enabled">
+                            {{'Force_oversold' | translate}}
+                            </button>
+                        </div>
+                        <div class="OversoldCancelAction text-uppercase">
+                            <img src="{!Application_Images}/Cancel_Red.png" ng-click="F_CO.closeOversoldPopup(true);"/>
+                            <span ng-click="F_CO.closeOversoldPopup(true);">{{'Cancel_Label' | translate}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="gridLoadingContainer" ng-if="CashSaleModel.displayGrid">
+            <div class="gridLoadingDiv">
+                <img src="{!Application_Images}/Home_Search_loading.gif" title="Please wait ..."/>
+            </div>
+        </div>
+    </div>
+    <!-- End: Cash Sale Oversold Confirmation Modal -->
+    <!-- profitability modal  Start-->
+    <div id="profitability-modal-window" class="modal fade modal-container profitability-modal-window" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content col-xs-12 P0">
+                <div class="modal-body">
+                    <header>
+                        <i class="bp-icons bp-font-21">profitability</i>
+                        <label class="line-height-xlarge H600 M0" ng-if="!M_FormRepository.formJson.Id">Customer order profitability</label>
+                    </header>
+                    <section class="section-container">
+                        <table class="profitability-modal-window-table profitability-header-table">
+                            <col width="25%"  />
+                            <col width="10%"  />
+                            <col width="15%"  />
+                            <col width="15%"  />
+                            <col width="15%"  />
+                            <col width="20%"  />
+                            <thead>
+                                <tr>
+                                    <th class="H100">SECTION</th>
+                                    <th class="H100 text-left">Products</th>
+                                    <th class="H100 text-right">SALES</th>
+                                    <th class="H100 text-right">COSTS</th>
+                                    <th class="H100 text-right">GROSS PROFIT</th>
+                                    <th class="H100 text-right">PROFIT %</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <div class="table-container">
+                            <table class="profitability-modal-window-table">
+                                <col width="25%"  />
+                                <col width="10%"  />
+                                <col width="15%"  />
+                                <col width="15%"  />
+                                <col width="15%"  />
+                                <col width="20%"  />
+                                <tbody ng-repeat = "profitabilitySection in M_CO.profitabilityList" ng-init = "sectionIndex = $index">
+                                    <tr ng-repeat="entityRec in profitabilitySection.ProductProfitabilityList" ng-init ="entityIndex = $index">
+                                        <td ng-if="entityIndex == 0" rowspan="{{profitabilitySection.ProductProfitabilityList.length}}" class="profitability-first-child H400 line-height-large">{{profitabilitySection.Section}} </td>
+                                        <td class="text-left">{{entityRec.Product}}</td>
+                                        <td class="text-right" ng-class="{'bp-coral-font' : entityRec.Sale < 0}">
+                                            <span ng-if="entityRec.Sale < 0">-</span> 
+                                            <span ng-if="entityRec.Sale < 0"> {{entityRec.Sale *-1 | currency: "$" : 2}} </span>
+                                            <span ng-if="entityRec.Sale >= 0"> {{entityRec.Sale | currency: "$" : 2}}</span>
+                                        </td>
+                                        <td class="text-right" ng-class="{'bp-coral-font' : entityRec.Cost < 0}">
+                                            <span ng-if="entityRec.Cost < 0">-</span> 
+                                            <span ng-if="entityRec.Cost < 0"> {{entityRec.Cost *-1 | currency: "$" : 2}} </span>
+                                            <span ng-if="entityRec.Cost >= 0"> {{entityRec.Cost | currency: "$" : 2}}</span>
+                                        </td>
+                                        <td class="text-right" ng-class="{'bp-coral-font' : entityRec.GrossProfit < 0}">
+                                            <span ng-if="entityRec.GrossProfit < 0">-</span> 
+                                            <span ng-if="entityRec.GrossProfit < 0"> {{entityRec.GrossProfit  *-1 | currency: "$" : 2}}</span>
+                                            <span ng-if="entityRec.GrossProfit >= 0"> {{entityRec.GrossProfit | currency: "$" : 2}}</span>
+                                             <span class = "est-label-for-profitability" data-toggle="tooltip" title="Estimate" ng-show = "entityRec.Product == 'Labor' && (M_CO.SOHeaderList[sectionIndex].SOInfo.WorkStatus != 'Job complete' || M_CO.SOHeaderList[sectionIndex].SOInfo.WorkStatus != 'Ready to invoice') && M_CO.SOHeaderList[sectionIndex].SOInfo.WorkStatus != 'Invoiced' && M_CO.IsTechnicianHoursCostingEnabled">Est</span>
+                                        </td>
+                                        <td class="text-right" ng-class="{'bp-coral-font' : entityRec.ProfitPercent < 0}">
+                                            <span ng-if="entityRec.ProfitPercent < 0">-</span> 
+                                            <span ng-if="entityRec.ProfitPercent < 0"> {{entityRec.ProfitPercent *-1 | currency: "" : 1}} </span>
+                                            <span ng-if="entityRec.ProfitPercent >= 0"> {{entityRec.ProfitPercent | currency: "" : 1}}</span>
+                                            <span>%</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="profitability-total-row">
+                                        <td> </td>
+                                        <td class="text-left H300 text-uppercase">Total:</td>
+                                        <td class="text-right H300" ng-class="{'bp-coral-font' : profitabilitySection.TotalSales < 0}">
+                                            <span ng-if="profitabilitySection.TotalSales < 0">-</span>
+                                            <span ng-if="profitabilitySection.TotalSales < 0"> {{profitabilitySection.TotalSales *-1 | currency: "$" : 2}} </span>
+                                            <span ng-if="profitabilitySection.TotalSales >= 0"> {{profitabilitySection.TotalSales | currency: "$" : 2}}</span>
+                                        </td>
+                                        <td class="text-right H300" ng-class="{'bp-coral-font' : profitabilitySection.TotalCost < 0}">
+                                            <span ng-if="profitabilitySection.TotalCost < 0">-</span>
+                                            <span ng-if="profitabilitySection.TotalCost < 0"> {{profitabilitySection.TotalCost  *-1 | currency: "$" : 2}}</span>
+                                            <span ng-if="profitabilitySection.TotalCost >= 0"> {{profitabilitySection.TotalCost | currency: "$" : 2}}</span>
+                                        </td>
+                                        <td class="text-right H300" ng-class="{'bp-coral-font' : profitabilitySection.TotalProfit < 0}">
+                                            <span ng-if="profitabilitySection.TotalProfit < 0">-</span>
+                                            <span ng-if="profitabilitySection.TotalProfit < 0"> {{profitabilitySection.TotalProfit  *-1 | currency: "$" : 2}}</span>
+                                            <span ng-if="profitabilitySection.TotalProfit >= 0"> {{profitabilitySection.TotalProfit | currency: "$" : 2}}</span>
+                                        </td>
+                                        <td class="text-right H300" ng-class="{'bp-coral-font' : profitabilitySection.TotalProfitPercentage < 0}">
+                                            <span ng-if="profitabilitySection.TotalProfitPercentage < 0">-</span>
+                                            <span ng-if="profitabilitySection.TotalProfitPercentage < 0"> {{profitabilitySection.TotalProfitPercentage *-1 | currency: "" : 1}} </span>
+                                            <span ng-if="profitabilitySection.TotalProfitPercentage >= 0"> {{profitabilitySection.TotalProfitPercentage | currency: "" : 1}}</span>
+                                            <span>%</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="setBgColor">
+                                    <tr>
+                                        <td class="H400">Customer order total</td>
+                                        <td></td>
+                                        <td class="text-right H400" ng-class="{'bp-coral-font' : M_CO.profitabilityListWrapper.COTotalSales < 0}">
+                                            <span ng-if="M_CO.profitabilityListWrapper.COTotalSales < 0">-</span>
+                                            <span ng-if="M_CO.profitabilityListWrapper.COTotalSales < 0"> {{M_CO.profitabilityListWrapper.COTotalSales *-1 | currency: "$" : 2}} </span>
+                                            <span ng-if="M_CO.profitabilityListWrapper.COTotalSales >= 0"> {{M_CO.profitabilityListWrapper.COTotalSales | currency: "$" : 2}}</span>
+                                        </td>
+                                        <td class="text-right H400" ng-class="{'bp-coral-font' : M_CO.profitabilityListWrapper.COTotalCost < 0}">
+                                            <span ng-if="M_CO.profitabilityListWrapper.COTotalCost < 0">-</span>
+                                            <span ng-if="M_CO.profitabilityListWrapper.COTotalCost < 0"> {{M_CO.profitabilityListWrapper.COTotalCost *-1 | currency: "$" : 2}} </span>
+                                            <span ng-if="M_CO.profitabilityListWrapper.COTotalCost >= 0"> {{M_CO.profitabilityListWrapper.COTotalCost | currency: "$" : 2}}</span>
+                                        </td>
+                                        <td class="text-right H400" ng-class="{'bp-coral-font' : M_CO.profitabilityListWrapper.COGrossProfit < 0}">
+                                            <span ng-if="M_CO.profitabilityListWrapper.COGrossProfit < 0">-</span>
+                                            <span ng-if="M_CO.profitabilityListWrapper.COGrossProfit < 0"> {{M_CO.profitabilityListWrapper.COGrossProfit *-1 | currency: "$" : 2}} </span>
+                                            <span ng-if="M_CO.profitabilityListWrapper.COGrossProfit >= 0"> {{M_CO.profitabilityListWrapper.COGrossProfit | currency: "$" : 2}}</span>
+                                        </td>
+                                        <td class="text-right H400" ng-class="{'bp-coral-font' : M_CO.profitabilityListWrapper.COProfitPercentage < 0}">
+                                            <span ng-if="M_CO.profitabilityListWrapper.COProfitPercentage < 0">-</span>
+                                            <span ng-if="M_CO.profitabilityListWrapper.COProfitPercentage < 0"> {{M_CO.profitabilityListWrapper.COProfitPercentage *-1 | currency: "" : 1}} </span>
+                                            <span ng-if="M_CO.profitabilityListWrapper.COProfitPercentage >= 0"> {{M_CO.profitabilityListWrapper.COProfitPercentage | currency: "" : 1}}</span>
+                                            <span>%</span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </section>
+                    <div class="profitability-button-container">
+						<a class="print-profitability-icon-container" ng-click="F_CO.printCOProfitabilityData()">
+                        	<i class="bp-icons bp-font-20 bp-cursor-pointer stroke-3" ng-click="CashReconciliationModel.printCashReconciliationData()">print</i>
+                        	<span class="bp-blue-font H400 ">Print</span>
+                        </a>
+                        <button class="bp-normal-button secondary-btn" ng-click="F_CO.hideprofitabilityModalWindow()"> {{'Label_Close' | translate}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- profitability modal end -->
+    <div class="modal fade CreateGroupModal CreateFeeModal  setCashDrawerModalWindow bp-cp-modal-dialog" id="ErrorCashDrawerModalWindow" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <div class="heading">Error</div>
+                        <p class="error-message">There is no cash drawer or terminal assigned to this work station. Please contact your administrator.</p>
+                        <div class ="form">
+                            <button class="bp-btn bp-btn-normal" ng-click="F_CO.hideErrorCashDrawer()">OKAY</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade CreateGroupModal CreateFeeModal setCashDrawerModalWindow bp-cp-modal-dialog" id="setCashDrawerModalWindow" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <div class="heading" ng-if = "M_CO.cashDrawerHeaderText">cash drawER DEACTIVATED</div>
+                        <p class="label-text" ng-if = "M_CO.cashDrawerHeaderText">Your cash drawer has been de-activated.Please re-activate it or select another one</p>
+                        <div class="heading assignDevice" ng-if = "M_CO.showAssignCashDrawerModalWindow || M_CO.showAssignTerminalModalWindow">Assign devices</div>
+                        <div class ="form">
+                            <div class="col-xs-12 P0" ng-if="M_CO.showAssignCashDrawerModalWindow">
+                                <p class="label-text" ng-if = "M_CO.showAssignCashDrawerModalWindow && !M_CO.cashDrawerHeaderText">Assign cash drawer</p>
+                                <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                                    <span class = "bp-autocomplete-image-icon">
+                                    <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer MT-3 stroke-5" ng-click = "F_CO.setFocusOnInput('cashDrawer')">arrowDown</i>
+                                    </span>
+                                    <input  type="text" id="cashDrawer" class="bp-autocomplete-input bp-cursor-pointer 
+                                        bp-input-text " placeholder="{{'Please_select' | translate }}"
+                                        ng-class = "{'bp-redborder' : M_CO.isErrorCashDrawer}"
+                                        autocomplete="off" ng-keyup="F_CO.keyPressNavigationOnDropdownElements($event, 'cashDrawerDropdownDiv', 'cashDrawer', M_CO.cashDrawerList)"
+                                        ng-model="M_CO.cashDrawerName" ng-keydown = "M_CO.isErrorCashDrawer = false;" ng-focus = "M_CO.showCashDrawerList = true;"
+                                        ng-blur="M_CO.showCashDrawerList = false; F_CO.hideDropdown();"  
+                                        readonly="readonly" />
+                                    <span class="error-message text-left col-xs-12 P0" ng-if="M_CO.isErrorCashDrawer">Please select cash drawer</span>                       
+                                    <div class = "bp-autocomplete-dropdown-wrapper" ng-if="M_CO.showCashDrawerList" id="cashDrawerDropdownDiv">
+                                        <ul>
+                                            <li ng-repeat="cashDrawerRec in M_CO.cashDrawerList track by $index" id="cashDrawer_{{$index}}"
+                                                ng-class="{'selected-row': $index == M_CO.currentDropDownIndex}"
+                                                ng-mousedown="F_CO.selectCashDrawer(cashDrawerRec)">
+                                                <div class="form-group-info col-xs-12 P0 text-left">
+                                                    <span >{{cashDrawerRec.CashDrawerName}}</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                        <ul ng-If="M_CO.cashDrawerList.length == 0">
+                                            <li id="cashDrawerNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                                <div class="text-left">{{'No_Results_Found' | translate}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 P0 terminalcard" ng-if="M_CO.IsPreferredPaymentEnabled && M_CO.showAssignTerminalModalWindow && M_CO.terminalList.length > 0">
+                                <p class="label-text" ng-if = "M_CO.showAssignTerminalModalWindow && !M_CO.terminalHeaderText">Assign terminal</p>
+                                <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                                    <span class = "bp-autocomplete-image-icon">
+                                    <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer MT-3 stroke-5" ng-click = "F_CO.setFocusOnInput('terminal')">arrowDown</i>
+                                    </span>
+                                    <input  type="text" id="terminal" class="bp-autocomplete-input bp-cursor-pointer 
+                                        bp-input-text " placeholder="{{'Please_select' | translate }}"
+                                        ng-class = "{'bp-redborder' : M_CO.isErrorTerminal}"
+                                        autocomplete="off" ng-keyup="F_CO.keyPressNavigationOnDropdownElements($event, 'terminalDropdownDiv', 'terminal', M_CO.terminalList)"
+                                        ng-model="M_CO.terminalName" ng-keydown = "M_CO.isErrorTerminal = false;" ng-focus = "M_CO.showTerminalList = true;"
+                                        ng-blur="M_CO.showTerminalList = false; F_CO.hideDropdown();"  
+                                        readonly="readonly" />
+                                    <span class="error-message text-left col-xs-12 P0" ng-if="M_CO.isErrorTerminal">Please select terminal</span>                       
+                                    <div class = "bp-autocomplete-dropdown-wrapper" ng-if="M_CO.showTerminalList" id="terminalDropdownDiv">
+                                        <ul>
+                                            <li ng-repeat="terminalRec in M_CO.terminalList track by $index" id="terminal_{{$index}}"
+                                                ng-class="{'selected-row': $index == M_CO.currentDropDownIndex}"
+                                                ng-mousedown="F_CO.selectTerminal(terminalRec)">
+                                                <div class="form-group-info col-xs-12 P0 text-left">
+                                                    <span >{{terminalRec.Nickname}}</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                        <ul ng-If="M_CO.terminalList.length == 0">
+                                            <li id="terminalNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                                <div class="text-left">{{'No_Results_Found' | translate}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="confirm-cash-drawer-container">
+                                <a class="cancel" data-dismiss="modal" aria-label="Close" ng-click = "M_CO.terminalName = '';M_CO.cashDrawerName = ''; F_CO.closeSetModalWindow();">Cancel</a>
+                                <button class="bp-btn bp-btn-normal" ng-click="F_CO.saveDeviceInfo()">Confirm</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    
+    <!--Transaction Type Modal Window Start-->
+    <div class="modal fade bp-cp-modal-dialog changeTransactionType" id="changeTransactionType" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <section>
+                        <h1 class="H600 bp-first-letter-capitalize">{{'transaction_type' | translate}}</h1>
+                        <div class="transaction-tab" >
+                           <a class="btn tab-btns H400" ng-repeat = "transactiolabelrec in M_CO.transactionTypelabel" ng-click = "M_CO.selectedTransactionTypeIndex = $index" ng-class="{'selected': M_CO.selectedTransactionTypeIndex == $index}">{{transactiolabelrec.CodeLabel}}</a>
+                       		 <span class="transaction-type-tool-tip" ng-mouseover = "M.CO.showTransactionTypeTooltip = true" ng-mouseleave = "M.CO.showTransactionTypeTooltip = false">i</span>
+                       <span ng-show = "M.CO.showTransactionTypeTooltip" class="transactionTypetooltip H200 line-height-normal">Select how you want to categorize this transaction for search and reporting purposes</span>
+                       </div>
+                      
+                       <div class="transaction-type-wrapper">
+                            <h4 class="H400">Inventory and special order handling:</h4>
+                            <div ng-if="M_CO.coHeaderRec.OrderStatus == 'Quote' || F_CO.getStatusForSpecialOrder()" class="warning-container" ng-class="{'orange-warning-container': F_CO.getStatusForSpecialOrder()}"> 
+                                <div class="bp-warning-template">
+                                    <span class="bp-warning-icon" ng-if="M_CO.coHeaderRec.OrderStatus == 'Quote'">
+                                        i
+                                    </span>
+                                    <span class="bp-orange-warning-icon" ng-if = "F_CO.getStatusForSpecialOrder()">
+                                        <i class="bp-icons bp-beer-font bp-font-14">warningFilled</i>
+                                    </span>
+                                    <div class="bp-warning-msg">    
+                                        <span class="bp-dark-grey1-font H301 line-height-large" ng-if="M_CO.coHeaderRec.OrderStatus == 'Quote'">All parts will remain uncommited and unordered because your order is set as a quote.</span>
+                                        <span class="H301" ng-if="F_CO.getStatusForSpecialOrder()">Parts have already been ordered, you can no longer change this setting.</span>
+                                    </div>
+                                </div>
+                            </div> 
+                            <ul class="transaction-type-rec" ng-class="{'disable-radio-button': M_CO.coHeaderRec.OrderStatus == 'Quote' || F_CO.getStatusForSpecialOrder()}">
+                                <li ng-repeat = "transactionrec in M_CO.transactionType">
+                                    <div class="circle" ng-click = "M_CO.transactionSelectedIndex = $index" ng-class="{'radioButtonSelected': M_CO.transactionSelectedIndex == $index}" ></div>
+                                    <label class="H400">{{transactionrec.label}}</label>
+                                    <span class="H301 line-height-large">{{transactionrec.value}}</span>
+                                </li>
+                            </ul>
+                            <div class="formBtn transaction-btn-container">
+                            <button class="btn-label H300" ng-click = "F_CO.hideChangeTransactionType()">
+                                Cancel
+                            </button>
+                            <button class="bp-btn save-btn bp-btn-normal" ng-click="M_CO.saveCoHeaderInfo()">
+                                Save
+                            </button>
+                        </div>
+                       </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!--Transaction Type Modal Window End-->
+    
+    <!-- No branding set -->
+    <div class="modal fade CreateGroupModal CreateFeeModal setCashDrawerModalWindow bp-cp-modal-dialog" id="setBrandingLocationModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+				    <div class="userGroupInfoArea">
+				       	<div class="heading">your branding has not been set</div>
+                        <p class="label-text">Please assign a Branding for your work station.</p>
+                        <div class ="form">
+                            <div class="col-xs-12 P0">
+			                	<div class = "bp-autocomplete-Wrapper autocomplete_v2">
+				                    <span class = "bp-autocomplete-image-icon">
+				                        <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer MT-3 stroke-5" ng-click = "F_CO.setFocusOnInput('BrandingLocationId')">arrowDown</i>
+				                     </span>
+			                         <input  type="text" id="BrandingLocationId" class="bp-autocomplete-input bp-cursor-pointer 
+				                         bp-input-text " placeholder="{{'Please_select' | translate }}"
+				                         autocomplete="off" ng-focus = "M_CO.showBrandingLocationList = true"
+				                         ng-blur="M_CO.showBrandingLocationList = false"
+				                          ng-model="M_CO.BusinessLocationName"
+				                          readonly="readonly"
+				                          ng-keyup="F_CO.keyPressNavigationOnDropdownElements($event, 'brandingLocationDropdownDiv', 'BL', M_CO.allBrandingLocationList)" />                       
+			                         <div class = "bp-autocomplete-dropdown-wrapper" ng-if = "M_CO.showBrandingLocationList" id="brandingLocationDropdownDiv">
+			                             <ul>
+			                                 <li ng-mousedown="F_CO.selectBrandingLocation(BLRec)"
+			                                 ng-class="{'selected-row': $index == M_CO.currentDropDownIndex}"
+			                                    ng-repeat="BLRec in M_CO.allBrandingLocationList track by $index" id="BL_{{$index}}">
+			                                     <div class="form-group-info col-xs-12 P0 text-left">
+			                                         <span >{{BLRec.BusinessLocationName}}</span>
+			                                     </div>
+			                                 </li> 
+			                             </ul>
+			                              <ul ng-if = "M_CO.allBrandingLocationList.length == 0">
+			                                 <li id="cashDrawerNoResults"  class="BP_angucomplete-row-NoResults-Msg">
+			                                     <div class="">{{'No_Results_Found' | translate}}</div>
+			                                 </li>
+			                             </ul>
+			                         </div>
+			                     </div>         
+			                 </div>
+                            <div class="confirm-cash-drawer-container">
+                                <a class="cancel" data-dismiss="modal" aria-label="Close" ng-click = "F_CO.closeSetBrandingLocationModalWindow()">Cancel</a>
+                                <button class="bp-btn bp-btn-normal" ng-disabled="!M_CO.selectedBusinessLocationNameId"
+                                	ng-click="F_CO.saveBrandingLocationInfo(); F_CO.invoicePrintPreview(M_CO.COInvoiceHistoryList[0].COInvoiceHeaderId); F_CO.closeSetBrandingLocationModalWindow();">Confirm</button>
+                            </div>
+                        </div>
+				    </div>
+				</div>
+			</div>
+		</div>
+	</div>
+    <div class="modal fade-scale bp-cp-modal-dialog serviceOrderNameModal bp-table dialog-opacity in" id="serviceOrderName" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-top-15 bp-fw-100">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="heading-text bp-first-letter-capitalize">{{ 'Service Job Name' | translate }}</div>
+                        <div>
+                            <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                                <input type="text" id="form-rec" class = "bp-autocomplete-input H300" 
+                                    ng-model = "M_CO.EditSoHeaderName"  
+                                    />
+                            </div>
+                        </div>
+                        <div class="formBtn transaction-btn-container">
+                            <button class="btn-label H300" ng-click = "F_CO.CloseServiceJobNameEditModalWindow()">
+                                Cancel
+                            </button>
+                            <button class="bp-btn save-btn primary" ng-click="F_CO.saveSoHeaderName()">
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div class="modal fade-scale bp-cp-modal-dialog serviceOrderNameModal bp-table dialog-opacity in unit-check-in" id="UnitArrivalModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-top-15 bp-fw-100">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="heading-text bp-first-letter-capitalize">Unit check-in</div>
+                        <div>
+                           <div class="row MB20">
+                                    <div class="col-xs-6">
+                                        <label class="field-title">Date due in</label>
+                                        <input type="text" class="date-picker" placeholder="{{M_CO.dateFormat}}" 
+                                        id="unitDetailStartDate" data-range-start="unitDetailStartDate" data-range-end="unitDetailEndDate" start-date="M_CO.unitArrival.MaxDueInDate"
+                                         date-format="M_CO.dateFormat"  ng-model="M_CO.unitArrival.DueInDate"
+                                         ng-change="F_CO.calculateTotalHours('', true)"
+                                          datepicker = "datepicker" autocomplete="off" readonly = "readonly"
+                                        />
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <label class="field-title">Time due in</label>
+                                        <input type="text" id="time-due-in-input" class = "bp-autocomplete-input  H301 bp-input-text bp-bold-font" placeholder="Enter a time" 
+                                                ng-model = "M_CO.unitArrival.DueInTime" ng-blur = "F_CO.calculateTotalHours('DueInTime')"
+                                           ng-disabled = "!M_CO.unitArrival.DueInDate"       />
+                                    </div>
+                                </div> 
+                                
+                                <div class="row MB20">
+                                    <div class="col-xs-6">
+                                        <label class="field-title">Date promised</label>
+                                        <input type="text" class="date-picker" placeholder="{{M_CO.dateFormat}}" 
+                                        id="unitDetailEndDate" data-range-start="unitDetailStartDate" data-range-end="unitDetailEndDate" start-date="M_CO.unitArrival.MaxDueInDate"
+                                        ng-change="F_CO.calculateTotalHours('', true)"
+                                         date-format="M_CO.dateFormat"  ng-model="M_CO.unitArrival.PromisedByDate"
+                                          datepicker = "datepicker" autocomplete="off" readonly = "readonly"
+                                        />
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <label class="field-title">Time promised</label>
+                                        <input type="text" id="time-due-in-input" class = "bp-autocomplete-input  H301 bp-input-text bp-bold-font" placeholder="Enter a time" 
+                                                ng-model = "M_CO.unitArrival.PromiseByTime" ng-blur = "F_CO.calculateTotalHours('PromiseByTime')"
+                                                ng-disabled = "!M_CO.unitArrival.PromisedByDate"    />
+                                    </div>
+                                </div> 
+                                
+                                <div class="row MB20">
+                                    <div class = "col-xs-12">
+                                    <label class="field-title unit-arrival">Unit arrived</label>
+                                    <span class="chk_tick" ng-click="F_CO.changeUnitArrivedFlag($event)" >
+                                            <i ng-if="M_CO.unitArrival.IsUnitArrived" class="bp-icons bp-font-11 bp-blue-font bp-text-transform stroke-3 doneIcon">check</i>
+                                            </span>
+                                    </div>
+                                </div> 
+                                <div ng-if="M_CO.unitArrival.IsUnitArrived" class="row">
+                                    <div class = "col-xs-6">
+                                    <label class="field-title">Unit location</label>
+                                    <input type="text" id="Unit-location" class = "bp-autocomplete-input  H301 bp-input-text" placeholder="Type unit location" 
+                                       maxlength = "25" autocomplete = "off" ng-model = "M_CO.unitArrival.UnitLocation" 
+                                                    />
+                                    </div>
+                                </div>
+                        </div>
+                        <div class="formBtn transaction-btn-container">
+                            <button class="btn-label H300" ng-click = "F_CO.CloseUnitCheckInModalWindow()">
+                                Cancel
+                            </button>
+                            <button class="bp-btn save-btn primary" ng-click="F_CO.saveUnitArrivalInfo()">
+                                Save
+                            </button>
+                        </div>
+                        </div>
+                        </div>
+                    </div>
+            
+        </div>
+    </div>
+    
+    <div class="modal fade-scale bp-cp-modal-dialog bp-table dialog-opacity in deal-re-opening-modal-window" id="DealReOpeningModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="white_FFF svg_width" ng-include="'{!Application_Images}/Icons/close.svg'"></i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="heading-text">Re-open invoiced deal</div>
+                   		<div>
+                   			<h2>To re-open an invoiced deal:</h2>
+                   			<div ng-if = "M_CO.isXeroEnabled || M_CO.IsQBEnabled" class = "main-container">
+                   				<i class="green_00A3DB doneIcon svg_width tickiconWidth"
+		                                        ng-include="'{!Application_Images}/Icons/check-1.svg'"
+		                                        ng-if="M_CO.reOpenDealJSON != undefined && M_CO.reOpenDealJSON.AccEntriesCanBeRemoved && !M_CO.isValidatingDealReOpening" ></i>
+		                          <i class="coral_svg svg_width" ng-include="'{!Application_Images}/Icons/close.svg'" ng-if="M_CO.reOpenDealJSON != undefined && !M_CO.reOpenDealJSON.AccEntriesCanBeRemoved && !M_CO.isValidatingDealReOpening"></i>
+                   				<div>
+                   					<span>
+                   						
+                   						The accounting entries will be reviewed to ensure that they can be removed from the accounting application
+                   					</span>
+                   				
+                   				</div>
+                   			</div>
+                   			<div class = "main-container">
+                   				  <i class="green_00A3DB doneIcon svg_width tickiconWidth"
+		                                        ng-include="'{!Application_Images}/Icons/check-1.svg'"
+		                                        ng-if="M_CO.reOpenDealJSON != undefined && M_CO.reOpenDealJSON.CanSoldUnitsBeReversed && !M_CO.isValidatingDealReOpening" ></i>
+		                                        <i class="coral_svg svg_width" ng-include="'{!Application_Images}/Icons/close.svg'" ng-if="M_CO.reOpenDealJSON != undefined && !M_CO.reOpenDealJSON.CanSoldUnitsBeReversed && !M_CO.isValidatingDealReOpening"></i>
+		                           
+                   				<div>
+                   					<span>
+                   					
+                   						The unit sold  will be reviewed to ensure there are no new customer service jobs or deal attached to them
+                   					</span>
+                   				
+                   				</div>
+                   			</div>
+                   			<div class = "main-container">
+                   				 <i class="green_00A3DB doneIcon svg_width tickiconWidth"
+		                                        ng-include="'{!Application_Images}/Icons/check-1.svg'"
+		                                        ng-if="M_CO.reOpenDealJSON != undefined && M_CO.reOpenDealJSON.CanTradedInUnitsBeReversed && !M_CO.isValidatingDealReOpening" ></i>
+		                                        <i class="coral_svg svg_width" ng-include="'{!Application_Images}/Icons/close.svg'" ng-if="M_CO.reOpenDealJSON != undefined && !M_CO.reOpenDealJSON.CanTradedInUnitsBeReversed && !M_CO.isValidatingDealReOpening"></i>
+                   				<div>
+                   					<span>
+                   					
+                   						Any traded in units stocked in when the deal was finalized will be reviewed to ensure there are no internal jobs or deals tied to them
+                   					</span>
+                   				
+                   				</div>
+                   				</div>
+                   				<div class = "btn-container">
+	                   				<button class="bp-btn bp-btn-normal" ng-click="F_CO.reOpenDeal()" 
+	                   				ng-if = "F_CO.checkDealReopenCheck()">Re-open</button>
+	                   				<button class="bp-btn bp-btn-normal" ng-click="F_CO.hideDealReopenModalWindow()" 
+	                   				ng-if = "!F_CO.checkDealReopenCheck()">Close</button>
+                   				</div>
+                   		
+                   		</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+<div class="modal fade-scale bp-cp-modal-dialog serviceOrderNameModal bp-table dialog-opacity in edit-notes-modal-window" id="editNotesModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-top-15 bp-fw-100">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="heading-text-new">
+                        	<span ng-if = "M_CO.editNotes.sectionName == 'customer'">Customer:</span>
+                        	<span ng-if = "M_CO.editNotes.sectionName == 'unit' || M_CO.editNotes.sectionName == 'Tradin'|| M_CO.editNotes.sectionName == 'service'">VIN:</span> 
+                        	<span> {{M_CO.editNotes.Name}}</span>
+                        </div>
+                        <div class = "section-container">
+                        	 <label>Notes</label>
+                        	 <textarea rows="4" ng-disabled = "F_CO.checkNotesPermission()" ng-class = "{'bp-grey1-font': F_CO.checkNotesPermission()}"
+                                    id="addnewNotes" ng-model="M_CO.editNotes.Notes" placeholder="Add notes"
+                                    maxlength ="255"></textarea>
+                        </div>
+                        
+                        <div class="formBtn transaction-btn-container">
+                            <button class="btn-label H300" ng-if = "!F_CO.checkNotesPermission()"  ng-click = "F_CO.CloseEditNotesModalWindow()">
+                                Cancel
+                            </button>
+                            <button class="bp-btn save-btn primary" ng-if = "!F_CO.checkNotesPermission()" ng-click="F_CO.saveNotes()">
+                                Save
+                            </button>
+                            <button class="bp-btn save-btn primary" ng-if = "F_CO.checkNotesPermission()" ng-click = "F_CO.CloseEditNotesModalWindow()">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     <div class="modal fade-scale bp-cp-modal-dialog bp-table dialog-opacity in deal-re-opening-modal-window" id="DealReOpeningModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-top-15 bp-fw-100">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="heading-text">Re-open invoiced deal</div>
+                   		<div>
+                   			<h2>To re-open this invoice all of the following conditions must be met:</h2>
+                   			<div ng-if = "M_CO.isXeroEnabled || M_CO.IsQBEnabled" class = "main-container">
+                   				<i class="bp-icons bp-font-12 bp-green-font bp-text-transform stroke-5" ng-if="M_CO.reOpenDealJSON != undefined && M_CO.reOpenDealJSON.AccEntriesCanBeRemoved && !M_CO.isValidatingDealReOpening" >check</i>
+		                        <i class="bp-icons bp-font-12 bp-coral-font bp-text-transform stroke-5" ng-if="M_CO.reOpenDealJSON != undefined && !M_CO.reOpenDealJSON.AccEntriesCanBeRemoved && !M_CO.isValidatingDealReOpening">close</i>
+                   				<div>
+                   					<span>
+                                        The accounting entries will be reviewed to ensure that they can be removed from the accounting application
+                   					</span>
+                   				</div>
+                   			</div>
+                   			<div class = "main-container">
+                   				<i class="bp-icons bp-font-12 bp-green-font bp-text-transform stroke-5" ng-if="M_CO.reOpenDealJSON != undefined && M_CO.reOpenDealJSON.CanSoldUnitsBeReversed && !M_CO.isValidatingDealReOpening" >check</i>
+		                        <i class="bp-icons bp-font-12 bp-coral-font bp-text-transform stroke-5" ng-if="M_CO.reOpenDealJSON != undefined && !M_CO.reOpenDealJSON.CanSoldUnitsBeReversed && !M_CO.isValidatingDealReOpening">close</i>
+                   				<div>
+                   					<span>
+                   						The unit sold  will be reviewed to ensure there are no new customer service jobs or deal attached to them
+                   					</span>
+                   				</div>
+                   			</div>
+                   			<div class = "main-container">
+                   				<i class="bp-icons bp-font-12 bp-green-font bp-text-transform stroke-5" ng-if="M_CO.reOpenDealJSON != undefined && M_CO.reOpenDealJSON.CanTradedInUnitsBeReversed && !M_CO.isValidatingDealReOpening" >check</i>
+		                        <i class="bp-icons bp-font-12 bp-coral-font bp-text-transform stroke-5" ng-if="M_CO.reOpenDealJSON != undefined && !M_CO.reOpenDealJSON.CanTradedInUnitsBeReversed && !M_CO.isValidatingDealReOpening">close</i>
+                   				<div>
+                   					<span>
+                   						Any traded in units stocked in when the deal was finalized will be reviewed to ensure there are no internal jobs or deals tied to them
+                   					</span>
+                   				</div>
+                   				</div>
+                   				<div class = "btn-container">
+	                   				<button class="bp-btn bp-btn-normal" ng-click="F_CO.reOpenDeal()" 
+	                   				ng-if = "F_CO.checkDealReopenCheck()">Re-open</button>
+	                   				<button class="bp-btn bp-btn-normal" ng-click="F_CO.hideDealReopenModalWindow()" 
+	                   				ng-if = "!F_CO.checkDealReopenCheck()">Close</button>
+                   				</div>
+                   		
+                   		</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    
+    <div class="modal fade-scale bp-cp-modal-dialog bp-table dialog-opacity in deal-re-opening-modal-window" id="InvoiceReOpeningModalWindow"  role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-top-15 bp-fw-100">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="heading-text">Re-open invoice </div>
+                        <div>
+                            <h2>To re-open this invoice all of the following conditions must be met:</h2>
+                            <div ng-repeat="reOpenRec in M_CO.reOpenInvoiceJSON.ConditionList" class = "main-container">
+                                <i class="bp-icons bp-font-12 bp-green-font bp-text-transform stroke-5" ng-if="reOpenRec.IsValidToReopen" >check</i>
+                                <i class="bp-icons bp-font-12 bp-coral-font bp-text-transform stroke-5" ng-if="!reOpenRec.IsValidToReopen">close</i>
+                                <div>
+                                    <span>
+                                        {{reOpenRec.ConditionText}}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class = "main-container">
+                                <div class="C-P0">
+                                    <span class="d-flex" ng-repeat = "messRec in M_CO.reOpenInvoiceJSON.MessageList">
+                                        {{messRec}}
+                                    </span>
+                                </div>
+                            </div>
+                                <div class = "btn-container">
+                                    <button class="bp-btn bp-btn-normal" ng-click="F_CO.reOpenInvoice()" 
+                                    ng-if = "F_CO.checkInvoiceReopenCheck()">Re-open</button>
+                                    <button class="bp-btn bp-btn-normal" ng-click="F_CO.hideModalWindow('InvoiceReOpeningModalWindow')" 
+                                    ng-if = "!F_CO.checkInvoiceReopenCheck()">Close</button>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="modal fade-scale bp-cp-modal-dialog bp-table dialog-opacity in deal-re-opening-modal-window" id="DealOptionAutoFulfill"  role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body option-fulfill-modal">
+                    <div ng-if="!F_CO.isOptionFullfilled">
+                        <div class="heading-text" >Option Auto Fulfill</div>
+                        <div>
+                            <h2>Please wait while we are committing and fulfilling deal options:</h2>
+                            <div ng-repeat="rec in F_CO.optionFullfilledActionToStatusMap" class = "main-container">
+                                <i class="bp-icons bp-font-12 bp-green-font bp-text-transform stroke-5" ng-if="rec.isCompleted" >check</i>
+                                <i class="bp-icons input-white-spiner bp-font-18 bp-white-font option-spinner stroke-1 blue-spinner" ng-if="!rec.isCompleted">spinner</i>                               
+                                <div>
+                                    <span>
+                                        {{rec.Name}}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="F_CO.isOptionFullfilled">
+                        <div class="heading-text" >Option Auto Fulfill Incomplete</div>
+                        <div>
+                            <h2 class="quick-fulfill-header">Some of your deal options require additional actions because:</h2>
+                            <ul class="quick-fulfill-list-item">
+                                <li ng-repeat="messRec in F_CO.optionFullfillMessageList" >
+                                    {{messRec}}
+                                </li>
+                            </ul>
+                            <h2 class="quick-fulfill-header">Please review and update the Deal Merchandise or Deal Service transactions that have been added to this customer order.</h2>
+                            <div class = "btn-container option-fulfill-con-btn">
+                                <button class="bp-btn bp-btn-normal" ng-click="F_CO.hideModalWindow('DealOptionAutoFulfill')" >Continue</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div id="OversoldPopUp" class="modal fade OversoldPopUp" role="dialog" ng-controller="">
+        <div class="modal-dialog modal-dialog_Oversold">
+            <div class="modal-content col-md-12">
+                <div class="modal-body popupContainerOversold">
+                    <div class="popupinside">
+                        <div class="OversoldHeading">
+                            <p>{{'Your_needs_exceed_the_amount_available_in_stock' | translate}}</p>
+                        </div>
+                        <div  class="M0 OversoldPartDetails" ng-if="!M_CO.IsNewLineItemInserted || (M_CO.recentlyAddedLineItem && M_CO.recentlyAddedLineItem.length == 1)">
+                            <h3 class="M0" ng-if="!M_CO.IsNewLineItemInserted">{{M_CO.recentlyUpdatedLineItem.Item}}</h3>
+                            <h3 class="M0" ng-if="M_CO.IsNewLineItemInserted">{{M_CO.recentlyAddedLineItem[0].Item}}</h3>
+                            <div class="AvailableInventoryAndPrice">
+                                <p class="M0 AvailableInventoryLabel text-capitalize">{{'Available_inventory' | translate}}:</p>
+                                <p class="M0 AvailableInventoryValue" ng-if="!M_CO.IsNewLineItemInserted">{{M_CO.recentlyUpdatedLineItem.Qty &lt; 0 ? M_CO.recentlyUpdatedLineItem.AvaliablePartsQty : (M_CO.recentlyUpdatedLineItem.AvaliablePartsQty + M_CO.recentlyUpdatedLineItem.QtyCpy)}}</p>
+                                <p class="M0 AvailableInventoryValue" ng-if="M_CO.IsNewLineItemInserted">{{M_CO.recentlyAddedLineItem[0].AvailableQty}}</p> 
+                                <p class="M0 AvailableInventoryAndPriceDivider">|</p>
+                               
+                                <p class="M0 priceLabel">{{'Label_Price' | translate}}:</p>
+                                <p class="M0 priceValue" ng-if="!M_CO.IsNewLineItemInserted">{{M_CO.recentlyUpdatedLineItem.Price | currency}}</p>
+                                <p class="M0 priceValue" ng-if="M_CO.IsNewLineItemInserted">{{M_CO.recentlyAddedLineItem[0].Price | currency}}</p>
+                            </div>
+                        </div>
+                        <div class="OversoldAvailableInventoryAndPriceBorderBottom" ng-if="!M_CO.IsNewLineItemInserted || (M_CO.recentlyAddedLineItem && M_CO.recentlyAddedLineItem.length == 1)"></div>
+                        <div class="OversoldActionHeading">
+                             <p>{{'Switch_to_customer_sale_create_special_order_message' | translate}}</p>
+                        </div>
+                        <div class="OversoldActionsContainer">
+                               <button id="createSpecialOrderActionBtn" type="button" class="btn btn-default OversoldActionBtn text-uppercase" ng-click="F_CO.openSelectCustomerSectionForSpecialOrder();">
+                                   {{'Create_special_order' | translate}}
+                               </button>
+
+                               <button id="oversoldActionBtn" type="button" class="btn btn-default OversoldActionBtn OversoldActionBtnMR text-uppercase" 
+                                   ng-click="F_CO.forceOversoldAction();" ng-if="GroupOnlyPermissions['Oversell inventory'].enabled">
+                                   {{'Force_oversold' | translate}}
+                               </button>
+                           </div>
+                        <div class="OversoldCancelAction text-uppercase">
+                            <img src="{!Application_Images}/Cancel_Red.png" ng-click="F_CO.closeOversoldPopup(true);"/>
+                            <span ng-click="F_CO.closeOversoldPopup(true);">{{'Cancel_Label' | translate}}</span>
+                        </div>
+                      </div>
+               </div>
+           </div>
+       </div>
+       <div class="gridLoadingContainer" ng-if="CashSaleModel.displayGrid">
+           <div class="gridLoadingDiv">
+               <img src="{!Application_Images}/Home_Search_loading.gif" title="Please wait ..."/>
+           </div>
+       </div>
+    </div>
+    <div class="modal fade bp-model-dialog ServiceJobClaim CreateGroupModal print-modal-popup CRM-lead-modal-window" id="CRMleadModalWindow" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close bp-close-but CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close" ng-click = "F_CO.hideCRMleadModalWindow()" >
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <div class="heading">{{ 'select_a_lead_from_the_crm' | translate }}</div>
+                        <div class="tab-content-print">
+                            <div class="left-container">
+                                <div class="form-input">
+                                    <label class="print-item-label">{{ 'CRM_lead' | translate }}</label>
+                                    <div class="bp-cell  searchInputArea " ng-class = "{'showingOverlay' : M_CO.showCRMLeadDropdown && ((M_CO.DP360LeadJSON | filter:{'FormattedLeadName' : M_CO.CRMLeadJSON.selectedLead}).length > 0)}">
+                                        <input  type="text" id="crmLeadSearch" class="bp-input-text searchInput select-crm-lead" autocomplete="off" 
+                                             placeholder="{{ 'select_a_CRM_lead' | translate }}" ng-focus = "M_CO.showCRMLeadDropdown = true" 
+                                             ng-blur = "M_CO.showCRMLeadDropdown = false" ng-model="M_CO.CRMLeadJSON.selectedLead"
+                                             ng-keyup="F_CO.keyPressNavigationOnDropdownElements($event, 'CRMLeadContainerScrollDiv', 'CRMLead', M_CO.DP360LeadJSON)"/>
+                                             <i class="bp-icons bp-blue-font bp-font-15 dealer-search-icon MT-3">search</i>
+                                             <div class="searchResultOverlay" id="CRMLeadContainerScrollDiv">
+                                                <ul>
+                                                    <li ng-repeat="leadRec in M_CO.DP360LeadJSON | filter:{'FormattedLeadName' : M_CO.CRMLeadJSON.selectedLead }"  
+                                                    ng-class="{'selected-row': $index == M_CO.currentDropDownIndex}" ng-mousedown = "F_CO.selectCRMLead(leadRec,$event)" id="CRMLead_{{$index}}">
+                                                        <div class="fullName">{{leadRec.FormattedLeadName}} </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="left" ng-if = "M_CO.CRMLeadJSON.isShowCustomerField && M_CO.CRMLeadJSON.selectedLead">
+                                                <label>{{'Label_Customer' | translate}}</label>
+                                                <autocompletev2 ng-if="!M_CO.IsWebComponentSTAEnabled" id="autocompletevCRMLeadId" template-name="Customer" section-name="CRMLead" section-id="CRMLeadId" default-value="M_CO.CRMLeadJSON.CustomerName" create-action-available-on-dropdown="true" initite-search = "M_CO.isInititeSearch"/>
+                                                <div class="searchToAdd" ng-if="M_CO.IsWebComponentSTAEnabled">
+                                                    <bpda-search-to-add
+                                                        id="autocompleteCRMLeadId"
+                                                        template-name="Customer"
+                                                        section-name="CRMLead" 
+                                                        section-id="CRMLeadId"
+                                                        input-value="{{M_CO.CRMLeadJSON.CustomerName}}"
+                                                        hide-filter-button="true"
+                                                        placeholder="Search to add"
+                                                        >
+                                                        <bp-button id="createUsingCRMContact" slot="actions" raised="button">Create using crm contact</bp-button>
+                                                    </bpda-search-to-add>
+                                                </div>
+                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-input crm-lead-button">
+                            <button class="bp-btn bp-btn-normal" ng-disabled = "!M_CO.CRMLeadJSON.selectedLead || !M_CO.CRMLeadJSON.CustomerId" ng-click = "F_CO.createDealFromDP360()">Create deal from CRM lead</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade CO-export-confirmation bp-cp-modal-dialog" id="PartsImport" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="edit-count-session-body">
+                        <h2 class="heading-text text-uppercase">IMPORT PICK LIST</h2>
+                        <div class="message-info text-left">
+                            <span class="bp-dark-grey2-font H400">
+                                Select a format
+                            </span>
+                        </div>
+                        <div class="searchInputArea export-dropdown" ng-class = "{'showingOverlay' : M_CO.selectExportTypeClicked}">
+                            <input  type="text" id="ImportTypeInput" class="searchInput" 
+                            autocomplete="off" ng-focus = "M_CO.selectExportTypeClicked = true" ng-blur="M_CO.selectExportTypeClicked = false"
+                            ng-model="M_CO.selectedPartImportFormat.Name" readonly="readonly"/> 
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow" ng-click = "F_CO.setFocusOnInput('ImportTypeInput')">arrowDown</i>
+                            <div class="searchResultOverlay" id="ImportTypeDropDownDiv">
+                             <ul>
+                                 <li ng-repeat="(key, value) in M_CO.partImportFormatList | orderBy:key"
+                                     ng-mousedown="M_CO.selectedPartImportFormat = value"
+                                     id="ImportType{{$index}}">
+                                     <div class="fullName text-capitalize">{{value.Name}}</div>
+                                 </li>  
+                                </ul> 
+                            </div>  
+                        </div>
+                        <div class="action-section">
+                            <droplet class="part-smart-droplet" ng-model="FileUpload.interface">
+                                <div class="search-entity-wrapper browse_but">
+                                    <droplet-upload-single ng-model="FileUpload.interface" ng-click="F_CO.setPartSmartFileReadData(M_CO.PartSamrtSectionName,M_CO.PartSamrtId)">
+                                    </droplet-upload-single>
+                                    <button class="action-button bp-btn bp-btn-normal bp-btn-medium text-uppercase  bp-btn-small H200"  ng-click="F_CO.setPartSmartFileReadData(M_CO.PartSamrtSectionName,M_CO.PartSamrtId)">Import</button>
+                                </div>
+                            </droplet>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <bp-ng-modal-window id-val="replaceUnitModalWindow" mobal-window-payload="M_CO.ModalWindowPayload" cancel-btn-action="F_CO.hideModalWindow('replaceUnitModalWindow')" primary-btn-action="F_CO.replaceUnitCoinfirm('replaceUnitModalWindow')">
+        <cite class="delete-info">
+            A service job has already been created for this deal unit.  Replacing the unit on the deal will also change the unit on the related service job.
+        </cite>
+    </bp-ng-modal-window>
+    <bp-ng-modal-window id-val="coinfirmationDealCommitModal" mobal-window-payload="M_CO.ModalWindowPayload" cancel-btn-action="F_CO.hideModalWindow('coinfirmationDealCommitModal')" primary-btn-action="F_CO.CommitDealOptionModalHandler()">
+        <cite class="delete-info">
+            <ul ng-if = "M_CO.unCommitedUnitList.length > 1 && !M_CO.AdditionalDealServiceCreationConfirmation" class="selected-unit-list">
+                <span class="selected-unit-text">Which unit would you like to commit options for?</span>
+                <li ng-repeat = "rec in M_CO.unCommitedUnitList track by $index" >
+                    <bp-ng-check-box remove-multi-select-style="true" value="rec.DealItemObj.isSelected" select-unselect-click="F_CO.toggleSelectedUnit($index)" 
+					    id-value="selectedUnit{{$index}}"></bp-ng-check-box>
+                    <span>{{rec.DealItemObj.FormattedName}}</span>
+                </li>
+            </ul>
+            <sapn ng-if = "M_CO.AdditionalDealServiceCreationConfirmation">
+                Since the existing service job related to this deal unit has already been completed/invoiced, any newly added options for this unit will result in a new service job being generated.
+            </sapn>
+            
+        </cite>
+        </bp-ng-modal-window>
+     <bp-ng-modal-window id-val="customerWarning" mobal-window-payload="M_CO.ModalWindowPayload" cancel-btn-action="F_CO.hideModalWindow('customerWarning');" primary-btn-action="F_CO.handlingCustomerModalWindow()">
+        <div class="c-sub-heading banner-container orange-banner MB20 MT5" ng-if="M_CO.changeCustomerWarningList.HasServiceJob" >
+            <i class="bp-icons bp-beer-font bp-font-18 MT-5">warningFilled</i>
+            <div>
+                <p>Your CO contains a service job</p>
+                <span>Units will be removed from the service jobs and and you will need to select units from the new customer</span>
+            </div>
+        </div>
+        <div class="c-sub-heading banner-container orange-banner MB20 MT5" ng-if="M_CO.changeCustomerWarningList.HasTradeIn" >
+            <i class="bp-icons bp-beer-font bp-font-18 MT-5">warningFilled</i>
+            <div>
+                <p>Your CO contains a trade-in</p>
+                <span>Trade-ins will be removed from unit deals and you will need to select a trade-in from the new customer.</span>
+            </div>
+        </div>
+        <div class="c-sub-heading banner-container orange-banner MB20 MT5" ng-if="M_CO.changeCustomerWarningList.HasServiceAppoitment" >
+            <i class="bp-icons bp-beer-font bp-font-18 MT-5">warningFilled</i>
+            <div>
+                <p>Your CO contains a service appointment</p>
+                <span>Service appointments will be removed from the service scheduler and you will need to create new appointments.</span>
+            </div>
+        </div>
+        <div class="c-sub-heading banner-container orange-banner MB20 MT5">
+            <i class="bp-icons bp-beer-font bp-font-18 MT-5">warningFilled</i>
+            <div>
+                <p>Pricing may need to be recalculated</p>
+                <span>The new customer may have a different price level or tax exemptions which would cause all pricing and taxes to be recalculated.  If true, this may take some additional time to complete.</span>
+            </div>
+        </div>
+        <div class="c-sub-heading banner-container orange-banner MB20 MT5" ng-if="M_CO.changeCustomerWarningList.HasBulkDiscount">
+            <i class="bp-icons bp-beer-font bp-font-18 MT-5">warningFilled</i>
+            <div>
+                <p>Any previously entered bulk discounts will also be reset to zero</p>
+            </div>
+        </div>
+        <div class="c-sub-heading banner-container orange-banner MB20 MT5" ng-if="M_CO.IsAutomaticTaxRates">
+            <i class="bp-icons bp-beer-font bp-font-18 MT-5">warningFilled</i>
+            <div>
+                <span>All taxes will revert back to using the local store rates and the taxes will be recalculated accordingly.</span>
+            </div>
+        </div>
+    </bp-ng-modal-window>
+
+    <bp-ng-modal-window id-val="customerErrorModal" mobal-window-payload="M_CO.ModalWindowPayload" cancel-btn-action="F_CO.hideModalWindow('customerErrorModal');" primary-btn-action="F_CO.hideModalWindow('customerErrorModal');">
+        <div class="c-sub-heading error-modal-window" ng-if="M_CO.changeCustomerWarningList.length > 0" >
+            <ul>
+                <li ng-repeat="rec in M_CO.changeCustomerWarningList track by $index">
+                    {{rec}}
+                </li>
+            </ul>
+        </div>
+    </bp-ng-modal-window>
+    
+    <full-page-modal id-value="reallocateModel" class-value="bp-full-page-modal" close-action="F_CO.closeReallocateModel(M_CO.reallocateOnOrderJson.SectionType, M_CO.reallocateOnOrderJson.index)">
+        <div class="reallocate-window-grid">
+            <h2 class="heading">{{'Reallocate_on_order_part' | translate}} </h2> 
+            <p class="sub-heading">{{'The_following_vendor_orders_contain' | translate}} </p>
+            <p class="co-part-number-and-discription">{{M_CO.reallocatePartsData.lineItem.PartNumberAndDescription}} </p>
+            <p class="sub-heading">{{'Select_one_to_fulfill_your_special_order_need_of' | translate}} <span class="liItem-text-strong"> {{M_CO.reallocateOnOrderJson.RequiredQty}}</span></p>
+            <div class="table-responsive" ng-if="M_CO.UnreceivedStockPartVOList.length > 0">
+                <table class="bp-editable-table reallocate-window-table">
+                    <col width="18%"  />
+                    <col width="18%"  />
+                    <col width="18%"  />
+                    <col width="18%"  />
+                    <col width="18%"  />
+                    <thead>
+                        <tr>
+                            <th class="H300 line-height-medium vo-number">{{ 'VONumber' | translate }}</th>
+                            <th class="H300 line-height-medium">{{ 'Type' | translate }}</th>
+                            <th class="H300 line-height-medium">{{ 'Ordered' | translate }}</th>
+                            <th class="H300 line-height-medium">{{ 'Expected' | translate }}</th>
+                            <th class="H300 line-height-medium">{{ 'On_order' | translate }}</th>
+                            <th class="H300 line-height-medium"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat = "partRec in M_CO.UnreceivedStockPartVOList track by $index" ng-init="tableRowIndex = $index">
+                            <td>
+                                <span>{{partRec.VONumber}}</span>
+                            </td>
+                            <td>
+                                <span>{{partRec.OrderType}}</span>
+                            </td>
+                            <td>
+                                <span>{{partRec.VOOrderedDate}}</span>
+                            </td>
+                            <td>
+                                <span>{{partRec.VOExpectedDate}}</span>
+                            </td>
+                            <td>
+                                <span>{{partRec.UnreceivedOnOrderQty}}</span>
+                            </td>
+                            <td class="lastChild">
+                                <span class="chk_tick" id="tableRowIndex" ng-click="F_CO.selectForReallocate(partRec,tableRowIndex)"
+					                ng-class = "{'disableCheck': F_CO.isDisableForReallocate(partRec) }">
+					                <i ng-if="partRec.IsSelectedForReallocate" class="bp-icons bp-font-11 bp-blue-font bp-text-transform stroke-3 doneIcon">check</i>
+					            </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="confirm-btn-section" ng-if="M_CO.UnreceivedStockPartVOList.length > 0">
+                <button class="c-btn c-ternary-btn" ng-disabled = "!F_CO.isSelectedForReallocate()" ng-click="F_CO.saveReallocateOnOrder(M_CO.reallocateOnOrderJson.SectionType, M_CO.reallocateOnOrderJson.index)">{{ 'Confirm' | translate }}</button>
+            </div>
+        </div>
+</full-page-modal>
+<bp-ng-modal-window id-val="recalculateModalWindow" class="recalculate-all-pricing-modal-window" mobal-window-payload="M_CO.ModalWindowPayload" cancel-btn-action="F_CO.hideModalWindow('recalculateModalWindow')" primary-btn-action="F_CO.hideModalWindow('recalculateModalWindow');F_CO.refreshCOPricingAndTax();">
+    <cite>
+        <ul ng-if = "M_CO.recalculateAllPricingList.length > 0" class="selected-unit-list">
+            <li ng-repeat = "rec in M_CO.recalculateAllPricingList track by $index" >
+                    <label class="checkbox">
+                        <span class="chk_tick includeInactiveMargin" ng-class="{'chked' : rec.isSelected}" 
+                            ng-click="F_CO.togglerecalculateAllPricing($index)">
+                            <i class="fa fa-check-square chksqure" ></i>
+                        </span>
+                    </label>
+                <span class="pricing-label">{{rec.Name}}</span>
+            </li>
+        </ul>
+    </cite>
+    </bp-ng-modal-window>
+
+    <!-- START: Select Deal Item Modal window -->
+    <div class="modal fade bp-model-dialog CreateGroupModal"  id="select-unit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close bp-close-but CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close" ng-click = "F_CO.hideSelectUnitpopUpModalWindow()" >
+                    <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <div class="heading">SELECT A UNIT</div>
+                        <div class = "select-unit-modal-body">
+                            <div class="select-unit-header2">Select one of the units being sold</div>
+                            <cite>
+                                <ul ng-if = "M_CO.Deal.UnitList.length > 0" class="selected-unit-list">
+                                    <li ng-repeat = "rec in M_CO.Deal.UnitList">
+                                        <div ng-if="rec.DealItemObj.UnitId" class = "select-unit-modal-checkbox-align">
+                                            <label class="checkbox">
+                                                <span class="chk_tick" ng-click="F_CO.selectUnselectDealItem($index)">
+                                                    <i ng-if="rec.IsUnitSelectedToPrint" class="bp-icons bp-font-12 bp-blue-font doneIcon">check</i>
+                                                </span>
+                                            </label>
+                                            <div>
+                                                <span class="align-with-checkbox select-unit-modal-text-bold">{{rec.DealItemObj.FormattedName}}</span>
+                                                <br/>
+                                                <span class="align-with-checkbox">VIN: {{rec.DealItemObj.VIN}}</span>    
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </cite>
+                        </div>
+                        <div class="button-group-print select-unit-modal-action-button">
+                            <div class="button-div">
+                                <button class="btn bp-btn-normal" ng-disabled = "!M_CO.SelectedDealItemId" ng-click="F_CO.printFormDocument(M_CO.SelectedDealItemId)"  data-dismiss="modal">
+                                    Accept
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END: Select Deal Item Modal window -->
+</apex:component>

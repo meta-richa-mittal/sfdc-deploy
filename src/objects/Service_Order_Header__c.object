@@ -1,0 +1,1374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Object used to handle service related section on Customer order header</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>false</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>Actual_Invoice_Date_Time__c</fullName>
+        <externalId>false</externalId>
+        <label>Actual Invoice Date Time</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Applicable_Tax__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Applicable Tax</label>
+        <referenceTo>Sales_Tax__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+        </fields>
+    <fields>
+        <fullName>CO_Header__c</fullName>
+        <externalId>false</externalId>
+        <label>CO Header</label>
+        <referenceTo>CO_Header__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <relationshipOrder>0</relationshipOrder>
+        <reparentableMasterDetail>false</reparentableMasterDetail>
+        <trackTrending>false</trackTrending>
+        <type>MasterDetail</type>
+        <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    </fields>
+    <fields>
+        <fullName>Claimed_Total__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(ISPICKVAL(Transaction_Type__r.Type__c, &apos;Third-Party&apos;), 
+       (Total_With_Tax__c - (IF( ISNULL(Deductible_SO_Payment__c) , 0, 
+          Deductible_SO_Payment__r.Total_With_Tax__c))), 0)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Claimed Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Deductible_SO_Payment__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Deductible SO Payment</label>
+        <lookupFilter>
+            <active>true</active>
+            <filterItems>
+                <field>SO_Payment_Role__c.RecordType.Name</field>
+                <operation>equals</operation>
+                <value>Deductible</value>
+            </filterItems>
+            <isOptional>false</isOptional>
+        </lookupFilter>
+        <referenceTo>SO_Payment_Role__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Deductible_Invoice_Number__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(ISBLANK( Deductible_SO_Payment__c ), &apos;N/A&apos;,  
+        Deductible_SO_Payment__r.Invoice_Number__r.Invoice_Number__c)</formula>
+        <label>Deductible Invoice Number</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Claim__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Claim</label>
+        <referenceTo>Claim__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Claim_Clearing__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(ISBLANK(Deductible_SO_Payment__r.Invoice_Number__c) || !ISBLANK( Invoice_Number__c) , 0, -(Deductible_SO_Payment__r.Pre_Tax_Total__c))</formula>
+        <label>Claim Clearing</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Claim_Invoice_Number__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(( ISPICKVAL(Transaction_Type__r.Type__c, &apos;Third-Party&apos;) &amp;&amp; !ISNULL(Invoice_Number__c)),  Invoice_Number__r.AutoNumberHolder__r.Name, &apos;&apos;)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Claim Invoice Number</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Commit_Order_Controls__c</fullName>
+        <externalId>false</externalId>
+        <label>Commit Order Controls</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Commit and order</fullName>
+                    <default>true</default>
+                    <label>Commit and order</label>
+                </value>
+                <value>
+                    <fullName>Commit only</fullName>
+                    <default>false</default>
+                    <label>Commit only</label>
+                </value>
+                <value>
+                    <fullName>Uncommitted</fullName>
+                    <default>false</default>
+                    <label>Uncommitted</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>Category__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Category</label>
+        <referenceTo>Category__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Cause__c</fullName>
+        <externalId>false</externalId>
+        <label>Cause</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Claim_Status__c</fullName>
+        <externalId>false</externalId>
+        <label>Claim Status</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Unsubmitted</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Ready to Submit</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Submitted</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Approved</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Denied</fullName>
+                    <default>false</default>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>Claim_Submitted_At__c</fullName>
+        <externalId>false</externalId>
+        <label>Claim Submitted At</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Concern__c</fullName>
+        <externalId>false</externalId>
+        <label>Concern</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Correction__c</fullName>
+        <externalId>false</externalId>
+        <label>Correction</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>CreatedDate__c</fullName>
+        <externalId>false</externalId>
+        <formula>DATEVALUE( CreatedDate )</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>CreatedDate</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Customer_Owned_Unit__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Customer Owned Unit</label>
+        <referenceTo>Customer_Owned_Unit__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Deal_Item__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Lookup to Deal Item</description>
+        <externalId>false</externalId>
+        <label>Deal Item</label>
+        <referenceTo>Deal_Item__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Deal__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Reference to deal</description>
+        <externalId>false</externalId>
+        <label>Deal</label>
+        <referenceTo>Deal__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Estimated_Hours__c</fullName>
+        <externalId>false</externalId>
+        <label>Estimated Hours</label>
+        <precision>7</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Fees_Bulk_Discount_Percent__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Fees Bulk Discount Percent</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>    
+    <fields>
+        <fullName>Hrs_Billed__c</fullName>
+        <externalId>false</externalId>
+        <label>Hrs Billed</label>
+        <summarizedField>Technician_Hour__c.Total_Hours__c</summarizedField>
+        <summaryForeignKey>Technician_Hour__c.Service_Order_Header__c</summaryForeignKey>
+        <summaryOperation>sum</summaryOperation>
+        <trackTrending>false</trackTrending>
+        <type>Summary</type>
+    </fields>
+    <fields>
+        <fullName>Hrs_Logged__c</fullName>
+        <externalId>false</externalId>
+        <label>Hrs Logged</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Invoice_Number__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Invoice Number</label>
+        <referenceTo>CO_Invoice_Header__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Is_Override_Tax__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Override Tax</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>IsPromisedBy_AmPm__c</fullName>
+        <externalId>false</externalId>
+        <label>IsPromisedBy AmPm</label>
+        <length>50</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Is_Tax_Based_On_Customer_Address__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Tax Based On Customer Address</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+	<fields>
+        <fullName>Is_Technician_Hours_Costing_Enabled__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Technician Hours Costing Enabled</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Unresolved_Fulfillment_Exists__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Is Unresolved Fulfillment Exists</description>
+        <externalId>false</externalId>
+        <label>Is Unresolved Fulfillment Exists</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Uploaded_to_Honda__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Uploaded to Honda</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Job_Type__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF((ISPICKVAL(Transaction_Type__r.Type__c, &apos;Internal&apos;) || ISPICKVAL(Transaction_Type__r.Type__c, &apos;Stock Unit&apos;)), &apos;Internal&apos;, 
+  IF(ISPICKVAL(Transaction_Type__r.Type__c, &apos;Deal Service&apos;), &apos;Deal&apos;, 
+    IF(ISPICKVAL(Transaction_Type__r.Type__c, &apos;Deal Service&apos;), &apos;Deal&apos;, 
+      Transaction_Type__r.Code_Label__c
+    )
+  )
+)</formula>
+        <label>Job Type</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Labor_Bulk_Discount_Percent__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Labor Bulk Discount Percent</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Labour_Tax__c</fullName>
+        <externalId>false</externalId>
+        <label>Labour Tax</label>
+        <precision>14</precision>
+        <required>false</required>
+        <scale>4</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>LastModifiedDate__c</fullName>
+        <externalId>false</externalId>
+        <formula>DATEVALUE(LastModifiedDate)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>LastModifiedDate</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Last Modified By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Modified Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Migration_Id__c</fullName>
+        <externalId>true</externalId>
+        <label>Migration Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Name__c</fullName>
+        <description>Unique name field</description>
+        <externalId>false</externalId>
+        <label>Name</label>
+        <length>255</length>
+        <required>true</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Notes_For_Customer__c</fullName>
+        <externalId>false</externalId>
+        <label>Notes For Customer</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Notes__c</fullName>
+        <externalId>false</externalId>
+        <label>Notes</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Odometer_on_Arrival__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Odometer on Arrival</label>
+        <precision>12</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Odometer_on_Departure__c</fullName>
+        <externalId>false</externalId>
+        <label>Odometer on Departure</label>
+        <precision>12</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Override_Tax_Applicable_On__c</fullName>
+        <externalId>false</externalId>
+        <label>Override Tax Applicable On</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>MultiselectPicklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Parts</fullName>
+                    <default>false</default>
+                    <label>Parts</label>
+                </value>
+                <value>
+                    <fullName>Labor</fullName>
+                    <default>false</default>
+                    <label>Labor</label>
+                </value>
+                <value>
+                    <fullName>Sublet</fullName>
+                    <default>false</default>
+                    <label>Sublet</label>
+                </value>
+                <value>
+                    <fullName>Fees</fullName>
+                    <default>false</default>
+                    <label>Fees</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+        <visibleLines>4</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Parts_Bulk_Discount_Percent__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Parts Bulk Discount Percent</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Promised_By__c</fullName>
+        <externalId>false</externalId>
+        <label>Promised By</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Provider_Discount_Markup__c</fullName>
+        <externalId>false</externalId>
+        <label>Provider Discount-Markup</label>
+        <precision>6</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Provider_Labour_Rate__c</fullName>
+        <externalId>false</externalId>
+        <label>Provider Labour Rate</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Provider_Part_Price_Base__c</fullName>
+        <externalId>false</externalId>
+        <label>Provider Part Price Base</label>
+        <length>80</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Provider__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Provider</label>
+        <lookupFilter>
+            <active>true</active>
+            <filterItems>
+                <field>Account.Claims_for_Service_Work__c</field>
+                <operation>equals</operation>
+                <value>True</value>
+            </filterItems>
+            <isOptional>false</isOptional>
+        </lookupFilter>
+        <referenceTo>Account</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Salesperson_Names__c</fullName>
+        <externalId>false</externalId>
+        <label>Salesperson Names</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>SO_Cause__c</fullName>
+        <externalId>false</externalId>
+        <label>SO Cause</label>
+        <length>2050</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>SO_Concern__c</fullName>
+        <externalId>false</externalId>
+        <label>SO Concern</label>
+        <length>2050</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>SO_Correction__c</fullName>
+        <externalId>false</externalId>
+        <label>SO Correction</label>
+        <length>2050</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>SO_Notes_For_Customer__c</fullName>
+        <externalId>false</externalId>
+        <label>SO Notes For Customer</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>SO_Status__c</fullName>
+        <externalId>false</externalId>
+        <formula>SO_Status_Ref__r.Name__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>SO Status</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>SO_Status_Ref__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>SO Status Ref</label>
+        <referenceTo>SO_Status__c</referenceTo>
+        <relationshipLabel>Service Order Headers (SO Status Ref)</relationshipLabel>
+        <relationshipName>Service_Order_Headers1</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>SO_Notes__c</fullName>
+        <externalId>false</externalId>
+        <label>SO Notes</label>
+        <length>1500</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>SO_Type__c</fullName>
+        <description>Customer order types</description>
+        <externalId>false</externalId>
+        <label>SO Type</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Customer</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Cash Sale</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Internal Service</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Deal</fullName>
+                    <default>false</default>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>Scheduled_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Scheduled Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Search_Tag__c</fullName>
+        <externalId>false</externalId>
+        <label>Search Tag</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Special_Order_Status__c</fullName>
+        <externalId>false</externalId>
+        <label>Special Order Status</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>true</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Need to order</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Order submitted</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>All in-stock</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Fulfilled</fullName>
+                <default>false</default>
+            </picklistValues>
+            <restrictedPicklist>true</restrictedPicklist>
+            <sorted>false</sorted>
+        </picklist>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>SO_Status_Priority_Number__c</fullName>
+        <externalId>false</externalId>
+        <formula>if( ISPICKVAL(Special_Order_Status__c, &apos;All in-stock&apos;), 1, 
+	if( ISPICKVAL(Special_Order_Status__c, &apos;Need to order&apos;), 2, 
+		if( ISPICKVAL(Special_Order_Status__c, &apos;Order submitted&apos;), 3, 
+			if( ISPICKVAL(Special_Order_Status__c, &apos;None&apos;), 4, 
+				if( ISPICKVAL(Special_Order_Status__c, &apos;Fulfilled&apos;), 5, 6)))))</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>SO Status Priority Number</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Status__c</fullName>
+        <externalId>false</externalId>
+        <label>Status</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>New</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Ready</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>In Progress</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Complete</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Reviewed</fullName>
+                    <default>false</default>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>Stock__c</fullName>
+        <externalId>false</externalId>
+        <label>Stock</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Sublet_Bulk_Discount_Percent__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Sublet Bulk Discount Percent</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Percent</type>
+    </fields>    
+    <fields>
+        <fullName>Tax_Amount__c</fullName>
+        <externalId>false</externalId>
+        <label>Tax Amount</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Technician_Name__c</fullName>
+        <externalId>false</externalId>
+        <label>Technician Name</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Technicians_Name__c</fullName>
+        <externalId>false</externalId>
+        <label>Technicians Name</label>
+        <length>10000</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Due_In_DateTime__c</fullName>
+        <externalId>false</externalId>
+        <label>Due In DateTime</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Due_In_Time__c</fullName>
+        <externalId>false</externalId>
+        <label>Due In Time</label>
+        <length>10</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Promised_By_DateTime__c</fullName>
+        <externalId>false</externalId>
+        <label>Promised By DateTime</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Promised_By_Time__c</fullName>
+        <externalId>false</externalId>
+        <label>Promised By Time</label>
+        <length>10</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Pre_Tax_Fees_Total__c</fullName>
+        <externalId>false</externalId>
+        <label>Pre Tax Fees Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Pre_Tax_Labor_Total__c</fullName>
+        <externalId>false</externalId>
+        <label>Pre Tax Labor Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Pre_Tax_Parts_Total__c</fullName>
+        <externalId>false</externalId>
+        <label>Pre Tax Parts Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Pre_Tax_Shop_Supplies_Total__c</fullName>
+        <externalId>false</externalId>
+        <label>Pre Tax Shop Supplies Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Pre_Tax_Sublet_Total__c</fullName>
+        <externalId>false</externalId>
+        <label>Pre Tax Sublet Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Pre_Tax_Total_Fee_With_Shop_Supplies__c</fullName>
+        <externalId>false</externalId>
+        <formula>Pre_Tax_Shop_Supplies_Total__c +  Pre_Tax_Fees_Total__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Pre Tax Total Fee With Shop Supplies</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>    
+    <fields>
+        <fullName>Total_Discount__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Discount</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Fee_Cost__c</fullName>
+        <description>Total fee cost - Populated after Service Job Finalize</description>
+        <externalId>false</externalId>
+        <label>Total Fee Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Fee_With_Shop_Supplies__c</fullName>
+        <externalId>false</externalId>
+        <formula>Total_Fees__c + Total_Shop_Supplies__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Total Fee With Shop Supplies</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+	<fields>
+		<fullName>Internal_Repair_Order_Total__c</fullName>
+		<externalId>false</externalId>
+		<formula>IF(  OR(ISPICKVAL(Transaction_Type__r.Type__c, &apos;Internal&apos;),ISPICKVAL(Transaction_Type__r.Type__c, &apos;Stock Unit&apos;)) ,  Total__c , 0)</formula>
+		<formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+		<label>Internal Repair Order Total</label>
+		<precision>18</precision>
+		<required>false</required>
+		<scale>2</scale>
+		<trackTrending>false</trackTrending>
+		<type>Currency</type>
+    </fields>
+	<fields>
+		<fullName>Warranty_Repair_Order_Total__c</fullName>
+		<externalId>false</externalId>
+		<formula>IF( ISPICKVAL(Transaction_Type__r.Type__c, &apos;Third-Party&apos;) ,  Total__c , 0)</formula>
+		<formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+		<label>Warranty Repair Order Total</label>
+		<precision>18</precision>
+		<required>false</required>
+		<scale>2</scale>
+		<trackTrending>false</trackTrending>
+		<type>Currency</type>
+    </fields>
+	<fields>
+		<fullName>Customer_Pay_Repair_Order_Total__c</fullName>
+		<externalId>false</externalId>
+		<formula>IF( ISPICKVAL(Transaction_Type__r.Type__c, &apos;Customer&apos;) ,  Total__c , 0)</formula>
+		<formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+		<label>Customer Pay Repair Order Total</label>
+		<precision>18</precision>
+		<required>false</required>
+		<scale>2</scale>
+		<trackTrending>false</trackTrending>
+		<type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Fees__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Fees</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Hours_Billed__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Hours Billed</label>
+        <precision>12</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Total_Labor__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Labor</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Labour_Cost__c</fullName>
+        <description>Total Labour cost - Populated after Service Job Finalize</description>
+        <externalId>false</externalId>
+        <label>Total Labour Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Parts__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Parts</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Related_Sublet_Cost__c</fullName>
+        <description>Total sublet cost - Populated after Service Job Finalize</description>
+        <externalId>false</externalId>
+        <label>Total Related Sublet Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Shop_Supplies_Cost__c</fullName>
+        <description>Total Shop Supplies cost - Populated after Service Job Finalize</description>
+        <externalId>false</externalId>
+        <label>Total Shop Supplies Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Shop_Supplies__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Shop Supplies</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Total_Sublet__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Sublet</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Tax__c</fullName>
+        <externalId>false</externalId>
+        <label>Total Tax</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_With_Tax__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF( $Setup.Configurations__c.Tax_Included_Pricing__c , Total__c , (Total__c +  Total_Tax__c))</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Total With Tax</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total__c</fullName>
+        <externalId>false</externalId>
+        <label>Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Transaction_Type__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Transaction Type</label>
+        <referenceTo>Transaction_Type__c</referenceTo>
+        <relationshipLabel>Service Order Headers</relationshipLabel>
+        <relationshipName>Service_Order_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Unit_Arrived__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Unit Arrived</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>  
+    <fields>
+        <fullName>Unit_Location__c</fullName>
+        <description>This field is use to hold the location of the unit on the store property</description>
+        <externalId>false</externalId>
+        <label>Unit Location</label>
+        <length>25</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Work_Status__c</fullName>
+        <externalId>false</externalId>
+        <label>Work Status</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>New job</fullName>
+                    <default>false</default>
+                    <label>New job</label>
+                </value>
+                <value>
+                    <fullName>Estimate</fullName>
+                    <default>false</default>
+                    <label>Estimate</label>
+                </value>
+                <value>
+                    <fullName>Triage required</fullName>
+                    <default>false</default>
+                    <label>Triage required</label>
+                </value>
+                <value>
+                    <fullName>Triage done</fullName>
+                    <default>false</default>
+                    <label>Triage done</label>
+                </value>
+                <value>
+                    <fullName>Customer to ok</fullName>
+                    <default>false</default>
+                    <label>Customer to ok</label>
+                </value>
+                <value>
+                    <fullName>Customer approved</fullName>
+                    <default>false</default>
+                    <label>Customer approved</label>
+                </value>
+                <value>
+                    <fullName>Ready to start</fullName>
+                    <default>false</default>
+                    <label>Ready to start</label>
+                </value>
+                <value>
+                    <fullName>In progress</fullName>
+                    <default>false</default>
+                    <label>In progress</label>
+                </value>
+                <value>
+                    <fullName>Wait for parts</fullName>
+                    <default>false</default>
+                    <label>Wait for parts</label>
+                </value>
+                <value>
+                    <fullName>PartMgr review</fullName>
+                    <default>false</default>
+                    <label>PartMgr review</label>
+                </value>
+                <value>
+                    <fullName>ServMgr review</fullName>
+                    <default>false</default>
+                    <label>ServMgr review</label>
+                </value>
+                <value>
+                    <fullName>Job complete</fullName>
+                    <default>false</default>
+                    <label>Job complete</label>
+                </value>
+                <value>
+                    <fullName>Ready to invoice</fullName>
+                    <default>false</default>
+                    <label>Ready to invoice</label>
+                </value>
+                <value>
+                    <fullName>Invoiced</fullName>
+                    <default>false</default>
+                    <label>Invoiced</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <label>Service Order Header</label>
+    <listViews>
+        <fullName>All</fullName>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <nameField>
+        <displayFormat>SO-{00000000}</displayFormat>
+        <label>Service Order Header Number</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Service Order Headers</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ControlledByParent</sharingModel>
+    <webLinks>
+        <fullName>Unsubmit_Claim</fullName>
+		    <availability>online</availability>
+		    <displayType>button</displayType>
+		    <linkType>javascript</linkType>
+		    <masterLabel>Unsubmit Claim</masterLabel>
+		    <openType>onClickJavaScript</openType>
+		    <protected>false</protected>
+		    <url>{!REQUIRESCRIPT(&quot;/soap/ajax/56.0/connection.js&quot;)}
+		{!REQUIRESCRIPT(&quot;/soap/ajax/56.0/apex.js&quot;)}
+		
+		var apexClassRec = sforce.connection.query(&quot;SELECT NamespacePrefix FROM ApexClass where Name Like &apos;%Constants&apos;&quot;);
+		var nameSpace = apexClassRec.getArray(&quot;records&quot;)[0].NamespacePrefix ;
+		
+		if(nameSpace != &quot;&quot; &amp;&amp; nameSpace != null &amp;&amp; nameSpace != undefined) {
+		nameSpace += &quot;/&quot;;
+		} else {
+		nameSpace = &quot;&quot;;
+		}
+		
+		var errorMsg = sforce.apex.execute(nameSpace + &quot;BPWebServiceManager&quot;,&quot;unsubmitClaim&quot;,{soId:&quot;{!Service_Order_Header__c.Id}&quot;});
+		
+		if(errorMsg != &apos;&apos;) {
+		alert(errorMsg);
+		} else {
+		alert(&apos;Successfully unsubmitted claim.&apos;);
+		window.location.reload();
+		}</url>
+    </webLinks>   
+</CustomObject>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>Hierarchy</customSettingsType>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>Dealer_Number__c</fullName>
+        <description>This is typically 5 digit numbers.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>This is typically 5 digit numbers.</inlineHelpText>
+        <label>Dealer Number</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Honda_Vendor_Code__c</fullName>
+        <description>The vendor code of the Blackpurl vendor which is Honda.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The vendor code of the Blackpurl vendor which is Honda.</inlineHelpText>
+        <label>Honda Vendor Code</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Honda_Web_API__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Flag to enable/disable Honda API integration.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Flag to enable/disable Honda API integration.</inlineHelpText>
+        <label>Honda Web API</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>VO_Number__c</fullName>
+        <externalId>false</externalId>
+        <label>VO Number</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Web_Key_Number__c</fullName>
+        <description>Security key supplied to the dealer</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Security key supplied to the dealer</inlineHelpText>
+        <label>Web Key Number</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>Honda Configuration</label>
+    <visibility>Public</visibility>
+</CustomObject>

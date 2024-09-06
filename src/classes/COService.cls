@@ -2,6 +2,56 @@ global without sharing class COService {
 
     public static SO_KLI_Recalculation.Errorhandler error;
     
+    public static String getCOHeaderDetailsByGridName(String coHeaderId, String gridName) {
+        try{ 
+            List<CO_Header__c> coHeaderRec = new List<CO_Header__c>();
+            coHeaderRec = SOQLUtility.getCOHeaderDetails(coHeaderId, 2); 
+            List<CO_Invoice_Header__c> closedCOInvoiceHeaders = new List<CO_Invoice_Header__c>();
+            List<CO_Line_Item__c> coLineItems = new List<CO_Line_Item__c>();
+            List<CO_Kit_Header__c> coKitHeaders = new List<CO_Kit_Header__c>();
+            List<Price_Level__c> priceLevelList = new List<Price_Level__c>();
+            List<CO_Deposit__c> coDeposits = new List<CO_Deposit__c>();
+            List<CO_Invoice_Payment__c> coInvoicePayments = new List<CO_Invoice_Payment__c>();
+            
+            List<Account> customerRecords = new List<Account>(); 
+            if(String.isNotBlank(coHeaderRec[0].Customer__c)) {
+                customerRecords = SOQLUtil.getCardDetails(new Map<String, String>{'Id' => coHeaderRec[0].Customer__c}); 
+            } else if(coHeaderRec[0].CO_Type__c == 'Cash Sale'){
+                priceLevelList = SOQLUtil.getCardDetailsForCO(null);     
+            } else if(coHeaderRec[0].CO_Type__c == 'Internal Service') {
+                String defaultPriceLevelId = GeneralConfiguration.getDefaultPriceLevelOnInternalService();
+                priceLevelList = SOQLUtil.getCardDetailsForCO(defaultPriceLevelId);    
+            }
+            if(gridName == null ||  gridName.contains('coDeposit')) {
+                List<CO_Invoice_Header__c> coInvoiceHeaders = SOQLUtil.getCOInvoiceHeaderByCOHeaderId(coHeaderId);   
+                coDeposits = SOQLUtil.getCODepositByCOHeaderId(coHeaderId);
+                if(coInvoiceHeaders.size() > 0) {
+                    coInvoicePayments = SOQLUtil.getCOInvoicePaymentsByCOInvoiceHeaderId(coInvoiceHeaders[0].Id);
+                }
+            }
+            if(gridName == null || gridName.contains('closedCOInvoiceHeader')) {
+                closedCOInvoiceHeaders = SOQLUtil.getInvoiceHistory(coHeaderId);
+            }
+            
+            if(gridName == null || gridName.contains('coLineItem')) {
+                coLineItems = SOQLUtil.getCOLineItemByCOHeaderId(coHeaderId);
+                coKitHeaders = SOQLUtil.getCOKHByCOHeaderId(coHeaderId);
+            }
+            
+            CustomerOrderWrapper.COHeaderWrapper coHeaderWrapperObj;
+            if(coHeaderRec.size() > 0) {  
+                coHeaderWrapperObj = new CustomerOrderWrapper.COHeaderWrapper(coHeaderRec[0], customerRecords, coLineItems, coKitHeaders, closedCOInvoiceHeaders, priceLevelList, 
+                                                    coDeposits, coInvoicePayments);
+            } else {
+                coHeaderWrapperObj = new CustomerOrderWrapper.COHeaderWrapper(null, customerRecords, coLineItems, coKitHeaders, closedCOInvoiceHeaders, priceLevelList, 
+                                                    coDeposits, coInvoicePayments);
+            } 
+            return BPUtility.getEncodedString(System.JSON.serialize(coHeaderWrapperObj, true));
+        }catch(Exception e){
+            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
+        }
+    }
+    
     public static String addPayment(List<COInvoicePayment> coInvoicePaymentsObjList, String coId) {
         try {
             // Added one common method for validation

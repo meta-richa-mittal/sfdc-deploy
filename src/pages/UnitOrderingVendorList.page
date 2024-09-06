@@ -1,0 +1,55 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0" controller="GlobalController">
+	<div class="fadein" ui-view="UnitOrderingChildView" autoscroll='false'></div>
+	<div class="GroupSummaryWrapper" ng-if="M_UO.isUnitSelected == 'Active unit vendors'">
+   		<div class="bp-boxes">
+   			<div class="row">
+   				<div class="col-xs-12 col-sm-4 col-md-3" ng-repeat="vendor in M_UO.vendorsList | orderBy: 'VendorName'" ng-click="F_UO.MoveToState('UnitOrdering.ViewVendorOrderUnits', {'vendorId': vendor.VendorId});" data-toggle="tooltip" title="View and order" tooltip-follow-cursor="true">
+   					<div class="bp-box unitOrder">
+						<div class="info-area">
+                            <div class="unitname">{{vendor.VendorName}}</div>
+                            <div class="unitdetail"><span class="unitCount" ng-class="{'active':vendor.UnitCount,'inactive':!vendor.UnitCount}">{{vendor.UnitCount}}</span> {{ 'unit_Label' | translate }}<span class = "text-lowercase" ng-if="vendor.UnitCount > 1">{{ 'S' | translate }}</span> {{ 'on_order' | translate }}</div>
+                        </div>
+   					</div>
+                </div>
+   				<div class="col-xs-12 col-sm-4 col-md-3" ng-click="F_UO.selectVendor()" ng-show="GroupOnlyPermissions['Unit ordering']['create/modify']">
+   					<div class="bp-box unitOrder add-new-box">
+						<i class="bp-icons bp-font-40 bp-grey-font">addSquare</i>
+						<span>{{ 'Add_new_unit_vendor' | translate }}</span>
+   					</div>
+				</div>	            						
+			</div>	            						
+		</div>
+	</div>	            					            				            						
+	<div class="GroupSummaryWrapper" ng-if="M_UO.isUnitSelected == 'Required units'" id="viewVendorOrderUnitsWrapperId" ng-class = "{'paddingBottom60' : M_UO.enableReceivedUnitsBtnFlag}">
+		<div class="viewVendorUnitOrderTableHeader table-responsive RequiredUnitList" ng-if="M_UO.RequiredUnitsList.length > 0">
+			<table class = "bp-editable-table orderHostoryGrid">
+				<thead>
+					<tr>
+						<th class = "bp-text-lowercase">{{'Label_Order' | translate}} #</th>
+						<th class = "bp-text-lowercase">{{'Label_Customer' | translate}}</th>
+						<th class = "bp-text-lowercase">{{'Label_Make' | translate}}</th>
+						<th class = "bp-text-lowercase">{{'Model_details' | translate}}</th>
+						<th class = "bp-text-lowercase">{{'Label_Year' | translate}}</th>
+						<th class = "bp-text-lowercase">{{'Label_Confirmed_sale_date' | translate}}</th>
+						<th></th>
+					</tr>
+				</thead>
+										
+				<tbody>
+					<tr ng-repeat="requiredUnitRec in M_UO.RequiredUnitsList">
+						<td>
+							<a  ng-click = "F_UO.moveToStateInNewTab('CustomerOrder_V2', {'Id': requiredUnitRec.CoId})">{{requiredUnitRec.CoNumber}}</a>
+						</td>
+						<td>{{requiredUnitRec.CustomerName}}</td>
+						<td>{{requiredUnitRec.MakeName}}</td>
+						<td>{{requiredUnitRec.ModelName+' '+requiredUnitRec.SubModelName}}</td>
+						<td>{{requiredUnitRec.Year}}</td>
+						<td>{{requiredUnitRec.ConfirmedSaleDate}}</td>
+						<td><bp-ng-button name="Order unit" class-value="c-primary OrderUnitBtn" action="F_UO.MoveToState('UnitOrdering.AddeditUnitOrder', {'unitId' : requiredUnitRec.UnitId,'vendorId' : requiredUnitRec.VendorId,'VendorPurchasetaxId' : requiredUnitRec.VendorPurchasetaxId, 'openInEditableMode': true})" disabled-value=""></bp-ng-button></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>	            					            				
+		<div class="noRequiredUnit"  ng-if="!M_UO.RequiredUnitsList.length"><i aria-hidden="true" class="fa fa-info-circle"></i><span>{{'Label_No_Required_Unit' | translate}}</span></div>
+	</div>
+</apex:page>

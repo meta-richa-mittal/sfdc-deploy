@@ -1,0 +1,723 @@
+<apex:component controller="GlobalController">
+    <!-- Start: Deal Merch Section -->
+    <div class="bp-accordion-entry expanded deal-merchandise-section"  
+        ng-class = "{'bp-collapse' : M_CO.expandedSectionName != 'DealMerchSection', 'disable-accordion': !GroupOnlyPermissions['Merchandise']['view']}">
+        <div class="bp-accordion-header bp-orange d-flex new-header-container" >
+            <div class="icon-container" ng-click = "F_CO.expandOrCollapseSection('DealMerchSectionId','DealMerchSection', '', GroupOnlyPermissions['Merchandise']['view'])">
+                <i class="bp-icons stroke-5 bp-lh-20">part</i>
+            </div>
+            <div class = "main-section-header" ng-click = "F_CO.expandOrCollapseSection('DealMerchSectionId','DealMerchSection', '', GroupOnlyPermissions['Merchandise']['view'])">
+                <section-header
+                    section-name = "M_CO.sectionName['DEAL_MERCHANDISE']"
+                    is-top-left-container-show = "true"
+                    is-total-container-show = 'true'
+                    no-title-ellipsis = "true"
+                    total = "M_CO.Deal.DealFulfillmentSectionObj.MerchandiseTotal | currency"
+                    total-label = "Total:"
+                    total-fetching-state = "M_CO.isAsyncActionInProgressForDealMerchandiseSection"
+                    is-badge-container-show = 'true'
+                    show-so-status="true"
+                    so-status="M_CO.Deal.DealFulfillmentSectionObj.SpecialOrderStatus"
+                    >
+                </section-header>
+            </div>
+            <div class="bp-accordion-toggle right-container bp-orange-dark-bg"  ng-if = "M_CO.expandedSectionName != 'DealMerchSection'" ng-click = "F_CO.expandOrCollapseSection('DealMerchSectionId','DealMerchSection', '', GroupOnlyPermissions['Merchandise']['view'])">
+                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowDown</i>
+            </div>
+            <div class="bp-accordion-toggle right-container bp-orange-dark-bg" ng-if = "M_CO.expandedSectionName == 'DealMerchSection'" ng-click = "F_CO.expandOrCollapseSection('DealMerchSectionId','DealMerchSection', '', GroupOnlyPermissions['Merchandise']['view'])">
+                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowUp</i>
+            </div>
+        </div>
+        <div class="bp-accordion-detail bp-collapse-div-transition bp-light-gray4 MerchandiseSectionGrid" id = "DealMerchSectionId" ng-class = "{'merchandiseSectionOpen': M_CO.expandedSectionName == 'DealMerchSection'}">
+            <div class="bp-inner-accordian open dfSummary" ng-class="{'bp-inner-accordian-opened': M_CO.expandedInnerSectionName == 'DealMerch_SummarySection', 'bp-disabled': !M_CO.COHeaderId}">
+                <div class="inner-accordian-header col-md-12" ng-click = "F_CO.expandOrCollapseInnerSection('DealMerch_SummarySectionId', 'DealMerch_SummarySection')">
+                    <div class="inner-accordian-header-left">
+                        <h2 class="accordian-left-details text-upperCase">{{ 'Summary' | translate }}</h2>
+                    </div>
+                    <div class="accordian-right-details">
+                        <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName != 'DealMerch_SummarySection'">
+                        <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowDown</i>
+                        </a> 
+                        <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName == 'DealMerch_SummarySection'">
+                        <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowUp</i>
+                        </a>
+                    </div>
+                </div>
+                <div class="inner-accordian-body bp-collapse-div-transition" id="DealMerch_SummarySectionId" ng-class="{'bp-expand-div-transition': M_CO.expandedSectionName == 'DealMerch_SummarySection'}">
+                    <div class = "col-xs-12 col-sm-6 form-container">
+                        <div class = "col-xs-12">
+                            <div class = "col-xs-12 P0 PT0 PB0 bp-border-bottom-none expandableContainer">
+                                <label class = "col-xs-12">Salesperson</label>
+                                <div class="table-responsive technician-time-table" ng-if="M_CO.DealMerchSalesPersonList.length > 0">
+                                    <table class = "bp-editable-table SOJobItemsGrid SOHoursLogGrid deal-salesperson-list">
+                                        <col width="5%" />
+                                        <col width="50%" />
+                                        <thead>
+                                            <tr>
+                                                <th class = "bp-text-uppercase text-center">{{'Label_Name' | translate}}</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class = "bp-expanded-deletable-div-transition" ng-repeat="assignedSalesperson in M_CO.DealMerchSalesPersonList" ng-init="AssignedSalespersonIndex = $index">
+                                                <td class="PT0 PB0">
+                                                    <div class="first-name-wrappeer" data-toggle="tooltip" title="{{assignedSalesperson.NameInitials}}">
+                                                        <div class = "circle"
+                                                            >{{assignedSalesperson.NameInitials}}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="boldText LogTechId PL0">
+                                                    <div class="InnerFlexContainer">
+                                                        <span class =" hursLogged">{{::assignedSalesperson.TechnicianName}}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="MB10" ng-class = "{'MT30': M_CO.DealMerchSalesPersonList.length == 0}">
+                                    <button class="bp-btn bp-btn-normal bp-first-letter-capitalize" id = "Assign_Deal_Merch_Salesperson" ng-disabled="(!GroupOnlyPermissions['Merchandise']['create/modify'] || M_CO.coHeaderRec.OrderStatus === 'Closed')"
+                                        ng-click="F_CO.showTechnicianListOverlay('Assign_Deal_Merch_Salesperson', M_CO.coHeaderRec.COHeaderId, true, 'Deal Merchandise')">{{'Label_Assign_Salesperson' | translate }}</button>            
+                                </div>
+                            </div>
+                            <div class="col-xs-12 P0 text-left">
+                                <label class="bp-bold-font H400 MB20 bp-first-letter-capitalize">{{ 'transaction_type' | translate }}</label>
+                            </div>
+                            <div class="transaction-tab">
+                                <a class="btn tab-btns H400 transactiontypebtn selected" ng-repeat = "ttObj in M_CO.DealMerchTransactionTypelabel">{{ttObj.CodeLabel}}</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class = "col-xs-12 col-sm-6 form-container" ng-class="{'dummy-animation': M_CO.fetchingMerchandiseSalesTax}">
+                        <div class="col-xs-12" >
+                            <label class="col-xs-6 bp-font-16">Deal Merchandise Totals</label>
+                        </div>
+                        <div class = "col-xs-12 dealTotalSummary">
+                            <label class = "col-xs-6 MT20">{{ 'Number of items' | translate }}</label>
+                            <span class="col-xs-6 bp-dark-grey1-font MT20">{{F_CO.getDealMerchSummaryTotals('Number of items')}}</span>
+                        </div>
+                        <div class = "col-xs-12 dealTotalSummary">
+                            <label class = "col-xs-6">{{ 'Number of pieces' | translate }}</label>
+                            <span class="col-xs-6 bp-dark-grey1-font">{{F_CO.getDealMerchSummaryTotals('Number of pieces')}}</span>
+                        </div>
+                        <div class = "col-xs-12 dealTotalSummary">
+                            <label class = "col-xs-6">{{ 'Parts total' | translate }}</label>
+                            <span class="col-xs-6 bp-dark-grey1-font">{{F_CO.getDealMerchSummaryTotals('Parts total') | currency}}</span>
+                        </div>
+                        <div class = "col-xs-12 dealTotalSummary">
+                            <label class = "col-xs-6">{{ 'Fees total' | translate }}</label>
+                            <span class="col-xs-6 bp-dark-grey1-font">{{F_CO.getDealMerchSummaryTotals('Fee total') | currency}}</span>
+                        </div>
+                        <div class = "col-xs-12 dealTotalSummary">
+                            <label class = "col-xs-6 bp-bold-font">Deal Merchandise Totals</label>
+                            <span class="col-xs-6 bp-dark-grey1-font bp-font-14 bp-bold-font" ng-if="!M_CO.fetchingMerchandiseSalesTax">{{F_CO.getDealMerchSummaryTotals('totals') | currency}}</span>
+                            <span class="col-xs-6 bp-dark-grey1-font dummySalesTax dummy-tag-name" ng-if="M_CO.fetchingMerchandiseSalesTax"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bp-inner-accordian open dfSummary" id = "" ng-class="{'bp-inner-accordian-opened': M_CO.expandedInnerSectionName == 'DealMerch_PASection'}">
+                <div class="inner-accordian-header col-md-12" ng-click = "F_CO.expandOrCollapseInnerSection('DealMerch_PASectionId', 'DealMerch_PASection')">
+                    <div class="inner-accordian-header-left">
+                        <h2 class="accordian-left-details text-upperCase">{{ 'Parts_Accessories_Fees' | translate }}</h2>
+                    </div>
+                    <div class="accordian-right-details">
+                        <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName != 'DealMerch_PASection'">
+                        <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowDown</i>
+                        </a> 
+                        <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName == 'DealMerch_PASection'">
+                        <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowUp</i>
+                        </a>
+                    </div>
+                </div>
+                <div class="inner-accordian-body bp-collapse-div-transition col-md-12 merchandiseLineItemWrapper" id="DealMerch_PASectionId" ng-class="{'bp-expand-div-transition': M_CO.expandedSectionName == 'DealMerch_PASection'}">
+                    <div class="expandableContainer">
+                        <div class="table-responsive" ng-if = "M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList.length > 0" ng-class = "{'PB67' : M_CO.coHeaderRec.OrderStatus === 'Closed'}">
+                            <table class = "bp-editable-table SOJobItemsGrid">
+                                <col width="5%"  />
+                                <col width="25%" />
+                                <col width="15%" />
+                                <col width="10%" />
+                                <col width="15%" />
+                                <col width="15%" />
+                                <col width="15%" />
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th class = "bp-text-uppercase">{{ 'Item_description' | translate }}</th>
+                                        <th class = "bp-text-uppercase text-center">{{ 'Qty_needed' | translate }}</th>
+                                        <th class = "bp-text-uppercase text-center">{{ 'Label_Status' | translate }}</th>
+                                        <th class = "bp-text-uppercase text-center">{{ 'Label_Price' | translate }}</th>
+                                        <th class = "bp-text-uppercase text-center">{{ 'Label_Subtotal' | translate }}</th>
+                                        <th class = "bp-text-uppercase"></th>
+                                    </tr>
+                                </thead>
+                                <tbody ng-repeat="COKHitem in M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList track by $index" ng-init="CoKitHeaderIndex = $index">
+                                    <!-- Start: Kit Header Row -->
+                                    <tr ng-if="COKHitem.Id" class = "bp-expanded-deletable-div-transition kitHeaderTr" 
+                                        id = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}"
+                                        ng-click="F_CO.editLineItem(COKHitem, 'DealMerch_Section_COKitHeader', CoKitHeaderIndex)"
+                                        ng-class = "{'bp-tr-hover': !COKHitem.isAsyncActionInProgress, 'dummy-animation':COKHitem.isAsyncActionInProgress}">
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KHItem', '', CoKitHeaderIndex)}">
+                                            <i class="bp-icons bp-font-25 bp-grey-font stroke-3 itemSvg tableItem">kit</i>
+                                        </td>
+                                        <td class="boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KHItem', '', CoKitHeaderIndex)}">
+                                            <div class="liItemDesc_setTextEllipsis">
+                                                <!-- InnerFlexContainer -->
+                                                <span class ="bp-blue-font">{{::COKHitem.ItemDescription}}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KHItem', '', CoKitHeaderIndex)}">
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KHItem', '', CoKitHeaderIndex)}">
+                                        </td>
+                                        <td ng-if="COKHitem.isAsyncActionInProgress" class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}','bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}' && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KHItem', '', CoKitHeaderIndex)}">
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td ng-if="COKHitem.isAsyncActionInProgress" class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}','bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}' && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KHItem', '', CoKitHeaderIndex)}">
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td ng-if="!COKHitem.isAsyncActionInProgress" class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KHItem', '', CoKitHeaderIndex)}">
+                                            <span ng-if = "M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex"
+                                                ng-class="{'fixedPriceWithLock': (COKHitem.IsFixedPrice || COKHitem.IsFixedKitHeaderCO), 'pull-left': (COKHitem.IsFixedPrice || COKHitem.IsFixedKitHeaderCO)}">{{::COKHitem.Price | currency}}</span>
+                                            <span ng-if = "M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex">
+                                                <numbers-only id-value = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_Price"
+                                                    class-value = "bp-input-text inTimeEdit timeField text-center"
+                                                    input-model-value = "COKHitem.Price" 
+                                                    include-negative = "false"
+                                                    include-zero = "true"
+                                                    precision-length = "2"
+                                                    blur-value = "F_CO.updateCOKHItem('DealMerch', CoKitHeaderIndex, $event, '_Price')"
+                                                    input-keydown-value="F_CO.setFlagOnTabForBlurHandling($event)"/>
+                                            </span>
+                                            <i class="bp-icons bp-font-12 bp-grey-font pull-left lockSvg" ng-if="(COKHitem.IsFixedPrice) && (M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex)">lock</i>
+                                            <i class="bp-icons bp-font-12 bp-grey-font pull-left lockSvg" ng-if="(COKHitem.IsFixedKitHeaderCO) && (M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex)">lock</i>
+                                        </td>
+                                        <td ng-if="!COKHitem.isAsyncActionInProgress" class="text-center boldText" 
+                                            ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KHItem', '', CoKitHeaderIndex)}">
+                                            <span>{{COKHitem.Price | currency}}</span>
+                                        </td>
+                                        <td ng-if="COKHitem.IsDummyKit" class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}','bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}' && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KHItem', '', CoKitHeaderIndex)}" >
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td ng-if="!COKHitem.IsDummyKit" class="partInvIconAdjustment" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': (COKHitem.COLIList[0].Status === 'Invoiced' || !GroupOnlyPermissions['Merchandise']['create/modify']) || F_CO.isDealInvoiced() || F_CO.isDealApproved() || F_CO.isArchivedQuote()}" >
+                                            <span data-toggle="tooltip" title="More actions" ng-if="COKHitem.COLIList[0].Status != 'Invoiced' 
+                                                && GroupOnlyPermissions['Merchandise']['create/modify']"
+                                                id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_deleteBtn">
+                                            <i class="bp-icons bp-blue-font bp-font-18 LIDeleteBtn" ng-click = "F_CO.openMoveOrDeleteConfirmationPopup('', '', CoKitHeaderIndex, COKHitem.Id, '', '', 'DealMerch', false)">delete</i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <!-- End: Kit Header Row -->
+                                    <!-- Start: Kit Line Items Row with Kit Header (Kit Line Items) -->  
+                                    <!-- isPart,IsFee,IsEnvFee-->
+                                    <tr class = "bp-expanded-deletable-div-transition kitLITr" id = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}"
+                                        ng-click="F_CO.editLineItem(COLI, 'DealMerch_Section_COKitHeader', CoKitHeaderIndex, CoLIIndex, '', '', (COLI.IsPart && !COLI.IsNonInventoryPart))"
+                                        ng-repeat-start="COLI in COKHitem.COLIList track by $index" ng-init="CoLIIndex = $index" ng-if="COKHitem.Id"
+                                        ng-class="{'bp-tr-hover': !COKHitem.isAsyncActionInProgress, 'dummy-animation':COKHitem.isAsyncActionInProgress,'no-border':COKHitem.Id && M_CO.supersededParts[COLI.partId] != null}" >
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KitLI', '', CoKitHeaderIndex, CoLIIndex)}">
+                                        </td>
+                                        <td class="boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KitLI', '', CoKitHeaderIndex, CoLIIndex)}">
+                                            <div class="liItemDesc_setTextEllipsis" 
+                                                ng-if="(M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index) || ((COLI.IsPart && !COLI.IsNonInventoryPart) || F_CO.isDealApproved())">
+                                                <i class="bp-icons pull-left bp-font-23 bp-grey-font stroke-3 itemSvg kitItemSvg" ng-if="COLI.IsPart">part</i>
+                                                <i class="bp-icons pull-left bp-font-23 bp-grey-font stroke-3 itemSvg kitItemSvg" ng-if="COLI.IsEnvFee || COLI.IsFee">fee</i>
+                                                <span class="bp-blue-font" ng-class="{'bp-blue-hover' : (COLI.IsPart)}" 
+                                                    id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_itemDesc"
+                                                    ng-click="F_CO.moveToState('ViewPart',{Id:COLI.PartId},(COLI.IsPart && !COLI.IsNonInventoryPart))">
+                                                {{::COLI.ItemCode}} - {{::COLI.ItemDescription}}
+                                                </span> 
+                                            </div>
+                                            <div class="liItemDesc" ng-if="(M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index) && ((!COLI.IsPart || (COLI.IsPart && COLI.IsNonInventoryPart)) && !F_CO.isDealApproved())">
+                                                <i class="bp-icons pull-left bp-font-23 bp-grey-font stroke-3 itemSvg kitItemSvg" ng-if="COLI.IsPart">part</i>
+                                                <i class="bp-icons pull-left bp-font-23 bp-grey-font stroke-3 itemSvg kitItemSvg" ng-if="COLI.IsEnvFee || COLI.IsFee">fee</i>
+                                                <span class="editableDescInput editableKitDescInput" ng-class="{'focusInput': setBotrderOnSpan}">
+                                                <span class="itemCode">{{::COLI.ItemCode}} - </span>
+                                                <input id = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_itemDesc"
+                                                    class = "bp-input-text text-center"
+                                                    ng-focus="setBotrderOnSpan = true;"
+                                                    ng-blur="setBotrderOnSpan = false; F_CO.UpdateDealCOLineItem(CoKitHeaderIndex, CoLIIndex, $event);"
+                                                    ng-keydown="F_CO.setFlagOnTabForBlurHandling($event)"
+                                                    type="text" ng-model = "COLI.ItemDescription"
+                                                    maxlength = "255"/>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KitLI', '', CoKitHeaderIndex, CoLIIndex)}">
+                                            <span>{{::COLI.Qty}}</span>
+                                        </td>
+                                        <td class="text-center bp-bold-font" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KitLI', '', CoKitHeaderIndex, CoLIIndex)}">
+                                            <span ng-if="M_CO.coHeaderRec.OrderStatus != 'Quote' && COLI.IsPart && COLI.Status!=='Ordered' && !COLI.IsNonInventoryPart && !M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[CoLIIndex].ShowItemInfo && (COLI.QtyCommitted == 0 && COLI.QtyOrder > 0)" class="bp-red-font col-xs-12 P0">{{ 'Part_Object_Status_Required' | translate }}</span>
+                                            <span ng-if="M_CO.coHeaderRec.OrderStatus != 'Quote' && COLI.IsPart && !COLI.IsNonInventoryPart && !M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[CoLIIndex].ShowItemInfo && (COLI.QtyCommitted > 0 && COLI.QtyOrder > 0)" class="bp-orange-font col-xs-12 P0">{{ 'Part_Object_Status_Multiple' | translate }}</span>
+                                            <!-- Start: Status for kit LI - Inventory part -->
+                                            <span ng-if="(COLI.IsPart && !COLI.IsNonInventoryPart && !M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[CoLIIndex].ShowItemInfo && (M_CO.coHeaderRec.OrderStatus === 'Quote' || (!(COLI.QtyCommitted >= 0 && COLI.QtyOrder > 0) || (COLI.Status === 'Ordered' && COLI.QtyCommitted == 0 ))))" 
+                                                ng-class="{'bp-green-font': COLI.Status == 'In Stock', 'bp-green-dark-font': COLI.Status == 'Invoiced',
+                                                'bp-red-font': (COLI.Status == 'Required' || COLI.Status === 'RETURN' || COLI.Status === 'Oversold'),
+                                                'bp-coral-light-bg': (COLI.Status === 'RETURN' || COLI.Status === 'Oversold'),
+                                                'bp-status-bubble': (COLI.Status === 'RETURN' || COLI.Status === 'Oversold'),
+                                                'bp-orange-font': (COLI.Status === 'Ordered'),
+                                                'bp-first-letter-capitalize': (COLI.Status === 'RETURN' || COLI.Status === 'Oversold')}" 
+                                                class="P0"> {{((COLI.Qty - COLI.QtyCommitted) > 0 &amp;&amp; (COLI.QtyCommitted != 0)) ? "Multiple" : COLI.Status }}</span><!-- col-xs-12  -->
+                                            <!-- End: Status for kit LI - Inventory part -->
+                                            <!-- Start: Status for kit LI - Non Inventory part -->
+                                            <span ng-if="COLI.IsPart && COLI.IsNonInventoryPart" 
+                                                ng-class = "{'bp-green-font': (COLI.Status != 'Invoiced' && (COLI.Qty >= 0)),
+                                                'bp-green-dark-font': COLI.Status == 'Invoiced', 
+                                                'bp-red-font': (COLI.Status != 'Invoiced' && !(COLI.Qty >= 0)), 
+                                                'bp-coral-light-bg': (COLI.Status != 'Invoiced' && !(COLI.Qty >= 0)),
+                                                'bp-status-bubble': (COLI.Status != 'Invoiced' && !(COLI.Qty >= 0))}" class ="P0">
+                                                <!-- col-xs-12  -->
+                                                {{(COLI.Status == "Invoiced")  ? "Invoiced" : ((COLI.Qty >= 0) ? "In Stock" : 'Return')}}
+                                            </span>
+                                            <!-- End: Status for kit LI - Non Inventory part -->
+                                            <span ng-if="!COLI.IsPart" ng-class="{'bp-cyan-font': COLI.Status != 'Invoiced','bp-green-dark-font': COLI.Status == 'Invoiced'}" class ="col-xs-12 P0"> {{COLI.Status == "Invoiced"  ? "Invoiced" : "Ready" }}</span>
+                                        </td>
+                                        <td ng-if="COKHitem.isAsyncActionInProgress" class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}','bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KitLI', '', CoKitHeaderIndex, CoLIIndex)}">
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td ng-if="COKHitem.isAsyncActionInProgress" class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}','bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KitLI', '', CoKitHeaderIndex, CoLIIndex)}">
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td ng-if="!COKHitem.isAsyncActionInProgress" class="text-center price-edit" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KitLI', '', CoKitHeaderIndex, CoLIIndex)}">
+                                            <span ng-if = "(M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index
+                                                || !GroupOnlyPermissions['Override price'].enabled || COLI.IsFixedPrice)"
+                                                ng-class="{'fixedPriceWithLock': (COLI.IsFixedPrice || COLI.IsFixedPriceForCO), 'pull-left': (COLI.IsFixedPrice || COLI.IsFixedPriceForCO)}">
+                                            {{COLI.Price | currency}}
+                                            </span>
+                                            <span ng-if = "(M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index 
+                                                && GroupOnlyPermissions['Override price'].enabled && !COLI.IsFixedPrice)">
+                                                <numbers-only id-value = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_Price"
+                                                    class-value = "bp-input-text inTimeEdit timeField text-center"
+                                                    input-model-value = "COLI.Price" 
+                                                    include-negative = "false"
+                                                    include-zero = "true"
+                                                    precision-length = "2"
+                                                    blur-value="F_CO.UpdateDealCOLineItem(CoKitHeaderIndex, CoLIIndex, $event, '_Price');" 
+                                                    input-keydown-value="F_CO.setFlagOnTabForBlurHandling($event)"
+                                                    />
+                                            </span>
+                                            <i class="bp-icons bp-font-12 bp-grey-font pull-left lockSvg" ng-if="(COLI.IsFixedPrice) && (M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index)">lock</i>
+                                            <i class="bp-icons bp-font-12 bp-grey-font pull-left lockSvg" ng-if="(COLI.IsFixedPriceForCO) && (M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index)">lock</i>
+                                            <span class="price-variance-warning" ng-if="(M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index || !GroupOnlyPermissions['Override price'].enabled || COLI.IsFixedPrice) && COLI.Status == 'Required' && M_CO.IsForeignExchangeCostingEnabled && COLI.IsForeignVendor">
+                                            <span data-toggle="tooltip" data-original-title="{{'Special_ordering_a_foreign_part_click_to_learn_more' | translate}}" data-html="true">
+                                            <i id = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_warning" ng-click="F_CO.openPriceVarianceWarningModal($event, 'Deal Merchandise', CoKitHeaderIndex, $index)" class="bp-icons bp-tart-orange-font bp-font-14">warningFilled</i>
+                                            </span>
+                                            </span>
+                                            <span ng-if="(M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index && GroupOnlyPermissions['Override price'].enabled && !COLI.IsFixedPrice && COLI.Status == 'Required' && M_CO.IsForeignExchangeCostingEnabled && COLI.IsForeignVendor)">
+                                            <span class="warning-icon" data-toggle="tooltip" data-original-title="{{'Special_ordering_a_foreign_part_click_to_learn_more' | translate}}" data-html="true">
+                                            <i id = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_warning" ng-click="F_CO.openPriceVarianceWarningModal($event, 'Deal Merchandise', CoKitHeaderIndex, $index)" class="bp-icons bp-tart-orange-font bp-font-14">warningFilled</i>
+                                            </span>
+                                            </span>
+                                        </td>
+                                        <td ng-if="!COKHitem.isAsyncActionInProgress" class="text-center boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' 
+                                            && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KitLI', '', CoKitHeaderIndex, CoLIIndex)}">
+                                            <span ng-class="{'bp-red-font': (COLI.Qty * COLI.Price) < 0}">{{(COLI.Qty * COLI.Price) | currency}}</span>
+                                        </td>
+                                        <td ng-if="COLI.IsDummyLineItem" class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}','bp-disabled': M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' && !F_CO.displayEditBtnOnLineItem('DealMerch', 'KitLI', '', CoKitHeaderIndex, CoLIIndex)}">
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td ng-if="!COLI.IsDummyLineItem" class="partInvIconAdjustment" ng-class="{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}' || M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}',
+                                            'bp-disabled': (COLI.Status === 'Invoiced' || F_CO.isDealApproved())}">
+                                            <i class="bp-icons bp-blue-font bp-font-20 bp-chevron bp-cursor-pointer" data-toggle="tooltip" title="{!$Label.More_options}"
+                                                id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_moreOptions"
+                                                ng-class="{'bp-chevron-up' : M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo, 'bp-chevron-down' : !M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo}"
+                                                ng-if="COLI.IsPart && !COLI.IsNonInventoryPart && (COLI.Qty >= 0) && COLI.Status != 'Invoiced'"
+                                                ng-click="F_CO.showHideDealMerchandiseItemInfo(CoKitHeaderIndex, CoLIIndex)">expandBadge</i>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="COKHitem.Id && M_CO.supersededParts[COLI.partId] != null && COLI.Status != 'Invoiced'">
+                                        <td></td>
+                                        <td colspan="8">
+                                            <div class="show_Availableline text-uppercase bgYellow"><span class="logo-icon">i</span>{{ 'part_has_been_superseded_to' | translate }} : {{M_CO.supersededParts[COLI.partId].partNumber}}</div>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    <!-- Start: Deal Merchandise Special Order Section For Kit Line Items -->
+                                    <tr class="bp-expanded-deletable-div-transition itemOrderInfoTR" id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_StockCommitted" 
+                                        ng-if="(COKHitem.Id && COLI.IsPart && !COLI.IsNonInventoryPart && M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo && (COLI.Qty >= 0)) && !M_CO.showQuote">
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td class="boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <div class="liItemDesc_setTextEllipsis bp-dark-grey2-font">
+                                                <span>{{' Committed_from_the_stock' | translate }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <span ng-if = "M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index || F_CO.isDealApproved()">{{SOLI.StockCommited}}</span>
+                                            <span ng-if = "M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index && !F_CO.isDealApproved()">
+                                                <numbers-only id-value="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_StockCommitted"
+                                                    class-value="bp-input-text inTimeEdit timeField text-center"
+                                                    min-value="0"
+                                                    max-value="{{F_CO.getMaxCommitedValue(COLI)}}"
+                                                    input-model-value="COLI.QtyCommitted" 
+                                                    include-negative="false"
+                                                    include-zero="true"
+                                                    precision-length="2"
+                                                    force-precision-length="false"
+                                                    blur-value = "F_CO.UpdateDealCOLineItem(CoKitHeaderIndex, $index, $event, '_StockCommitted');"
+                                                    input-keydown-value="F_CO.setFlagOnTabForBlurHandling($event)"
+                                                    input-keyup-value="F_CO.calculateSpecialOrderValue('DealMerchandise', 'StockCommited', CoKitHeaderIndex, null, $index, (COLI.IsPart && !COLI.IsNonInventoryPart));"/>
+                                            </span>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <span class="bp-green-font bp-bold-font">{{ 'Part_Object_Status_InStock' | translate }}</span>
+                                        </td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                    </tr>
+                                    <tr class="bp-expanded-deletable-div-transition itemOrderInfoTR" id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_QtyOrder"
+                                        ng-if="(COKHitem.Id && COLI.IsPart && !COLI.IsNonInventoryPart && M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo && (COLI.Qty >= 0)) && !M_CO.showQuote">
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td class="boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <div class="liItemDesc_setTextEllipsis bp-red-font">
+                                                <span>{{ 'Quantity_to_order' | translate }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <span>{{COLI.QtyOrder}}</span>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <span class="bp-red-font bp-bold-font" ng-if="COLI.Status !== 'Ordered'">{{ 'Part_Object_Status_Required' | translate }}</span>
+                                            <span class="bp-orange-font bp-bold-font" ng-if="COLI.Status === 'Ordered'">{{ 'Label_Ordered' | translate }}</span>
+                                        </td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                    </tr>
+                                    <tr class="inventory-status-liItem" id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_AvailableInventory" 
+                                        ng-repeat-end="ng-repeat-end" 
+                                        ng-if="COKHitem.Id && COLI.IsPart && !COLI.IsDummyLineItem && !COLI.IsNonInventoryPart && (M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo || M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index)">
+                                        <td colspan="7" class="PN0">
+                                            <table class="table-extra-for-button">
+                                                <col width="40%" ng-show="(!(COLI.QtyOrder > 0 && COLI.Status !== 'Ordered' && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled) || !((M_CO.isBRPEnabled && COLI.IsBRPPart) || (M_CO.IsCassonsAPIEnabled && COLI.CassonsId)) || !M_CO.isMeshEnabledOrg)" />
+                                                <col width="34%" ng-show="((COLI.QtyOrder > 0 && COLI.Status !== 'Ordered' && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled) && ((M_CO.isBRPEnabled && COLI.IsBRPPart) || (M_CO.IsCassonsAPIEnabled && COLI.CassonsId)) && M_CO.isMeshEnabledOrg)" />
+                                                <col width="" />
+                                                <col width="10%" ng-show="(!(COLI.QtyOrder > 0 && COLI.Status !== 'Ordered' && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled) || !((M_CO.isBRPEnabled && COLI.IsBRPPart) || (M_CO.IsCassonsAPIEnabled && COLI.CassonsId)) || !M_CO.isMeshEnabledOrg)" />
+                                                <col width="1%" ng-show="((COLI.QtyOrder > 0 && COLI.Status !== 'Ordered' && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled) && ((M_CO.isBRPEnabled && COLI.IsBRPPart) || (M_CO.IsCassonsAPIEnabled && COLI.CassonsId)) && M_CO.isMeshEnabledOrg)" />
+                                                <tbody>
+                                                    <tr class="inventory-status-liItem" ng-class="{ 'liItem-bg-white': ((COLI.ActualAvailableParts - COLI.QtyCommitted) > 0 && !M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo), 'liItem-bg-red': ((COLI.ActualAvailableParts - COLI.Qty) <= 0 && COLI.ActualAvailableParts - COLI.QtyCommitted <= 0), 'liItem-bg-orange': ((COLI.ActualAvailableParts - COLI.QtyCommitted > 0) && M_CO.Deal.DealFulfillmentSectionObj.DealMerchandiseList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo)}">
+                                                        <td  class="helper-text-label">
+                                                            <span ng-if="(COLI.ActualAvailableParts - COLI.QtyCommitted) > 0 && !M_CO.COKHList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo" class="label-text"><span class="liItem-text-strong"> {{::COLI.AvaliablePartsQty}} </span><span>{{ 'remaining_in_stock_with' | translate }}</span> <span class="liItem-text-strong">{{COLI.OnOrderPartQty}}</span> <span>{{ 'on_order' | translate }}</span></span>
+                                                            <span ng-if="((COLI.ActualAvailableParts - COLI.Qty) <= 0 && COLI.ActualAvailableParts - COLI.QtyCommitted <= 0)" class="label-text red"><span class="liItem-text-strong">0 </span><span>{{ 'remaining_in_stock_with' | translate }}</span> <span class="liItem-text-strong">{{COLI.OnOrderPartQty}}</span> <span>{{ 'on_order' | translate }}</span></span>
+                                                            <span ng-if="(COLI.ActualAvailableParts - COLI.QtyCommitted > 0) && M_CO.COKHList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo" class="label-text orange"><span class="liItem-text-strong"> {{COLI.ActualAvailableParts - COLI.QtyCommitted}} </span><span>{{ 'remaining_in_stock_with' | translate }}</span> <span class="liItem-text-strong">{{COLI.OnOrderPartQty}}</span> <span>{{ 'on_order' | translate }}</span></span>
+                                                        </td>
+                                                        <td class="text-left liItemBtn" id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_inventoryButtons">
+                                                            <button ng-if="(COLI.QtyOrder > 0 && COLI.Status !== 'Ordered') && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled" class="bp-btn bp-btn-normal table-extra-btn-placement" ng-click="F_CO.openReallocateModalWindow(COLI, M_CO.COHeaderId, 'Deal Merchandise')">{{ 'Allocate_on_order' | translate }}</button>
+                                                            <button class="bp-btn secondary-btn table-extra-btn-placement" ng-if="(M_CO.isBRPEnabled && COLI.IsBRPPart)" ng-click="F_CO.openPartLocatorWindow(COLI, 'Deal Merchandise')" >{{ 'Vendor_Availability' | translate }}</button>
+                                                            <button class="bp-btn secondary-btn table-extra-btn-placement" ng-if="M_CO.IsCassonsAPIEnabled && COLI.CassonsId" ng-click="F_CO.openCassonsAPIWindow(COLI, 'Deal Merchandise')" >{{ 'Vendor_Availability' | translate }}  - {{COLI.CassonsSOH}}</button>
+                                                            <span ng-if="M_CO.isMeshEnabledOrg && M_CO.collectiveInfo.externalId && COLI.ItemCode" class="table-extra-btn-placement" ng-bind-html="F_CO.partLookupHtml(COLI.ItemCode, M_CO.collectiveInfo.externalId)"></span>
+                                                            <a class="view-related-label" data-target="#SupersededPart" data-toggle="modal" ng-click="showAlternatePartDialog=true; F_CO.getAlternateParts(COLI, M_CO.COHeaderId, 'Deal Merchandise', CoKitHeaderIndex);">{{ 'View_related_parts' | translate }}</a>
+                                                        </td>
+                                                        <td class="helper-text-label" ng-class="{ 'bg-white': ((COLI.ActualAvailableParts - COLI.QtyCommitted) > 0 && !M_CO.COKHList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo), 'bg-red': ((COLI.ActualAvailableParts - COLI.Qty) <= 0 && COLI.ActualAvailableParts - COLI.QtyCommitted <= 0), 'bg-orange': ((COLI.ActualAvailableParts - COLI.QtyCommitted > 0) && M_CO.COKHList[CoKitHeaderIndex].COLIList[$index].ShowItemInfo)}"></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <!-- End: Merchandise Special Order Section For Kit Line Items -->
+                                    <!-- End: Kit Line Items Row with Kit Header (Kit Line Items) -->
+                                    <!-- Start: Line Items Row without Kit Header (Non Kit Line Items) -->
+                                    <tr class = "bp-expanded-deletable-div-transition" ng-repeat-start="COLI in COKHitem.COLIList track by $index" ng-if="!COKHitem.Id"
+                                        id = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}" ng-init="CoLIIndex = $index"
+                                        ng-click="F_CO.editLineItem(COKHitem, 'DealMerch_Section_COKitHeader', CoKitHeaderIndex, CoLIIndex, '', '', (COLI.IsPart && !COLI.IsNonInventoryPart))"
+                                        ng-class="{'bp-tr-hover': !COKHitem.isAsyncActionInProgress,'no-border':!COKHitem.Id && M_CO.supersededParts[COLI.partId] != null,'dummy-animation':COKHitem.isAsyncActionInProgress}">
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}',
+                                            'bp-disabled': (!F_CO.displayEditBtnOnLineItem('DealMerch', 'NonKitLI', '', CoKitHeaderIndex, CoLIIndex) 
+                                            && M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}')}">
+                                            <i class="bp-icons bp-font-25 bp-grey-font stroke-3 itemSvg tableItem" ng-if="COLI.IsPart">part</i>
+                                            <i class="bp-icons bp-font-25 bp-grey-font stroke-3 itemSvg tableItem" ng-if="COLI.IsFee">fee</i>
+                                        </td>
+                                        <td class="boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}',
+                                            'bp-disabled': (!F_CO.displayEditBtnOnLineItem('DealMerch', 'NonKitLI', '', CoKitHeaderIndex, CoLIIndex) 
+                                            && M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}')}">
+                                            <div class="liItemDesc_setTextEllipsis"
+                                                ng-if="(M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index) || (COLI.IsPart && !COLI.IsNonInventoryPart) || F_CO.isDealApproved()">
+                                                <!-- InnerFlexContainer -->
+                                                <span class="bp-blue-font" ng-class="{'bp-blue-hover' : COLI.IsPart}" 
+                                                    id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_itemDesc"
+                                                    ng-click="F_CO.moveToState('ViewPart',{Id:COLI.partId},(COLI.IsPart && !COLI.IsNonInventoryPart))">
+                                                {{COLI.ItemCode}} - {{COLI.ItemDescription}}
+                                                </span> <!--  class ="setTextEllipsis"; {{COLI.Item}}-->
+                                            </div>
+                                            <div class="liItemDesc" ng-if="(M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index) && (!COLI.IsPart || (COLI.IsPart && COLI.IsNonInventoryPart)) && !F_CO.isDealApproved()">
+                                                <span class="editableDescInput"> 
+                                                <span class="itemCode">{{COLI.ItemCode}} - </span>
+                                                <input id = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_itemDesc"
+                                                    class = "bp-input-text text-center"
+                                                    type="text" ng-model = "COLI.ItemDescription"
+                                                    ng-blur="F_CO.UpdateDealCOLineItem(CoKitHeaderIndex, CoLIIndex, $event)"
+                                                    ng-keydown="F_CO.setFlagOnTabForBlurHandling($event)"/>
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}',
+                                            'bp-disabled': (!F_CO.displayEditBtnOnLineItem('DealMerch', 'NonKitLI', '', CoKitHeaderIndex, CoLIIndex) 
+                                            && M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}')}">
+                                            <span ng-if = "M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index || F_CO.isDealApproved()">{{COLI.Qty}}</span>
+                                            <span ng-if = "M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index && !F_CO.isDealApproved()">
+                                                <numbers-only id-value = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_Qty"
+                                                    class-value = "bp-input-text inTimeEdit timeField text-center"
+                                                    min-value = ""
+                                                    default-value = "1"
+                                                    input-model-value = "COLI.Qty" 
+                                                    include-negative = "true"
+                                                    include-zero = "false"
+                                                    precision-length = "2"
+                                                    force-precision-length = "false"
+                                                    blur-value="F_CO.UpdateDealCOLineItem(CoKitHeaderIndex, CoLIIndex, $event, '_Qty');"
+                                                    input-keydown-value="F_CO.setFlagOnTabForBlurHandling($event)"
+                                                    input-keyup-value="F_CO.calculateSpecialOrderValue('DealMerchandise', 'QtyNeeded', CoKitHeaderIndex, null, $index, (COLI.IsPart && !COLI.IsNonInventoryPart));"/>
+                                            </span>
+                                        </td>
+                                        <td class="text-center" ng-class="{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}" ng-if="COKHitem.isAsyncActionInProgress">
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td class="text-center" ng-class="{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}" ng-if="COKHitem.isAsyncActionInProgress">
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td class="text-center" ng-class="{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}" ng-if="COKHitem.isAsyncActionInProgress">
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td ng-if="!COKHitem.isAsyncActionInProgress" class="text-center bp-bold-font" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}',
+                                            'bp-disabled': (!F_CO.displayEditBtnOnLineItem('DealMerch', 'NonKitLI', '', CoKitHeaderIndex, CoLIIndex) 
+                                            && M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}')}">
+                                            <div class="InnerFlexContainer">
+                                                <span ng-if="COLI.Status !== 'Ordered' && COLI.IsPart && !COLI.IsNonInventoryPart && !COKHitem.COLIList[$index].ShowItemInfo && (COLI.QtyCommitted == 0 && COLI.QtyOrder > 0)" class="bp-red-font col-xs-12 P0">{{ 'Part_Object_Status_Required' | translate }}</span>
+                                                <span ng-if="COLI.IsPart && !COLI.IsNonInventoryPart && !COKHitem.COLIList[$index].ShowItemInfo && (COLI.QtyCommitted > 0 && COLI.QtyOrder > 0)" class="bp-orange-font col-xs-12 P0">{{ 'Part_Object_Status_Multiple' | translate }}</span>
+                                                <span ng-if="(COLI.IsPart && !COLI.IsNonInventoryPart && !COKHitem.COLIList[$index].ShowItemInfo && (!(COLI.QtyCommitted >= 0 && COLI.QtyOrder > 0) || (COLI.Status === 'Ordered' && COLI.QtyCommitted === 0)))" ng-class="{'bp-green-font': COLI.Status == 'In Stock','bp-red-font': (COLI.Status == 'Oversold'|| COLI.Status == 'Required' || COLI.Status == 'RETURN'), 'bp-coral-light-bg': COLI.Status == 'RETURN', 'bp-first-letter-capitalize': COLI.Status === 'RETURN', 'bp-status-bubble': COLI.Status === 'RETURN', 'bp-orange-font':COLI.Status === 'Ordered','bp-green-dark-font': COLI.Status == 'Invoiced'}" class="col-xs-12 bp-bold-font P0 text-center"> {{((COLI.Qty - COLI.QtyCommitted) > 0 &amp;&amp; (COLI.QtyCommitted) != 0) ? "Multiple" : COLI.Status }}</span>
+                                                <span ng-if="COLI.IsPart && COLI.IsNonInventoryPart" ng-class = "{'bp-green-font': COLI.Status != 'Invoiced','bp-green-dark-font': COLI.Status == 'Invoiced'}" class ="col-xs-12 bp-bold-font P0 text-center"> {{COLI.Status == "Invoiced"  ? "Invoiced" : "In Stock" }}</span>
+                                                <span ng-if="!COLI.IsPart" ng-class = "{'bp-cyan-font': COLI.Status != 'Invoiced','bp-green-dark-font': COLI.Status == 'Invoiced'}" class ="col-xs-12 bp-bold-font P0 text-center"> {{COLI.Status == "Invoiced"  ? "Invoiced" : "Ready" }}</span>
+                                                <!-- <span ng-class = "{'bp-green-font': COLI.Status == 'In Stock','bp-yellow-dark-font': COLI.Status == 'Required'}" class ="setTextEllipsis text-right"> {{COLI.Status}}</span> -->
+                                            </div>
+                                        </td>
+                                        <td ng-if="!COKHitem.isAsyncActionInProgress" class="text-center price-edit" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}',
+                                            'bp-disabled': (!F_CO.displayEditBtnOnLineItem('DealMerch', 'NonKitLI', '', CoKitHeaderIndex, CoLIIndex) 
+                                            && M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}')}">
+                                            <span ng-if = "(M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index
+                                                || !GroupOnlyPermissions['Override price'].enabled)">{{COLI.Price | currency}}</span>
+                                            <span ng-if = "(M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index
+                                                && GroupOnlyPermissions['Override price'].enabled)">
+                                                <numbers-only id-value = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_Price"
+                                                    class-value = "bp-input-text inTimeEdit timeField text-center"
+                                                    input-model-value = "COLI.Price" 
+                                                    include-negative = "false"
+                                                    include-zero = "true"
+                                                    precision-length = "2"
+                                                    blur-value="F_CO.UpdateDealCOLineItem(CoKitHeaderIndex, CoLIIndex, $event, '_Price');"
+                                                    input-keydown-value="F_CO.setFlagOnTabForBlurHandling($event)"/>
+                                            </span>
+                                            <span class="price-variance-warning" ng-if="(M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index || !GroupOnlyPermissions['Override price'].enabled) && COLI.Status == 'Required' && M_CO.IsForeignExchangeCostingEnabled && COLI.IsForeignVendor">
+                                            <span data-toggle="tooltip" data-original-title="{{'Special_ordering_a_foreign_part_click_to_learn_more' | translate}}" data-html="true">
+                                            <i id = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_warning" ng-click="F_CO.openPriceVarianceWarningModal($event, 'Deal Merchandise', CoKitHeaderIndex, $index)" class="bp-icons bp-tart-orange-font bp-font-14">warningFilled</i>
+                                            </span>
+                                            </span>
+                                            <span ng-if="(M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index && GroupOnlyPermissions['Override price'].enabled && COLI.Status == 'Required' && M_CO.IsForeignExchangeCostingEnabled && COLI.IsForeignVendor)">
+                                            <span class="warning-icon" data-toggle="tooltip" data-original-title="{{'Special_ordering_a_foreign_part_click_to_learn_more' | translate}}" data-html="true">
+                                            <i id = "DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_warning" ng-click="F_CO.openPriceVarianceWarningModal($event, 'Deal Merchandise', CoKitHeaderIndex, $index)" class="bp-icons bp-tart-orange-font bp-font-14">warningFilled</i>
+                                            </span>
+                                            </span>
+                                        </td>
+                                        <td ng-if="!COKHitem.isAsyncActionInProgress" class="text-center boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}',
+                                            'bp-disabled': (!F_CO.displayEditBtnOnLineItem('DealMerch', 'NonKitLI', '', CoKitHeaderIndex, CoLIIndex) 
+                                            && M_CO.editLineItem !== 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'), 'bp-red-font': (COLI.Qty * COLI.Price) < 0}">
+                                            <span >{{(COLI.Qty * COLI.Price) | currency}}</span>
+                                            <!--   <span ng-if="SOLI.SubTotal">{{SOLI.SubTotal | currency}}</span> -->
+                                        </td>
+                                        <td ng-if="COLI.IsDummyLineItem" class="text-center" ng-class="{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <div class="dummy-tag-name"></div>
+                                        </td>
+                                        <td ng-if="!COLI.IsDummyLineItem" class="partInvIconAdjustment" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}','bp-disabled': (COLI.Status === 'Invoiced') || F_CO.isDealInvoiced() || F_CO.isDealApproved() || F_CO.isArchivedQuote()}">
+                                            <i class="bp-icons bp-blue-font bp-font-20 bp-chevron bp-cursor-pointer" data-toggle="tooltip" title="{!$Label.More_options}"
+                                                id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_moreOptions"
+                                                ng-class="{'bp-chevron-up' : COKHitem.COLIList[$index].ShowItemInfo, 'bp-chevron-down' : !COKHitem.COLIList[$index].ShowItemInfo}"
+                                                ng-if="COLI.IsPart && !COLI.IsNonInventoryPart && COLI.Status != 'Invoiced'"
+                                                ng-click="F_CO.showHideDealMerchandiseItemInfo(CoKitHeaderIndex, CoLIIndex)">expandBadge</i>
+                                            <span data-toggle="tooltip" title="Delete" ng-if = "COLI.Status != 'Invoiced' && GroupOnlyPermissions['Merchandise']['create/modify']"
+                                                id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_deleteBtn">
+                                            <i class="bp-icons bp-blue-font bp-font-18 LIDeleteBtn" ng-click="F_CO.openMoveOrDeleteConfirmationPopup('', '', CoKitHeaderIndex, COKHitem.Id, CoLIIndex, COLI.CoLineItemId, 'DealMerch', false)">delete</i>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="!COKHitem.Id && M_CO.supersededParts[COLI.partId] != null && COLI.Status != 'Invoiced'">
+                                        <td></td>
+                                        <td colspan="8">
+                                            <div class="show_Availableline text-uppercase bgYellow"><span class="logo-icon">i</span>{{ 'part_has_been_superseded_to' | translate }} : {{M_CO.supersededParts[COLI.partId].partNumber}}</div>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    <!-- Start: Deal Merchandise Special Order Section -->
+                                    <tr class="bp-expanded-deletable-div-transition itemOrderInfoTR" id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_StockCommittedSection" 
+                                        ng-if="!COKHitem.Id && COLI.IsPart && !COLI.IsNonInventoryPart && COKHitem.COLIList[$index].ShowItemInfo">
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td class="boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <div class="liItemDesc_setTextEllipsis bp-dark-grey2-font">
+                                                <span>{{ 'Committed_from_the_stock' | translate }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <span ng-if = "M_CO.editLineItem != 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index || F_CO.isDealApproved()">{{COLI.QtyCommitted}}</span>
+                                            <span ng-if = "M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index && !F_CO.isDealApproved()">
+                                                <numbers-only id-value="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_StockCommitted"
+                                                    class-value="bp-input-text inTimeEdit timeField text-center"
+                                                    min-value="0"
+                                                    max-value="{{F_CO.getMaxCommitedValue(COLI)}}"
+                                                    input-model-value="COLI.QtyCommitted" 
+                                                    include-negative="false"
+                                                    include-zero="true"
+                                                    precision-length="2"
+                                                    force-precision-length="false"
+                                                    blur-value="F_CO.UpdateDealCOLineItem(CoKitHeaderIndex, $index, $event, '_StockCommitted');"
+                                                    input-keydown-value="F_CO.setFlagOnTabForBlurHandling($event)"
+                                                    input-keyup-value="F_CO.calculateSpecialOrderValue('DealMerchandise', 'StockCommited', CoKitHeaderIndex, null, $index, (COLI.IsPart && !COLI.IsNonInventoryPart));"/>
+                                            </span>
+                                            <!-- max-value="{{COLI.Qty}}" -->
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <span class="bp-green-font bp-bold-font">{{ 'Part_Object_Status_InStock' | translate }}</span>
+                                        </td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                    </tr>
+                                    <tr class="bp-expanded-deletable-div-transition itemOrderInfoTR" id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_QtyOrder"
+                                        ng-if="!COKHitem.Id && COLI.IsPart && !COLI.IsNonInventoryPart && COKHitem.COLIList[$index].ShowItemInfo">
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td class="boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <div class="liItemDesc_setTextEllipsis bp-red-font">
+                                                <span>{{ 'Quantity_to_order' | translate }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <span>{{COLI.QtyOrder}}</span>
+                                        </td>
+                                        <td class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}">
+                                            <span class="bp-red-font bp-bold-font" ng-if="COLI.Status !== 'Ordered'" >{{ 'Part_Object_Status_Required' | translate }}</span>
+                                            <span class="bp-orange-font bp-bold-font" ng-if="COLI.Status === 'Ordered'">{{ 'Label_Ordered' | translate }}</span>
+                                        </td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                        <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}'}"></td>
+                                    </tr>
+                                    <tr class="inventory-status-liItem" id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_AvailableInventory" 
+                                        ng-repeat-end="ng-repeat-end" 
+                                        ng-if="!COKHitem.Id && COLI.IsPart && !COLI.IsDummyLineItem  && !COLI.IsNonInventoryPart && (COKHitem.COLIList[$index].ShowItemInfo || M_CO.editLineItem == 'DealMerch_Section_COKitHeader' + CoKitHeaderIndex + '_COLI' + $index)">
+                                        <td colspan="7" class="PN0">
+                                            <table class="table-extra-for-button">
+                                                <col width="40%" ng-show="(!(COLI.QtyOrder > 0 && COLI.Status !== 'Ordered' && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled) || !((M_CO.isBRPEnabled && COLI.IsBRPPart) || (M_CO.IsCassonsAPIEnabled && COLI.CassonsId)) || !M_CO.isMeshEnabledOrg)" />
+                                                <col width="34%" ng-show="((COLI.QtyOrder > 0 && COLI.Status !== 'Ordered' && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled) && ((M_CO.isBRPEnabled && COLI.IsBRPPart) || (M_CO.IsCassonsAPIEnabled && COLI.CassonsId)) && M_CO.isMeshEnabledOrg)" />
+                                                <col width="" />
+                                                <col width="10%" ng-show="(!(COLI.QtyOrder > 0 && COLI.Status !== 'Ordered' && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled) || !((M_CO.isBRPEnabled && COLI.IsBRPPart) || (M_CO.IsCassonsAPIEnabled && COLI.CassonsId)) || !M_CO.isMeshEnabledOrg)" />
+                                                <col width="1%" ng-show="((COLI.QtyOrder > 0 && COLI.Status !== 'Ordered' && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled) && ((M_CO.isBRPEnabled && COLI.IsBRPPart) || (M_CO.IsCassonsAPIEnabled && COLI.CassonsId)) && M_CO.isMeshEnabledOrg)" />
+                                                <tbody>
+                                                    <tr class="inventory-status-liItem" ng-class="{ 'liItem-bg-white': ((COLI.ActualAvailableParts - COLI.QtyCommitted) > 0 && !COKHitem.COLIList[$index].ShowItemInfo), 'liItem-bg-red': ((COLI.ActualAvailableParts - COLI.Qty) <= 0 && COLI.ActualAvailableParts - COLI.QtyCommitted <= 0), 'liItem-bg-orange': ((COLI.ActualAvailableParts - COLI.QtyCommitted > 0) && COKHitem.COLIList[$index].ShowItemInfo) }">
+                                                        <td  class="helper-text-label">
+                                                            <span ng-if="(COLI.ActualAvailableParts - COLI.QtyCommitted) > 0 && !COKHitem.COLIList[$index].ShowItemInfo" class="label-text "><span class="liItem-text-strong"> {{COLI.AvaliablePartsQty}} </span><span>{{ 'remaining_in_stock_with' | translate }}</span> <span class="liItem-text-strong">{{COLI.OnOrderPartQty}}</span> <span>{{ 'on_order' | translate }}</span></span>
+                                                            <span ng-if="((COLI.ActualAvailableParts - COLI.Qty) <= 0 && COLI.ActualAvailableParts - COLI.QtyCommitted <= 0)" class="label-text red"><span class="liItem-text-strong">0 </span><span>{{ 'remaining_in_stock_with' | translate }}</span> <span class="liItem-text-strong">{{COLI.OnOrderPartQty}}</span> <span>{{ 'on_order' | translate }}</span></span>
+                                                            <span ng-if="(COLI.ActualAvailableParts - COLI.QtyCommitted > 0) && COKHitem.COLIList[$index].ShowItemInfo" class="label-text orange "><span class="liItem-text-strong"> {{COLI.ActualAvailableParts - COLI.QtyCommitted}} </span><span>{{ 'remaining_in_stock_with' | translate }}</span> <span class="liItem-text-strong">{{COLI.OnOrderPartQty}}</span> <span>{{ 'on_order' | translate }}</span></span>
+                                                        </td>
+                                                        <td class="text-left liItemBtn" id="DealMerch_Section_COKitHeader{{CoKitHeaderIndex}}_COLI{{$index}}_inventoryButtons">
+                                                            <button ng-if="(COLI.QtyOrder > 0 && COLI.Status !== 'Ordered') && COLI.OnOrderPartQty > 0 && GroupOnlyPermissions['Reallocate on order parts'].enabled" class="bp-btn bp-btn-normal table-extra-btn-placement" ng-click="F_CO.openReallocateModalWindow(COLI, M_CO.COHeaderId, 'Deal Merchandise')">{{ 'Allocate_on_order' | translate }}</button>
+                                                            <button class="bp-btn secondary-btn table-extra-btn-placement" ng-if="(M_CO.isBRPEnabled && COLI.IsBRPPart)" ng-click="F_CO.openPartLocatorWindow(COLI, 'Deal Merchandise')" >{{ 'Vendor_Availability' | translate }}</button>
+                                                            <button class="bp-btn secondary-btn table-extra-btn-placement" ng-if="M_CO.IsCassonsAPIEnabled && COLI.CassonsId" ng-click="F_CO.openCassonsAPIWindow(COLI, 'Deal Merchandise')" >{{ 'Vendor_Availability' | translate }}  - {{COLI.CassonsSOH}}</button>
+                                                            <span ng-if="M_CO.isMeshEnabledOrg && M_CO.collectiveInfo.externalId && COLI.ItemCode" class="table-extra-btn-placement" ng-bind-html="F_CO.partLookupHtml(COLI.ItemCode, M_CO.collectiveInfo.externalId)"></span>
+                                                            <a class="view-related-label" data-target="#SupersededPart" data-toggle="modal" ng-click="showAlternatePartDialog=true; F_CO.getAlternateParts(COLI, M_CO.COHeaderId, 'Deal Merchandise', CoKitHeaderIndex);">{{ 'View_related_parts' | translate }}</a>
+                                                        </td>
+                                                        <td class="helper-text-label" ng-class="{ 'bg-white': ((COLI.ActualAvailableParts - COLI.QtyCommitted) > 0 && !COKHitem.COLIList[$index].ShowItemInfo), 'bg-red': ((COLI.ActualAvailableParts - COLI.Qty) <= 0 && COLI.ActualAvailableParts - COLI.QtyCommitted <= 0), 'bg-orange': ((COLI.ActualAvailableParts - COLI.QtyCommitted > 0) && COKHitem.COLIList[$index].ShowItemInfo) }"></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>	
+									</tr>
+									<!-- End: Deal Merchandise Special Order Section -->
+									<!-- End: Line Items Row without Kit Header (Non Kit Line Items) -->
+								</tbody>
+							</table>
+						</div>
+						<div class="search-entity-wrapper" ng-if="F_CO.showAutoComplete()"
+							ng-class="{'pull-left autocomplete-wrapper-left': !F_CO.disableSTA('DealMerchandise') && !F_CO.isAllDealMerchandiseInvoicedCompletely() && !F_CO.isDealInvoiced() && !F_CO.isDealApproved() && !F_CO.isArchivedQuote()}">
+							<p class="search-entity-text">{{ 'Scan_or_search_to_add_a_part_kit_or_merchandise' | translate }}</p>
+							<autocompletev2 ng-if="!M_CO.IsWebComponentSTAEnabled" id="autocompletev2MerchandiseSectioId"
+								is-scaning-enabled="true"
+								template-name="Entity"
+								section-name = "DealMerch Section"
+								section-id="DealMerchSectionWrapperId"
+								is-disabled="F_CO.disableSTA('DealMerchandise') || F_CO.isAllDealMerchandiseInvoicedCompletely() || F_CO.isDealInvoiced() || F_CO.isDealApproved() || F_CO.isArchivedQuote()"/>
+							<div class="searchToAdd" ng-if="M_CO.IsWebComponentSTAEnabled">
+								<bpda-search-to-add id="autocompleteDealMerchSectionWrapperId"
+									is-scanning-enabled="true"
+									template-name="Entity"
+									section-name = "DealMerch Section"
+									section-id="DealMerchSectionWrapperId"
+									ng-disabled="F_CO.disableSTA('DealMerchandise') || F_CO.isAllDealMerchandiseInvoicedCompletely() || F_CO.isDealInvoiced() || F_CO.isDealApproved() || F_CO.isArchivedQuote()"
+									ng-attr-available-filters= "{{F_CO.populateSTAFilters('staDealMerchandise')}}"
+									ng-attr-selected-filters="{{F_CO.populateSelectedSTAFilters('autocompleteDealMerchSectionWrapperId')}}"
+								>
+								</bpda-search-to-add>
+							</div>
+							<div class="bp-alert-info">
+								<bp-alert id="deal-merch-bp-alert" duration="3000" color="info" closable="true">
+									<bp-icon slot="icon" color="inherit">info</bp-icon>
+									You don't have to wait while we add your line item. You can immediately add a new one now!
+								</bp-alert>
+                            </div>
+                        </div>
+                        <div class="autocomplete-wrapper-right pull-left"
+                            ng-if="F_CO.showAutoComplete()  && !F_CO.disableSTA('DealMerchandise') && !F_CO.isAllDealMerchandiseInvoicedCompletely() && !F_CO.isDealInvoiced() && !F_CO.isDealApproved() && !F_CO.isArchivedQuote()">
+                            <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer pull-left MT-3" ng-click="F_CO.ShowPartsImportModel('Deal Merchandise',M_CO.COHeaderId)">partSmart</i>
+                            <a class="bp-blue-font bp-bold-font bp-font-14 pull-left line-height-small" ng-click="F_CO.ShowPartsImportModel('Deal Merchandise',M_CO.COHeaderId)">
+                            {{ 'Add_items_from_a_pick_list' | translate }}
+                            </a> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bp-inner-accordian open always-open deal-merchandise-action" ng-show="F_CO.showActionSubSection('Deal Merchandise');">
+                <div class="inner-accordian-header col-md-12">
+                    <div class="inner-accordian-header-left">
+                        <h2 class="accordian-left-details">{{ 'Merch_actions' | translate }}
+                            <span class="bp-req-icon">!</span>
+                        </h2>
+                    </div>
+                </div>
+                <div class="inner-accordian-body bp-white-bg col-md-12">
+                    <ul class="job-actions-buttons">
+                        <li  ng-click="F_CO.openInvoiceToDealPopup(0)"><a><i class="bp-icons stroke-5">addCircle</i>{{ 'Invoice_To_Deal' | translate }}</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <bp-ng-modal-window id-val="priceVarianceWarning" mobal-window-payload="M_CO.ModalWindowPayload" cancel-btn-action="F_CO.closePriceVarianceWarningModal()" primary-btn-action="F_CO.closePriceVarianceWarningModal()">
+        <div>
+            <span>
+                <p class="modal-window-message-info">{{ 'Price_variance_warning_message' | translate }}</p>
+            </span>
+        </div>
+    </bp-ng-modal-window>
+    <!-- End: Deal Merch Section -->
+</apex:component>

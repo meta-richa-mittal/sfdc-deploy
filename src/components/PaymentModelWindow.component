@@ -1,0 +1,404 @@
+<apex:component controller="GlobalController">
+<div class="modal fade-scale bp-model-dialog  CreateGroupModal checkout-modal-popup AddDepositPopup AddPaymentPopup" id="AddPaymentPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close bp-close-but CreateGroupModalCloseIcon" ng-click = "ViewCustomer.closePaymentPopup()">
+                    <span aria-hidden="true">
+                        <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body checkout-popup">
+                    <div class="userGroupInfoArea col-xs-12 P0">
+                        <div class="heading text-center">Choose a payment method </div>
+                        <div class = "payment-methods col-xs-12 P0">
+                            <ul class = " payment-container P0">
+                                <div class="preferred-payment-container" ng-if="ViewCustomer.IsPreferredPaymentEnabled">
+                                    <div class="preferred-payment" ng-class="{'active': ViewCustomer.selectPaymentMethodName == ViewCustomer.PreferredPaymentLabel}" ng-click="ViewCustomer.selectPaymentMethod(ViewCustomer.PreferredPaymentLabel)" ng-disabled="ViewCustomer.selectPaymentMethodName == ViewCustomer.PreferredPaymentLabel">
+                                        <img class="preferred-payment-img" src="{!Application_Images}/pp-logo.png" />
+                                     </div>
+                                </div>
+                                <li  ng-repeat = "paymentRec in ViewCustomer.PaymentMethod track by $index" ng-if = "paymentRec.Name != 'Gift card' && paymentRec.Name != ViewCustomer.PaymentProcessorName">
+                                    <div class="box" ng-click = "ViewCustomer.selectPaymentMethod(paymentRec.Name)"
+                                            ng-class="{'active': ViewCustomer.selectPaymentMethodName == paymentRec.Name }">
+                                            <div class="icon"><i class="bp-icons bp-font-18 bp-white-font bp-lh-20 paymentMethod">{{paymentRec.IconLink}}</i></div>
+                                            <h3>{{paymentRec.Name}}</h3>
+                                   </div>
+                                </li>
+                                <div class="box" ng-click="ViewCustomer.selectPaymentMethod('Direct Deposit');" ng-class="{'active': ViewCustomer.selectPaymentMethodName == 'Direct Deposit'}">
+                                    <div><i class="bp-icons bp-font-18 bp-white-font">deposit</i></div>
+                                    <h3 class="bp-first-letter-capitalize">{{ 'Direct_Deposit' | translate }}</h3>
+                                </div>
+                            </ul>
+                        </div>
+                    	  <div class="col-lg-8 payment-input-wrap">
+                    	  <p class="total-amount" ng-if="!ViewCustomer.appliedSurchargeDetails.IsSurchargeApplicable">{{ViewCustomer.ARActivityListTotal | currency }} </p>
+
+                            <div class="surcharge-box" ng-if="ViewCustomer.appliedSurchargeDetails.IsSurchargeApplicable">
+
+                          <div class="surcharge-payment-wrap">
+                            <span class="bp-red-font surcharge-warning">{{'Warning_additional_surcharge_is_being_added' | translate}}</span>
+                            </div>
+                        <div class="surcharge-payment-wrap">
+                            <span>Amount paid</span>
+                            <div class="checkout-payment-input-small">
+                                <p class="amount">{{ViewCustomer.ARActivityListTotal | currency }} </p>
+                            </div>
+                        </div>
+                        <div class="surcharge-payment-wrap">
+                            <div class="checkout-payment-input-small surcharge-per" ng-if="GroupOnlyPermissions['Modify payment method surcharge']['enabled']">
+                                <numbers-only blur-value="ViewCustomer.calculateReceiveAmountWithSurcharge(ViewCustomer.ARActivityListTotal)" class-value="" precision-length="2" include-negative="false" min-value="0" default-value="0"
+                                    input-model-value="ViewCustomer.appliedSurchargeDetails.SurchargePercentage" />
+                            
+                            %</div>
+                            <span ng-if="!GroupOnlyPermissions['Modify payment method surcharge']['enabled']">{{ViewCustomer.appliedSurchargeDetails.SurchargePercentage}}</span>
+                            <span>surcharge</span>
+                            <span class="surcharge-val">{{ViewCustomer.SurchargeAmount | currency}}</span>
+                        </div>
+                        <div class="surcharge-payment-wrap MB10">
+                            <span>Total payment</span>
+                            <span class="surcharge-val bp-bold-font">{{ViewCustomer.ARActivityListTotalWithSurcharge | currency }}</span>
+                        </div>
+                    </div>
+
+                          <div class="reference-number-container cash-drawer" ng-if="ViewCustomer.selectPaymentMethodName != ViewCustomer.PreferredPaymentLabel">
+                            <span>Reference &nbsp;#</span>
+                            <input type="text"
+                                id ="ARPayment_ReferenceNumber"
+                                class="bp-input-text"
+                                ng-model="ViewCustomer.ReferenceNumber"
+                                autocomplete="off"/>
+                          </div>
+                          <div class="cash-drawer" ng-if="ViewCustomer.IsPreferredPaymentEnabled &&  ViewCustomer.selectPaymentMethodName == ViewCustomer.PreferredPaymentLabel">
+                            <i class="bp-icons bp-font-24 stroke-3 MT-5">terminal</i>
+                            <span class="cash-drawer-info bp-red-font H300" ng-if="!ViewCustomer.terminalList.length">{{'No_terminals_defined' | translate}}</span>
+                            <span class="bp-dark-grey2-font cash-drawer-info" ng-if="ViewCustomer.terminalList.length">{{ViewCustomer.selectedTerminal}}</span>
+                            <a class="bp-blue-font bp-bold-font" ng-if = "ViewCustomer.checkTerminalPermission() && GroupOnlyPermissions['Set cash drawer']['enabled']" ng-click = "ViewCustomer.showChangeTerminalModalWindowPopup()">change</a>
+                            <div ng-if = "ViewCustomer.showChangeTerminalModalWindow" class="change-cash-drawer-modal-window deposit-cash-drawer">
+                                <div class="chnage-cash-drawer-container text-left">
+                                    <label>Change terminal for this work station</label>
+                                    <div class="col-xs-12 P0">
+                                        <div class = "bp-autocomplete-Wrapper autocomplete_v2 text-left">
+                                            <span class = "bp-autocomplete-image-icon">
+                                                <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer stroke-5 MT-3" ng-click = "ViewCustomer.showTerminalList = !ViewCustomer.showTerminalList;ViewCustomer.setFocusOnInput('paymentTerminal');" ng-blur="ViewCustomer.showTerminalList = false;ViewCustomer.hideDropdown();">arrowDown</i>
+                                            </span>
+                                            <input  type="text" id="paymentTerminal" class="bp-autocomplete-input bp-cursor-pointer 
+                                                bp-input-text " placeholder="{{'Please_select' | translate }}"
+                                                autocomplete="off" ng-keyup="ViewCustomer.keyPressNavigationOnDropdownElements($event, 'paymentTerminalDropdownDiv', 'paymentTerminal', ViewCustomer.terminalList)"
+                                                ng-model="ViewCustomer.terminalName" ng-click = "ViewCustomer.showTerminalList = !ViewCustomer.showTerminalList"
+                                                ng-blur="ViewCustomer.showTerminalList = false; ViewCustomer.hideDropdown();"  
+                                                readonly="readonly" />                       
+                                            <div class = "bp-autocomplete-dropdown-wrapper" ng-show="ViewCustomer.showTerminalList" id="paymentTerminalDropdownDiv">
+                                                <ul>
+                                                    <li ng-repeat="terminalRec in ViewCustomer.terminalList track by $index" id="paymentTerminal_{{$index}}"
+                                                        ng-class="{'selected-row': $index == ViewCustomer.currentDropDownIndex}"
+                                                        ng-mousedown="ViewCustomer.selectTerminal(terminalRec)">
+                                                        <div class="form-group-info col-xs-12 P0">
+                                                            <span >{{terminalRec.Nickname}}</span>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                                <ul ng-If="ViewCustomer.terminalList.length == 0">
+                                                    <li id="TerminalNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                                        <div class="">{{'No_Results_Found' | translate}}</div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="button secondary" ng-click="ViewCustomer.saveDeviceInfo()">CONFIRM</button>
+                                    <a class="cancel-change-cash-drawer buttonhollow" ng-click = "ViewCustomer.showChangeTerminalModalWindow = false;">Cancel</a>
+                                </div>
+                            </div>
+                        </div>
+                    	  <div class="cash-drawer">
+                                <i class="bp-icons bp-font-20 bp-dark-grey1-font stroke-3 MT-5">cashDrawer</i>
+                                <span class="bp-dark-grey2-font cash-drawer-info">{{ViewCustomer.selectedcashDrawer}}</span>
+                                <a class="bp-blue-font bp-bold-font" ng-if = "GroupOnlyPermissions['Set cash drawer']['enabled']" ng-click = "ViewCustomer.showChangeCashDrawerModalWindow()">change</a>
+                                <div ng-if = "ViewCustomer.showChangeModalWindow" class="change-cash-drawer-modal-window deposit-cash-drawer">
+                                    <div class="chnage-cash-drawer-container text-left">
+                                        <label>Change cash drawer for this work station</label>
+                                        <div class="col-xs-12 P0">
+                                            <div class = "bp-autocomplete-Wrapper autocomplete_v2 text-left">
+                                                <span class = "bp-autocomplete-image-icon">
+                                                    <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer stroke-5 MT-3" ng-click = "ViewCustomer.showCashDrawerList = !ViewCustomer.showCashDrawerList;ViewCustomer.setFocusOnInput('paymentCashDrawer');" ng-blur="ViewCustomer.showCashDrawerList = false;ViewCustomer.hideDropdown();">arrowDown</i>
+                                                </span>
+                                                <input  type="text" id="paymentCashDrawer" class="bp-autocomplete-input bp-cursor-pointer 
+                                                    bp-input-text " placeholder="{{'Please_select' | translate }}"
+                                                    autocomplete="off" ng-keyup="ViewCustomer.keyPressNavigationOnDropdownElements($event, 'paymentCashDrawerDropdownDiv', 'paymentCashDrawer', ViewCustomer.cashDrawerList)"
+                                                    ng-model="ViewCustomer.cashDrawerName" ng-click = "ViewCustomer.showCashDrawerList = !ViewCustomer.showCashDrawerList"
+                                                    ng-blur="ViewCustomer.showCashDrawerList = false; ViewCustomer.hideDropdown();"  
+                                                    readonly="readonly" />                       
+                                                <div class = "bp-autocomplete-dropdown-wrapper" ng-show="ViewCustomer.showCashDrawerList" id="paymentCashDrawerDropdownDiv">
+                                                    <ul>
+                                                        <li ng-repeat="cashDrawerRec in ViewCustomer.cashDrawerList track by $index" id="paymentCashDrawer_{{$index}}"
+                                                            ng-class="{'selected-row': $index == ViewCustomer.currentDropDownIndex}"
+                                                            ng-mousedown="ViewCustomer.selectCashDrawer(cashDrawerRec)">
+                                                            <div class="form-group-info col-xs-12 P0">
+                                                                <span >{{cashDrawerRec.CashDrawerName}}</span>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                    <ul ng-If="ViewCustomer.showCashDrawerList.length == 0">
+                                                        <li id="cashDrawerNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                                            <div class="">{{'No_Results_Found' | translate}}</div>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button class="button secondary" ng-click="ViewCustomer.saveDeviceInfo()">CONFIRM</button>
+                                        <a class="cancel-change-cash-drawer buttonhollow" ng-click = "ViewCustomer.showChangeModalWindow = false;">Cancel</a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="cash-drawer payment-date" >
+	                             <i class="bp-icons bp-font-20 bp-dark-grey1-font stroke-3 MT-5">calendar</i>
+	                             <div class="date-picker-confirm collapsible">
+                                                    <input id="togglePicker3" type="checkbox" class="picker-toggle" ng-model="ViewCustomer.togglePicker"/>
+                                                    <div class="date-picker-field">
+                                                      <span class="date-display">Payment date: <em>{{ViewCustomer.paymentDate == ViewCustomer.todayDate ? 'Today' : ViewCustomer.paymentDate.replace('/', '-').replace('/', '-')}}</em></span>
+                                                      <label ng-if="GroupOnlyPermissions['Backdating']['enabled']" for="togglePicker3" class="open-date-picker bp-blue-font bp-bold-font">change</label>
+                                                      <label for="togglePicker3" class="close-date-picker bp-blue-font bp-bold-font">done</label>
+                                                    </div>
+                                            
+                                                <div class="expanded-date-picker">
+                                                  <!--- Option 1 : display only instant change or view only -->
+                                                  <div class="date-picker-field">
+                                            
+                                                    <span class="date-display">Selected date: <em>{{ ViewCustomer.tempPaymentDate == ViewCustomer.todayDate ? 'Today' : ViewCustomer.tempPaymentDate.replace('/', '-').replace('/', '-')}}</em></span>
+                                                  </div>
+                                                  <!--- Option 2 : input to display instant change or edit on view only -->
+                                                  <input type="hidden" class="date-picker alt-field prevent-invalid-input" name="depositPaymentDate"
+                                                   id="depositPaymentDate" date-format="ViewCustomer.DateFormat" placeholder="{{ViewCustomer.DateFormat}}" 
+                                                    required = "required" autocomplete="off"  end-date = "ViewCustomer.depositPaymentDate.maxDate"
+														/>
+                                                  <div ng-model="ViewCustomer.tempPaymentDate" class="date-calendar" data-inputFieldID="#depositPaymentDate" date-format="ViewCustomer.DateFormat"  
+                                                    datepicker= "datepicker" end-date = "ViewCustomer.depositPaymentDate.maxDate">
+                                                  </div>
+                                                     <cite class="hint text-left">Cannot select the date in future</cite>
+                                                  <cite class="error" ng-class="{'server-error': ViewCustomer.datePickerErrorMessage}">{{ViewCustomer.datePickerErrorMessage}}</cite>
+                                                  <div class="action-buttons">
+                                                    <!-- do Data saving action on this click -->
+                                                    <button class="button confirm" ng-click="ViewCustomer.confirmBackDatingAction ('depositPaymentDate')">Confirm</button>
+                                                  </div>
+                                                </div>
+                                                <!-- expaded-date-picker -->
+                                            
+                                              </div>
+                             </div>
+                            
+                            
+                    	  
+                    	  
+                    	  </div>
+                    
+                    </div> 
+                
+                		<div class="flex-box-footer">
+                         <div class="flex-right" ng-if="ViewCustomer.selectPaymentMethodName != ViewCustomer.PreferredPaymentLabel">
+                            <button class="button subtle" id="closemodal" tabindex="2" type="button" ng-click="ViewCustomer.closePaymentPopup()">Cancel</button>
+                            <button class="button primary medium" tabindex="1" type="submit"  ng-disabled = "!ViewCustomer.selectPaymentMethodName || !ViewCustomer.selectedcashDrawer"  ng-click = "ViewCustomer.receivePayment()">Receive payment</button>
+                         </div>
+                         <div class="preferred-payment-btns" ng-if="ViewCustomer.selectPaymentMethodName == ViewCustomer.PreferredPaymentLabel">
+                            <button class="button subtle" id="closemodal" tabindex="2" type="button" ng-click="ViewCustomer.closePaymentPopup()">Cancel</button>
+                            <button class="bp-btn bp-btn-secondaryCTA" ng-class="{'bp-bg-opactity': !ViewCustomer.terminalList.length}" ng-click="ViewCustomer.receivePaymentWithPreferredPayment('Preferred Payments With Terminal')" ng-disabled="!ViewCustomer.selectPaymentMethodName || !ViewCustomer.selectedcashDrawer">{{ 'Card_terminal' | translate }}</button>
+                            <button class="bp-btn bp-btn-secondaryCTA" ng-click="ViewCustomer.receivePaymentWithPreferredPayment('Preferred Payments Without Card')" ng-disabled="!ViewCustomer.selectPaymentMethodName || !ViewCustomer.selectedcashDrawer">{{ 'Card_not_present' | translate }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+
+
+<div class="modal fade-scale bp-model-dialog  CreateGroupModal checkout-modal-popup AddDepositPopup AddPaymentPopup  CoinfirnPaymentPopup" id="CoinfirnPaymentPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close bp-close-but CreateGroupModalCloseIcon" ng-click="ViewCustomer.closeCoinfirmationPopup(); ViewCustomer.setDefaultValuePaymentPopup()">
+                    <span aria-hidden="true">
+                        <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body checkout-popup">
+                    <div class="userGroupInfoArea col-xs-12 P0">
+                        <div class="heading text-center">Please confirm payment details</div>
+                         <cite class="flex-alert warning">
+                                    <i class="icon"></i>
+                                    <p class="flex-alert-text">
+                                    <span class="message">This action is not reversible</span>
+                                    </p>
+                       </cite>
+                        <div class="confirmation-details">
+                        	<ul>
+                        		<li>
+                        			<label>Amount</label>
+                                    <p class="bp-red-font surcharge-msg" ng-if="ViewCustomer.appliedSurchargeDetails.IsSurchargeApplicable">{{"(includes "+ViewCustomer.appliedSurchargeDetails.SurchargePercentage+"%"+" surcharge)"}}</p>
+                        			<span ng-if="ViewCustomer.appliedSurchargeDetails.IsSurchargeApplicable">{{ViewCustomer.ARActivityListTotalWithSurcharge | currency }}</span>
+                        			<span ng-if="!ViewCustomer.appliedSurchargeDetails.IsSurchargeApplicable">{{ViewCustomer.ARActivityListTotal | currency }}</span>
+                        		</li>
+                        		<li>
+                        			<label>Payment method</label>
+                        			<span>{{ViewCustomer.selectPaymentMethodName}}</span>
+                        		</li>
+                        		<li>
+                        			<label>Customer</label>
+                        			<span>{{ViewCustomer.CustomerInfo.CustomerInfo.FirstName}} {{ViewCustomer.CustomerInfo.CustomerInfo.LastName}}</span>
+                        		</li>
+                                <li ng-if="ViewCustomer.selectPaymentMethodName != ViewCustomer.PreferredPaymentLabel">
+                        			<label>Reference &nbsp;#</label>
+                        			<span>{{ViewCustomer.ReferenceNumber}}</span>
+                        		</li>
+                                <li ng-if="ViewCustomer.selectPaymentMethodName == ViewCustomer.PreferredPaymentLabel">
+                        			<label>Terminal</label>
+                        			<span>{{ViewCustomer.selectedTerminal}}</span>
+                        		</li>
+                        		<li>
+                        			<label>Cash drawer</label>
+                        			<span>{{ViewCustomer.selectedcashDrawer}}</span>
+                        		</li>
+                        		<li>
+                        			<label>Payment date</label>
+                        			<span>{{ViewCustomer.paymentDate}}</span>
+                        		</li>
+                        	</ul>
+                        </div>
+                    </div> 
+                
+                		<div class="flex-box-footer">
+                         <div class="flex-right">
+                            <button class="button subtle" id="closemodal" tabindex="2" type="button" ng-click="ViewCustomer.openReceivePaymentModelWindow(); ViewCustomer.closeCoinfirmationPopup();">Go back</button>
+                            <button class="button primary medium" tabindex="1" type="submit"><span class="button-text" ng-click="ViewCustomer.savePaymentsOnAccount()" >Yes, confirm payment</span></button>
+                         </div>
+                      </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="modal fade CreateGroupModal CreateFeeModal  setCashDrawerModalWindow bp-cp-modal-dialog" id="ErrorCashDrawerModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                        <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <div class="heading">Error</div>
+                        <p class="error-message">There is no cash drawer assigned to this work station. Please contact your administrator.</p>
+                        <div class ="form">
+                            <button class="bp-btn bp-btn-normal" ng-click="ViewCustomer.hideErrorCashDrawer()">OKAY</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="modal fade CreateGroupModal CreateFeeModal setCashDrawerModalWindow payment-select-modal-window bp-cp-modal-dialog" id="setCashDrawerModalWindow" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">
+                        <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                    </span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <div class="heading" ng-if = "ViewCustomer.cashDrawerHeaderText">cash drawER DEACTIVATED</div>
+                        <p class="label-text" ng-if = "ViewCustomer.cashDrawerHeaderText">Your cash drawer has been de-activated.Please re-activate it or select another one</p>
+                        <div class="heading assignDevice" ng-if = "ViewCustomer.showAssignCashDrawerModalWindow || ViewCustomer.showAssignTerminalModalWindow">Assign devices</div>
+                        <div class ="form">
+                            <div class="col-xs-12 P0" ng-if="ViewCustomer.showAssignCashDrawerModalWindow">
+                                <p class="label-text" ng-if = "ViewCustomer.showAssignCashDrawerModalWindow && !ViewCustomer.cashDrawerHeaderText">Assign cash drawer</p>
+                                <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                                    <span class = "bp-autocomplete-image-icon">
+                                        <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer stroke-5 MT-3" ng-click = "ViewCustomer.setFocusOnInput('cashDrawer')">arrowDown</i>
+                                    </span>
+                                    <input  type="text" id="cashDrawer" class="bp-autocomplete-input bp-cursor-pointer 
+                                        bp-input-text " placeholder="{{'Please_select' | translate }}"
+                                        ng-class = "{'bp-redborder' : ViewCustomer.isErrorCashDrawer}"
+                                        autocomplete="off" ng-keyup="ViewCustomer.keyPressNavigationOnDropdownElements($event, 'cashDrawerDropdownDiv', 'cashDrawer', ViewCustomer.cashDrawerList)"
+                                        ng-model="ViewCustomer.cashDrawerName" ng-keydown = "ViewCustomer.isErrorCashDrawer = false;" ng-focus = "ViewCustomer.showCashDrawerList = true;"
+                                        ng-blur="ViewCustomer.showCashDrawerList = false; ViewCustomer.hideDropdown();"  
+                                        readonly="readonly" />
+                                    <span class="error-message text-left col-xs-12 P0" ng-if="ViewCustomer.isErrorCashDrawer">Please select cash drawer</span>                       
+                                    <div class = "bp-autocomplete-dropdown-wrapper" ng-if="ViewCustomer.showCashDrawerList" id="cashDrawerDropdownDiv">
+                                        <ul>
+                                            <li ng-repeat="cashDrawerRec in ViewCustomer.cashDrawerList track by $index" id="cashDrawer_{{$index}}"
+                                                ng-class="{'selected-row': $index == ViewCustomer.currentDropDownIndex}"
+                                                ng-mousedown="ViewCustomer.selectCashDrawer(cashDrawerRec)">
+                                                <div class="form-group-info col-xs-12 P0 text-left">
+                                                    <span >{{cashDrawerRec.CashDrawerName}}</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                        <ul ng-If="ViewCustomer.showCashDrawerList.length == 0">
+                                            <li id="cashDrawerNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                                <div class="text-left">{{'No_Results_Found' | translate}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 P0 terminalcard" ng-if="ViewCustomer.IsPreferredPaymentEnabled && ViewCustomer.showAssignTerminalModalWindow">
+                                <p class="label-text" ng-if = "ViewCustomer.showAssignTerminalModalWindow && !ViewCustomer.terminalHeaderText">Assign terminal</p>
+                                <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                                    <span class = "bp-autocomplete-image-icon">
+                                        <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer stroke-5 MT-3" ng-click = "ViewCustomer.setFocusOnInput('terminal')">arrowDown</i>
+                                    </span>
+                                    <input  type="text" id="terminal" class="bp-autocomplete-input bp-cursor-pointer 
+                                        bp-input-text " placeholder="{{'Please_select' | translate }}"
+                                        ng-class = "{'bp-redborder' : ViewCustomer.isErrorTerminal}"
+                                        autocomplete="off" ng-keyup="ViewCustomer.keyPressNavigationOnDropdownElements($event, 'terminalDropdownDiv', 'terminal', ViewCustomer.terminalList)"
+                                        ng-model="ViewCustomer.terminalName" ng-keydown = "ViewCustomer.isErrorTerminal = false;" ng-focus = "ViewCustomer.showTerminalList = true;"
+                                        ng-blur="ViewCustomer.showTerminalList = false; ViewCustomer.hideDropdown();"  
+                                        readonly="readonly" />
+                                    <span class="error-message text-left col-xs-12 P0" ng-if="ViewCustomer.isErrorTerminal">Please select terminal</span>                       
+                                    <div class = "bp-autocomplete-dropdown-wrapper" ng-if="ViewCustomer.showTerminalList" id="terminalDropdownDiv">
+                                        <ul>
+                                            <li ng-repeat="terminalRec in ViewCustomer.terminalList track by $index" id="terminal_{{$index}}"
+                                                ng-class="{'selected-row': $index == ViewCustomer.currentDropDownIndex}"
+                                                ng-mousedown="ViewCustomer.selectTerminal(terminalRec)">
+                                                <div class="form-group-info col-xs-12 P0 text-left">
+                                                    <span >{{terminalRec.Nickname}}</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                        <ul ng-If="ViewCustomer.terminalList.length == 0">
+                                            <li id="terminalNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                                <div class="text-left">{{'No_Results_Found' | translate}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="confirm-cash-drawer-container">
+                                <a class="cancel" data-dismiss="modal" aria-label="Close" ng-click = "ViewCustomer.cashDrawerName = ''; ViewCustomer.closeSetCashDrawerModalWindow();">Cancel</a>
+                                <button class="bp-btn bp-btn-normal" ng-click="ViewCustomer.saveDeviceInfo()">Confirm</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</apex:component>

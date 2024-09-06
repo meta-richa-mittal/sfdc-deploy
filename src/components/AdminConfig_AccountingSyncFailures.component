@@ -1,0 +1,98 @@
+<apex:component controller="GlobalController">
+    <div class="LoadingDiv" ng-show="AdminConfig.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="accounting-sync-failures">
+        <div class="settings_Header row">
+            <div class="col-lg-3 col-md-3">
+                <div class="fixedHeaderText bp-pointer-cursor" ng-click="AdminConfig.toogleSectionView('showAccountingSyncFailures');">
+                    <span class="headerlabel">
+                    <i class="fa fa-angle-down" ng-show="AdminConfig.toggleObj.showAccountingSyncFailures" ></i>
+                    <i class="fa fa-angle-right" ng-show="!AdminConfig.toggleObj.showAccountingSyncFailures" ></i>
+                    <span class="divider">|</span>
+                    <span class="T2">QB/XERO Sync Failures</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div id="accounting-sync-failures-details" ng-show="AdminConfig.toggleObj.showAccountingSyncFailures" class="accounting-sync-failures">
+            <div class="main_section row" >
+                <div class="form">
+                    <div class="row margin8">
+                        <div class="col-md-8 bp-warning-template ML22 brp-info-banner">
+                            <span class="bp-warning-icon">
+                                <i class="bp-icons bp-font-20 bp-yellow-font bp-lh-20 stroke-3">warning</i>
+                            </span>
+                            <div class="bp-warning-msg">    
+                                <span>Unless you have been trained on how to properly use this tool, DO NOT perform any of the actions here</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row margin8">
+                        <button class="btn btn-default greenBtn margin8 ML22 bp-cursor-pointer" ng-click="AdminConfig.AccountingSyncFailures.getAccountingSyncFailureDetails(true)" ng-disabled="">{{ 'Check_for_sync_failures' | translate}}</button>
+                        <a ng-href="{{AdminConfig.AccountingSyncFailures.ErrorLogsURL}}" target="_blank">
+                            <button class="btn btn-default greenBtn margin8 bp-cursor-pointer">{{ 'View_error_log' | translate}}</button>
+                        </a>
+                        <a ng-href="{{AdminConfig.AccountingSyncFailures.WebServiceLogsURL}}" target="_blank">
+                            <button class="btn btn-default greenBtn margin8 bp-cursor-pointer">{{ 'View_webservices_log' | translate}}</button>
+                        </a>
+                    </div>
+
+                    <div class="row margin8">
+                        <div class="col-md-12 MR8">
+                            <div ng-if="AdminConfig.AccountingSyncFailures.SyncFailuresList.length > 0">
+                                <div class="form table-responsive price-level-table-container">
+                                    <div class="row margin8 MB0 ">
+                                        <table class="bp-editable-table acc-sync-failure-table">
+                                            <col width="40%" />
+                                            <col width="20%" />
+                                            <col width="20%" />
+                                            <col width="20%" />
+                                            <thead>
+                                                <tr>
+                                                    <th class="H300 line-height-medium">
+                                                        Object name
+                                                    </th>
+                                                    <th class="H300 line-height-medium text-center">
+                                                        Errors
+                                                    </th>
+                                                    <th class="H300 line-height-medium">
+                                                    </th>
+                                                    <th class="H300 line-height-medium">
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr ng-repeat = "failureRec in AdminConfig.AccountingSyncFailures.SyncFailuresList | orderBy: 'EntityName'"> 
+                                                    <td>{{failureRec.EntityName}}</td>
+                                                    <td class="text-center" ng-class="{'bp-red-font': failureRec.FailureCount > 0, 'bp-bold-font': failureRec.FailureCount > 0}">{{failureRec.FailureCount}}</td>
+                                                    <td class="text-center" ng-class="{'bp-no-cursor': failureRec.FailureCount == '?' || failureRec.FailureCount == 0 || failureRec.FailureListViewURL == ''}">
+                                                        <a ng-disabled="failureRec.FailureCount == '?' || failureRec.FailureCount == 0 || failureRec.FailureListViewURL == ''" ng-href="{{failureRec.FailureListViewURL}}" target="_blank">
+                                                            <button class="btn btn-default greenBtn bp-cursor-pointer" ng-disabled="failureRec.FailureCount == '?' || failureRec.FailureCount == 0 || failureRec.FailureListViewURL == ''" 
+                                                                ng-class="{'applyDisable': (failureRec.FailureCount == '?' || failureRec.FailureCount == 0 || failureRec.FailureListViewURL == '')}">{{ 'View' | translate}}</button>
+                                                        </a>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <button class="btn btn-default greenBtn bp-cursor-pointer" ng-click="AdminConfig.AccountingSyncFailures.executeScript(failureRec.EntityName)" 
+                                                            ng-disabled="failureRec.FailureCount == '?' || failureRec.FailureCount == 0" ng-class="{'applyDisable': (failureRec.FailureCount == '?' || failureRec.FailureCount == 0)}">
+                                                            {{ 'Run_script' | translate}}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>      
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</apex:component>

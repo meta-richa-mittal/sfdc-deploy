@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>false</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>AccountingId__c</fullName>
+        <description>Not in use</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+        <label>AccountingId</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+    	<fullName>Vendor_Name__c</fullName>
+	    <externalId>false</externalId>
+	    <formula>Vendor__r.Name</formula>
+	    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+	    <label>Vendor Name</label>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>AccountingResponse__c</fullName>
+        <description>Not in use</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+        <label>AccountingResponse</label>
+        <length>131072</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Available_For_Xero_Sync__c</fullName>
+        <description>Not in use</description>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+        <label>Available For Xero Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>CreatedDate__c</fullName>
+        <externalId>false</externalId>
+        <formula>DATEVALUE( CreatedDate )</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>CreatedDate</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Credit_Memo__c</fullName>
+        <externalId>false</externalId>
+        <label>Credit Memo#</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Credits_Pending__c</fullName>
+        <description>Total pre-tax cost of all of the line items that have not been credited.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Total pre-tax cost of all of the line items that have not been credited.</inlineHelpText>
+        <label>Credits Pending</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>        
+    </fields>
+    <fields>
+        <fullName>FX_Conversion_Rate__c</fullName>
+	    <externalId>false</externalId>
+	    <label>FX Conversion Rate</label>
+	    <precision>18</precision>
+	    <required>false</required>
+	    <scale>6</scale>
+	    <trackTrending>false</trackTrending>
+	    <type>Number</type>
+	    <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Backward_Conversion_Rate__c</fullName>
+        <description>Backward Conversion Rate With Markup</description>
+        <externalId>false</externalId>
+        <formula>if((ISNULL(FX_Conversion_Rate__c) || FX_Conversion_Rate__c = 0),1,1/FX_Conversion_Rate__c)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <inlineHelpText>Backward Conversion Rate With Markup</inlineHelpText>
+        <label>Backward Conversion Rate</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>6</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Credited_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Credited Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Credits_Pending_Reporting__c</fullName>
+        <externalId>false</externalId>
+        <formula>Credits_Pending__c * -1</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Credits Pending (Reporting)</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>LastModifiedDate__c</fullName>
+        <externalId>false</externalId>
+        <formula>DATEVALUE(LastModifiedDate)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>LastModifiedDate</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Notes__c</fullName>
+        <externalId>false</externalId>
+        <label>Notes</label>
+        <length>2000</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Last Modified By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Return_VO_Headers2</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Modified Date</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>RMA__c</fullName>
+        <externalId>false</externalId>
+        <label>RMA#</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Return_Total__c</fullName>
+        <externalId>false</externalId>
+        <formula>SubTotal__c +  Tax__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Return Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Reason__c</fullName>
+        <description>Field to indicate why they are returning the parts.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Field to indicate why they are returning the parts.</inlineHelpText>
+        <label>Reason</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Returned_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Returned Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Status__c</fullName>
+        <externalId>false</externalId>
+        <label>Status</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>In Progress</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Submitted</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Approved</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Credited</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Partially Credited</fullName>
+                    <default>false</default>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>SubTotal__c</fullName>
+        <externalId>false</externalId>
+        <label>SubTotal</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>SubTotal_Reporting__c</fullName>
+        <externalId>false</externalId>
+        <formula>SubTotal__c  * -1</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>SubTotal (Reporting)</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Submitted_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Submitted By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Return_VO_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Submitted_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Submitted Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+	    <fullName>Xero_Variance_JE_Accounting_Id__c</fullName>
+        <description>Not in use</description>
+	    <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+	    <label>Xero Variance JE Accounting Id</label>
+	    <length>255</length>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+    </fields>
+    <fields>
+	    <fullName>QB_Variance_JE_Accounting_Id__c</fullName>
+        <description>Not in use</description>
+	    <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+	    <label>QB Variance JE Accounting Id</label>
+	    <length>255</length>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+    </fields>
+    <fields>
+    	<fullName>Available_For_QB_Variance_JE_Sync__c</fullName>
+        <description>Not in use</description>
+	    <defaultValue>false</defaultValue>
+	    <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+	    <label>Available For QB Variance JE Sync</label>
+	    <trackTrending>false</trackTrending>
+	    <type>Checkbox</type>
+    </fields>
+    <fields>
+	    <fullName>Accounting_Response_Variance_JE__c</fullName>
+        <description>Not in use</description>
+	    <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+	    <label>Accounting Response Variance JE</label>
+	    <length>32768</length>
+	    <trackTrending>false</trackTrending>
+	    <type>LongTextArea</type>
+	    <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+	    <fullName>Accounting_Last_Sync_Time_Variance_JE__c</fullName>
+        <description>Not in use</description>
+	    <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+	    <label>Accounting Last Sync Time Variance JE</label>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Approved_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Approved By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Return_VO_Headers1</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Approved_Date__c</fullName>
+        <description>This is the date when the status of the return was set to “Approved”.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>This is the date when the status of the return was set to “Approved”.</inlineHelpText>
+        <label>Approved Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+	    <fullName>Available_For_Xero_Variance_JE_Sync__c</fullName>
+        <description>Not in use</description>
+	    <defaultValue>false</defaultValue>
+	    <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+	    <label>Available For Xero Variance JE Sync</label>
+	    <trackTrending>false</trackTrending>
+	    <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>SyncToken__c</fullName>
+        <description>Not in use</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+        <label>SyncToken</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+	    <fullName>Sync_Token_For_Variance_JE__c</fullName>
+        <description>Not in use</description>
+	    <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+	    <label>Sync Token For Variance JE</label>
+	    <length>255</length>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Tax__c</fullName>
+        <externalId>false</externalId>
+        <label>Tax</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Tax_Reporting__c</fullName>
+        <externalId>false</externalId>
+        <formula>Tax__c  * -1</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Tax (Reporting)</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total__c</fullName>
+        <externalId>false</externalId>
+        <label>Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Tracking_Number__c</fullName>
+        <description>Indicates a tracking number.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Indicates a tracking number.</inlineHelpText>
+        <label>Tracking#</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Vendor__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Vendor</label>
+        <referenceTo>Account</referenceTo>
+        <relationshipLabel>Return VO Headers</relationshipLabel>
+        <relationshipName>Return_VO_Headers</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Xero_Accounting_Id__c</fullName>
+        <description>Not in use</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+        <label>Xero Accounting Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>accountingLastSyncTime__c</fullName>
+        <description>Not in use</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+        <label>accountingLastSyncTime</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>availForQBSync__c</fullName>
+        <description>Not in use</description>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <inlineHelpText>Not in use</inlineHelpText>
+        <label>availForQBSync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <label>Return VO Header</label>
+    <listViews>
+        <fullName>All</fullName>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <listViews>
+        <fullName>Async_QB_Return_Vendor_Orders</fullName>
+        <columns>NAME</columns>
+        <columns>Credit_Memo__c</columns>
+        <columns>RMA__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>availForQBSync__c</field>
+            <operation>equals</operation>
+            <value>1</value>
+        </filters>
+        <label>Async QB Return Vendor Orders</label>
+    </listViews>
+    <listViews>
+        <fullName>Async_Xero_Vendor_Return</fullName>
+        <columns>NAME</columns>
+        <columns>Total__c</columns>
+        <columns>LAST_UPDATE</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Available_For_Xero_Sync__c</field>
+            <operation>equals</operation>
+            <value>1</value>
+        </filters>
+        <label>Async Xero Vendor Return</label>
+    </listViews>
+    <nameField>
+        <displayFormat>RTN-{00000000}</displayFormat>
+        <label>Return VO Header Number</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Return VO Headers</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

@@ -1,0 +1,143 @@
+<apex:component controller="GlobalController">
+ 	<div>
+ 					<form ng-class = "{'MB20': M_CS.sessionLineItemsList.length == 0}">
+                        <fieldset ng-if = "M_CS.activeCountSessionTabName == 'Counted parts'">
+                             <autocompletev2 id="autocompletev2CountedSectionId"
+                             is-disabled="M_CS.countSessionDetails.Status != 'In Progress'" template-name="Entity" section-name="Part Count Section" section-id="MerchandiseSectionWrapperId"  />
+                        </fieldset>
+                        <fieldset ng-if = "M_CS.activeCountSessionTabName != 'Counted parts'"> 
+                        	<input type="text" class="bp-input-text" ng-model="M_CS.searchStr" ng-keydown="F_CS.getSearchResults($event)" placeholder="Find a part"/>
+                        </fieldset>
+                        <div class="g-search-box-ctas" ng-if = "M_CS.activeCountSessionTabName == 'Counted parts'">
+                            <a class="button tertiary small" ng-disabled="M_CS.countSessionDetails.Status != 'In Progress'" ng-click = "F_CS.openImportFileModelWindow('demoImportFileModalWindow')">Import file</a>
+                        </div>
+                          <div class="g-search-box-ctas delete-all-issues" ng-if = "M_CS.activeCountSessionTabName == 'Issues to resolve'">
+                            <a class="button tertiary small" ng-click = "F_CS.mergeAllDuplicateCountSessionLineItems()" ng-if="M_CS.sessionLineItemsListWrapper.TotalDuplicateCountIssues > 0 && M_CS.sessionLineItemsList.length > 0">Merge all duplicates</a> 
+                            <a class="button tertiary small" ng-click = "F_CS.openImportFileModelWindow('deleteAllUserCoinfirmPopup')" ng-if="M_CS.sessionLineItemsList.length > 0">Delete all issues</a>
+                        </div>
+                    </form>
+			<div class ="table-responsive">
+                <table class="bp-editable-table part-count-table count-session-table" ng-if = "M_CS.sessionLineItemsList.length > 0 && M_CS.activeCountSessionTabName != 'Issues to resolve'">
+                    <col width="15%" ng-if = "M_CS.activeCountSessionTabName != 'Adjustments'"/>
+                    <col width="10%" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'"/>
+                    <col width="10%" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'"/>
+                    <col width="15%" ng-if = "M_CS.activeCountSessionTabName == 'Counted parts'"/>
+                     <col width="25%" ng-if = "M_CS.activeCountSessionTabName == 'Uncounted parts'"/>
+                    <col width="15%" ng-if = "M_CS.activeCountSessionTabName != 'Uncounted parts'"/>
+                    <col width="25%" ng-if = "M_CS.activeCountSessionTabName == 'Uncounted parts'"/>
+                     <col width="15%" ng-if = "M_CS.activeCountSessionTabName == 'Counted parts'"/>
+                    <col width="25%" ng-if = "M_CS.activeCountSessionTabName == 'Uncounted parts'"/>
+                    <col width="10%" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'"/>
+                    <col width="10%" />
+                    <col width="10%" ng-if = "M_CS.activeCountSessionTabName != 'Uncounted parts'"/>
+                    <col width="10%" ng-if = "M_CS.activeCountSessionTabName != 'Uncounted parts'"/>
+                    <col width="10%" ng-if = "M_CS.activeCountSessionTabName == 'Counted parts'"/>
+                    <col width="10%" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'"/>
+                    <col width="15%" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'"/>
+                    <thead>
+                        <th>{{'Part #' | translate}}</th>
+                        <th>{{'Description' | translate}}</th>
+                        <th>Vendor</th>
+                         <th>Location</th>
+                        <th class = "text-right">Available</th>
+                       
+                        <th class = "text-right" ng-if = "M_CS.activeCountSessionTabName != 'Uncounted parts'">{{'Counted ' | translate}}</th>
+                        <th class="text-right" ng-if = "M_CS.activeCountSessionTabName != 'Uncounted parts'">Variance</th>
+                        <th ng-if = "M_CS.activeCountSessionTabName == 'Counted parts'"></th>
+                        <th class = "text-right" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'">Cost</th>
+                        <th class = "text-right" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'">Net adjustment</th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat = "sessionLineItemRec in M_CS.sessionLineItemsList">
+                            <td><a class="bp-blue-font H300  line-height-medium" target="_blank" ui-sref="ViewPart({Id: sessionLineItemRec.PartId})">{{::sessionLineItemRec.PartNumber}}</a></td>
+                            <td class="H300 line-height-medium"><span class="bp-set-text-ellipses">{{::sessionLineItemRec.Description}}</span></td>
+                            <td class="H300 line-height-medium"><span class="bp-set-text-ellipses">{{::sessionLineItemRec.VendorName}}</span></td>
+                            <td ng-class = "{'un-counted-pats-location' : M_CS.activeCountSessionTabName == 'Uncounted parts'}"><span class = "bp-set-text-ellipses">{{::sessionLineItemRec.Locations}}</span></td>
+                            <td class = "text-right">{{::sessionLineItemRec.QtyAvailable}}</td>
+                            <td class = "text-right" ng-if = "M_CS.activeCountSessionTabName != 'Uncounted parts'">{{::sessionLineItemRec.CountedQty}}</td>
+                            <td class="text-right H301 line-height-medium text-right" ng-class = "{'bp-red-font': sessionLineItemRec.Variance < 0 }" ng-if = "M_CS.activeCountSessionTabName != 'Uncounted parts'">
+                            	{{::sessionLineItemRec.Variance}}
+                            	</td>
+                            <td class="text-right H300 line-height-medium" ng-if = "M_CS.activeCountSessionTabName == 'Counted parts'">
+                                 <div class="flex-container items-right" ng-if = "M_CS.countSessionDetails.Status == 'In Progress'">
+                                      <a class="button icon edit" ng-click = "F_CS.EditCountSession($index);">
+                                        <i class="bp-icons bp-font-14 bp-fw-100">edit</i>
+                                      </a>
+                                      <a class="button icon delete" ng-click="F_CS.deleteCountSessionLineItem(sessionLineItemRec.Id)"><span class="button-text" aira-hidden="true">Delete</span></a>
+                                 </div>
+                            </td>
+                            <td class = "text-right" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'">{{::sessionLineItemRec.Cost | currency}}</td>
+                            <td class = "text-right" ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'">{{::sessionLineItemRec.NetAdjustment | currency}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <table class="bp-editable-table part-count-table count-session-table issue-to-resolve-table" ng-if = "M_CS.sessionLineItemsList.length > 0 && M_CS.activeCountSessionTabName == 'Issues to resolve'">
+                    <col width="15%"/>
+                    <col width="15%"/>
+                    <col width="18%"/>
+                    <col width="18%"/>
+                    <col width="7%"/>
+                    <col width="22%"/>
+                    <col width="5%"/>
+                    <thead>
+                        <th>{{'Part #' | translate}}</th>
+                        <th>{{'Description' | translate}}</th>
+                        <th>Vendor</th>
+                         <th>Location</th>
+                        <th class = "text-right">Count qty</th>
+                        <th>Issue</th>
+                        <th></th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat = "sessionLineItemRec in M_CS.sessionLineItemsList" >
+                            <td ng-click = "F_CS.openResolveModelWindow(sessionLineItemRec)">
+                            	<a ng-if = "sessionLineItemRec.Issue == 'Duplicate part' || sessionLineItemRec.Issue == 'Active count'" class="bp-blue-font H300  line-height-medium" 
+                            		target="_blank" ui-sref="ViewPart({Id: sessionLineItemRec.PartId})">{{::sessionLineItemRec.PartNumber}}</a>
+                            	<span class="bp-red-font H300" ng-if = "sessionLineItemRec.Issue != 'Duplicate part' && sessionLineItemRec.Issue != 'Active count'">
+                            		{{::sessionLineItemRec.PartNumber}}
+                            	</span>
+                            </td>
+                            <td class="line-height-medium" ng-click = "F_CS.openResolveModelWindow(sessionLineItemRec)">
+                            	<span class="bp-set-text-ellipses H300" ng-if = "sessionLineItemRec.Issue == 'Duplicate part' || sessionLineItemRec.Issue == 'Active count'">{{::sessionLineItemRec.Description}}</span>
+                            	<span class="bp-set-text-ellipses H301 line-height-large" ng-if = "sessionLineItemRec.Issue != 'Duplicate part' && sessionLineItemRec.Issue != 'Active count'">- Unknown -</span>
+                            </td>
+                            <td class="line-height-medium" ng-click = "F_CS.openResolveModelWindow(sessionLineItemRec)">
+                            	<span class="bp-set-text-ellipses H300" ng-if = "sessionLineItemRec.Issue == 'Duplicate part' || sessionLineItemRec.Issue == 'Active count'">{{::sessionLineItemRec.VendorName}}</span>
+                            	<span class="bp-set-text-ellipses bp-red-font" ng-if = "sessionLineItemRec.Issue == 'Missing vendor'">Multiple vendors found</span>
+                            	<span class="bp-set-text-ellipses H301 line-height-large" ng-if = "sessionLineItemRec.Issue == 'Invalid part'">- Unknown -</span>
+                            </td>
+                            <td ng-click = "F_CS.openResolveModelWindow(sessionLineItemRec)">
+                            	<span class = "bp-set-text-ellipses">{{::sessionLineItemRec.Locations}}</span>
+                            </td>
+                            <td class = "text-right" ng-click = "F_CS.openResolveModelWindow(sessionLineItemRec)">{{::sessionLineItemRec.CountedQty}}</td>
+                            <td ng-click = "F_CS.openResolveModelWindow(sessionLineItemRec)">
+                            	<span class = "bp-red-font" ng-if = "sessionLineItemRec.Issue == 'Duplicate part'">Duplicate count</span>
+                            	<span class = "bp-red-font" ng-if = "sessionLineItemRec.Issue == 'Invalid part'">Invalid part#</span>
+                            	<span class = "bp-red-font" ng-if = "sessionLineItemRec.Issue == 'Missing vendor'">Multiple vendors for this part #</span>
+                            	<span class = "bp-red-font" ng-if = "sessionLineItemRec.Issue == 'Active count'">Active on different count, must delete</span>
+                            </td>
+                            <td class="text-right H300 line-height-medium">
+                                 <div class="flex-container items-right" ng-if = "M_CS.countSessionDetails.Status == 'In Progress'">
+                                      <a class="button icon delete" ng-click="F_CS.deleteCountSessionLineItem(sessionLineItemRec.Id)"><span class="button-text" aira-hidden="true">Delete</span></a>
+                                 </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+           		<p class = "count-no-record-found M0_important" ng-if = "M_CS.sessionLineItemsList.length == 0">
+           			<span ng-if = "M_CS.activeCountSessionTabName == 'Counted parts'">You have no counted parts.</span>
+           			<span ng-if = "M_CS.activeCountSessionTabName == 'Uncounted parts'">You have no uncounted parts.</span>
+           			<span ng-if = "M_CS.activeCountSessionTabName == 'Issues to resolve'">You have no issues to resolve.</span>
+           			<span ng-if = "M_CS.activeCountSessionTabName == 'Adjustments'">You have no adjustments.</span>
+           		</p>
+            </div>
+			 <list-pagination id-value = "Count_Session_Pagination_" 
+                     total-records-length = "M_CS.TotalRecords"
+                     page-size = "M_CS.searchResultPageSortAttrsJSON.PageSize"
+                     current-page = "M_CS.searchResultPageSortAttrsJSON.CurrentPage"
+                     changes-count = "M_CS.searchResultPageSortAttrsJSON.ChangesCount"
+                     pagination-control-method = "F_CS.paginationControlsAction"
+                     ng-if = "M_CS.sessionLineItemsList.length > 0" />
+   </div>
+</apex:component>

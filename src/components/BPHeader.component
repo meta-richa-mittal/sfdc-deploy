@@ -1,0 +1,761 @@
+<apex:component controller="BPGlobalHeaderCtrl">
+    <apex:attribute name="Application_Images" Description="" required="true" type="String"/>
+    <apex:attribute name="Application" Description="" required="true" type="String"/>
+    <apex:attribute name="Assests" Description="" required="true" type="String"/>
+    <apex:stylesheet value="{!Application}/css/BPHeader.css"/>
+    <c:AutoCompleteSuggestion />
+    <c:AutoComplete1 />
+    <script>
+        var BPGlobalHeader = angular.module('BPGlobalHeader', ['autocomplete', 'autocomplete1','globalSearchModule']);
+            BPGlobalHeader.controller('BPGlobalHeader', function ($scope, $rootScope, $q, $state, $stateParams, CustomerActiveOrdersServiceForSta) {
+            $(function() {
+                /*
+                 * Menu Toggle Script
+                 */
+                $(document).on('click', function(e) {
+                    if (!$(e.target).parent().hasClass('drawer-menu-icon') &&
+                        !$(e.target).prev().hasClass('app-drop-menu-toggle') &&
+                        !$(e.target).hasClass('app-drop-menu-toggle') && !$(e.target).hasClass('drawer-menu') &&
+                        !$(e.target).closest('menu').hasClass('drop-menu') ) {
+                        $('.app-drop-menu-toggle').prop('checked', false);
+                    } else {
+                        var thisDropMenu = $(e.target).closest('.app-menu-toggle-icon').find('.app-drop-menu-toggle').attr('id');
+                        $('.app-drop-menu-toggle:not(#' + thisDropMenu + ')').prop('checked', false);
+                    }
+                });
+            
+                /*
+                 * hide header on
+                 * doesn't require fallback, if wheel function not support or not present 
+                 * then event won't bind, and header will remain sticky.
+                 * CSS Helper class used : hide-on-scroll
+                 */
+                if ($('.app-global-header.hide-on-scroll').length) {
+                    // Hide Header on on scroll down
+                    var didScroll;
+                    var lastScrollTop = 0;
+                    var delta = 0;
+                    var navbarHeight = $('.app-global-header.hide-on-scroll').outerHeight();
+            
+                    $(window).scroll(function(event) {
+                        didScroll = true;
+                    });
+            
+                    setInterval(function() {
+                        if (didScroll) {
+                            hasScrolled();
+                            didScroll = false;
+                        }
+                    }, 20);
+            
+                    function hasScrolled() {
+                        //st = scroll top
+                        var st = $(this).scrollTop();
+            
+                        // Make sure they scroll more than delta
+                        if (Math.abs(lastScrollTop - st) <= delta)
+                            return;
+                        // toggle hide-now class and hide drop menu if opened while scrolling.
+                        if (st > lastScrollTop && st > navbarHeight && !$('#HamburgerToggle').is(':checked')) {
+                            // Scroll Down
+                            $('.app-global-header.hide-on-scroll').addClass('hide-now');
+                            $('.app-drop-menu-toggle').prop('checked', false);
+                        } else {
+                            // Scroll Up
+                            if (st + $(window).height() < $(document).height()) {
+                                $('.app-global-header.hide-on-scroll').removeClass('hide-now');
+                            }
+                        }
+            
+                        lastScrollTop = st;
+                    }
+                }
+            });
+
+				 $('body').on('focus', '.app-search-form .search-input', function(e){
+                   // e.preventDefault();
+                    //Need to make it 768px;
+                    if(window.outerWidth > 768) {
+                        $(".globalSearchWrapperContainer").addClass('active');
+                    }
+                    $(this).closest('.search-field').addClass('active');
+                    $(this).parent().find('.search-suggestions').addClass('active');
+                     angular.element('#globalSearchStrInput').css('padding-left', 36);
+                	  setTimeout(function(){
+                     	 $('#globalSearchStrInput')[0].value = ' '
+                     },100);
+                });
+            $rootScope.GroupOnlyPermissions = $Global.Permission.GroupOnlyPermissions;
+            $scope.BPGlobalHeader = {};
+            $scope.CustomerModal = {};
+            $scope.BPGlobalHeader.IsTrialOrg = {!IsTrialOrg}; 
+            $scope.BPGlobalHeader.TrailOrgDays = $Global.TrailOrgDays;
+            $scope.BPGlobalHeader.showNotificationSidePanel = false;
+            $scope.BPGlobalHeader.pageToOpenForCreateBtn = null;
+            $scope.BPGlobalHeader.ActiveOrders = [];
+            $scope.BPGlobalHeader.communityURL = $Global.communityURL;
+            $rootScope.CompanyLocale = $Global.CompanyLocale;
+            $scope.BPGlobalHeader.isBRPEnabled = $Global.isBRPEnabled;
+            $scope.isLoadTechScheduling = $Global.IsLoadTechScheduling;
+            $scope.BPGlobalHeader.IsFusionMappingEnabled = $Global.IsFusionMappingEnabled;
+            $rootScope.IsTechnicianHoursCostingEnabled = $Global.IsTechnicianHoursCostingEnabled;
+            $scope.BPGlobalHeader.isHondaWebAPIEnabled = $Global.IsHondaAPIEnabled;
+            $scope.BPGlobalHeader.currentSelectedInvoiceIndex = -1;
+            $scope.BPGlobalHeader.BusinessName =  $Global.BusinessName;
+            $scope.BPGlobalHeader.IsShopifyActivated = $Global.IsShopifyActivated;
+            getActiveIntegrationList();
+            updateUnreadTextMessageCount();
+            $scope.BPGlobalHeader.UnitIconName = $Global.UnitIconName;
+            $scope.BPGlobalHeader.IsMESHEnabledOrg = $Global.IsMESHEnabledOrg;
+            getRefreshMinutes();
+            getAccountingPeriodClosedDate();
+            $scope.BPGlobalHeader.IsTwoWayTextEnabled = $Global.IsTwoWayTextEnabled;
+            $scope.BPGlobalHeader.openCommunityPage = function(url) {
+                window.open(url, '_blank');
+            }
+            
+            function getRefreshMinutes() {
+                CustomerActiveOrdersServiceForSta.getRefreshMinutes().then(function(Result) {
+                    if(Result){
+                        $scope.BPGlobalHeader.refreshMinutes = Result * 60 * 1000;
+                        myTimer = setInterval(function(){updateUnreadTextMessageCount()}, $scope.BPGlobalHeader.refreshMinutes); 
+                    }
+                }, function(errorMessage) {
+                    Notification.error(errorMessage);
+                });
+            }
+            function getAccountingPeriodClosedDate() {
+                CustomerActiveOrdersServiceForSta.getAccountingPeriodClosedDate().then(function(Result) {
+                    if(Result && Result.responseStatus == 'success') {
+                        $Global.accountClosedDate = Result.response;
+                    } else {
+                        console.error(Result);
+                    }
+                }, function(errorMessage) {
+                });
+            }
+           
+            function getActiveIntegrationList() {
+                CustomerActiveOrdersServiceForSta.getActiveIntegrationList().then(function(Result) {
+                    setActiveItegrations(Result);
+                }, function(errorMessage) {
+                    Notification.error(errorMessage);
+                });
+            }
+
+            function setActiveItegrations(activeIntegrationsList) {
+            	$Global.isBRPEnabled = activeIntegrationsList.includes('BRP');
+                $scope.BPGlobalHeader.isBRPOAuth2Enabled = $Global.isBRPOAuth2Enabled = activeIntegrationsList.includes('BRP OAuth2.0');
+				$Global.isXeroEnabled = activeIntegrationsList.includes('Xero');
+                $Global.IsDP360Enabled = activeIntegrationsList.includes('DP360');
+                $scope.BPGlobalHeader.isBRPEnabled = $Global.isBRPEnabled;
+				if($Global.isBRPEnabled) {
+				    getBRPVendorsList();
+				}
+            }
+            
+            function getBRPVendorsList() {
+                CustomerActiveOrdersServiceForSta.getBRPVendorsList().then(function(Result) {
+                    $Global.BRPVendorsList = Result;
+                }, function(errorMessage) {
+                    Notification.error(errorMessage);
+                });
+            }
+            
+            $scope.BPGlobalHeader.MoveToState = function(stateName, attr)  {
+                if(window.outerWidth < 768 ) {
+                    $('#HamburgerToggle').prop('checked', false);
+                } else {
+                    $('.app-drop-menu-toggle').prop('checked', false);
+                }
+                if(stateName == 'CustomerOrder_V2' && $rootScope.currentStateName == 'CustomerOrder_V2' && ($stateParams.Id || $stateParams.AppointmentId)) {
+                   $rootScope.CustomerOrder_V2Parms = {};
+                   $state.go('CustomerOrder_V2', {Id:'', AppointmentId: ''});
+                } else if(stateName == 'AddEditUnit') {
+                    var addSKU_Json = { customerMasterData : null,
+                                        customerId : null,
+                                        unitType : 'STOCK'
+                                      };
+                    loadState($state, 'AddEditUnit', {AddEditUnitParams: addSKU_Json}); 
+                } else {
+                    if (stateName == 'PayrollClocking' || stateName == 'JobClocking') {
+                        angular.element(".click-back-drop").show();
+                    }
+                    if(attr != undefined && attr != null && attr != '') {
+                       loadState($state, stateName, attr); 
+                    } else  {
+                        loadState($state, stateName);
+                    }
+                }
+            }
+            $scope.BPGlobalHeader.openIncomingTextMessage = function() {
+                loadState($state, 'IncomingTextMessage');
+            }
+            $scope.BPGlobalHeader.brandNavBarAction = function(event)   {
+                if(event.ctrlKey) {
+                    var url = $state.href('homePage');
+                    window.open(url,'_blank');
+                } else if($state.current.name === 'homePage')   {
+                    angular.element('html, body').stop().animate({
+                        scrollTop: 0
+                    }, 1);
+                } else  {
+                    $scope.BPGlobalHeader.MoveToState('homePage');
+                }
+            }
+            
+            $scope.BPGlobalHeader.createOrderAction = function(orderActionName) {
+                if(window.outerWidth > 768 ) {
+                 $('.app-drop-menu-toggle').prop('checked', false);
+                }
+                if((orderActionName === 'UO' || orderActionName === 'Vendor Invoicing' || orderActionName === 'Return Vendor Order') && ($Global.isShowQBVersionBanner)){
+                    Notification.error("Your version of Quickbooks does not support this type of transaction, please upgrade your Quickbooks");
+                    return;
+                } else{
+                    if(orderActionName === 'Vendor Order' || orderActionName === 'Vendor Receiving' || orderActionName === 'Vendor Invoicing' || orderActionName === 'Return Vendor Order' || orderActionName === 'Vendor Credit') {
+                        selectVendorAction(orderActionName);
+                    } else if(orderActionName === 'UO')  {
+                        $scope.BPGlobalHeader.MoveToState('UnitOrdering.UnitOrderingVendorList');
+                    }
+                }
+            }
+            
+            var selectVendorAction = function(type) {
+                $scope.BPGlobalHeader.type = type;
+                $scope.BPGlobalHeader.MoveToState('SelectCustomer', {myParams: {type : $scope.BPGlobalHeader.type}});
+            }
+            
+            $rootScope.$on('selectedCustomerCallback', function (event, args) {
+                if($scope.BPGlobalHeader.type == 'Vendor Order') {
+                    createVOHeader(args);
+                } else if($scope.BPGlobalHeader.type == 'Vendor Receiving') {
+                    createVOReceiving(args);
+                } else if($scope.BPGlobalHeader.type == 'Vendor Invoicing') {
+                    createVOInvoicing(args);
+                } else if($scope.BPGlobalHeader.type == 'Return Vendor Order') {
+                    createReturnVO(args);
+                } else if($scope.BPGlobalHeader.type == 'Vendor Credit') {
+                    createReturnCR(args);
+                }
+            });
+            
+            var createVOHeader = function(vendorId) {
+                CustomerActiveOrdersServiceForSta.createVendorOrder(vendorId).then(function (successfulSearchResult) {
+                    $scope.BPGlobalHeader.MoveToState('VendorOrder', {Id: successfulSearchResult});
+                },
+                function (errorSearchResult) {
+                    //Notification.error("Some error occurred, please refresh the page");
+                });
+            }
+            
+            var createVOReceiving = function(vendorId) {
+            $scope.BPGlobalHeader.vendorId = vendorId;
+	            if($scope.BPGlobalHeader.isHondaWebAPIEnabled) {
+	            	CustomerActiveOrdersServiceForSta.checkForHondaIntegrationEnabled(vendorId).then(function (successfulSearchResult) {
+						if(successfulSearchResult) {
+							$scope.BPGlobalHeader.selectedInvoiceValue = '';
+							openHondaInvoceModelWindow()
+						} else {
+                CustomerActiveOrdersServiceForSta.createVendorReceiving(vendorId).then(function (successfulSearchResult) {
+                    $scope.BPGlobalHeader.MoveToState('VendorOrderReceiving', {Id: successfulSearchResult});
+                },
+                function (errorSearchResult) {
+			                });
+		            	}
+                	},
+	                function (errorSearchResult) {
+	                });
+	            } else {
+	            	CustomerActiveOrdersServiceForSta.createVendorReceiving(vendorId).then(function (successfulSearchResult) {
+	                    $scope.BPGlobalHeader.MoveToState('VendorOrderReceiving', {Id: successfulSearchResult});
+	                },
+	                function (errorSearchResult) {
+	                });
+	            }
+            }
+            
+             $scope.BPGlobalHeader.changeSeletedInvoice = function (event) {
+	          var keyCode = event.which ? event.which : event.keyCode;
+	            if (keyCode === 40) {
+	                if (($scope.BPGlobalHeader.hondaInvoiceList.length - 1) > $scope.BPGlobalHeader.currentSelectedInvoiceIndex) {
+	                    $scope.BPGlobalHeader.currentSelectedInvoiceIndex++;
+	                    angular.element('#invoice-input-text')[0].scrollTop = angular.element('#invoice_' + $scope.BPGlobalHeader.currentSelectedInvoiceIndex)[0].offsetTop - 100;
+	                }
+	            } else if (keyCode === 38) {
+	                if ($scope.BPGlobalHeader.currentSelectedInvoiceIndex > 0) {
+	                    $scope.BPGlobalHeader.currentSelectedInvoiceIndex--;
+	                    angular.element('#invoice-input-text')[0].scrollTop = angular.element('#invoice_' + $scope.BPGlobalHeader.currentSelectedInvoiceIndex)[0].offsetTop - 100;
+	                }
+	            } else if (keyCode === 13) {
+	            	$scope.BPGlobalHeader.selectedInvoiceValue = $scope.BPGlobalHeader.hondaInvoiceList[$scope.BPGlobalHeader.currentSelectedInvoiceIndex];
+	                $scope.BPGlobalHeader.currentSelectedInvoiceIndex = -1;
+	                $scope.BPGlobalHeader.isInvoiceFocusedState = false;
+	               
+	            }
+	        } 
+	        
+	        $scope.BPGlobalHeader.hondaSelectedVRInvoice = function(invoiceRec) {
+	        		$scope.BPGlobalHeader.isLoading = true;
+	        	  CustomerActiveOrdersServiceForSta.getHondaInvoiceData($scope.BPGlobalHeader.selectedInvoiceValue).then(function (HondaInvoiceData) {
+                    CustomerActiveOrdersServiceForSta.createVendorReceiving($scope.BPGlobalHeader.vendorId).then(function (successfulSearchResult) {
+						$scope.BPGlobalHeader.isLoading = false;
+						angular.element('#HondaInvoceModel').modal('hide');
+						$scope.BPGlobalHeader.MoveToState('VendorOrderReceiving', {
+		                    Id: successfulSearchResult,
+		                    myParams: HondaInvoiceData
+		                });
+	                },
+	                function (errorSearchResult) {
+	                $scope.BPGlobalHeader.isLoading = false;
+	                });
+                    
+                },
+                function (errorSearchResult) {
+                    $scope.BPGlobalHeader.isLoading = false;
+                });
+            }
+            function updateUnreadTextMessageCount () {
+                CustomerActiveOrdersServiceForSta.getUnreadTextMessageCount().then(function (result) {
+                        $rootScope.UnreadTextMessageCount =  result;
+                    },
+	                function (errorSearchResult) {
+	                });
+            }
+            $scope.BPGlobalHeader.hideHondaInvoceModelWindow = function() {
+            	angular.element('#HondaInvoceModel').modal('hide');
+	            var previousStateName;
+	            var previousState_iDParams;
+	            if ($stateParams.myParams != undefined && $stateParams.myParams.A_View_StateName != undefined && $stateParams.myParams.A_View_StateName != '' && $stateParams.myParams.A_View_StateParams != undefined) {
+	                previousStateName = $stateParams.myParams.A_View_StateName;
+	                previousState_iDParams = $stateParams.myParams.A_View_StateParams.Id;
+	            } else {
+	                previousStateName = $rootScope.$previousState.name;
+	                previousState_iDParams = $rootScope.$previousStateParams.Id;
+	            }
+		            loadState($state, previousStateName, {
+		                Id: previousState_iDParams
+		            });
+	            }
+            
+             angular.element(document).on("click", "#HondaInvoceModel .modal-backdrop", function() {
+            	$scope.BPGlobalHeader.hideHondaInvoceModelWindow();
+        	});
+            
+            function openHondaInvoceModelWindow() {
+            	$scope.BPGlobalHeader.isLoading = true;
+            	 setTimeout(function(){
+                	angular.element('#HondaInvoceModel').modal({
+			        backdrop: 'static',
+			        keyboard: false
+                },100)
+            	 CustomerActiveOrdersServiceForSta.getHondaInvoiceList().then(function (successfulSearchResult) {
+	                    if(successfulSearchResult.length > 0) {
+	                    	$scope.BPGlobalHeader.hondaInvoiceList = successfulSearchResult;
+	                    } 
+				    });
+				    $scope.BPGlobalHeader.isLoading = false;
+	                },
+	                function (errorSearchResult) {
+	                    //Notification.error("Some error occurred, please refresh the page");
+	                    $scope.BPGlobalHeader.isLoading = false;
+	                });
+            }
+            
+            var createVOInvoicing = function(vendorId) {
+                CustomerActiveOrdersServiceForSta.createVendorInvoicing(vendorId).then(function (successfulSearchResult) {
+                    $scope.BPGlobalHeader.MoveToState('VendorOrderInvoicing', {Id: successfulSearchResult});
+                },
+                function (errorSearchResult) {
+                    //Notification.error("Some error occurred, please refresh the page");
+                });
+            }
+            
+            var createReturnVO = function(vendorId) {
+                CustomerActiveOrdersServiceForSta.createReturnVO(vendorId).then(function (successfulSearchResult) {
+                    $scope.BPGlobalHeader.MoveToState('ReturnVO', {Id: successfulSearchResult});
+                },
+                function (errorSearchResult) {
+                    //Notification.error("Some error occurred, please refresh the page");
+                });
+            }
+
+            var createReturnCR = function(vendorId) {
+                CustomerActiveOrdersServiceForSta.createReturnVendorCR(vendorId).then(function (successfulSearchResult) {
+                    $scope.BPGlobalHeader.MoveToState('ReturnVendorCredit', {Id: successfulSearchResult});
+                },
+                function (errorSearchResult) {
+                    Notification.error("Some error occurred, please refresh the page");
+                });
+            }
+            
+            $scope.BPGlobalHeader.loadSchedulerAction = function() {
+                if(window.outerWidth < 768 ) {
+                    $('#HamburgerToggle').prop('checked', false);
+                }
+                if($scope.isLoadTechScheduling) {
+                    if($rootScope.currentStateName === 'TechScheduler.JobScheduler') {
+                        $state.go('TechScheduler', {}, {reload: true});
+                    } else {
+                        $state.go('TechScheduler');
+                    }
+                } else {
+                    $state.go('JobScheduling');
+                }
+            }
+            
+            $scope.BPGlobalHeader.calculateScreenMarginTop = function(){
+                $rootScope.wrapperHeight = angular.element("#app-global-header-container-id").height();
+                if($scope.BPGlobalHeader.TrailOrgDays == 0){
+                    $rootScope.wrapperHeight -= angular.element("#BP_ExpirationDetailsAndUpgradeBtn_Wrapper_Id").height();
+                }
+                angular.element("#BP_Home_mainContainer").css("margin-top", $rootScope.wrapperHeight);
+            }
+            
+            $scope.BPGlobalHeader.calculateScreenMarginTopResponsive = function() {
+                $rootScope.wrapperHeight = angular.element("#app-global-header-container-id").height();
+                angular.element("#BP_Home_mainContainer").css("margin-top", $rootScope.wrapperHeight);
+            }
+            
+            $scope.BPGlobalHeader.calculateScreenMarginTop();
+            
+            $(window).resize(function(){
+                $scope.BPGlobalHeader.calculateScreenMarginTopResponsive();
+            });
+        });
+        
+        BPGlobalHeader.service("CustomerActiveOrdersServiceForSta", function ($q) {
+            this.getCustomerActiveOrders = function (customerId) {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.getActiveCustomerOrdersById}', customerId);
+            },
+            this.createVendorOrder = function (vendorId) {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.createNewVendorOrder}', vendorId);
+            },
+            
+            this.createVendorReceiving = function (vendorId) {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.createNewVendorReceiving}', vendorId);
+            },
+            
+            this.createVendorInvoicing = function (vendorId) {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.createNewVendorInvoicing}', vendorId);
+            },
+            this.getHondaInvoiceList = function () {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.getHondaInvoiceList}');
+            },
+             this.checkForHondaIntegrationEnabled = function (vendorId) {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.checkForHondaIntegrationEnabled}', vendorId);
+            },
+            this.getHondaInvoiceData = function (invoiceNumber) {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.getHondaInvoiceData}', invoiceNumber);
+            },
+            this.getUnreadTextMessageCount = function () {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.getUnreadTextMessageCount}');
+            },
+            this.getRefreshMinutes = function () {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.getRefreshMinutes}');
+            },
+            this.getAccountingPeriodClosedDate = function() {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.getAccountingPeriodClosedDate}');
+            },
+            this.getActiveIntegrationList = function() {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.getActiveIntegrationList}');
+            },
+            this.getBRPVendorsList = function() {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.getBRPVendorsList}');
+            },
+            this.createReturnVendorCR = function(vendorId) {
+                return RemoteActionService($q, '{!$RemoteAction.BPGlobalHeaderCtrl.createNewReturnVendorCR}', vendorId);
+            }
+            
+            
+            
+            
+            this.createReturnVO = function (vendorId) {
+                vendorId = encodeString(vendorId);
+                var deferred = $q.defer();
+                // make AJAX request to the remote service
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.BPGlobalHeaderCtrl.createNewReturnVO}',vendorId,
+                    function (result, event) {
+                        if (event.type == 'exception') {
+                            deferred.reject(event.message);
+                        } else {
+                            var vendorReceivingHeaderId = decodeString(result);
+                            deferred.resolve(vendorReceivingHeaderId);
+                        }
+                    }, {
+                        escape : true
+                });
+                return deferred.promise;
+            }
+        });
+    </script>
+    <header class="app-global-header sticky" ng-controller="BPGlobalHeader" id="app-global-header-container-id">
+        <div class="app-main-logo">
+            <a tabindex="1" class="main-logo" ng-click="BPGlobalHeader.brandNavBarAction($event)">
+               <i class="bp-icons bp-font-32 bp-blue-font bp-lh-33" title="Home">blackpurl</i>
+            </a>
+            <h1>Go to home</h1>
+        </div>
+        <input type="checkbox" id="HamburgerToggle"/>
+        <label class="hamburger-icon" for="HamburgerToggle">
+            <span class="text">MENU</span>
+            <span class="bun-top"></span>
+            <span class="ham"></span>
+            <span class="bun-bottom"></span>
+        </label>
+        <div class="nav-container">
+            <nav class="app-main-nav">
+                <ul class="menu">
+                    <li class = "sell">
+                        <a id="sell" tabindex="1" ng-click = "BPGlobalHeader.MoveToState('CustomerOrder_V2')">Sell</a>
+                    </li>
+                    <li class="app-menu-toggle-icon Order">
+                        <input class="app-drop-menu-toggle" type="checkbox" id="OrderSubMenu"/>
+                        <label tabindex="1" for="OrderSubMenu" class="OrderSubMenu">Order</label>
+                        <menu class="drop-menu icon-grid">
+                            <a tabindex="2" ng-click="BPGlobalHeader.createOrderAction('Vendor Order')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Vendor order']['create/modify']}">
+                                <i class="bp-icons bp-font-35 bp-blue-font bp-lh-35 stroke-3">partOrder</i>
+                            <span>VO - Parts &amp; Sublet</span>
+                            </a>
+                            <a tabindex="2" ng-click="BPGlobalHeader.createOrderAction('Vendor Receiving')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Vendor receiving']['create/modify']}">
+                                <i class="bp-icons bp-font-35 bp-blue-font bp-lh-35 stroke-3">partReceive</i>
+                                <span>VR - Receiving</span>
+                            </a>
+                            <a tabindex="2" ng-click="BPGlobalHeader.createOrderAction('Vendor Invoicing')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Vendor invoicing']['create/modify']}">
+                                <i class="bp-icons bp-font-35 bp-blue-font bp-lh-35 stroke-3">partInvoice</i>
+                                <span>VI - Invoice reconcile</span>
+                            </a>
+                            <a tabindex="2" ng-click="BPGlobalHeader.createOrderAction('Return Vendor Order')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Vendor order']['create/modify']}">
+                                <i class="bp-icons bp-font-35 bp-blue-font bp-lh-35 stroke-3">partReturn</i>
+                                <span>RTN - Part returns</span>
+                            </a>
+                            <a tabindex="2" ng-click="BPGlobalHeader.createOrderAction('Vendor Credit')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Vendor order']['create/modify']}">
+                                <i class="bp-icons bp-font-35 bp-blue-font bp-lh-35 stroke-3">partInvoice</i>
+                                <span>RTNCR - Return credits</span>
+                            </a>
+                            <a tabindex="2" ng-click="BPGlobalHeader.createOrderAction('UO')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Unit ordering']['view']}">
+                                <i class="bp-icons bp-font-35 bp-blue-font bp-lh-35 stroke-3 unit-icon">{{BPGlobalHeader.UnitIconName}}</i>
+                            <span>UNT - Unit ordering</span>
+                            </a>
+                        </menu>
+                    </li>
+                    <li class="Schedule">
+                        <a ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Service scheduler']['read only']}" tabindex="1" ng-click = "BPGlobalHeader.loadSchedulerAction()">Schedule</a>
+                    </li>
+
+                  <li class="app-menu-toggle-icon Order reporting-icon-drop-down">
+                        <input class="app-drop-menu-toggle" type="checkbox" id="ReportingSubMenu"/>
+                        <label tabindex="1" for="ReportingSubMenu" class="OrderSubMenu">Reporting</label>
+                        <menu class="drop-menu icon-grid small-icon-grid">
+                            <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('HomeSearch')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Reports']['enabled']}">
+                                <i class="bp-icons bp-font-35 bp-blue-font bp-lh-35 stroke-3">report</i>
+                            <span>Reports</span>
+                            </a>
+                            <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('WorkshopDashboard')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Workshop dashboard']['enabled']}">
+                                <i class="bp-icons bp-font-35 bp-blue-font bp-lh-35 stroke-3">dashboard</i>
+                            <span>Workshop dashboard</span>
+                            </a>
+                        </menu>
+                    </li>
+                </ul>
+            </nav>
+            <nav class="app-secondary-nav app-menu-toggle-icon has-icon">
+                
+                <input class="app-drop-menu-toggle" type="checkbox" id="AppDrawer"/>
+                <label for="AppDrawer" tabindex="1" class="drawer-menu-icon tool-tip">
+                    <i class="bp-icons bp-white-font bp-fw-100 MT1" title="app drawer">grid</i>
+                   <span>Other tools</span></label>
+                <ul class="sec-menu">
+					<li><a tabindex="1" ng-click="BPGlobalHeader.MoveToState('PayrollClocking')">Payroll clocking</a></li>
+					<li><a tabindex="1" ng-click="BPGlobalHeader.MoveToState('JobClocking')">Job clocking</a></li>
+                    <li><a tabindex="1" ng-click="BPGlobalHeader.MoveToState('CashReconciliation')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Cash reconciliation'].submit}">Cash reconciliation</a></li>
+                </ul>
+                <menu class="drop-menu drawer-menu icon-grid">
+                <h3>Other tools</h3>
+                <!-- duplicated links from sec-menu -->
+				<a class="on-sec-menu" tabindex="2" ng-click="BPGlobalHeader.MoveToState('PayrollClocking')">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">payrollClockingV2</i>
+                    <span>Payroll clocking</span>
+                </a>
+				<a class="on-sec-menu" tabindex="2" ng-click="BPGlobalHeader.MoveToState('JobClocking')">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">jobClocking</i>
+                    <span>Job clocking</span>
+                </a>
+                <a class="on-sec-menu" tabindex="2" ng-click="BPGlobalHeader.MoveToState('CashReconciliation')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Cash reconciliation'].submit}">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">cashReconciliation</i>
+                    <span>Cash reconciliation</span>
+                </a>
+                <!-- duplicated links from sec-menu ends here -->
+                 <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('PartCount')" class="part-count" ng-class = "{'disabld-nav-bar-action': !GroupOnlyPermissions['Part inventory count']['enabled']}">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3 auto-mated-img">partCount</i>
+                    <span>Part counting</span>
+                </a>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('UserSetting', {Id: 'Import_And_Export'})"  ng-if="GroupOnlyPermissions['Accounting settings export'].enabled">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">exportImport</i>
+                    <span>Import &amp; export</span>
+                </a>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('PriceFileImport')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Price file import'].enabled}">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">fileImportV2</i>
+                    <span>Price file import</span>
+                </a>
+                 <a class = "part-count" tabindex="2" ng-click="BPGlobalHeader.MoveToState('AutomatedPriceFiles')" ng-if = "GroupOnlyPermissions['Price file import'].enabled">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3 auto-mated-img">priceFile</i>
+                    <span>{{'Processed_price_files' | translate}}</span>
+                </a>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('TaxActivityAndSettings')" ng-if = "GroupOnlyPermissions['Tax management'].enabled">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">salesTax</i>
+                    <span>Tax activity &amp; settings</span>
+                </a>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('FusionBenchmarking')" ng-if = "BPGlobalHeader.IsFusionMappingEnabled">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">fusionBench</i>
+                    <span>Fusion benchmarking</span>
+                </a>
+                <a tabindex="2" ng-if="BPGlobalHeader.isBRPEnabled" ng-click="BPGlobalHeader.MoveToState('DealerLookup')">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">brpSearch</i>
+                    <span>BRP lookup</span>
+                </a>
+                <a tabindex="2" ng-if="BPGlobalHeader.isBRPEnabled && BPGlobalHeader.isBRPOAuth2Enabled" ng-click="BPGlobalHeader.MoveToState('BRPPartOrderStatus')">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">brpSearch</i>
+                    <span>PO status</span>
+                </a>
+                <a tabindex="2" ng-if = "BPGlobalHeader.IsShopifyActivated && GroupOnlyPermissions['Manage website products'].enabled" ng-click="BPGlobalHeader.MoveToState('WebsiteProductManagement')">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">websiteManagement</i>
+                    <span>Website product management</span>
+                </a>
+                <a tabindex="2" ng-if = "false && BPGlobalHeader.IsMESHEnabledOrg  && GroupOnlyPermissions['Quick transfers'].enabled" ng-click="BPGlobalHeader.MoveToState('QuickTransfer')">
+                    <i ng-include="'{!Application_Images}/img/icons/quick-transfer.svg'"></i>
+                    <span>Quick transfer</span>
+                </a>
+                <a tabindex="2" ng-if = "BPGlobalHeader.IsMESHEnabledOrg  && GroupOnlyPermissions['Quick transfers'].enabled" ng-click="BPGlobalHeader.MoveToState('MeshUnitLookup')">
+                    <i ng-include="'{!Application_Images}/img/icons/quick-transfer.svg'"></i>
+                    <span>Inter-store units</span>
+                </a>
+                </menu>
+            </nav>
+            <nav class="app-add-menu app-menu-toggle-icon has-icon">
+                <input class="app-drop-menu-toggle " type="checkbox" id="AppAddMenu"/>
+                <label tabindex="1" for="AppAddMenu" class="tool-tip">
+                    <i class="bp-icons bp-white-font bp-fw-100 MT1" title="Add New">addSquareFilled</i>
+                    <span>Add new</span></label>
+                <menu class="drop-menu add-menu-items icon-grid">
+                <h3>Add New</h3>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('AddEditCustomerV2')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Customers'].enabled}">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-33 stroke-3">customerV2</i>
+                    <span>Customer</span>
+                </a>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('AddEditVendor')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Vendors'].enabled}">
+                    <i class="bp-icons bp-font-33 bp-purple-font bp-lh-33 stroke-3">vendorV2</i>
+                    <span>Vendor</span>
+                </a>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('AddEditPart')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Parts'].enabled}">
+                    <i class="bp-icons bp-font-33 bp-orange-font bp-lh-33 stroke-3">partOrder</i>
+                    <span>Part</span>
+                </a>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('AddEditLabour')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Labor'].enabled}">
+                    <i class="bp-icons bp-font-33 bp-yellow-font bp-lh-33 stroke-3">laborV2</i>
+                    <span>Labor code</span>
+                </a>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('AddEditKit')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Kits'].enabled}">
+                    <i class="bp-icons bp-font-33 bp-cyan-font bp-lh-33 stroke-3">kit</i>
+                    <span>Kit</span>
+                </a>
+                <a tabindex="2" ng-click="BPGlobalHeader.MoveToState('AddEditFee')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Fees'].enabled}">
+                    <i class="bp-icons bp-font-33 bp-blue-font bp-lh-40 stroke-3">fee</i>
+                    <span>Fee</span>
+                </a>
+                <a tabindex="2" ng-click = "BPGlobalHeader.MoveToState('AddEditUnit')" ng-class="{'disabld-nav-bar-action': !GroupOnlyPermissions['Stock units'].enabled}">
+                    <i class="bp-icons bp-font-35 bp-blue-font bp-lh-35 stroke-3 unit-icon">{{BPGlobalHeader.UnitIconName}}</i>
+                    <span>Stock unit</span>
+                </a>
+                </menu>
+            </nav>
+            
+            <div >
+                <c:NewGlobalSearch rendered="{!isNewGlobalSearchEnabled}"></c:NewGlobalSearch>
+            </div>
+            <form class="app-search-form" ng-if="{!!isNewGlobalSearchEnabled}">
+                <fieldset class="search-field">
+                    <c:GlobalSearch_V2 Application_Images="{!Application_Images}" rendered="{!!isNewGlobalSearchEnabled}"/>
+                </fieldset>
+            </form>
+            
+            <nav class="app-setting-nav">
+                <ul class="icon-menu">
+                    <li>
+                       <a ng-click="BPGlobalHeader.openCommunityPage(BPGlobalHeader.communityURL)" tabindex="1" class="tool-tip">
+                            <i class="bp-icons bp-white-font" title="Knowledge base">help</i>    
+                            <span>Knowledge base</span>
+                        </a>
+                    </li>
+                    <li class="app-menu-toggle-icon has-icon show-arrow">
+                        <input class="app-drop-menu-toggle" type="checkbox" id="AppSettingMenu"/>
+                        <label tabindex="1" for="AppSettingMenu" class="tool-tip right-zero business-name-tooltip">
+                        <cite class="message-notification" ng-if = "BPGlobalHeader.IsTwoWayTextEnabled  && UnreadTextMessageCount > 0 && GroupOnlyPermissions['View incoming text messages'].enabled"></cite>
+                            <i class="bp-icons bp-white-font bp-fw-100">settingFilled</i>   
+                            <span><p class = "M0">{{BPGlobalHeader.BusinessName}}</p><p class="M0">Account &amp; settings</p></span>
+                        </label>
+                        <menu class="drop-menu app-setting-menu list-grid">
+                            <header class="user-info">
+                            	<h4 class="user-name bp-set-text-ellipses">{{BPGlobalHeader.BusinessName}}</h4>
+                                <h4 class="user-name">{!JSENCODE($User.FirstName)} {!JSENCODE($User.LastName)}</h4>
+                            </header>
+                            <a href="#" ng-hide="true"><span>My profile</span></a>
+                            <a ng-click="BPGlobalHeader.MoveToState('UserSetting', {Id: 'Home'})" ng-class = "{'disabld-nav-bar-action': !GroupOnlyPermissions['System Settings'].enabled}"><span>System settings</span></a>
+                            <a ng-if = "BPGlobalHeader.IsTwoWayTextEnabled && GroupOnlyPermissions['View incoming text messages'].enabled" ng-click = "BPGlobalHeader.openIncomingTextMessage()"><span>Messages <cite class="message-count" ng-if = "UnreadTextMessageCount > 0">{{UnreadTextMessageCount}}</cite></span></a>
+                            <a ng-href="/secur/logout.jsp" class="log-out"><span>Logout</span></a>
+                        </menu>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div id="HondaInvoceModel" class="modal fade-scale bp-model-dialog honda-invoce-model SendSMSModal" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content col-xs-12 P0">
+            <div class="modal-header">
+            <button type="button" class="close" ng-click = "BPGlobalHeader.hideHondaInvoceModelWindow()">
+                <span aria-hidden="true">
+                    <i class="bp-icons bp-font-12 bp-white-font bp-fw-100">close</i>
+                </span>
+            </button>
+            </div>
+                <div class="modal-body">
+                 	<div class="userGroupInfoArea">
+	                 	<h1 class="heading-info H600">select an invoice from honda</h1>
+	                 	<div class = "send-order-drop-down">
+                        <div class="bp-cell bp-customerdropdown price-level-drop-down-value bp-unitSearch-area customerDropDown searchInputArea selectableDropdown" ng-class="{'showingOverlay' : BPGlobalHeader.isInvoiceFocusedState}">
+                           <input type="text" id="invoice-input-text" class="searchInput bp-new-input" 
+                           ng-keyup="BPGlobalHeader.changeSeletedInvoice($event)"
+                           placeholder="{{ 'Please_select' | translate }}" name="Price Level" ng-focus="BPGlobalHeader.isInvoiceFocusedState = true" ng-blur="BPGlobalHeader.isInvoiceFocusedState = false;" ng-model="BPGlobalHeader.selectedInvoiceValue" />
+                           <i class="bp-icons bp-font-14 bp-blue-font bp-cursor-pointer downArrow stroke-3 MT-3" ng-click="BPGlobalHeader.isInvoiceFocusedState = true">arrowDown</i>
+                           <div class="searchResultOverlay" id="autocompleteScrollDiv">
+                               <ul>
+                                   <li ng-repeat="hondaRec in BPGlobalHeader.hondaInvoiceList | filter : BPGlobalHeader.selectedInvoiceValue"
+                                   ng-class="{'selected-row': $index == BPGlobalHeader.currentSelectedInvoiceIndex}" id="invoice_{{$index}}"
+                                    ng-mousedown="BPGlobalHeader.selectedInvoiceValue = hondaRec">
+                                        <div class="fullName">{{hondaRec}}</div>
+                                    </li>
+                               </ul>
+                           </div>
+                       </div>
+                    </div>
+		                 <div class="text-center formBtn">
+		                   <button id="text-now-btn" class="bp-btn text-uppercase bp-btn-normal" ng-disabled = "!BPGlobalHeader.selectedInvoiceValue" ng-click = "BPGlobalHeader.hondaSelectedVRInvoice()">
+		                       import the invoice
+		                   </button>  
+		                 </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="LoadingDiv" ng-show="BPGlobalHeader.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    </header>
+	<div class = "click-back-drop"></div>
+	
+	
+</apex:component>

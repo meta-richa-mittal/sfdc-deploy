@@ -1,0 +1,29 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="ViewVendorCtrl" sidebar="false" applyHtmlTag="false" applyBodyTag="false" 
+    contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('VendorInfoService', ['$q', function ($q) {
+            return {
+            	getVendorInfo: function(vendorId){
+	                return RemoteActionService($q, '{!$RemoteAction.ViewVendorCtrl.getVendorInfo}', vendorId);
+	            },
+                getBPExportFormatList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.ViewVendorCtrl.getBPExportFormatList}');
+                },
+                saveDefaultVOExportFormat: function(vendorId, exportId) {
+                    return RemoteActionService($q, '{!$RemoteAction.ViewVendorCtrl.saveDefaultVOExportFormat}', vendorId, exportId);
+                },
+                getCustomVOExportByVendorId: function(vendorId) {
+                    return RemoteActionService($q, '{!$RemoteAction.ViewVendorCtrl.getCustomVOExportByVendorId}', vendorId);
+                },
+                getBPColumnNameList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.ViewVendorCtrl.getBPColumnNameList}');
+                },
+                saveCustomVOExport: function(customVOExportJSON) {
+                    return RemoteActionService($q, '{!$RemoteAction.ViewVendorCtrl.saveCustomVOExport}', customVOExportJSON);
+                }
+            };
+        }]);  
+        return Routing_AppJs_PK;
+    }); 
+</apex:page>

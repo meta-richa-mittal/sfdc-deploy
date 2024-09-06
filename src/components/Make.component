@@ -1,0 +1,21 @@
+<apex:component controller="GlobalController">
+    <h1>{{::M_UnitPricing.UnAssignedModelList.MakeName}} models:</h1>
+    <span class="c-heading-text">Assign factory options by first selecting a model.</span>
+    <div class="bp-boxes bp-branding-location-main-container">
+        <div class="row">
+            <div class="col-xs-6 col-sm-4 branding-location-detail  make-details" ng-click = "F_UnitPricing.selectedModelRec(activeModelRec)" ng-repeat = "activeModelRec in M_UnitPricing.UnAssignedModelList.ActiveModelList">
+                <div class="bp-box branding-location-box">
+                    <div class="icon-area unitOrderVendorInfo">
+                        <span  class="icon"> 
+                            <i class="bp-icons bp-font-26 bp-white-font stroke-3">{{M_UnitPricing.UnitIconName}}</i>
+                        </span>
+                    </div>	 
+                    <div class="info-area">
+                     <div class="name">{{::activeModelRec.ModelName}}</div>
+                     <div class="no-of-active-count">{{::activeModelRec.ActiveSubModelsCount}} sub-model<span ng-if = "activeModelRec.ActiveSubModelsCount>1">s</span></div>
+                 </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</apex:component>

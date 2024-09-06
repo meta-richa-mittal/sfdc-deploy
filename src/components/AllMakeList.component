@@ -1,0 +1,32 @@
+<apex:component controller="GlobalController">
+    <h1>Select a make which you want to assign default pricing and options</h1>
+    <div class="bp-boxes bp-branding-location-main-container">
+        <div class="row">
+            <div class="col-xs-6 col-sm-4 col-md-3 branding-location-detail" ng-click = "F_UnitPricing.selectMakeRec(activeMakeRec)" ng-repeat = "activeMakeRec in M_UnitPricing.ActiveMakeList">
+                <div class="bp-box branding-location-box">
+                    <div class="icon-area unitOrderVendorInfo">
+                        <span  class="icon">
+                            <i class="bp-icons bp-font-26 bp-white-font stroke-3">{{M_UnitPricing.UnitIconName}}</i>
+                        </span>
+                    </div>	 
+                    <div class="info-area">
+                     <div class="name">{{::activeMakeRec.MakeName}}</div>
+                     <div class="no-of-active-count">{{::activeMakeRec.ActiveModelsCount}} model<span ng-if = "activeMakeRec.ActiveModelsCount>1">s</span></div>
+                 </div>
+                </div>
+            </div>
+            <div class="col-xs-6 col-sm-4 col-md-3 add-new-box-container" ng-click = "F_UnitPricing.openMakeListModelWindow()" >
+                <div class="add-new-box-border">
+                    <div class="bp-box add-new-box">
+                     <div class="icon-area">
+                         <span class="icon"><i class="bp-icons bp-font-63 bp-grey-font bp-lh-64">addCircle</i></span>
+                     </div>                                     
+                     <div class="info-area">
+                         <div class="name">Select a make</div>
+                     </div>                                     
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</apex:component>
