@@ -68,7 +68,7 @@ jobs:
             path: "logfile.txt"
         - name: Search for smallest error
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status != 'success' }}
-          uses: meta-richa-mittal/get-deploy-error@v1.11
+          uses: meta-richa-mittal/get-deploy-error@v1.12
           id: search_error
           with:
             string: ${{ steps.read_file.outputs.contents }}
