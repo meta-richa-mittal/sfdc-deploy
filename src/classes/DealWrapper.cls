@@ -14,7 +14,7 @@ public class DealWrapper {
     public List<UserSettingCtrl.UserWrapper> UserList;
     public List<DealUnresolvedFulfillmentWrapper> DealUnresolvedFulfillmentList;
     public List<CODeposit> DealDepositList;
-	public DealFinanceWrapper DealFinanceObj;
+    public DealFinanceWrapper DealFinanceObj;
     public SO_KLI_Recalculation.Errorhandler error;
     
     // Constructor
@@ -25,33 +25,29 @@ public class DealWrapper {
         }
         
         this.DealFulfillmentSectionObj = new DealFulfillmentSectionWrapper(coliList, cokhList, specialOrderList);
-        this.error = (COService.error != null) ? COService.error : new SO_KLI_Recalculation.Errorhandler('200', 'Success');
+        this.error = (CustomerOrderCtrl.error != null) ? CustomerOrderCtrl.error : new SO_KLI_Recalculation.Errorhandler('200', 'Success');
     }
     
     public DealWrapper(Deal_Finance__c dealFinanceRec) {
         this.DealFinanceObj = new DealFinanceWrapper(dealFinanceRec);
     } 
-	
-	public DealWrapper(Deal__c dealRec, List<Deal_Item__c> dealItems, Map<Id, List<Deal_Kit_Header__c>> dealItemIdToDKHListMap) {
-		this.DealInfo = new DealInfoWrapper(dealRec);
-		this.UnitList = new List<UnitSectionWrapper>();
-		for(Deal_Item__c dealItemRec : dealItems) {
+    
+    public DealWrapper(Deal__c dealRec, List<Deal_Item__c> dealItems, Map<Id, List<Deal_Kit_Header__c>> dealItemIdToDKHListMap) {
+        this.DealInfo = new DealInfoWrapper(dealRec);
+        this.UnitList = new List<UnitSectionWrapper>();
+        for(Deal_Item__c dealItemRec : dealItems) {
             if(dealItemRec.Type__c != Constants.DEAL_ITEM_TYPE_TRADE_IN) {
                 if(!dealItemIdToDKHListMap.containsKey(dealItemRec.Id)) {
                     dealItemIdToDKHListMap.put(dealItemRec.Id, new List<Deal_Kit_Header__c>());
                 }
-                UnitSectionWrapper unitSectionObj = new UnitSectionWrapper(dealItemRec, dealItemIdToDKHListMap.get(dealItemRec.Id));
-                if((dealItemRec.Unit_Status__c == 'Temporary' || dealItemRec.Unit_Status__c == 'Required') && dealItemRec.Customer_Owned_Unit__c != null) {
-                    unitSectionObj.DealItemObj.UnitOptionalFields = UnitProductTypeService.getUnitOptionalFieldsData(dealItemRec.Customer_Owned_Unit__r.Product_Type__c, dealItemRec.Customer_Owned_Unit__c);
-                }
-                this.UnitList.add(unitSectionObj);
+                this.UnitList.add(new UnitSectionWrapper(dealItemRec, dealItemIdToDKHListMap.get(dealItemRec.Id)));
             }
-		}
-	}
-	
+        }
+    }
+    
     public DealWrapper(Deal__c dealRec, List<Deal_Item__c> dealItems, List<CO_Line_Item__c> coliList, List<CO_Kit_Header__c> cokhList, 
-    					List<Vendor_Order_Line_Item__c> specialOrderList, List<User> usersList, List<Deal_Unresolved_Fulfillment__c> dealUnresolvedFulfillmentRecList, 
-    					Deal_Finance__c dealFinanceRec,  Map<Id, List<Deal_Kit_Header__c>> dealItemIdToDKHListMap) {
+                        List<Vendor_Order_Line_Item__c> specialOrderList, List<User> usersList, List<Deal_Unresolved_Fulfillment__c> dealUnresolvedFulfillmentRecList, 
+                        Deal_Finance__c dealFinanceRec,  Map<Id, List<Deal_Kit_Header__c>> dealItemIdToDKHListMap) {
         this.DealInfo = new DealInfoWrapper(dealRec);
         this.UnitList = new List<UnitSectionWrapper>();
         this.TradeInsList = new List<DealItem>();
@@ -67,11 +63,7 @@ public class DealWrapper {
                 if(!dealItemIdToDKHListMap.containsKey(dealItemRec.Id)) {
                     dealItemIdToDKHListMap.put(dealItemRec.Id, new List<Deal_Kit_Header__c>());
                 }
-                UnitSectionWrapper unitSectionObj = new UnitSectionWrapper(dealItemRec, dealItemIdToDKHListMap.get(dealItemRec.Id));
-                if((dealItemRec.Unit_Status__c == 'Temporary' || dealItemRec.Unit_Status__c == 'Required') && dealItemRec.Customer_Owned_Unit__c != null) {
-                    unitSectionObj.DealItemObj.UnitOptionalFields = UnitProductTypeService.getUnitOptionalFieldsData(dealItemRec.Customer_Owned_Unit__r.Product_Type__c, dealItemRec.Customer_Owned_Unit__c);
-                }
-                this.UnitList.add(unitSectionObj);
+                this.UnitList.add(new UnitSectionWrapper(dealItemRec, dealItemIdToDKHListMap.get(dealItemRec.Id)));
                 for(Deal_Unit_Price_Cost__c dealUnitPriceRec : dealItemRec.Deal_Unit_Prices_Costs__r){
                     dealUnitPriceList.add(dealUnitPriceRec);
                 }
@@ -137,11 +129,10 @@ public class DealWrapper {
         public String AssignedTo{get; set;}
         public String UnitStatus{get; set;}
         public Decimal DealCommission{get; set;}
+        public String SalespersonId{get; set;}
         public String Salesperson{get; set;}
         public String InvoiceId{get; set;}
         public String InvoiceNumber{get; set;}
-        public String InsuranceProvider;
-        public String InsurancePolicy;
         
         public Decimal UnitsTotal{get; set;}
         public Decimal PartsAndLabourTotals{get; set;}
@@ -163,17 +154,10 @@ public class DealWrapper {
         public Boolean IsInvoiceItemActive {get; set;}
         public Decimal PreTaxTotal;
         public Boolean isDealSectionTradeOnly; 
-	    public String InvoiceDate;
+        public String InvoiceDate;
         public List<String> NotesForCustomer;
-        public String CoBuyerId{get; set;}
-        public String CoBuyerName{get; set;}        
-        public String CoBuyerDOB{get; set;}
-        public String CoBuyerDriverLicence{get; set;} 
-        public String CoBuyerFirstName{get; set;}
-        public String CoBuyerLastName{get; set;}
-        public Boolean IsTaxBasedOnCustomerAddress{get; set;}
-	    
-	    public DealInfoWrapper(Deal__c dealInfoRec, Boolean isNewCO) {
+         
+        public DealInfoWrapper(Deal__c dealInfoRec, Boolean isNewCO) {
             setDealBasicFields(dealInfoRec);
         }
 
@@ -188,7 +172,6 @@ public class DealWrapper {
             if(dealInfoRec.Delivery_Date__c != null){
                 this.DeliveryDate =  BPUtility.getFormatedDateTime(datetime.newInstance(dealInfoRec.Delivery_Date__c.year(), dealInfoRec.Delivery_Date__c.month(),dealInfoRec.Delivery_Date__c.day()));
             }
-            this.IsTaxBasedOnCustomerAddress = dealInfoRec.Is_Tax_Based_On_Customer_Address__c;
             this.DownPayment = (dealInfoRec.Down_Payment__c != null) ? dealInfoRec.Down_Payment__c : 0;
             this.DealCommission = (dealInfoRec.Deal_Commission__c != null) ? dealInfoRec.Deal_Commission__c : 0;
             
@@ -214,46 +197,35 @@ public class DealWrapper {
             this.UninvoicedAmount = (dealInfoRec.CO_Header__r.Uninvoiced_Amount__c != null) ? dealInfoRec.CO_Header__r.Uninvoiced_Amount__c : 0;
             this.DP360LeadId = dealInfoRec.DP360_Lead_Id__c;
             this.DP360LeadURL = dealInfoRec.DP360_Lead_URL__c;
-            this.Salesperson =  dealInfoRec.Salesperson_Name__c;
+            this.SalespersonId = dealInfoRec.Salesperson__c;
+            this.Salesperson =  (dealInfoRec.Salesperson_Name__c != null) ? dealInfoRec.Salesperson_Name__c : UserInfo.getName();
             this.InvoiceNumber = dealInfoRec.Invoice_Number__r.Invoice_Number__c;
             this.InvoiceId = dealInfoRec.Invoice_Number__c;
             this.IsInvoiceItemActive = dealInfoRec.CO_Invoice_Items__r.size() > 0 ? dealInfoRec.CO_Invoice_Items__r[0].Is_Invoiceable__c && dealInfoRec.CO_Invoice_Items__r[0].isActive__c : false;
-	    	this.InsuranceProvider = dealInfoRec.Insurance_Provider__c;
-            this.InsurancePolicy = dealInfoRec.Insurance_Policy__c;
-
-	    	if(AccessControl.ifObjectFieldIsAccessible('Category__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
+            
+            if(AccessControl.ifObjectFieldIsAccessible('Category__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
             List<Category__c> defaultStockedTradeCategoryList = [SELECT AccountingId__c, Income_GL__c FROM Category__c WHERE Type__c = 'Stocked Trade' AND Default__c = true AND Active__c = true];
             this.isTradeStockInActionAvailable = 
                 String.isBlank(Accounting_Settings__c.getOrgDefaults().Provider_Name__c) || Accounting_Settings__c.getOrgDefaults().Provider_Name__c == 'No Integration' 
-	               || (defaultStockedTradeCategoryList.size() > 0 && 
-			             ((Accounting_Settings__c.getOrgDefaults().Provider_Name__c == 'Xero' && String.isNotBlank(defaultStockedTradeCategoryList[0].Income_GL__c)) 
-							|| (String.isNotBlank(defaultStockedTradeCategoryList[0].AccountingId__c)))
-					   );
-					   
+                   || (defaultStockedTradeCategoryList.size() > 0 && 
+                         ((Accounting_Settings__c.getOrgDefaults().Provider_Name__c == 'Xero' && String.isNotBlank(defaultStockedTradeCategoryList[0].Income_GL__c)) 
+                            || (String.isNotBlank(defaultStockedTradeCategoryList[0].AccountingId__c)))
+                       );
+                       
             this.PreTaxTotal = ((dealInfoRec.Pre_Tax_Unit_Price_And_Cost_Total__c != null ? dealInfoRec.Pre_Tax_Unit_Price_And_Cost_Total__c : 0) + 
-        					   (dealInfoRec.F_I_Total__c != null ? dealInfoRec.F_I_Total__c : 0) + 
-        					   (dealInfoRec.Pre_Tax_Fee_Total__c != null ? dealInfoRec.Pre_Tax_Fee_Total__c : 0) + 
-        					   (dealInfoRec.Pre_Tax_Labour_Total__c != null ? dealInfoRec.Pre_Tax_Labour_Total__c : 0) + 
-        				       (dealInfoRec.Pre_Tax_Other_Product_Total__c != null ? dealInfoRec.Pre_Tax_Other_Product_Total__c : 0) + 
-        					   (dealInfoRec.Pre_Tax_Part_Total__c != null ? dealInfoRec.Pre_Tax_Part_Total__c : 0)).setScale(2, RoundingMode.HALF_UP);                                       
-        	this.isDealSectionTradeOnly = dealInfoRec.Deal_Section_Trade_Only__c;
-        	
-        	if(dealInfoRec.Invoice_Number__r.Invoice_Date__c != null) {
+                               (dealInfoRec.F_I_Total__c != null ? dealInfoRec.F_I_Total__c : 0) + 
+                               (dealInfoRec.Pre_Tax_Fee_Total__c != null ? dealInfoRec.Pre_Tax_Fee_Total__c : 0) + 
+                               (dealInfoRec.Pre_Tax_Labour_Total__c != null ? dealInfoRec.Pre_Tax_Labour_Total__c : 0) + 
+                               (dealInfoRec.Pre_Tax_Other_Product_Total__c != null ? dealInfoRec.Pre_Tax_Other_Product_Total__c : 0) + 
+                               (dealInfoRec.Pre_Tax_Part_Total__c != null ? dealInfoRec.Pre_Tax_Part_Total__c : 0)).setScale(2, RoundingMode.HALF_UP);                                       
+            this.isDealSectionTradeOnly = dealInfoRec.Deal_Section_Trade_Only__c;
+            
+            if(dealInfoRec.Invoice_Number__r.Invoice_Date__c != null) {
                 this.InvoiceDate =  BPUtility.getFormatedDateTime(dealInfoRec.Invoice_Number__r.Invoice_Date__c);
             } else {
                 this.InvoiceDate =  BPUtility.getFormatedDateTime(system.now());
             }
             this.NotesForCustomer = (dealInfoRec.Notes_For_Customer__c != null) ?  dealInfoRec.Notes_For_Customer__c.split('\n') : new List<String>();
-            
-            this.CoBuyerId = dealInfoRec.Co_Buyer__c;
-            this.CoBuyerName = dealInfoRec.Co_Buyer__c != null ? dealInfoRec.Co_Buyer__r.Name : '';
-            this.CoBuyerDOB = (dealInfoRec.Co_Buyer__c != null && dealInfoRec.Co_Buyer__r.Birth_Date__c != null) ? 
-            	BPUtility.getFormatedDateTime(datetime.newInstance(dealInfoRec.Co_Buyer__r.Birth_Date__c.year(), 
-            	dealInfoRec.Co_Buyer__r.Birth_Date__c.month(),dealInfoRec.Co_Buyer__r.Birth_Date__c.day())): '';
-            	
-            this.CoBuyerDriverLicence = dealInfoRec.Co_Buyer__c != null ? dealInfoRec.Co_Buyer__r.Drivers_License__c : '';
-            this.CoBuyerFirstName = dealInfoRec.Co_Buyer__c != null ? dealInfoRec.Co_Buyer__r.FirstName__c : '';
-            this.CoBuyerLastName = dealInfoRec.Co_Buyer__c != null ? dealInfoRec.Co_Buyer__r.LastName__c : '';
         }
     }
     
@@ -277,7 +249,6 @@ public class DealWrapper {
         public SO_KLI_Recalculation.Errorhandler error{get; set;}
         public Decimal TotalEnforceRideawayPrice{get; set;}
         public Boolean IsRideawayPricingEnabled{get; set;}
-        public Boolean IsLockInUnitPricing;
         public String DeliveryDate;
         public Decimal SalesTaxTotal;
         public Boolean IsDealFulfilled;
@@ -297,7 +268,6 @@ public class DealWrapper {
             this.FactoryOptionList = new List<FactoryOption>();
             
             this.IsRideawayPricingEnabled = dealItemRec.Is_Rideaway_Pricing_Enabled__c;
-            this.IsLockInUnitPricing = dealItemRec.Is_Lock_In_Unit_Pricing__c;
             this.TotalEnforceRideawayPrice = 0;
             this.TotalOptionAndFee = 0;
             this.TotalOptionAndFeeWithKit = 0;
@@ -329,10 +299,10 @@ public class DealWrapper {
                     if(optionFeeObj.PartId != null || optionFeeObj.LabourId != null) {
                         this.TotalPartAndLabor += optionFeeObj.Total;
                     } else if(String.isNotBlank(optionFeeObj.FeeId)) {
-						this.TotalFee += optionFeeObj.Total;
-					} else if(optionFeeObj.ProductId != null && optionFeeObj.ProductType == 'Sublet') {
-					    this.TotalSublet += optionFeeObj.Total;
-					}
+                        this.TotalFee += optionFeeObj.Total;
+                    } else if(optionFeeObj.ProductId != null && optionFeeObj.ProductType == 'Sublet') {
+                        this.TotalSublet += optionFeeObj.Total;
+                    }
                     if(optionFeeObj.KitHeaderId != null) {
                         this.TotalOptionAndFeeWithKit += optionFeeObj.Total;
                     }
@@ -355,7 +325,7 @@ public class DealWrapper {
             this.Total = this.TotalOptionAndFeeWithKit + this.TotalBasePrice + this.TotalDealerInstalledOption + this.TotalFactoryOption + this.TotalStampDuty;
             this.DeliveryDate = dealItemRec.Deal__r.Delivery_Date__c != null ? BPUtility.getFormatedDateTime(datetime.newInstance(dealItemRec.Deal__r.Delivery_Date__c.year(), dealItemRec.Deal__r.Delivery_Date__c.month(),dealItemRec.Deal__r.Delivery_Date__c.day())): '';
             this.SalesTaxTotal = (dealItemRec.Deal__r.Sales_Tax_Total__c != null ? dealItemRec.Deal__r.Sales_Tax_Total__c : 0);
-            this.error = (COService.error != null) ? COService.error : new SO_KLI_Recalculation.Errorhandler('200', 'Success');
+            this.error = (CustomerOrderCtrl.error != null) ? CustomerOrderCtrl.error : new SO_KLI_Recalculation.Errorhandler('200', 'Success');
             this.IsDealFulfilled = dealItemRec.Deal__r.Is_Deal_Fulfilled__c;
         }
     }
@@ -462,7 +432,6 @@ public class DealWrapper {
         public String DealItemId{get; set;}
         public Decimal Qty {get; set;}
         public String PartId{get; set;}
-        public Boolean IsForeignVendor {get; set;}
         public String FeeId{get; set;}
         public String LabourId{get; set;}
         public String KitHeaderId{get; set;}
@@ -482,8 +451,6 @@ public class DealWrapper {
         public Boolean IsFixedPrice{get; set;}
         public Boolean IsFixedPriceForCO{get; set;}
         public Boolean IsEnvFee{get; set;}
-        public String UUID;
-        public Boolean IsNonInventoryPart;
 
         public OptionAndFeeInfo(Option_Fee__c optionAndFeeRec){
             this.Id = optionAndFeeRec.Id;
@@ -491,9 +458,6 @@ public class DealWrapper {
             this.DealItemId = optionAndFeeRec.Deal_Item__c;
             this.Qty = optionAndFeeRec.Qty__c;
             this.PartId = optionAndFeeRec.Part__c;
-            if(optionAndFeeRec.Part__c != null) {
-                this.IsForeignVendor = optionAndFeeRec.Part__r.Vendor__r.Is_Foreign_Vendor__c;
-            }
             this.FeeId = optionAndFeeRec.Fee__c;
             this.LabourId = optionAndFeeRec.Labour_Code__c;
             this.ProductId = optionAndFeeRec.Product__c;
@@ -502,22 +466,15 @@ public class DealWrapper {
             this.IsFixedPriceForCO = (optionAndFeeRec.Is_Fixed_Kit_Line_Item_CO__c == null) ? false : optionAndFeeRec.Is_Fixed_Kit_Line_Item_CO__c  ;
             this.FixedPrice = optionAndFeeRec.Fixed_Price__c;
                         
-            if(optionAndFeeRec.Part__c != null) {
-                if(optionAndFeeRec.Part__r.Non_Inventory_Part__c) {
-                    this.ItemCode = (optionAndFeeRec.Item_Code__c != null) ? optionAndFeeRec.Item_Code__c : '';
-                    this.ItemDescription = (optionAndFeeRec.Item_Description__c != null) ? optionAndFeeRec.Item_Description__c : '';
-                } else {
-                    this.ItemCode = (optionAndFeeRec.Part__r.Part_Number__c != null) ? optionAndFeeRec.Part__r.Part_Number__c : '';
-                    this.ItemDescription = (optionAndFeeRec.Part__r.Description__c != null) ? optionAndFeeRec.Part__r.Description__c : '';
-                }
-                if(optionAndFeeRec.Qty__c < 0) {
-                    this.Status = 'Return';
-                } else if(optionAndFeeRec.Status__c == 'Fulfilled') {
+            if(optionAndFeeRec.Part__c != null){
+                this.ItemCode = (optionAndFeeRec.Part__r.Part_Number__c != null) ? optionAndFeeRec.Part__r.Part_Number__c : '';
+                this.ItemDescription = (optionAndFeeRec.Part__r.Description__c != null) ? optionAndFeeRec.Part__r.Description__c : '';
+                if(optionAndFeeRec.Status__c == 'Fulfilled') {
                     this.Status = optionAndFeeRec.Status__c;
                 } else if(optionAndFeeRec.CO_Line_Item__c != null) {
                     this.Status = COLIWrapper.getPartCOLIStatus(optionAndFeeRec.CO_Line_Item__r);
                 } else if(optionAndFeeRec.Service_Order_Line_Item__c != null && optionAndFeeRec.Service_Order_Line_Item__r.CO_Line_Item__c != null) {
-	    			this.Status = COLIWrapper.getPartCOLIStatus(optionAndFeeRec.Service_Order_Line_Item__r.CO_Line_Item__r);
+                    this.Status = COLIWrapper.getPartCOLIStatus(optionAndFeeRec.Service_Order_Line_Item__r.CO_Line_Item__r);
                 } else if((optionAndFeeRec.Part__r.AvailableParts__c > 0) || optionAndFeeRec.Part__r.Non_Inventory_Part__c) {
                     this.Status = 'In Stock';
                 } else {
@@ -560,8 +517,6 @@ public class DealWrapper {
             this.Total = this.Total.setScale(2, RoundingMode.HALF_UP);
             this.Price = this.Price.setScale(2, RoundingMode.HALF_UP);
             this.IsEnvFee = optionAndFeeRec.Is_Environmental_Fee__c;
-            this.UUID = optionAndFeeRec.UUID__c;
-            this.IsNonInventoryPart = optionAndFeeRec.Part__r.Non_Inventory_Part__c;
         }
 
         private String setOptionStatus(Option_Fee__c optionAndFeeRec) {
@@ -597,7 +552,6 @@ public class DealWrapper {
         public Boolean IsFixedPriceForCO{get; set;}
         public Decimal TaxAmount{get; set;}
         public String DealItemId{get; set;}
-        public String UUID;
         
         public DealKitHeader(Deal_Kit_Header__c dealKitHeaderRec, List<Option_Fee__c> optionAndFeeRecList, Boolean hasChild) {
             this.hasChildren = hasChild;
@@ -628,7 +582,6 @@ public class DealWrapper {
                 this.OptionAndFeeList.add(new OptionAndFeeInfo(optionAndFeeRec));
             }
             this.DealItemId = dealKitHeaderRec.Deal_Item__c;
-            this.UUID = (dealKitHeaderRec != null && dealKitHeaderRec.Id != null) ? dealKitHeaderRec.UUID__c : (optionAndFeeRecList.size() > 0 ? optionAndFeeRecList[0].UUID__c : null);
         }
     }
     
@@ -706,21 +659,11 @@ public class DealWrapper {
         public List<COHeaderWrapper.COKitHeader> DealMerchandiseList;
         public List<COHeaderWrapper.SpecialOrder> DealSpecialOrderList;
         public Decimal MerchandiseTotal;
-        public String SpecialOrderStatus;
         
-        //Do not call this wrapper class from a loop
         public DealFulfillmentSectionWrapper(List<CO_Line_Item__c> coliList, List<CO_Kit_Header__c> cokhList, List<Vendor_Order_Line_Item__c> specialOrderList){
             this.DealMerchandiseList = new List<COHeaderWrapper.COKitHeader>();
             this.DealMerchandiseList = COHeaderWrapper.getCOLineItemsList(coliList, cokhList);
             this.MerchandiseTotal = 0;
-            if(!coliList.isEmpty() || !cokhList.isEmpty()) {
-                String coHeaderId = !coliList.isEmpty() ? coliList[0].CO_Header__c : (!cokhList.isEmpty() ? cokhList[0].CO_Header__c : null);
-                if(String.isNotBlank(coHeaderId)) {
-                    for(CO_Section_Detail__c sectionDetail : [Select Special_Order_Status__c FROM CO_Section_Detail__c Where CO_Header__c =: coHeaderId AND Section_Type__c =: COSectionDetailService.DEAL_MERCHANDISE LIMIT 1]) {
-                        this.SpecialOrderStatus = sectionDetail.Special_Order_Status__c;
-                    }
-                }
-            }
             for(CO_Line_Item__c coliRec : coliList) {
                 if(coliRec.Qty__c == null) {
                     coliRec.Qty__c = 0;
@@ -773,7 +716,7 @@ public class DealWrapper {
         public SO_KLI_Recalculation.Errorhandler error;
         
         public DealUnresolvedFulfillmentWrapper() {
-            this.error = COService.error;
+            this.error = CustomerOrderCtrl.error;
         }
         
         public DealUnresolvedFulfillmentWrapper(Deal_Unresolved_Fulfillment__c dealUnresolvedFulfillmentObj){ 
@@ -803,7 +746,7 @@ public class DealWrapper {
             this.COKitHeaderId = dealUnresolvedFulfillmentObj.Co_Kit_Header__c;
             this.DealKitHeaderId = dealUnresolvedFulfillmentObj.Deal_Kit_Header__c;
             this.SOKitHeaderId = dealUnresolvedFulfillmentObj.Service_Order_Kit_Header__c;
-            this.error = (COService.error != null) ? COService.error : new SO_KLI_Recalculation.Errorhandler('200', 'Success');
+            this.error = (CustomerOrderCtrl.error != null) ? CustomerOrderCtrl.error : new SO_KLI_Recalculation.Errorhandler('200', 'Success');
             
             this.RelatedStockIds = '';
             this.RelatedOptionAndFeeIdList = new List<String>();
@@ -858,7 +801,6 @@ public class DealWrapper {
     public static List<String> getDealFields(){
         List<String> dealFields = new List<String>{ 'Id',
                                                     'Down_Payment__c', 
-                                                    'Is_Tax_Based_On_Customer_Address__c',
                                                     'Delivery_Date__c', 
                                                     'Unit_Status__c', 
                                                     'Status__c',
@@ -887,7 +829,9 @@ public class DealWrapper {
                                                     'DP360_Lead_Id__c',
                                                     'DP360_Lead_URL__c',
                                                     'Deal_Commission__c',
+                                                    'Salesperson__c',
                                                     'Salesperson_Name__c',
+                                                    'Salesperson__r.Technician_Name__c',
                                                     'Invoice_Number__r.Invoice_Number__c',
                                                     'Invoice_Number__r.Invoice_Date__c',
                                                     'Pre_Tax_Unit_Price_And_Cost_Total__c',
@@ -896,15 +840,7 @@ public class DealWrapper {
                                                     'Pre_Tax_Other_Product_Total__c',
                                                     'Pre_Tax_Part_Total__c',
                                                     'Deal_Section_Trade_Only__c',
-                                                    'Notes_For_Customer__c',
-                                                    'Insurance_Provider__c',
-                                                    'Insurance_Policy__c',
-                                                    'Co_Buyer__c',
-                                                    'Co_Buyer__r.Name',
-                                                    'Co_Buyer__r.Birth_Date__c',
-                                                    'Co_Buyer__r.Drivers_License__c',
-                                                    'Co_Buyer__r.FirstName__c',
-                                                    'Co_Buyer__r.LastName__c'
+                                                    'Notes_For_Customer__c'
                                                 };
                                                 
         return dealFields;
@@ -918,11 +854,8 @@ public class DealWrapper {
                                                             'Deal_Item__r.Deal__c',
                                                             'Deal_Item__r.Customer_Owned_Unit__c',
                                                             'Deal_Item__r.Applicable_Tax__c',
-                                                            'Deal_Item__r.Unit_Tax_Applicable_On__c',
-                                                            'Deal_Item__r.Taxable__c',
                                                             'Qty__c',
                                                             'Part__c',
-                                                            'Part__r.Vendor__r.Is_Foreign_Vendor__c',
                                                             'Part__r.Description__c',
                                                             'Part__r.Part_Number__c',
                                                             'Part__r.AvailableParts__c',
@@ -972,7 +905,6 @@ public class DealWrapper {
                                                             'CO_Line_Item__r.Vendor_Order_Header__r.Status__c',
                                                             'CO_Line_Item__r.CO_Status__c',
                                                             'CO_Line_Item__r.Is_In_Merch_Section__c',
-                                                            'CO_Line_Item__r.Is_In_Service_Order__c',
                                                             'CO_Line_Item__r.Merchandise_Commit_Order_controls__c',
                                                             'CO_Line_Item__r.Part__r.AvailableParts__c',
                                                             'Service_Order_Line_Item__r.CO_Line_Item__r.Qty__c',
@@ -983,12 +915,9 @@ public class DealWrapper {
                                                             'Service_Order_Line_Item__r.CO_Line_Item__r.Vendor_Order_Header__r.Status__c',
                                                             'Service_Order_Line_Item__r.CO_Line_Item__r.CO_Status__c',
                                                             'Service_Order_Line_Item__r.CO_Line_Item__r.Is_In_Merch_Section__c',
-                                                            'Service_Order_Line_Item__r.CO_Line_Item__r.Is_In_Service_Order__c',
                                                             'Service_Order_Line_Item__r.CO_Line_Item__r.Merchandise_Commit_Order_controls__c',
                                                             'Service_Order_Line_Item__r.CO_Line_Item__r.Part__r.AvailableParts__c',
-                                                            'Service_Order_Line_Item__r.CO_Line_Item__r.Status__c',
-                                                            'UUID__c', 
-                                                            'Applicable_Tax__c'
+                                                            'Service_Order_Line_Item__r.CO_Line_Item__r.Status__c'
                                                         };
         return optionAndFeeFields;
     }
@@ -1012,10 +941,8 @@ public class DealWrapper {
                                                     'Is_Install__c',
                                                     'Deal_Item__r.Customer_Owned_Unit__c',
                                                     'Deal_Item__r.Deal__r.Co_Header__c',
-                                                    'Deal_Item__r.Deal__r.Is_Tax_Based_On_Customer_Address__c',
                                                     'Code__c',
-                                                    'Description__c',
-                                                    'UUID__c'
+                                                    'Description__c'
                                                 };
         return DealKHFields;
     }
@@ -1031,8 +958,8 @@ public class DealWrapper {
                                                             'Sales_Tax_Percentage__c',
                                                             'Unit_Price_Cost__c',
                                                             'Price_When_Tax_Included__c',
-															'Deal_Item__r.Customer_Owned_Unit__c',
-															'Total_Cost__c'                                                
+                                                            'Deal_Item__r.Customer_Owned_Unit__c',
+                                                            'Total_Cost__c'                                                
                                                         };
         return DealUnitPriceCost;
     }
@@ -1081,7 +1008,6 @@ public class DealWrapper {
         public String FinanceCompanyName{get; set;}
         public String FinanceCompanyEmail{get; set;}
         public String FinanceCompanyPhone{get; set;}
-        public String FinanceCompanyFormattedPhone{get; set;}
         public String FinanceCompanyAccountNumber{get; set;}
         public String FinanceCompanyAddress1{get; set;}
         public String FinanceCompanyAddress2{get; set;}
@@ -1089,7 +1015,6 @@ public class DealWrapper {
         public String FinanceCompanyState{get; set;}
         public String FinanceCompanycountry{get; set;}
         public String FinanceCompanyPostal{get; set;}
-        public Boolean CommissionsNotInFINPayments{get; set;}
         public String Status{get; set;}
         public Decimal DealTotal{get; set;}
         public Decimal FIProductTotal{get; set;}
@@ -1103,10 +1028,13 @@ public class DealWrapper {
         public Decimal EstimatedPayment{get; set;}
         public List<FIProductWrapper> FIProductList{get; set;}
         public Decimal FinanceCommission{get; set;}
-        public Decimal BuyRate;
-        public Decimal BuyRateCommission;
-        public Decimal ApprovedAmountFinanced;
-
+        public String CoBuyerId{get; set;}
+        public String CoBuyerName{get; set;}        
+        public String CoBuyerDOB{get; set;}
+        public String CoBuyerDriverLicence{get; set;} 
+        public String CoBuyerFirstName{get; set;}
+        public String CoBuyerLastName{get; set;}
+        
         public DealFinanceWrapper(){}
         
         public DealFinanceWrapper(Deal_Finance__c dealFinanceObj){ 
@@ -1116,9 +1044,7 @@ public class DealWrapper {
             this.FinanceCompanyName = dealFinanceObj.Finance_Company__r.Name;
             this.FinanceCompanyEmail = (dealFinanceObj.Finance_Company__r.Preferred_Email__c != null) ? dealFinanceObj.Finance_Company__r.Preferred_Email__c : dealFinanceObj.Finance_Company__r.Work_Email__c;
             this.FinanceCompanyPhone = (dealFinanceObj.Finance_Company__r.Preferred_Phone__c != null) ? dealFinanceObj.Finance_Company__r.Preferred_Phone__c : dealFinanceObj.Finance_Company__r.Work_Number__c;
-            this.FinanceCompanyFormattedPhone = this.FinanceCompanyPhone != null ? PrintCustomerOrderInvoiceCtrl.formatphonenumber(this.FinanceCompanyPhone) : null;
             this.FinanceCompanyAccountNumber = dealFinanceObj.Finance_Company__r.AccountNumber;
-            this.CommissionsNotInFINPayments = dealFinanceObj.Finance_Company__r.Commissions_not_in_finance_payments__c;
 
             String billingStreet = (dealFinanceObj.Finance_Company__r.BillingStreet == null ) ? '' : dealFinanceObj.Finance_Company__r.BillingStreet;
             List<String> bsList = billingStreet.split('\n');
@@ -1140,7 +1066,7 @@ public class DealWrapper {
             this.FIProductTax = dealFinanceObj.F_I_Product_Tax_Total__c;
             this.DownPayment = dealFinanceObj.Down_Payment__c != null ? dealFinanceObj.Down_Payment__c : 0;
             this.InterestRate = dealFinanceObj.Interest_Rate__c;
-            this.FinanceCommission = dealFinanceObj.Finance_Commission__c != null ? dealFinanceObj.Finance_Commission__c : 0;
+            this.FinanceCommission = dealFinanceObj.Finance_Commission__c;
             this.LoanTerm = dealFinanceObj.Loan_Term__c;
             this.TermType = dealFinanceObj.Term_Type__c;
             this.PaymentFrequency = dealFinanceObj.Payment_Frequency__c;
@@ -1148,9 +1074,16 @@ public class DealWrapper {
             for(F_I_Product__c fAndIProductRec : dealFinanceObj.F_I_Products__r) {
                 FIProductList.add(new FIProductWrapper(fAndIProductRec));
             }
-            this.BuyRate = dealFinanceObj.Buy_Rate__c;
-            this.BuyRateCommission = dealFinanceObj.Buy_Rate_Commission__c != null ? dealFinanceObj.Buy_Rate_Commission__c : 0;
-            this.ApprovedAmountFinanced = dealFinanceObj.Approved_Amount_Financed__c;
+            this.CoBuyerId = dealFinanceObj.Co_Buyer__c;
+            this.CoBuyerName = dealFinanceObj.Co_Buyer__c != null ? dealFinanceObj.Co_Buyer__r.Name : '';
+            this.CoBuyerDOB = (dealFinanceObj.Co_Buyer__c != null && dealFinanceObj.Co_Buyer__r.Birth_Date__c != null) ? 
+                BPUtility.getFormatedDateTime(datetime.newInstance(dealFinanceObj.Co_Buyer__r.Birth_Date__c.year(), 
+                dealFinanceObj.Co_Buyer__r.Birth_Date__c.month(),dealFinanceObj.Co_Buyer__r.Birth_Date__c.day())): '';
+                
+            this.CoBuyerDriverLicence = dealFinanceObj.Co_Buyer__c != null ? dealFinanceObj.Co_Buyer__r.Drivers_License__c : '';
+            this.CoBuyerFirstName = dealFinanceObj.Co_Buyer__c != null ? dealFinanceObj.Co_Buyer__r.FirstName__c : '';
+            this.CoBuyerLastName = dealFinanceObj.Co_Buyer__c != null ? dealFinanceObj.Co_Buyer__r.LastName__c : '';
+
         }
     }
     private static String getSystemDefaultPriceLevelName() {
@@ -1170,13 +1103,8 @@ public class DealWrapper {
         public Decimal SalesTaxPercentage{get; set;}
         public String ProductId{get; set;} 
         public String DealId{get; set;}
-        public String DealFinanceId{get; set;}
-        public String UUID;
-        public Decimal Cost;
-        public String CostMethod;
-        public Decimal CostRate;
-        public String ProductFinanceCompanyId{get; set;}
-        public String ProductFinanceCompanyName{get; set;}
+        public String DealFinanceId{get; set;} 
+        
         
         public FIProductWrapper(F_I_Product__c FandIProduct) {
             this.Id = FandIProduct.Id;
@@ -1196,14 +1124,8 @@ public class DealWrapper {
             
             Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
             if(isTaxIncludingPricing) {
-                this.Price = (FandIProduct.Price_When_Tax_Included__c != null ? FandIProduct.Price_When_Tax_Included__c.setScale(2, RoundingMode.HALF_UP) : 0);
+                this.Price = (this.Price * (1 + this.SalesTaxPercentage /100)).setScale(2, RoundingMode.HALF_UP);
             }
-            this.UUID = FandIProduct.UUID__c;
-            this.CostMethod = FandIProduct.Cost_Method__c;
-            this.Cost = FandIProduct.Cost__c != null ? FandIProduct.Cost__c.setScale(2, RoundingMode.HALF_UP) : 0;
-            this.CostRate = FandIProduct.Cost_Rate__c != null ? FandIProduct.Cost_Rate__c : 0;
-            this.ProductFinanceCompanyId = FandIProduct.Vendor_Product__r.Vendor__c;
-            this.ProductFinanceCompanyName = FandIProduct.Vendor_Product__r.Vendor__r.Name;
         }
     }   
     
@@ -1229,8 +1151,6 @@ public class DealWrapper {
         public String PriceLevel;
         public String TaxExemption;
         public String CustomerDriverLicenceNumber;
-        public String Notes;
-        public Integer TotalActiveOrders;
         
         public CoBuyerWrapper(Account coBuyerObj){ 
             this.Id = coBuyerObj.Id;
@@ -1282,92 +1202,90 @@ public class DealWrapper {
             this.MobileNumberSMS = coBuyerObj.Mobile_Number_SMS__c;
             this.FormattedOtherPhone = (coBuyerObj.Formatted_Mobile_Number__c == null) ? '' : coBuyerObj.Formatted_Mobile_Number__c;
             this.CustomerDriverLicenceNumber = (coBuyerObj.Drivers_License__c != null) ? coBuyerObj.Drivers_License__c : '';
-            this.Notes = String.isNotBlank(coBuyerObj.Notes__c) ? coBuyerObj.Notes__c : '';
-            this.TotalActiveOrders = (!coBuyerObj.CO_Headers__r.isEmpty()) ? coBuyerObj.CO_Headers__r.size() : 0;
         }
         
     }
     
     public class BillOfSaleFormWrapper {
-    	public Decimal CashPrice;
-    	public Decimal DocumentationAmount;
-    	public Decimal HUTAmount;
-    	public Decimal TitleAmount;
-    	public Decimal InsuranceAmount;
-    	public Decimal LessTradeIn;
-    	public Decimal CashPaid;
-    	public Decimal BalanceDue;
-    	public Decimal TotalAmount;
+        public Decimal CashPrice;
+        public Decimal DocumentationAmount;
+        public Decimal HUTAmount;
+        public Decimal TitleAmount;
+        public Decimal InsuranceAmount;
+        public Decimal LessTradeIn;
+        public Decimal CashPaid;
+        public Decimal BalanceDue;
+        public Decimal TotalAmount;
         public Decimal FeeWithoutHUTAmount;
         public Decimal CashPriceWithoutHUTFeeTag;
-    	
-    	public BillOfSaleFormWrapper(Deal__c dealRec) {
-    		this.CashPrice = (dealRec.Pre_Tax_Unit_Price_And_Cost_Total__c != null ? dealRec.Pre_Tax_Unit_Price_And_Cost_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
-    		this.CashPrice += (dealRec.Stamp_Duty_Total__c != null ? dealRec.Stamp_Duty_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
-    		this.CashPrice += (dealRec.Lien_Payout_Total__c != null ? dealRec.Lien_Payout_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
+        
+        public BillOfSaleFormWrapper(Deal__c dealRec) {
+            this.CashPrice = (dealRec.Pre_Tax_Unit_Price_And_Cost_Total__c != null ? dealRec.Pre_Tax_Unit_Price_And_Cost_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
+            this.CashPrice += (dealRec.Stamp_Duty_Total__c != null ? dealRec.Stamp_Duty_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
+            this.CashPrice += (dealRec.Lien_Payout_Total__c != null ? dealRec.Lien_Payout_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
             this.CashPriceWithoutHUTFeeTag = (dealRec.Pre_Tax_Unit_Price_And_Cost_Total__c != null ? dealRec.Pre_Tax_Unit_Price_And_Cost_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
-    		this.CashPriceWithoutHUTFeeTag += (dealRec.Stamp_Duty_Total__c != null ? dealRec.Stamp_Duty_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
-    		this.CashPriceWithoutHUTFeeTag += (dealRec.Lien_Payout_Total__c != null ? dealRec.Lien_Payout_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
-    		this.DocumentationAmount = 0;
-    		//this.HUTAmount = (dealRec.Sales_Tax_Total__c != null ? dealRec.Sales_Tax_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
-    		this.HUTAmount = 0;
-    		this.TitleAmount = 0;
+            this.CashPriceWithoutHUTFeeTag += (dealRec.Stamp_Duty_Total__c != null ? dealRec.Stamp_Duty_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
+            this.CashPriceWithoutHUTFeeTag += (dealRec.Lien_Payout_Total__c != null ? dealRec.Lien_Payout_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
+            this.DocumentationAmount = 0;
+            //this.HUTAmount = (dealRec.Sales_Tax_Total__c != null ? dealRec.Sales_Tax_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
+            this.HUTAmount = 0;
+            this.TitleAmount = 0;
             this.FeeWithoutHUTAmount = 0;
-    		this.InsuranceAmount = 0;
-    		this.LessTradeIn = 0;
-    		this.CashPaid = 0;
-    		this.TotalAmount = (dealRec.Deal_Total__c != null ? dealRec.Deal_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
-    		
-    		for(Option_Fee__c optionFeeRec : dealRec.Options_Fees__r) {
-    			optionFeeRec.Qty__c = optionFeeRec.Qty__c != null ? optionFeeRec.Qty__c : 0;
-    			optionFeeRec.Price__c = optionFeeRec.Price__c != null ? optionFeeRec.Price__c : 0;
-    		
-    			if(optionFeeRec.Product__c != null && optionFeeRec.Product__r.Type__c == Constants.DEAL_PRODUCT) {
-    				this.InsuranceAmount += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-    			} else if(optionFeeRec.Fee__c != null) {
-    				if((optionFeeRec.Fee__r.Assigned_Tag_1__c != null && optionFeeRec.Fee__r.Assigned_Tag_1__c.containsIgnoreCase(Constants.HUT))
+            this.InsuranceAmount = 0;
+            this.LessTradeIn = 0;
+            this.CashPaid = 0;
+            this.TotalAmount = (dealRec.Deal_Total__c != null ? dealRec.Deal_Total__c : 0).setScale(2, RoundingMode.HALF_UP);
+            
+            for(Option_Fee__c optionFeeRec : dealRec.Options_Fees__r) {
+                optionFeeRec.Qty__c = optionFeeRec.Qty__c != null ? optionFeeRec.Qty__c : 0;
+                optionFeeRec.Price__c = optionFeeRec.Price__c != null ? optionFeeRec.Price__c : 0;
+            
+                if(optionFeeRec.Product__c != null && optionFeeRec.Product__r.Type__c == Constants.DEAL_PRODUCT) {
+                    this.InsuranceAmount += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+                } else if(optionFeeRec.Fee__c != null) {
+                    if((optionFeeRec.Fee__r.Assigned_Tag_1__c != null && optionFeeRec.Fee__r.Assigned_Tag_1__c.containsIgnoreCase(Constants.HUT))
                         || (optionFeeRec.Fee__r.Assigned_Tag_2__c != null && optionFeeRec.Fee__r.Assigned_Tag_2__c.containsIgnoreCase(Constants.HUT))) {
                         this.HUTAmount += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-    				} else if((optionFeeRec.Fee__r.Assigned_Tag_1__c != null && optionFeeRec.Fee__r.Assigned_Tag_1__c.containsIgnoreCase(Constants.DOC))
-    					|| (optionFeeRec.Fee__r.Assigned_Tag_2__c != null && optionFeeRec.Fee__r.Assigned_Tag_2__c.containsIgnoreCase(Constants.DOC))
-    					|| (optionFeeRec.Fee__r.Assigned_Tag_1__c != null && optionFeeRec.Fee__r.Assigned_Tag_1__c.containsIgnoreCase(Constants.ORIG))
-    					|| (optionFeeRec.Fee__r.Assigned_Tag_2__c != null && optionFeeRec.Fee__r.Assigned_Tag_2__c.containsIgnoreCase(Constants.ORIG))) {
-    					this.DocumentationAmount += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-    				} else if((optionFeeRec.Fee__r.Assigned_Tag_1__c != null && optionFeeRec.Fee__r.Assigned_Tag_1__c.containsIgnoreCase(Constants.TITLE))
+                    } else if((optionFeeRec.Fee__r.Assigned_Tag_1__c != null && optionFeeRec.Fee__r.Assigned_Tag_1__c.containsIgnoreCase(Constants.DOC))
+                        || (optionFeeRec.Fee__r.Assigned_Tag_2__c != null && optionFeeRec.Fee__r.Assigned_Tag_2__c.containsIgnoreCase(Constants.DOC))
+                        || (optionFeeRec.Fee__r.Assigned_Tag_1__c != null && optionFeeRec.Fee__r.Assigned_Tag_1__c.containsIgnoreCase(Constants.ORIG))
+                        || (optionFeeRec.Fee__r.Assigned_Tag_2__c != null && optionFeeRec.Fee__r.Assigned_Tag_2__c.containsIgnoreCase(Constants.ORIG))) {
+                        this.DocumentationAmount += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+                    } else if((optionFeeRec.Fee__r.Assigned_Tag_1__c != null && optionFeeRec.Fee__r.Assigned_Tag_1__c.containsIgnoreCase(Constants.TITLE))
                         || (optionFeeRec.Fee__r.Assigned_Tag_2__c != null && optionFeeRec.Fee__r.Assigned_Tag_2__c.containsIgnoreCase(Constants.TITLE))) {
-    					this.TitleAmount += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+                        this.TitleAmount += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
                     } else {
-    					this.CashPrice += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-    				}
+                        this.CashPrice += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+                    }
                     if((optionFeeRec.Fee__r.Assigned_Tag_1__c != null && !optionFeeRec.Fee__r.Assigned_Tag_1__c.containsIgnoreCase(Constants.HUT))
                     || (optionFeeRec.Fee__r.Assigned_Tag_2__c != null && !optionFeeRec.Fee__r.Assigned_Tag_2__c.containsIgnoreCase(Constants.HUT))
                     || (optionFeeRec.Fee__r.Assigned_Tag_1__c == null && optionFeeRec.Fee__r.Assigned_Tag_2__c == null)) {
                             this.CashPriceWithoutHUTFeeTag += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
                             this.FeeWithoutHUTAmount += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
                     }
-    			} 
+                } 
                 else {
-    				this.CashPrice += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+                    this.CashPrice += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
                     this.CashPriceWithoutHUTFeeTag += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-    			}
-    		}
-    		
-    		for(Deal_Item__c dealItemRec : dealRec.Deal_Items__r) {
-	        	if(dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_TRADE_IN) {
-	        		this.LessTradeIn += ((dealItemRec.Agreed_Value__c != null) ? dealItemRec.Agreed_Value__c : 0).setScale(2, RoundingMode.HALF_UP);
-	        	}
-			}
-			this.LessTradeIn = -(this.LessTradeIn);
-			
-			if(dealRec.Status__c == Constants.INVOICED && dealRec.Invoice_Number__c !=  null) {
-				this.CashPaid = dealRec.Invoice_Number__r.Total_Amount_Except_Charge_Account__c.setScale(2, RoundingMode.HALF_UP);
-			} else {
-				this.CashPaid = dealRec.CO_Header__r.Total_Deposit_And_Payment__c.setScale(2, RoundingMode.HALF_UP);
-			}
-			
-			this.BalanceDue = ((this.CashPrice + this.DocumentationAmount + this.HUTAmount + this.TitleAmount + this.InsuranceAmount
-								+ this.LessTradeIn) - this.CashPaid).setScale(2, RoundingMode.HALF_UP);
-    	}
+                }
+            }
+            
+            for(Deal_Item__c dealItemRec : dealRec.Deal_Items__r) {
+                if(dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_TRADE_IN) {
+                    this.LessTradeIn += ((dealItemRec.Agreed_Value__c != null) ? dealItemRec.Agreed_Value__c : 0).setScale(2, RoundingMode.HALF_UP);
+                }
+            }
+            this.LessTradeIn = -(this.LessTradeIn);
+            
+            if(dealRec.Status__c == Constants.INVOICED && dealRec.Invoice_Number__c !=  null) {
+                this.CashPaid = dealRec.Invoice_Number__r.Total_Amount_Except_Charge_Account__c.setScale(2, RoundingMode.HALF_UP);
+            } else {
+                this.CashPaid = dealRec.CO_Header__r.Total_Deposit_And_Payment__c.setScale(2, RoundingMode.HALF_UP);
+            }
+            
+            this.BalanceDue = ((this.CashPrice + this.DocumentationAmount + this.HUTAmount + this.TitleAmount + this.InsuranceAmount
+                                + this.LessTradeIn) - this.CashPaid).setScale(2, RoundingMode.HALF_UP);
+        }
     }
     
     public class PriceAndCostOptionWrapper {
@@ -1378,7 +1296,6 @@ public class DealWrapper {
         public Decimal TotalCost{get; set;}
         public String FactoryOptionId{get; set;}
         public Decimal SalesTaxPercentage{get; set;}
-        public String UpcId{get; set;}
         
         public PriceAndCostOptionWrapper(Deal_Unit_Price_Cost__c dupcRec){
             this.Id = dupcRec.Id;
@@ -1417,9 +1334,7 @@ public class DealWrapper {
                                                             'Price_Level__c',
                                                             'Price_Level__r.Name__c',
                                                             'Type__c',
-                                                            'Drivers_License__c',
-                                                            'Notes__c',
-                                                            '(Select Id FROM CO_Headers__r where Status__c = \'Open\')'
+                                                            'Drivers_License__c'
                                                         };
         return CoBuyerFieldList;
     }
@@ -1441,19 +1356,21 @@ public class DealWrapper {
                                                             'Interest_Rate__c',
                                                             'Loan_Term__c',
                                                             'Term_Type__c',
-                                                            'Estimated_Payment__c', 
+                                                            'Estimated_Payment__c',
                                                             'Payment_Frequency__c',
                                                             'Finance_Company__r.AccountNumber',
-                                                            'Finance_Company__r.Commissions_not_in_finance_payments__c',
                                                             'Finance_Commission__c',
+                                                            'Co_Buyer__c',
+                                                            'Co_Buyer__r.Name',
+                                                            'Co_Buyer__r.Birth_Date__c',
+                                                            'Co_Buyer__r.Drivers_License__c',
+                                                            'Co_Buyer__r.FirstName__c',
+                                                            'Co_Buyer__r.LastName__c',
                                                             'Finance_Company__r.BillingStreet',
                                                             'Finance_Company__r.BillingCity',
                                                             'Finance_Company__r.BillingState',
                                                             'Finance_Company__r.BillingCountry',
-                                                            'Finance_Company__r.BillingPostalCode',
-                                                            'Buy_Rate__c',
-                                                            'Buy_Rate_Commission__c',
-                                                            'Approved_Amount_Financed__c'
+                                                            'Finance_Company__r.BillingPostalCode'
                                                         };
         return DealFinanceFieldList;
     }
@@ -1461,7 +1378,6 @@ public class DealWrapper {
     public static List<String> getDealFIProductFields(){
         List<String> DealFIProductFieldList = new List<String>{ 'Id',
                                                             'Price__c',
-                                                            'Price_When_Tax_Included__c',
                                                             'Item_Description__c',
                                                             'Sales_Tax__c',
                                                             'Sales_Tax_Percentage__c',
@@ -1471,13 +1387,7 @@ public class DealWrapper {
                                                             'Vendor_Product__r.Description__c',
                                                             'Deal_Finance__c',
                                                             'Deal__c',
-                                                            'Vendor_Product__r.Code__c',
-                                                            'UUID__c',
-                                                            'Cost_Method__c',
-                                                            'Cost__c',
-                                                            'Cost_Rate__c',
-                                                            'Vendor_Product__r.Vendor__c',
-                                                            'Vendor_Product__r.Vendor__r.Name'
+                                                            'Vendor_Product__r.Code__c'
                                                         };
         return DealFIProductFieldList;
     }
