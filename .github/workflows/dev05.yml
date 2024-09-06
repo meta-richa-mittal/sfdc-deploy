@@ -65,7 +65,7 @@ jobs:
           with:
             path: "logfile.txt"
         - name: Search for smallest error
-          uses: meta-richa-mittal/get-deploy-error@v1.10
+          uses: meta-richa-mittal/get-deploy-error@v1.11
           id: search_error
           with:
             string: ${{ steps.read_file.outputs.contents }}
