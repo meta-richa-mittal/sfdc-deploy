@@ -56,15 +56,18 @@ jobs:
       runs-on: ubuntu-latest
       steps:
         - name: Download log file
+          if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status != 'success' }}
           uses: actions/download-artifact@v4
           with:
             name: log_deploy
         - name: Read log file
+          if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status != 'success' }}
           id: read_file
           uses: andstor/file-reader-action@v1
           with:
             path: "logfile.txt"
         - name: Search for smallest error
+          if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status != 'success' }}
           uses: meta-richa-mittal/get-deploy-error@v1.11
           id: search_error
           with:
