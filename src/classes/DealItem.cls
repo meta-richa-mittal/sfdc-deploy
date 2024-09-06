@@ -71,9 +71,9 @@ public class DealItem {
     public Boolean IsAutomatic;
     public String Notes;
 
-    // Constructor
-    public DealItem() {}
-    
+	// Constructor
+	public DealItem() {}
+	
     public DealItem(Deal_Item__c dealItem) {
         this.Id = dealItem.Id;
         this.UnitId = dealItem.Customer_Owned_Unit__c;
@@ -99,114 +99,114 @@ public class DealItem {
         this.FinanceCompanyName = dealItem.Finance_Company__r.Name;
         if(isTaxIncludingPricing) {
             this.SalesTax = this.AgreedValue - (this.AgreedValue / (1 + (this.SalesTaxPercentage / 100)));
-        } else {
-            this.SalesTax = ((this.AgreedValue * this.SalesTaxPercentage)/100).setScale(2, RoundingMode.HALF_UP);
-        }
+		} else {
+			this.SalesTax = ((this.AgreedValue * this.SalesTaxPercentage)/100).setScale(2, RoundingMode.HALF_UP);
+		}
 
         this.Taxable = dealItem.Taxable__c;
         this.ApplicableTaxId = dealItem.Applicable_Tax__c;
         this.ApplicableTaxName = dealItem.Applicable_Tax__c != null ? dealItem.Applicable_Tax__r.Name__c : '';
         
-        if(dealItem.Customer_Owned_Unit__c == null){
-            this.Make = dealItem.Unit_Make__c;
-            this.MakeName = (dealItem.Unit_Make__c != null) ? dealItem.Unit_Make__r.Name : '';
-            
-            if(dealItem.Unit_Model__c != null) {
-                this.Model = dealItem.Unit_Model__c;
-                this.ModelName = dealItem.Unit_Model__r.Name__c;
-            } 
-            if(dealItem.Sub_Model__c != null) {
-                this.SubModel = dealItem.Sub_Model__c;
-                this.SubModelName = dealItem.Sub_Model__r.Sub_Model_Name__c;
-            }
-            
-            this.MakeModelDescription = (dealItem.Sub_Model__c != null) ? dealItem.Sub_Model__r.Description__c : '';
+    	if(dealItem.Customer_Owned_Unit__c == null){
+    		this.Make = dealItem.Unit_Make__c;
+	    	this.MakeName = (dealItem.Unit_Make__c != null) ? dealItem.Unit_Make__r.Name : '';
+	    	
+	    	if(dealItem.Unit_Model__c != null) {
+	    		this.Model = dealItem.Unit_Model__c;
+	    		this.ModelName = dealItem.Unit_Model__r.Name__c;
+	    	} 
+	    	if(dealItem.Sub_Model__c != null) {
+	    		this.SubModel = dealItem.Sub_Model__c;
+	    		this.SubModelName = dealItem.Sub_Model__r.Sub_Model_Name__c;
+	    	}
+	    	
+	    	this.MakeModelDescription = (dealItem.Sub_Model__c != null) ? dealItem.Sub_Model__r.Description__c : '';
            
-            this.Year = dealItem.Year__c;
-            this.ExteriorColour = dealItem.Colour__c;
-            this.FormattedName = ((this.Year != null) ? String.valueOf(this.Year) + ', ' : '') + 
-                                    ((this.MakeName != null) ? this.MakeName + ' ' : '') + 
-                                    ((this.ModelName != null) ? this.ModelName : '') + 
-                                    ((this.SubModelName != null) ? ' ' + this.SubModelName : '') +
-                                    ((this.ExteriorColour != null) ? ', ' + this.ExteriorColour : '');
+	    	this.Year = dealItem.Year__c;
+	    	this.ExteriorColour = dealItem.Colour__c;
+	    	this.FormattedName = ((this.Year != null) ? String.valueOf(this.Year) + ', ' : '') + 
+	    						 	((this.MakeName != null) ? this.MakeName + ' ' : '') + 
+			                       	((this.ModelName != null) ? this.ModelName : '') + 
+			                       	((this.SubModelName != null) ? ' ' + this.SubModelName : '') +
+			                       	((this.ExteriorColour != null) ? ', ' + this.ExteriorColour : '');
 
             this.Notes = dealItem.Notes__c != null ? dealItem.Notes__c : '';
                                                    
-        } else {
-            this.Make = dealItem.Customer_Owned_Unit__r.Unit_Make__c;
-			this.Make = dealItem.Customer_Owned_Unit__r.Make_Name_Formula__c;
-            this.MakeName = (dealItem.Customer_Owned_Unit__r.Unit_Make__c != null) ? dealItem.Customer_Owned_Unit__r.Unit_Make__r.Name : '';
-            
-            if(dealItem.Customer_Owned_Unit__r.Unit_Model__c != null) {
-                this.Model = dealItem.Customer_Owned_Unit__r.Unit_Model__c;
-                this.ModelName = dealItem.Customer_Owned_Unit__r.Unit_Model__r.Name__c;
-            } 
-            if(dealItem.Customer_Owned_Unit__r.Sub_Model__c != null) {
-                this.SubModel = dealItem.Customer_Owned_Unit__r.Sub_Model__c;
-                this.SubModelName = dealItem.Customer_Owned_Unit__r.Sub_Model__r.Sub_Model_Name__c;
-            }
-            
-            this.MakeModelDescription = (dealItem.Customer_Owned_Unit__r.Sub_Model__c != null) ? dealItem.Customer_Owned_Unit__r.Sub_Model__r.Description__c : '';
-            this.Year = dealItem.Customer_Owned_Unit__r.Year__c;
-            this.ExteriorColour = dealItem.Customer_Owned_Unit__r.Colour__c;
-            this.InteriorColor = dealItem.Customer_Owned_Unit__r.Interior_Colour__c;
-            this.UnitType = (dealItem.Customer_Owned_Unit__r.Unit_Type__c != null) ? dealItem.Customer_Owned_Unit__r.Unit_Type__c : '';
-            if(this.UnitType == 'STOCK') {
-                if(dealItem.Customer_Owned_Unit__r.Status__c == 'Available') {
-                    this.StatusColor = 'Green';
-                } else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Reserved' || dealItem.Customer_Owned_Unit__r.Status__c == 'Sold'){
-                    this.StatusColor = 'Red';
-                } else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Traded' || dealItem.Customer_Owned_Unit__r.Status__c == 'Delivered'){
-                    this.StatusColor = 'Black';
-                }
-            } else if(this.UnitType == 'COU') {
-                if(dealItem.Customer_Owned_Unit__r.Status__c == 'Active') {
-                    this.StatusColor = 'Green';
-                } else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Inactive'){
-                    this.StatusColor = 'Red';
-                } else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Transferred'){
-                    this.StatusColor = 'Black';
-                }
-            } else if(this.UnitType == 'ORDU') {
-                if(dealItem.Customer_Owned_Unit__r.Status__c == 'On Order') {
-                    this.StatusColor = 'Red';
-                } else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Cancelled' || dealItem.Customer_Owned_Unit__r.Status__c == 'Traded'){
-                    this.StatusColor = 'Black';
-                }
-            }
-            this.IsAutomatic = dealItem.Customer_Owned_Unit__r.Automatic__c;
-            this.Status = dealItem.Customer_Owned_Unit__r.Status__c;
-            this.VIN = (dealItem.Customer_Owned_Unit__r.VIN_Number__c == null) ? 'VIN Unknown' : dealItem.Customer_Owned_Unit__r.VIN_Number__c;
-            this.UnitNumber = dealItem.Customer_Owned_Unit__r.Unit_Number__c;
-            this.StockNumber = dealItem.Customer_Owned_Unit__r.Stock_Id__c;
-            this.FormattedName = dealItem.Customer_Owned_Unit__r.Formatted_Name__c;
-            this.OptionAndFeeStatus = dealItem.Option_And_Fee_Status__c;
-            this.REGO = dealItem.Customer_Owned_Unit__r.Plate__c;
-            this.RegExpiryDate = (dealItem.Customer_Owned_Unit__r.Reg_Expiry_Date__c!= null) ? BPUtility.getFormatedDateTime(datetime.newInstance(dealItem.Customer_Owned_Unit__r.Reg_Expiry_Date__c.year(), dealItem.Customer_Owned_Unit__r.Reg_Expiry_Date__c.month(),dealItem.Customer_Owned_Unit__r.Reg_Expiry_Date__c.day())): '';
-            this.EngineNumber = dealItem.Customer_Owned_Unit__r.Engine_Serial_No__c;
-            this.EngineSize = dealItem.Customer_Owned_Unit__r.Displacement__c;
-            this.IsSctockedIn = dealItem.Is_Stocked_In__c;
-            this.Mileage = dealItem.Customer_Owned_Unit__r.Mileage_Value__c;
-            this.MileageType = dealItem.Customer_Owned_Unit__r.Mileage_Type__c;
-            
-            this.OtherSerialNo = dealItem.Customer_Owned_Unit__r.Other_Serial_No__c != null ? dealItem.Customer_Owned_Unit__r.Other_Serial_No__c : '';
-            this.KeyNo = dealItem.Customer_Owned_Unit__r.Key_No__c != null ? dealItem.Customer_Owned_Unit__r.Key_No__c : '';
-            
-            this.ComplianceDate = (dealItem.Customer_Owned_Unit__r.Compliance_Date__c != null ) ? dealItem.Customer_Owned_Unit__r.Compliance_Date__c : '';
-            this.RegistrationSerial = (dealItem.Customer_Owned_Unit__r.Registration_Serial__c != null ) ? dealItem.Customer_Owned_Unit__r.Registration_Serial__c : '';
-            if(dealItem.Customer_Owned_Unit__r.Manufactured_Date__c != null){
-                this.ManufacturedDate =  BPUtility.getFormatedDateTime(datetime.newInstance(dealItem.Customer_Owned_Unit__r.Manufactured_Date__c.year(), dealItem.Customer_Owned_Unit__r.Manufactured_Date__c.month(), dealItem.Customer_Owned_Unit__r.Manufactured_Date__c.day()));
-            }
-            
-            this.DateStockedIn = (dealItem.Customer_Owned_Unit__r.Date_Stocked_In__c != null) ? BPUtility.getFormatedDateTime(datetime.newInstance(dealItem.Customer_Owned_Unit__r.Date_Stocked_In__c.year(), dealItem.Customer_Owned_Unit__r.Date_Stocked_In__c.month(),dealItem.Customer_Owned_Unit__r.Date_Stocked_In__c.day())): '';
-            
-            this.YearFirstRego = (dealItem.Customer_Owned_Unit__r.Year_Of_1st_Rego__c != null) ? dealItem.Customer_Owned_Unit__r.Year_Of_1st_Rego__c : '';
+    	} else {
+    		this.Make = dealItem.Customer_Owned_Unit__r.Unit_Make__c;
+			this.Make = dealItem.Customer_Owned_Unit__r.Unit_Make_Formula__c;
+	    	this.MakeName = (dealItem.Customer_Owned_Unit__r.Unit_Make__c != null) ? dealItem.Customer_Owned_Unit__r.Unit_Make__r.Name : '';
+	    	
+	    	if(dealItem.Customer_Owned_Unit__r.Unit_Model__c != null) {
+	    		this.Model = dealItem.Customer_Owned_Unit__r.Unit_Model__c;
+	    		this.ModelName = dealItem.Customer_Owned_Unit__r.Unit_Model__r.Name__c;
+	    	} 
+	    	if(dealItem.Customer_Owned_Unit__r.Sub_Model__c != null) {
+	    		this.SubModel = dealItem.Customer_Owned_Unit__r.Sub_Model__c;
+	    		this.SubModelName = dealItem.Customer_Owned_Unit__r.Sub_Model__r.Sub_Model_Name__c;
+	    	}
+	    	
+	    	this.MakeModelDescription = (dealItem.Customer_Owned_Unit__r.Sub_Model__c != null) ? dealItem.Customer_Owned_Unit__r.Sub_Model__r.Description__c : '';
+	    	this.Year = dealItem.Customer_Owned_Unit__r.Year__c;
+	    	this.ExteriorColour = dealItem.Customer_Owned_Unit__r.Colour__c;
+	    	this.InteriorColor = dealItem.Customer_Owned_Unit__r.Interior_Colour__c;
+	    	this.UnitType = (dealItem.Customer_Owned_Unit__r.Unit_Type__c != null) ? dealItem.Customer_Owned_Unit__r.Unit_Type__c : '';
+	    	if(this.UnitType == 'STOCK') {
+				if(dealItem.Customer_Owned_Unit__r.Status__c == 'Available') {
+					this.StatusColor = 'Green';
+				} else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Reserved' || dealItem.Customer_Owned_Unit__r.Status__c == 'Sold'){
+					this.StatusColor = 'Red';
+				} else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Traded' || dealItem.Customer_Owned_Unit__r.Status__c == 'Delivered'){
+					this.StatusColor = 'Black';
+				}
+	    	} else if(this.UnitType == 'COU') {
+	    		if(dealItem.Customer_Owned_Unit__r.Status__c == 'Active') {
+	    			this.StatusColor = 'Green';
+	    		} else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Inactive'){
+	    			this.StatusColor = 'Red';
+	    		} else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Transferred'){
+	    			this.StatusColor = 'Black';
+	    		}
+	    	} else if(this.UnitType == 'ORDU') {
+	    		if(dealItem.Customer_Owned_Unit__r.Status__c == 'On Order') {
+	    			this.StatusColor = 'Red';
+	    		} else if(dealItem.Customer_Owned_Unit__r.Status__c == 'Cancelled' || dealItem.Customer_Owned_Unit__r.Status__c == 'Traded'){
+	    			this.StatusColor = 'Black';
+	    		}
+	  		}
+	  		this.IsAutomatic = dealItem.Customer_Owned_Unit__r.Automatic__c;
+	  		this.Status = dealItem.Customer_Owned_Unit__r.Status__c;
+	  		this.VIN = (dealItem.Customer_Owned_Unit__r.VIN_Number__c == null) ? 'VIN Unknown' : dealItem.Customer_Owned_Unit__r.VIN_Number__c;
+			this.UnitNumber = dealItem.Customer_Owned_Unit__r.Unit_Number__c;
+			this.StockNumber = dealItem.Customer_Owned_Unit__r.Stock_Id__c;
+			this.FormattedName = dealItem.Customer_Owned_Unit__r.Formatted_Name__c;
+			this.OptionAndFeeStatus = dealItem.Option_And_Fee_Status__c;
+			this.REGO = dealItem.Customer_Owned_Unit__r.Plate__c;
+			this.RegExpiryDate = (dealItem.Customer_Owned_Unit__r.Reg_Expiry_Date__c!= null) ? BPUtility.getFormatedDateTime(datetime.newInstance(dealItem.Customer_Owned_Unit__r.Reg_Expiry_Date__c.year(), dealItem.Customer_Owned_Unit__r.Reg_Expiry_Date__c.month(),dealItem.Customer_Owned_Unit__r.Reg_Expiry_Date__c.day())): '';
+			this.EngineNumber = dealItem.Customer_Owned_Unit__r.Engine_Serial_No__c;
+			this.EngineSize = dealItem.Customer_Owned_Unit__r.Displacement__c;
+			this.IsSctockedIn = dealItem.Is_Stocked_In__c;
+			this.Mileage = dealItem.Customer_Owned_Unit__r.Mileage_Value__c;
+			this.MileageType = dealItem.Customer_Owned_Unit__r.Mileage_Type__c;
+			
+			this.OtherSerialNo = dealItem.Customer_Owned_Unit__r.Other_Serial_No__c != null ? dealItem.Customer_Owned_Unit__r.Other_Serial_No__c : '';
+			this.KeyNo = dealItem.Customer_Owned_Unit__r.Key_No__c != null ? dealItem.Customer_Owned_Unit__r.Key_No__c : '';
+			
+			this.ComplianceDate = (dealItem.Customer_Owned_Unit__r.Compliance_Date__c != null ) ? dealItem.Customer_Owned_Unit__r.Compliance_Date__c : '';
+			this.RegistrationSerial = (dealItem.Customer_Owned_Unit__r.Registration_Serial__c != null ) ? dealItem.Customer_Owned_Unit__r.Registration_Serial__c : '';
+	  		if(dealItem.Customer_Owned_Unit__r.Manufactured_Date__c != null){
+    			this.ManufacturedDate =  BPUtility.getFormatedDateTime(datetime.newInstance(dealItem.Customer_Owned_Unit__r.Manufactured_Date__c.year(), dealItem.Customer_Owned_Unit__r.Manufactured_Date__c.month(), dealItem.Customer_Owned_Unit__r.Manufactured_Date__c.day()));
+    		}
+    		
+    		this.DateStockedIn = (dealItem.Customer_Owned_Unit__r.Date_Stocked_In__c != null) ? BPUtility.getFormatedDateTime(datetime.newInstance(dealItem.Customer_Owned_Unit__r.Date_Stocked_In__c.year(), dealItem.Customer_Owned_Unit__r.Date_Stocked_In__c.month(),dealItem.Customer_Owned_Unit__r.Date_Stocked_In__c.day())): '';
+    		
+    		this.YearFirstRego = (dealItem.Customer_Owned_Unit__r.Year_Of_1st_Rego__c != null) ? dealItem.Customer_Owned_Unit__r.Year_Of_1st_Rego__c : '';
             this.Notes = (dealItem.Customer_Owned_Unit__r.Notes__c  != null) ? dealItem.Customer_Owned_Unit__r.Notes__c : '';
-        }
-        
-        if(String.isNotBlank(dealItem.Category__c)) {
-            this.CategoryId = dealItem.Category__c;
-            this.CategoryName = dealItem.Category__r.Name;
+	  	}
+	  	
+	  	if(String.isNotBlank(dealItem.Category__c)) {
+        	this.CategoryId = dealItem.Category__c;
+        	this.CategoryName = dealItem.Category__r.Name;
         }
         
         List<Exempt_Fee_On_Form__mdt> exemptFeeOnFormList = MetadataService.getAllExemptFeeOnFormList();
@@ -219,7 +219,7 @@ public class DealItem {
                     }
                 }
                 if(feeExemptWrapperList.size() > 0) {
-                    TagNameToFeeExemptListMap.put((exemptFeeOnFormRec.Label).toUpperCase(), feeExemptWrapperList);
+            	    TagNameToFeeExemptListMap.put((exemptFeeOnFormRec.Label).toUpperCase(), feeExemptWrapperList);
                  }
             }
         }
@@ -348,7 +348,7 @@ public class DealItem {
                                                         'Notes__c',
                                                         'Deal__r.Notes_For_Customer__c',
                                                         'Deal__r.Is_Deal_Fulfilled__c'
-                                                    };
+	                                                };
         return dealItemFields;
     } 
 }
