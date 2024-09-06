@@ -134,6 +134,7 @@ public class DealItem {
                                                    
     	} else {
     		this.Make = dealItem.Customer_Owned_Unit__r.Unit_Make__c;
+		this.Make = dealItem.Customer_Owned_Unit__r.Unit_Make_Formula__c;
 	    	this.MakeName = (dealItem.Customer_Owned_Unit__r.Unit_Make__c != null) ? dealItem.Customer_Owned_Unit__r.Unit_Make__r.Name : '';
 	    	
 	    	if(dealItem.Customer_Owned_Unit__r.Unit_Model__c != null) {
