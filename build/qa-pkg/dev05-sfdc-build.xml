@@ -19,6 +19,7 @@
 
 	<target name="copySFDCToDeploy" depends="cleanSFDCDeploy">
 		<echo level="info">${copy.sfdc.application.msg}</echo>
+		<record name="logfile_tests.txt" action="start" />
 		<sync todir="${SFDC_changesToDeploy}" verbose="true">
 			<fileset dir="${env.WORKSPACE}/src/" includes="**" />
 		</sync>
