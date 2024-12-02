@@ -37,7 +37,7 @@ jobs:
           distribution: 'temurin'
       - name: Build with Ant
         id: sfdc_deploy_step
-        run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml deployOnly
+        run: ant -buildfile build/qa-pkg/dev05-sfdc-build.xml fullDeployAndRunTests
       - name: Update job status variable
         id: update_job_status_var
         if: ${{ success() || failure() }}
