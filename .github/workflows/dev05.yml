@@ -65,7 +65,7 @@ jobs:
           id: read_file
           uses: andstor/file-reader-action@v1
           with:
-            path: "logfile.txt"
+            path: "logfile_tests.txt"
         - name: Search for smallest error
           if: ${{ needs.Dev05_Org_Refresh.outputs.deploy_status != 'success' }}
           uses: meta-richa-mittal/get-deploy-error@v1.14
