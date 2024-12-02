@@ -32,4 +32,7 @@
 		</delete>
 		<mkdir dir="${SFDC_changesToDeploy}"/>
 	</target>
+	<target name="fullDeployAndRunTests" depends="deployAndRunTests,cleanSFDCDeploy">
+		<echo level="info">${full.deploy.msg}</echo>
+	</target>
 </project>
