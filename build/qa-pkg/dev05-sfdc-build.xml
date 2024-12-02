@@ -32,6 +32,19 @@
 		</delete>
 		<mkdir dir="${SFDC_changesToDeploy}"/>
 	</target>
+	<target name="deployAndRunTests" depends="copySFDCToDeploy">
+		<echo level="info">${deploy.sfdc.deploy.run.tests.msg}</echo>
+		<sf:deploy 
+			username="${env.SF_USERNAME}"
+			password="${env.SF_PASSWORD}"
+			serverurl="${sf.serverurl}"
+			pollWaitMillis="${sf.pollWaitMillis}"
+			maxPoll="${sf.maxPoll}"
+			deployRoot="${SFDC_changesToDeploy}" 
+			testLevel="RunLocalTests" 
+			ignoreWarnings="true">
+		</sf:deploy>
+	</target>
 	<target name="fullDeployAndRunTests" depends="deployAndRunTests,cleanSFDCDeploy">
 		<echo level="info">${full.deploy.msg}</echo>
 	</target>
