@@ -19,7 +19,6 @@
 
 	<target name="copySFDCToDeploy" depends="cleanSFDCDeploy">
 		<echo level="info">${copy.sfdc.application.msg}</echo>
-		<record name="logfile_tests.txt" action="start" />
 		<sync todir="${SFDC_changesToDeploy}" verbose="true">
 			<fileset dir="${env.WORKSPACE}/src/" includes="**" />
 		</sync>
@@ -35,6 +34,7 @@
 	</target>
 	<target name="deployAndRunTests" depends="copySFDCToDeploy">
 		<echo level="info">${deploy.sfdc.deploy.run.tests.msg}</echo>
+		<record name="logfile_tests.txt" action="start" />
 		<sf:deploy 
 			username="${env.SF_USERNAME}"
 			password="${env.SF_PASSWORD}"
