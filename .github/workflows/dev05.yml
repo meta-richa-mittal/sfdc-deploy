@@ -48,7 +48,7 @@ jobs:
         if: ${{ success() || failure() }}
         with:
           name: log_deploy
-          path: logfile.txt
+          path: logfile_tests.txt
   Post_Slack_Message:
       if: ${{ success() || failure() }}
       needs: Dev05_Org_Refresh
