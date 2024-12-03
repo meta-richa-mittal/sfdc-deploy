@@ -58,13 +58,14 @@ public without sharing class UnitPricingService {
         return 'Success';
     }
     
-    public static FactoryOptionModelWrapper getModelPricingAndOptionsDetails(String modelId) {
-        List<Unit_Sub_Model__c> unitSubModelList = UnitPricingSOQLUtil.getActiveSubModelsByModelId(modelId);
-        List<Unit_Model__c> unitModelList = UnitPricingSOQLUtil.getActiveModelsByModelId(modelId);
+    public static FactoryOptionModelWrapper getModelPricingAndOptionsDetails(String filterJson) {
+        UnitSubmodelFilterWrapper filterObj = (UnitSubmodelFilterWrapper) System.JSON.deserialize(filterJson, UnitSubmodelFilterWrapper.class);
+        List<Unit_Sub_Model__c> unitSubModelList = UnitPricingSOQLUtil.getActiveSubModelsByModelId(filterObj);
+        List<Unit_Model__c> unitModelList = UnitPricingSOQLUtil.getActiveModelsByModelId(filterObj.ModelId);
         if(unitModelList.size() == 0){
-            throw new BlackPurlException('No model exist with id ' + modelId);
+            throw new BlackPurlException('No model exist with id ' + filterObj.ModelId);
         }
-        return new FactoryOptionModelWrapper(unitModelList[0], unitSubModelList);
+        return new FactoryOptionModelWrapper(unitModelList[0], unitSubModelList, (filterObj.StartIndex == null || filterObj.StartIndex == 0));
     }
    
     public static String saveSubModel(String subModelJson) {    
@@ -290,5 +291,12 @@ public without sharing class UnitPricingService {
                 this.Price =  ((sobjRec.get(Constants.NAMESPACE +'Default_Price__c') != null) ? Decimal.valueOf(String.valueOf(sobjRec.get(Constants.NAMESPACE +'Default_Price__c'))) : 0);  
             } 
         }
+    }
+
+    public class UnitSubmodelFilterWrapper {
+        public Integer StartIndex;
+        public Integer RecordCount;
+        public String SearchKeyword;
+        public String ModelId;
     }
 }

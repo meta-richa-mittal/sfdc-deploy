@@ -31,6 +31,7 @@ public class DealItem {
     public String EngineNumber;
     public Decimal EngineSize;
     public Boolean Taxable;
+    public String UnitTaxApplicableOn;
     public String ApplicableTaxId;
     public String ApplicableTaxName;
     public String InteriorColor;
@@ -70,8 +71,21 @@ public class DealItem {
     public String CategoryName;
     public Boolean IsAutomatic;
     public String Notes;
+    public String UnitVendorId;
+    public Boolean TransferPlateRegToNewUnit;
+    public String TransferToUnitId;
+    public Boolean IsNewUnit;
+    public String ProductTypeId;
+    public String ProductType;
+    public String ApplicableStampDutyCalName;
+    public String ApplicableStampDutyCalId;
+    public Decimal DutiableValue;
+    public UnitProductTypeWrapper UnitOptionalFields;
+    public String Location;
+    public List<String> AssignedTags;
 
-	// Constructor
+	
+    // Constructor
 	public DealItem() {}
 	
     public DealItem(Deal_Item__c dealItem) {
@@ -92,8 +106,8 @@ public class DealItem {
         this.TradeInUnitStockNumber = dealItem.Stocked_In_Unit__r.Stock_Id__c != null ? dealItem.Stocked_In_Unit__r.Stock_Id__c : '';
         
         this.TradeInUnitStockedIn = (dealItem.Stocked_In_Unit__r.Date_Stocked_In__c != null) ? BPUtility.getFormatedDateTime(datetime.newInstance(dealItem.Stocked_In_Unit__r.Date_Stocked_In__c.year(), dealItem.Stocked_In_Unit__r.Date_Stocked_In__c.month(),dealItem.Stocked_In_Unit__r.Date_Stocked_In__c.day())): '';
-        this.TradeInMileageValue = dealItem.Customer_Owned_Unit__r.Mileage_Value__c;
-        this.TradeInMileageType = dealItem.Customer_Owned_Unit__r.Mileage_Type__c;
+        this.TradeInMileageValue = dealItem.Mileage__c;
+        this.TradeInMileageType = dealItem.Mileage_Type__c;
         this.LienPayout = dealItem.Lien_Payout__c != null ? dealItem.Lien_Payout__c : 0;
         this.FinanceCompanyId = dealItem.Finance_Company__c;
         this.FinanceCompanyName = dealItem.Finance_Company__r.Name;
@@ -104,10 +118,18 @@ public class DealItem {
 		}
 
         this.Taxable = dealItem.Taxable__c;
+        this.UnitTaxApplicableOn = dealItem.Unit_Tax_Applicable_On__c;
         this.ApplicableTaxId = dealItem.Applicable_Tax__c;
         this.ApplicableTaxName = dealItem.Applicable_Tax__c != null ? dealItem.Applicable_Tax__r.Name__c : '';
+
+        this.TransferPlateRegToNewUnit = dealItem.Transfer_Plate_Reg_to_New_Unit__c;
+        this.TransferToUnitId = dealItem.Transfer_To__c;
+
+        this.DutiableValue = dealItem.Dutiable_Value__c;
+        this.ApplicableStampDutyCalId = dealItem.Stamp_Duty_Calculators__c;
+        this.ApplicableStampDutyCalName = (dealItem.Stamp_Duty_Calculators__c != null) ? dealItem.Stamp_Duty_Calculators__r.Name__c : '';
         
-    	if(dealItem.Customer_Owned_Unit__c == null){
+    	if(dealItem.Customer_Owned_Unit__c == null) {
     		this.Make = dealItem.Unit_Make__c;
 	    	this.MakeName = (dealItem.Unit_Make__c != null) ? dealItem.Unit_Make__r.Name : '';
 	    	
@@ -149,6 +171,7 @@ public class DealItem {
 	    	this.Year = dealItem.Customer_Owned_Unit__r.Year__c;
 	    	this.ExteriorColour = dealItem.Customer_Owned_Unit__r.Colour__c;
 	    	this.InteriorColor = dealItem.Customer_Owned_Unit__r.Interior_Colour__c;
+            this.IsNewUnit = dealItem.Customer_Owned_Unit__r.New_Unit__c;
 	    	this.UnitType = (dealItem.Customer_Owned_Unit__r.Unit_Type__c != null) ? dealItem.Customer_Owned_Unit__r.Unit_Type__c : '';
 	    	if(this.UnitType == 'STOCK') {
 				if(dealItem.Customer_Owned_Unit__r.Status__c == 'Available') {
@@ -185,9 +208,11 @@ public class DealItem {
 			this.EngineNumber = dealItem.Customer_Owned_Unit__r.Engine_Serial_No__c;
 			this.EngineSize = dealItem.Customer_Owned_Unit__r.Displacement__c;
 			this.IsSctockedIn = dealItem.Is_Stocked_In__c;
-			this.Mileage = dealItem.Customer_Owned_Unit__r.Mileage_Value__c;
-			this.MileageType = dealItem.Customer_Owned_Unit__r.Mileage_Type__c;
-			
+			this.Mileage = dealItem.Mileage__c;
+			this.MileageType = dealItem.Mileage_Type__c;
+			if(dealItem.Customer_Owned_Unit__r != null) this.AssignedTags = TagUtil.getTagsList(dealItem.Customer_Owned_Unit__r);
+            this.Location = dealItem.Customer_Owned_Unit__r.Location__c;
+
 			this.OtherSerialNo = dealItem.Customer_Owned_Unit__r.Other_Serial_No__c != null ? dealItem.Customer_Owned_Unit__r.Other_Serial_No__c : '';
 			this.KeyNo = dealItem.Customer_Owned_Unit__r.Key_No__c != null ? dealItem.Customer_Owned_Unit__r.Key_No__c : '';
 			
@@ -201,9 +226,15 @@ public class DealItem {
     		
     		this.YearFirstRego = (dealItem.Customer_Owned_Unit__r.Year_Of_1st_Rego__c != null) ? dealItem.Customer_Owned_Unit__r.Year_Of_1st_Rego__c : '';
             this.Notes = (dealItem.Customer_Owned_Unit__r.Notes__c  != null) ? dealItem.Customer_Owned_Unit__r.Notes__c : '';
-	  	}
+            this.UnitVendorId = dealItem.Customer_Owned_Unit__r.Vendor__c;
+            this.ProductTypeId = dealItem.Customer_Owned_Unit__r.Product_type__c;
+            this.ProductType = dealItem.Customer_Owned_Unit__r.Product_type__c != null ? dealItem.Customer_Owned_Unit__r.Product_type__r.Name__c : '';
+    }
 	  	
-	  	if(String.isNotBlank(dealItem.Category__c)) {
+	  	if(this.UnitType == 'ORDU' && dealItem.Customer_Owned_Unit__r.Category__c != null) {
+            this.CategoryId = dealItem.Customer_Owned_Unit__r.Category__c;
+        	this.CategoryName = dealItem.Customer_Owned_Unit__r.Category__r.Name;
+        } else if(String.isNotBlank(dealItem.Category__c)) {
         	this.CategoryId = dealItem.Category__c;
         	this.CategoryName = dealItem.Category__r.Name;
         }
@@ -235,6 +266,18 @@ public class DealItem {
         }
         return isRequiredTagExistOnFee;
     }
+
+    public Boolean checkNotThisTagOnFee(String assignedTagStr, String exemptFeeTagLabel) {
+        Boolean checkNotTagOnFee = true;
+        Set<String> assingedTagStrSet = new Set<String>();
+        if(String.isNotBlank(assignedTagStr) && String.isNotBlank(exemptFeeTagLabel)){ 
+            assingedTagStrSet.addAll(assignedTagStr.split(';'));
+            if(assingedTagStrSet.contains(exemptFeeTagLabel)) {
+                checkNotTagOnFee = false;
+            }
+        }
+        return checkNotTagOnFee;
+    }
     
     public class FeeExemptWrapper {
         public Decimal FeePrice;
@@ -252,6 +295,7 @@ public class DealItem {
         public Boolean IsTaxable;
         public String ApplicableTaxId;
         public String Id;
+        public String UnitTaxApplicableOn;
         
         public DealItemTaxDetailWrapper() {
             
@@ -296,17 +340,19 @@ public class DealItem {
                                                         'Customer_Owned_Unit__r.Stock_Id__c',
                                                         'Customer_Owned_Unit__r.Formatted_Name__c',
                                                         'Customer_Owned_Unit__r.Unit_Model__r.Sub_Model__c',
-                                                        'Customer_Owned_Unit__r.Mileage_Value__c',
-                                                        'Customer_Owned_Unit__r.Mileage_Type__c',
+                                                        'Mileage__c',
+                                                        'Mileage_Type__c',
                                                         'Customer_Owned_Unit__r.Notes__c',
                                                         'Customer_Owned_Unit__r.Plate__c',
                                                         'Customer_Owned_Unit__r.Reg_Expiry_Date__c',
                                                         'Customer_Owned_Unit__r.Engine_Serial_No__c',
                                                         'Customer_Owned_Unit__r.Displacement__c',
-                                                        'Customer_Owned_Unit__r.Mileage__c',
                                                         'Customer_Owned_Unit__r.Other_Serial_No__c',
                                                         'Customer_Owned_Unit__r.Key_No__c',
                                                         'Customer_Owned_Unit__r.New_Unit__c',
+                                                        'Customer_Owned_Unit__r.Consignment__c',
+                                                        'Customer_Owned_Unit__r.Vendor__c',
+                                                        'Customer_Owned_Unit__r.Product_type__c',
                                                         'Type__c',
                                                         'Lien_Payout__c',
                                                         'Finance_Company__c',
@@ -323,14 +369,20 @@ public class DealItem {
                                                         'Default_Unit_Sales_Tax_Percentage__c',
                                                         'Stamp_Duty_Total__c',
                                                         'Is_Override_Stamp_Duty__c',
+                                                        'Dutiable_Value__c',
+                                                        'Stamp_Duty_Calculators__c',
+                                                        'Stamp_Duty_Calculators__r.Name__c',
                                                         'Is_Rideaway_Pricing_Enabled__c',
                                                         'Rideaway_Pricing_Total__c',
+                                                        'Is_Lock_In_Unit_Pricing__c',
                                                         'Deal__r.Status__c',
                                                         'Deal__r.Type__c',
+                                                        'Deal__r.Co_Buyer__r.Name',
                                                         'Is_Stocked_In__c',
                                                         'Applicable_Tax__c',
                                                         'Applicable_Tax__r.Name__c',
                                                         'Taxable__c',
+                                                        'Unit_Tax_Applicable_On__c',
                                                         'Customer_Owned_Unit__r.Interior_Colour__c',
                                                         'Customer_Owned_Unit__r.Compliance_Date__c',
                                                         'Customer_Owned_Unit__r.Registration_Serial__c',
@@ -343,10 +395,25 @@ public class DealItem {
                                                         'Deal__r.Sales_Tax_Total__c',
                                                         'Category__c',
                                                         'Category__r.Name',
+                                                        'Customer_Owned_Unit__r.Category__c',
+                                                        'Customer_Owned_Unit__r.Category__r.Name',
                                                         'Customer_Owned_Unit__r.Automatic__c',
                                                         'Notes__c',
                                                         'Deal__r.Notes_For_Customer__c',
-                                                        'Deal__r.Is_Deal_Fulfilled__c'
+                                                        'Deal__r.Is_Deal_Fulfilled__c',
+                                                        'Transfer_Plate_Reg_to_New_Unit__c',
+                                                        'Transfer_To__c',
+                                                        'Deal__r.Insurance_Provider__c',
+                                                        'Deal__r.Insurance_Policy__c',
+                                                        'Deal__r.Down_Payment__c',
+                                                        'Deal__r.Salesperson_Name__c',
+                                                        'Deal__r.CO_Header__r.Owner__r.Name',
+                                                        'Unit_Status__c',
+                                                        'Customer_Owned_Unit__r.Product_type__r.Name__c',
+                                                        'Customer_Owned_Unit__r.Assigned_Tag_1__c',
+                                                        'Customer_Owned_Unit__r.Assigned_Tag_2__c',
+                                                        'Customer_Owned_Unit__r.Location__c'
+
 	                                                };
         return dealItemFields;
     } 

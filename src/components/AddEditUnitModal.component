@@ -1,0 +1,946 @@
+<apex:component >
+    <apex:attribute name="scopeVarName" type="string" description=""/>
+    <apex:attribute name="scopeMethodName" type="string" description=""/>
+    <apex:attribute name="unitDataFieldObj" type="string" description=""/>
+    <apex:attribute name="mapFieldObj" type="string" description=""/>
+    <apex:attribute name="fieldValidationObj" type="string" description=""/>
+    <apex:attribute name="factoryOptionScopeVar" type="string" description=""/>
+    <apex:attribute name="showFactoryOptions" type="boolean" description=""/>
+    <apex:attribute name="isComingFromUnitOrdering" type="boolean" description=""/>
+    <apex:attribute name="isComingFromCO" type="boolean" description=""/>
+
+    <bp-ng-modal-window id-val="{{{!scopeVarName}.AddEditUnitModalId}}" mobal-window-payload="{!scopeVarName}.ModalWindowPayload" cancel-btn-action="{!scopeMethodName}.closeAddEditStockCOUModal()" primary-btn-action="{!scopeMethodName}.saveAddEditStockCOUAction()" disable-primary-action="{!scopeMethodName}.isSaveAddEditStockCOUBtnDisabled()" class="AddEditStockAndCouModal" ng-class="{'user-suggestion-modal': {!scopeVarName}[{!mapFieldObj}.similarCOUList].length > 0}">
+        <div class="AddEditStockAndCouModalContainer">
+            <div class="cou-field">
+                <div ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && ({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'))">
+                    <div class="row">
+                        <div class="first-column">
+                            <div class="field-label required">Vendor</div>
+                            <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showVendorList'] }">
+                                <input autocomplete="off" ng-class="{'bp-redborder' : {!fieldValidationObj}[{!mapFieldObj}.VendorNameField]['isError'] == true}" class="bp-input-text searchInput" id="vendorField" placeholder="Select a vendor" type="text"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.VendorName]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('Vendor', $event)"
+                                ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('Vendor', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('Vendor', $event, filteredVendor)" />
+                                <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('vendorField')">arrowDown</i>
+                                <div class="searchResultOverlay" id="vendorDropDownDiv" ng-class="{'no-results-overlay': filteredVendor.length == 0}">
+                                    <ul>
+                                        <li id="vendor{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.VendorCurrentIndex] }" 
+                                        ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('Vendor', vendorObj, $event)" 
+                                        ng-repeat="vendorObj in {!scopeVarName}[{!mapFieldObj}.VendorList] | filter:{'VendorName' : {!unitDataFieldObj}[{!mapFieldObj}.VendorName]} as filteredVendor">
+                                            <div class="fullName">{{vendorObj.VendorName}}</div>
+                                        </li>
+                                        <li ng-if="filteredVendor.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                            <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                        </li>
+                                    </ul> 
+                                </div>
+                            </div>
+                        </div>
+                        <div class="second-column">
+                            <div class="field-label">Factory Order #</div>
+                            <div class="field-value searchInputArea">
+                                <input id="FactoryOrder" type="text" maxlength="40" class="bp-input-text searchInput"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.FactoryOrderNo]" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Id] && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && !{!isComingFromUnitOrdering} && ({!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Temporary' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Required')">
+                    <div class="first-column">
+                        <div class="field-label">Factory Order #</div>
+                        <div class="field-value searchInputArea">
+                            <input id="FactoryOrder" type="text" maxlength="40" class="bp-input-text searchInput"
+                            ng-model="{!unitDataFieldObj}[{!mapFieldObj}.FactoryOrderNo]" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="first-column" ng-class="{'unitSpecificationModal' : {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && {!scopeVarName}.vehicleSpecificationsResult == 'Match found with not all fields match'}">
+                        <div class="field-label" ng-class="{'required' : {!unitDataFieldObj}[{!mapFieldObj}.UnitType] != 'ORDU'}">VIN/SN</div>
+                        <div class="field-value searchInputArea">
+                            <div>
+                                <input id="VIN_Unit" type="text" maxlength="40" class="bp-input-text searchInput" ng-class="{'MB5': ({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' || {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU') && {!scopeVarName}.vehicleSpecificationsResult != '' && {!scopeVarName}.vehicleSpecificationsResult != 'Loading',
+                                'bp-redborder' : {!fieldValidationObj}[{!mapFieldObj}.VIN]['isError'] == true}"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.VIN]" upper-case-input="upper-case-input" ng-keydown="{!scopeMethodName}.keydownOnPrimaryDataFields($event, 'VIN')"
+                                ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('VIN')" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('VIN')" ng-disabled="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && !{!isComingFromUnitOrdering} && ({!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Temporary' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Required') " />
+                                <i class="input-loading-icon" ng-if="{!scopeVarName}.vehicleSpecificationsResult == 'Loading'">
+                                    <svg class="input-spiner" width="85px" height="85px" viewBox="0 0 66 66" xmlns="https://www.w3.org/2000/svg">
+                                        <circle class="input-spiner-path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+                                    </svg>
+                                </i>
+                                <span class="input-loading-icon green-circle-tick-mark" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && {!scopeVarName}.vehicleSpecificationsResult == 'Match found with all fields match'">
+                                    <i class="bp-icons bp-font-10 bp-white-font stroke-3">check</i>
+                                </span>
+                                <span class="input-loading-icon green-circle-tick-mark  bp-yellow-dark" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && {!scopeVarName}.vehicleSpecificationsResult == 'Match found with not all fields match'">
+                                    <span class="exclamation-mark">!</span>
+                                </span>
+                            </div>
+                            <div>
+                                <div class="form-input form-input-sub-item" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && {!scopeVarName}.vehicleSpecificationsResult == 'Match found'">
+                                    <label class="print-item-label bp-font-14">{{ 'Vehicle_lookup_information' | translate }}:</label>
+                                    <div class="bp-cell searchInputArea ">
+                                        <info-card-component id-value="couInfoCardAddNewId"
+                                          object-payload="{!scopeVarName}.unitCardInfoPayload"
+                                          button-action="{!scopeMethodName}.setDataFromBRP()">
+                                       </info-card-component>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-input result-text" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && {!scopeVarName}.vehicleSpecificationsResult == 'Match not found'">
+                                    <span class="print-item-label bp-font-14">{{ 'No_BRP_match_found' | translate }}</span>
+                                </div>
+                                <div class="form-input result-text match-not-found" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && {!scopeVarName}.vehicleSpecificationsResult == 'Match not found'">
+                                    <div>{{ 'This_is_not_a_valid_VIN_for_this_vendor' | translate }}</div>
+                                </div>
+                                <div class="form-input unit-order-specification-container" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && {!scopeVarName}.vehicleSpecificationsResult == 'Match found with not all fields match'">
+                                    <div unit-specification = "{!unitDataFieldObj}[{!mapFieldObj}.mapOfNewAndOldValue]"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="second-column">
+                        <div class="field-label">Product type</div>
+                        <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showProductTypeList'] }">
+                            <input autocomplete="off" class="bp-input-text searchInput" id="ProductTypeField" placeholder="Select a product type" type="text"
+                            ng-model="{!unitDataFieldObj}[{!mapFieldObj}.ProductType]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('ProductType', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ProductType')" 
+                            ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('ProductType', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('ProductType', $event)"
+                            ng-disabled="!{!scopeVarName}[{!mapFieldObj}.ProductTypeList] || {!scopeVarName}[{!mapFieldObj}.ProductTypeList].length == 0 || {!scopeVarName}[{!mapFieldObj}.ProductTypeList].length == 1" readonly="readonly" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('ProductTypeField')">arrowDown</i>
+                            <div class="searchResultOverlay" id="productDropDownDiv" ng-class="{'no-results-overlay': filteredProductType.length == 0}">
+                                <ul>
+                                    <li id="product{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.ProductTypeCurrentIndex] }" 
+                                    ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('ProductType', product, $event)" 
+                                    ng-repeat="product in {!scopeVarName}[{!mapFieldObj}.ProductTypeList] | orderBy:'Name'">
+                                        <div class="fullName">{{product.Name}}</div>
+                                    </li>
+                                    <li ng-if="filteredProductType.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                        <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                    </li>
+                                </ul> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="first-column">
+                        <div class="field-label required">Make</div>
+                        <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showMakeList'] }">
+                            <input ng-class="{'bp-redborder' : {!fieldValidationObj}[{!mapFieldObj}.MakeNameField]['isError'] == true}" autocomplete="off" class="bp-input-text searchInput" id="MakeUnitOrdering" placeholder="Select a make" type="text"
+                            ng-model="{!unitDataFieldObj}[{!mapFieldObj}.MakeName]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('Make', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('Make')" 
+                            ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('Make', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('Make', $event, filteredMake)" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('MakeUnitOrdering')">arrowDown</i>
+                            <div class="searchResultOverlay" id="makeDropDownDiv" ng-class="{'no-results-overlay': filteredMake.length == 0}">
+                                <ul>
+                                    <li id="make{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.MakeCurrentIndex] }" 
+                                    ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('Make', unitMake, $event)" 
+                                    ng-repeat="unitMake in {!scopeVarName}[{!mapFieldObj}.MakeList] | filter:{'UnitMakeName' : {!unitDataFieldObj}[{!mapFieldObj}.MakeName]} as filteredMake">
+                                        <div class="fullName">{{unitMake.UnitMakeName}}</div>
+                                    </li>
+                                    <li ng-if="filteredMake.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                        <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                    </li>
+                                </ul> 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="second-column">
+                        <div class="field-label">Stock # / Unit ID</div>
+                        <div class="field-value searchInputArea" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' ">
+                            <input type="text" class="bp-input-text searchInput" maxlength="40" ng-class="{'bp-redborder' : {!scopeVarName}.isStockNumberInvalid}"
+                            ng-model="{!unitDataFieldObj}[{!mapFieldObj}.StockId]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('Stock/UnitId', $event)" />
+                        </div>
+                        <div class="field-value searchInputArea" ng-if="({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' || {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU')">
+                            <input type="text" class="bp-input-text searchInput" maxlength="40" ng-class="{'bp-redborder' : {!scopeVarName}.isStockNumberInvalid}"
+                            ng-model="{!unitDataFieldObj}[{!mapFieldObj}.UnitId]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('Stock/UnitId', $event)"
+                            ng-disabled="({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && !{!isComingFromUnitOrdering} && ({!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Temporary' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Required')) || {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU'" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="first-column">
+                        <div class="field-label required">Model</div>
+                        <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showModelList'] }">
+                            <input ng-class="{'bp-redborder' : {!fieldValidationObj}[{!mapFieldObj}.ModelNameField]['isError'] == true}" autocomplete="off" class="bp-input-text searchInput" id="ModelUnitOrdering" placeholder="Select a model" type="text"
+                            ng-model="{!unitDataFieldObj}[{!mapFieldObj}.ModelName]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('Model', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('Model')" 
+                            ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('Model', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('Model', $event, filteredModel)" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('ModelUnitOrdering')">arrowDown</i>
+                            <div class="searchResultOverlay" id="modelDropDownDiv" ng-class="{'no-results-overlay': filteredModel.length == 0}">
+                                <ul>
+                                    <li id="model{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.ModelCurrentIndex] }" 
+                                    ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('Model', unitModel, $event)" 
+                                    ng-repeat="unitModel in {!scopeVarName}[{!mapFieldObj}.ModelList] | filter:{'UnitModelName' : {!unitDataFieldObj}[{!mapFieldObj}.ModelName]} as filteredModel">
+                                        <div class="fullName">{{unitModel.UnitModelName}}</div>
+                                    </li>
+                                    <li ng-if="filteredModel.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                        <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                    </li>
+                                </ul> 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="second-column">
+                        <div class="field-label">Condition</div>
+                        <div class="field-value bp-cell searchInputArea" ng-class = "{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showConditionList'] }">
+                            <input  type="text" id="Condition" class="bp-input-text searchInput" placeholder="{{ 'Please_select' | translate }}" autocomplete="off" 
+                                ng-focus = "{!scopeMethodName}.focusOnPrimaryDataFields('Condition', $event)" ng-blur = "{!scopeMethodName}.blurOnPrimaryDataFields('Condition', $event)"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.Condition]" readonly="readonly"
+                                ng-disabled="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU'"
+                            />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('Condition')">arrowDown</i>
+                            <div class="searchResultOverlay" id="ConditionDropDownDiv">
+                                <ul>
+                                    <li ng-repeat="condition in {!scopeVarName}[{!mapFieldObj}.ConditionList]"
+                                        ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('Condition', condition, $event)"
+                                        ng-class="{'selected-row': condition == {!unitDataFieldObj}[{!mapFieldObj}.Condition]}"
+                                        id="condition{{$index}}">
+                                        <div class="fullName">{{condition}}</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row align-control">
+                    <div class="first-column">
+                        <div class="field-label">Sub model</div>
+                        <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showSubModelList'] }">
+                            <input autocomplete="off" class="bp-input-text searchInput" id="SubModelUnitOrdering" placeholder="Select a sub-model" type="text"
+                            ng-model="{!unitDataFieldObj}[{!mapFieldObj}.SubModelName]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('SubModel', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('SubModel')" 
+                            ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('SubModel', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('SubModel', $event, filteredSubModel)" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('SubModelUnitOrdering')">arrowDown</i>
+                            <div class="searchResultOverlay" id="subModelDropDownDiv" ng-class="{'no-results-overlay': filteredSubModel.length == 0}">
+                                <ul>
+                                    <li id="subModel{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.SubModelCurrentIndex] }" 
+                                    ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('SubModel', unitSubModel, $event)" 
+                                    ng-repeat="unitSubModel in {!scopeVarName}[{!mapFieldObj}.SubModelList] | filter:{'SubModelName' : {!unitDataFieldObj}[{!mapFieldObj}.SubModelName]} as filteredSubModel">
+                                        <div class="fullName">{{unitSubModel.SubModelName}}</div>
+                                    </li>
+                                    <li ng-if="filteredSubModel.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                        <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                    </li>
+                                </ul> 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="second-column">
+                        <div class="field-label">Location</div>
+                        <div class="field-value searchInputArea">
+                            <input type="text" class="bp-input-text searchInput" ng-model="{!unitDataFieldObj}[{!mapFieldObj}.Location]" placeholder="Enter a location" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row align-control">
+                    <div class="first-column">
+                        <div class="field-label">Year</div>
+                        <div class="field-value bp-cell searchInputArea " ng-class = "{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showYearsList'] }">
+                            <numbers-only 
+                                class-value="bp-input-text searchInput"
+                                id-value="YearAddEditUnit"
+                                place-holder-value="{{ 'Please_select' | translate }}"
+                                include-blank="true"
+                                blur-value="{!scopeMethodName}.blurOnPrimaryDataFields('Year', $event); {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showYearsList'] = false;"
+                                focus-value="{!scopeVarName}[{!mapFieldObj}.dropDownObj]['showYearsList'] = true;"
+                                input-model-value="{!unitDataFieldObj}[{!mapFieldObj}.SearchYear]"
+                                input-keyup-value="{!scopeMethodName}.keyupOnPrimaryDataFields('Year', $event, filteredYear)" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click = "{!scopeMethodName}.setFocusOnElement('YearAddEditUnit')">arrowDown</i>
+                            <div class="searchResultOverlay" id="yearDropDownDiv" ng-class="{'no-results-overlay': filteredYear.length == 0}">
+                                <ul>
+                                    <li ng-repeat="yearValue in {!scopeVarName}[{!mapFieldObj}.Years] | filter:{'year' : {!unitDataFieldObj}[{!mapFieldObj}.SearchYear]} as filteredYear"
+                                        ng-mousedown="{!unitDataFieldObj}[{!mapFieldObj}.SearchYear] = yearValue.year; {!unitDataFieldObj}[{!mapFieldObj}.SearchYear] = yearValue.year;"
+                                        ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.YearCurrentIndex]}"
+                                        id="year{{$index}}">
+                                        <div class="fullName">{{yearValue.year}}</div>
+                                    </li>
+                                    <li  ng-if="filteredYear.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                        <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="second-column">
+                        <div class="field-label">Tags</div>
+                        <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showTagsList'] }">
+                            <input autocomplete="off" class="bp-input-text searchInput" id="TagInputField" placeholder="{{'Search_tag'| translate }}" type="text"
+                            ng-model="{!unitDataFieldObj}[{!mapFieldObj}.TagName]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('Tag', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('Tag')" 
+                            ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('Tag', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('Tag', $event, filteredTag)" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('TagInputField')">arrowDown</i>
+                            <div class="searchResultOverlay" id="tagDropDownDiv" ng-class="{'no-results-overlay': filteredTag.length == 0}">
+                                <ul>
+                                    <li id="tag_{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.TagCurrentIndex] }" 
+                                    ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('Tag', tag, $event, $index)" 
+                                    ng-repeat="tag in {!scopeVarName}[{!mapFieldObj}.TagList] | orderBy:'Name' | filter:{'Name' : {!unitDataFieldObj}[{!mapFieldObj}.TagName] } as filteredTag">
+                                        <div class="fullName">{{tag.Name}}</div>
+                                    </li>
+                                    <li ng-if="filteredTag.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                        <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                    </li>
+                                </ul> 
+                            </div>
+                            <div class="tag" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.AssignedTags].length > 0">
+                                <ul class="tag-ul-list">
+                                   <li class="tag-list" ng-repeat="tag in {!unitDataFieldObj}[{!mapFieldObj}.AssignedTags]">
+                                      <span class="tag-name-span">{{tag}}</span>
+                                      <i class="bp-icons bp-font-10 bp-blue-font stroke-3 bp-lh-20 cross-icon" data-toggle="tooltip" title="Remove" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('Tag', tag, $index)">close</i>
+                                   </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-if="({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' || {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU')">
+                    <div class="first-column">
+                        <div class="field-label" ng-class="{'required': {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && ({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')) }">Category</div>
+                        <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showCategoryList'] }">
+                            <input autocomplete="off" ng-class="{'bp-redborder' : {!fieldValidationObj}[{!mapFieldObj}.CategoryNameField]['isError'] == true}" class="bp-input-text searchInput" id="categoryField" placeholder="Select a category" type="text"
+                            ng-model="{!unitDataFieldObj}[{!mapFieldObj}.CategorySearch]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('Category', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('Category')" 
+                            ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('Category', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('Category', $event, filteredCategory)" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('categoryField')">arrowDown</i>
+                            <div class="searchResultOverlay" id="categoryDropDownDiv" ng-class="{'no-results-overlay': filteredCategory.length == 0}">
+                                <ul>
+                                    <li id="category_{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.CategoryCurrentIndex] }" 
+                                    ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('Category', catRec, $event)" 
+                                    ng-repeat="catRec in {!scopeVarName}[{!mapFieldObj}.CategoryList] | filter:{'CategoryName' : {!unitDataFieldObj}[{!mapFieldObj}.CategorySearch]} as filteredCategory">
+                                        <div class="fullName">{{(catRec.Name) ? catRec.Name : catRec.CategoryName}}</div>
+                                    </li>
+                                    <li ng-if="filteredCategory.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                        <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                    </li>
+                                </ul> 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="second-column">
+                        <div class="field-label">{{({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU') ? 'Total Price' : 'Price'}}</div>
+                        <div class="field-value searchInputArea dollar-input-section">
+                            <span ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK'" class="dollar">$</span>
+                            <price-only-input ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK'" id-value = "Price"
+                                class-value = "bp-input-text searchInput priceOnlyInput contain-dollar"
+                                max-length = "15" 
+                                precision-length = "2" 
+                                input-value = "{!unitDataFieldObj}[{!mapFieldObj}.TotalBasePrice]"
+                                input-model = "{!scopeVarName}" 
+                                rel-value = "PriceTooltipId"
+                                validation-modal = "{!fieldValidationObj}"
+                                validation-modal-key = "TotalBasePrice"
+                                disabled-value = "({!unitDataFieldObj}[{!mapFieldObj}.Id] != null && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' 
+                                    && {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Sold')"
+                            />
+                            <div ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU'">{{ {!unitDataFieldObj}[{!mapFieldObj}.TotalPrice] | currency }}
+                                <span>
+                                    <bp-flag ng-if="{!scopeVarName}[{!mapFieldObj}.IsForeignExchangeCostingEnabled] && {!unitDataFieldObj}[{!mapFieldObj}.IsForeignVendor]" currencyCode = "{{{!unitDataFieldObj}[{!mapFieldObj}.CurrencyCode]}}"></bp-flag>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-if="({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' || {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU')">
+                    <div class="first-column" ng-if="({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')) || (!{!showFactoryOptions} && {!unitDataFieldObj}[{!mapFieldObj}.Id] && ({!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Temporary' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Required'))">
+                        <div class="field-label">Taxable</div>
+                        <div class="field-value taxable">
+                            <label class="bp-switch"> 
+                                <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.IsTaxable]" type="checkbox" ng-disabled="({!unitDataFieldObj}[{!mapFieldObj}.Id] != null && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' && !GroupOnlyPermissions['Sales Taxes']['assign'])"
+                                ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ApplicableTaxToggle')"/>
+                                <div class="bp-slider round" ng-class="{'disabled': ({!unitDataFieldObj}[{!mapFieldObj}.Id] != null && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' && !GroupOnlyPermissions['Sales Taxes']['assign']) }"></div>
+                            </label>
+                            <div ng-if="{!unitDataFieldObj}[{!mapFieldObj}.IsTaxable]" class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showApplicableTaxList'] }">
+                                <input autocomplete="off" class="bp-input-text searchInput" id="applicableTaxField" placeholder="Please select" type="text" ng-disabled="{!unitDataFieldObj}[{!mapFieldObj}.Id] != null && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' && !GroupOnlyPermissions['Sales Taxes']['assign']"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.ApplicableTaxName]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('ApplicableTax', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ApplicableTax')" 
+                                ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('ApplicableTax', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('ApplicableTax', $event, filteredApplicableTax)" />
+                                <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('applicableTaxField')">arrowDown</i>
+                                <div class="searchResultOverlay" id="taxableDropDownDiv" ng-class="{'no-results-overlay': filteredApplicableTax.length == 0}">
+                                    <ul>
+                                        <li id="applicableTax_{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.TaxableCurrentIndex] }"
+                                        ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('ApplicableTax', applicableTax, $event)" 
+                                        ng-repeat="applicableTax in {!scopeVarName}[{!mapFieldObj}.ApplicableTaxList] | filter:{'Name' : {!unitDataFieldObj}[{!mapFieldObj}.ApplicableTaxName] } as filteredApplicableTax">
+                                            <div class="fullName">{{applicableTax.Name}}</div>
+                                        </li>
+                                        <li ng-if="filteredApplicableTax.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                            <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                        </li>
+                                    </ul> 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="first-column" ng-if="{!showFactoryOptions} && !{!isComingFromUnitOrdering} && ({!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Temporary' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Required') ">
+                        <div class="field-label">Ride-away pricing</div>
+                        <div class="field-value taxable">
+                            <label class="bp-switch"> 
+                                <input ng-disabled="!{!unitDataFieldObj}[{!mapFieldObj}.Id]" ng-model="{!factoryOptionScopeVar}[{!mapFieldObj}.IsRideawayPricingEnabled]" type="checkbox"
+                                ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('RideAwayPricingToggle')"/>
+                                <div class="bp-slider round" ng-class="{'bp-cursorNotAllowed': !{!unitDataFieldObj}[{!mapFieldObj}.Id]}"></div>
+                            </label>
+                            <div ng-if="{!factoryOptionScopeVar}[{!mapFieldObj}.IsRideawayPricingEnabled]" class="field-value bp-cell searchInputArea dollar-input-section rideAway">
+                                <span class="dollar">$</span>
+                                <numbers-only 
+                                    id-value="InputForRideawayPrice"
+                                    class-value="bp-input-text searchInput priceOnlyInput contain-dollar"
+                                    precision-length="2"
+                                    input-model-value="{!factoryOptionScopeVar}[{!mapFieldObj}.TotalEnforceRideawayPrice]"
+                                    input-keyup-value="{!scopeMethodName}.enableSaveAction($event,'RideawayPrice')"
+                                    force-precision-length="true"
+                                    blur-value="{!scopeMethodName}.restoreOriginalValueOnBlur($event,'RideawayPrice')"
+                                    disabled-value="!GroupOnlyPermissions['Override price'].enabled || !{!unitDataFieldObj}[{!mapFieldObj}.Id]"
+                                />
+                                <button class="bp-btn bp-btn-normal edit-price-save-btn bp-font-12" id="SaveBtnRideawayPrice" ng-show="{!scopeVarName}.shownSaveButton == 'RideawayPrice'"
+                                    ng-mousedown="{!scopeMethodName}.updateRideawayPricing()"
+                                    ng-keydown="{!scopeMethodName}.actionOnSaveButton($event,'RideawayPrice')"
+                                    ng-disabled="!{!unitDataFieldObj}[{!mapFieldObj}.Id]"
+                                    ng-blur="{!scopeMethodName}.restoreOriginalValueOnBlur($event,'RideawayPrice')">{{ 'Save_Label' | translate }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="second-column">
+                        <div class="field-label" ng-class="{'required': {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK'}">{{({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU') ? 'Total Cost' : 'Cost'}}</div>
+                        <div class="field-value searchInputArea dollar-input-section">
+                            <span ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK'" class="dollar">$</span>
+                            <price-only-input ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK'" id-value = "Cost"
+                                class-value = "bp-input-text searchInput priceOnlyInput contain-dollar"
+                                max-length = "15" 
+                                precision-length = "2" 
+                                input-value = "{!unitDataFieldObj}[{!mapFieldObj}.TotalBaseCost]"
+                                input-model = "{!scopeVarName}" 
+                                rel-value = "CostTooltipId"
+                                validation-modal = "{!fieldValidationObj}"
+                                validation-modal-key = "TotalBaseCost"
+                                disabled-value = "({!unitDataFieldObj}[{!mapFieldObj}.Id] != null && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' )"
+                            />
+                            <div ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU'">{{ {!unitDataFieldObj}[{!mapFieldObj}.TotalCost] | currency }}
+                                <span>
+                                    <bp-flag ng-if="{!scopeVarName}[{!mapFieldObj}.IsForeignExchangeCostingEnabled] && {!unitDataFieldObj}[{!mapFieldObj}.IsForeignVendor]" currencyCode = "{{{!unitDataFieldObj}[{!mapFieldObj}.CurrencyCode]}}"></bp-flag>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="{!scopeMethodName}.isCurrentLocaleAustralia() && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] != 'COU' && !{!isComingFromCO}">
+                    <div class="row">
+                        <div class="first-column applicable-stamp-duty">
+                            <div class="field-label">Applicable stamp duty</div>
+                            <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showApplicableStampDutyList'] }">
+                                <input autocomplete="off" class="bp-input-text searchInput" id="ApplicableStampDutyField" placeholder="Please select" type="text"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.ApplicableStampDutyCalName]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('ApplicableStampDuty', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ApplicableStampDuty')" 
+                                ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('ApplicableStampDuty', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('ApplicableStampDuty', $event, filteredApplicableStampDuty)" readonly="true" />
+                                <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('ApplicableStampDutyField')">arrowDown</i>
+                                <div class="searchResultOverlay" id="ApplicableStampDutyDropDownDiv" ng-class="{'no-results-overlay': filteredApplicableStampDuty.length == 0}">
+                                    <ul>
+                                        <li id="ApplicableStampDuty_{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.ApplicableStampDutyCurrentIndex] }" 
+                                        ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('ApplicableStampDuty', ApplicableStampDuty, $event, $index)" 
+                                        ng-repeat="ApplicableStampDuty in {!scopeVarName}[{!mapFieldObj}.ApplicableStampDutyList] | orderBy:'Name'">
+                                            <div class="fullName">{{ApplicableStampDuty.Name}}</div>
+                                        </li>
+                                        <li ng-if="filteredApplicableStampDuty.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                            <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                        </li>
+                                    </ul> 
+                                </div>
+                            </div>
+                        </div>
+                        <div class="second-column" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Id] && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK'">
+                            <div class="field-label required">Date stocked in</div>
+                            <div class="field-value searchInputArea">
+                                <input type="text" class="bp-input-text searchInput date-picker" id="customerOwnUnitDateStockedIn"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.DateIn]" date-format="{!scopeVarName}.dateFormat"
+                                ng-focus="{!scopeMethodName}.formFieldJustGotFocus('customerUnitMainDateInId')" ng-blur="{!scopeMethodName}.OnBlurDateIn('DateIn');" ng-change="{!scopeMethodName}.maxDateCalculation();" 
+                                end-date="{!scopeVarName}.dateOptions3.maxDate" datepicker = "datepicker" autocomplete="off" readonly = "readonly" />
+                            </div>
+                        </div>
+                        <div class="second-column" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && ({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'))">
+                            <div class="field-label">Date ordered</div>
+                            <div class="field-value searchInputArea">
+                                <input type="text" class="bp-input-text searchInput date-picker" id="OrderedDateUnitOrdering"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.OrderedDate]" date-format="{!scopeVarName}.dateFormat" ng-change = "{!scopeMethodName}.calculateExpectedDate()" data-range-start="OrderedDateUnitOrdering"
+                                data-range-end="ExpectedDateUnitOrdering" datepicker = "datepicker" autocomplete="off" readonly = "readonly" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && ({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'))">
+                        <div class="first-column">
+                            <div class="field-label">Date expected</div>
+                            <div class="field-value searchInputArea">
+                                <input type="text" class="bp-input-text searchInput date-picker" id="ExpectedDateUnitOrdering"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.ExpectedDate]" date-format="{!scopeVarName}.dateFormat" start-date="{!unitDataFieldObj}[{!mapFieldObj}.OrderedDate]"
+                                datepicker = "datepicker" autocomplete="off" readonly = "readonly" />
+                            </div>
+                        </div>
+                        <div class="second-column accrue-purchase-tax-label">
+                            <div class="field-label">Accrue purchase tax until this unit is sold?</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.IsAccruePurchaseTaxUntilThisUnitIsSold]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('AccruePurchaseTaxToggle')" ng-disabled="{!scopeVarName}[{!mapFieldObj}.IsForeignExchangeCostingEnabled] && {!unitDataFieldObj}[{!mapFieldObj}.IsForeignVendor] && {!unitDataFieldObj}[{!mapFieldObj}.VendorName]" />
+                                    <div class="bp-slider round" ng-class="{'disabled': {!scopeVarName}[{!mapFieldObj}.IsForeignExchangeCostingEnabled] && {!unitDataFieldObj}[{!mapFieldObj}.IsForeignVendor] && {!unitDataFieldObj}[{!mapFieldObj}.VendorName] }"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Id] && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK'">
+                        <div class="first-column" ng-if="COUModal.AdditionalFieldsInfo.DateOut.isPrimary">
+                            <div class="field-label">Date stocked out</div>
+                            <div class="field-value searchInputArea">
+                                <input type="text" class="bp-input-text searchInput date-picker" id="dateOut"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.DateOut]" date-format="{!scopeVarName}.dateFormat" start-date="{!scopeVarName}.dateOptions5.minDate"
+                                datepicker = "datepicker" autocomplete="off" readonly = "readonly"
+                                ng-focus="{!scopeMethodName}.formFieldJustGotFocus('customerUnitMainDateOutId')"
+                                ng-disabled="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' || ({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && {!unitDataFieldObj}[{!mapFieldObj}.Consignment])" />
+                            </div>
+                        </div>
+                        <div ng-class="{'first-column': !COUModal.AdditionalFieldsInfo.DateOut.isPrimary, 'second-column': COUModal.AdditionalFieldsInfo.DateOut.isPrimary }">
+                            <div class="field-label">Publish in feeds</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.IsPublishInFeeds]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('PublishedInFeedsToggle')"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="second-column" ng-if="!COUModal.AdditionalFieldsInfo.DateOut.isPrimary">
+                            <div class="field-label">Active</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.IsActive]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ActiveToggle')"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Id] && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' && COUModal.AdditionalFieldsInfo.DateOut.isPrimary">
+                        <div class="first-column">
+                            <div class="field-label">Active</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.IsActive]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ActiveToggle')"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="!({!unitDataFieldObj}[{!mapFieldObj}.Id] && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] != 'COU' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')">
+                    <div class="row" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Id] && ({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' || {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU')">
+                        <div class="first-column" ng-if="COUModal.AdditionalFieldsInfo.DateIn.isPrimary && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] != 'COU'">
+                            <div class="field-label required">Date stocked in</div>
+                            <div class="field-value searchInputArea">
+                                <input type="text" class="bp-input-text searchInput date-picker" id="customerOwnUnitDateStockedIn"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.DateIn]" date-format="{!scopeVarName}.dateFormat"
+                                ng-focus="{!scopeMethodName}.formFieldJustGotFocus('customerUnitMainDateInId')" ng-blur="{!scopeMethodName}.OnBlurDateIn('DateIn');" ng-change="{!scopeMethodName}.maxDateCalculation();" 
+                                end-date="{!scopeVarName}.dateOptions3.maxDate" datepicker = "datepicker" autocomplete="off" readonly = "readonly" />
+                            </div>
+                        </div>
+                        <div class="first-column" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && {!unitDataFieldObj}[{!mapFieldObj}.Id] != null && {!unitDataFieldObj}[{!mapFieldObj}.Consignment]">
+                            <div class="field-label">Category</div>
+                            <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showCategoryList'] }">
+                                <input autocomplete="off" ng-class="{'bp-redborder' : {!fieldValidationObj}[{!mapFieldObj}.CategoryNameField]['isError'] == true}" class="bp-input-text searchInput" id="categoryField" placeholder="Select a category" type="text"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.CategorySearch]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('Category', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('Category')" 
+                                ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('Category', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('Category', $event, filteredCategory)" />
+                                <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('categoryField')">arrowDown</i>
+                                <div class="searchResultOverlay" id="categoryDropDownDiv" ng-class="{'no-results-overlay': filteredCategory.length == 0}">
+                                    <ul>
+                                        <li id="category_{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.CategoryCurrentIndex] }" 
+                                        ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('Category', catRec, $event)" 
+                                        ng-repeat="catRec in {!scopeVarName}[{!mapFieldObj}.CategoryList] | filter:{'CategoryName' : {!unitDataFieldObj}[{!mapFieldObj}.CategorySearch]} as filteredCategory">
+                                            <div class="fullName">{{(catRec.Name) ? catRec.Name : catRec.CategoryName}}</div>
+                                        </li>
+                                        <li ng-if="filteredCategory.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                            <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                        </li>
+                                    </ul> 
+                                </div>
+                            </div>
+                        </div>
+                        <div class="first-column" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && {!unitDataFieldObj}[{!mapFieldObj}.Id] && !{!unitDataFieldObj}[{!mapFieldObj}.Consignment]">
+                            <div class="field-label">Consignment?</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.Consignment]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ConsignmentToggle')"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="second-column" ng-if="COUModal.AdditionalFieldsInfo.DateOut.isPrimary">
+                            <div class="field-label">Date stocked out</div>
+                            <div class="field-value searchInputArea">
+                                <input type="text" class="bp-input-text searchInput date-picker" id="dateOut"
+                                ng-model="{!unitDataFieldObj}[{!mapFieldObj}.DateOut]" date-format="{!scopeVarName}.dateFormat" start-date="{!scopeVarName}.dateOptions5.minDate"
+                                datepicker = "datepicker" autocomplete="off" readonly = "readonly"
+                                ng-focus="{!scopeMethodName}.formFieldJustGotFocus('customerUnitMainDateOutId')"
+                                ng-disabled="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' || ({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && {!unitDataFieldObj}[{!mapFieldObj}.Consignment])" />
+                            </div>
+                        </div>
+                        <div class="second-column" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' && !COUModal.AdditionalFieldsInfo.DateOut.isPrimary">
+                            <div class="field-label">Publish in feeds</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.IsPublishInFeeds]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('PublishedInFeedsToggle')"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && COUModal.AdditionalFieldsInfo.IsActive.isPrimary && COUModal.currentCOUId" ng-class="{'second-column': ({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && !COUModal.AdditionalFieldsInfo.DateOut.isPrimary), 'first-column': {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && !COUModal.AdditionalFieldsInfo.DateIn.isPrimary}">
+                            <div class="field-label">Active</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.IsActive]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ActiveToggle')"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Id] && ({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' || ({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && COUModal.AdditionalFieldsInfo.DateOut.isPrimary))">
+                        <div class="first-column" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' && COUModal.AdditionalFieldsInfo.DateOut.isPrimary">
+                            <div class="field-label">Publish in feeds</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.IsPublishInFeeds]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('PublishedInFeedsToggle')"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div ng-if="COUModal.AdditionalFieldsInfo.IsActive.isPrimary && COUModal.currentCOUId" ng-class="{'second-column': (({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK' && COUModal.AdditionalFieldsInfo.DateOut.isPrimary) || ({!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && !COUModal.AdditionalFieldsInfo.DateOut.isPrimary)), 'first-column': {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && COUModal.AdditionalFieldsInfo.DateOut.isPrimary}">
+                            <div class="field-label">Active</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.IsActive]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ActiveToggle')"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && {!unitDataFieldObj}[{!mapFieldObj}.Consignment]">
+                        <div class="first-column" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Id]">
+                            <div class="field-label">Consignment?</div>
+                            <div class="field-value consignment">
+                                <label class="bp-switch"> 
+                                    <input ng-model="{!unitDataFieldObj}[{!mapFieldObj}.Consignment]" type="checkbox"
+                                    ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ConsignmentToggle')"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="second-column" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Consignment] && {!unitDataFieldObj}[{!mapFieldObj}.Id]">
+                            <div class="field-label">Suggested price</div>
+                            <div class="field-value searchInputArea dollar-input-section">
+                                <span class="dollar">$</span>
+                                <numbers-only 
+                                    id-value="SuggestedPriceOnConsignment"
+                                    max-length="15"
+                                    class-value="bp-input-text searchInput priceOnlyInput contain-dollar"
+                                    precision-length="2"
+                                    force-precision-length="true"
+                                    input-model-value="{!unitDataFieldObj}[{!mapFieldObj}.SuggestedPrice]"
+                                    blur-value="{!scopeMethodName}.blurOnPriceField($event,'SuggestedPrice')"
+                                    ng-class-name="{'redborder' : {!fieldValidationObj}[{!mapFieldObj}.SuggestedPrice]['isError'] }"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU' && {!unitDataFieldObj}[{!mapFieldObj}.Id]">
+                        <div class="first-column"></div>
+                        <div class="second-column" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Consignment]">
+                            <div class="field-label">Agreed payout</div>
+                            <div class="field-value searchInputArea dollar-input-section">
+                                <span class="dollar">$</span>
+                                <numbers-only 
+                                    id-value="AgreedPayoutOnConsignment"
+                                    max-length="15"
+                                    class-value="bp-input-text searchInput priceOnlyInput contain-dollar"
+                                    precision-length="2"
+                                    force-precision-length="true"
+                                    input-model-value="{!unitDataFieldObj}[{!mapFieldObj}.AgreedPayout]"
+                                    blur-value="{!scopeMethodName}.blurOnPriceField($event,'AgreedPayout')"
+                                    ng-class-name="{'redborder' : {!fieldValidationObj}[{!mapFieldObj}.AgreedPayout]['isError'] }"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="applicable-stamp-duty-section" ng-if="{!scopeMethodName}.isCurrentLocaleAustralia() && {!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' && !{!isComingFromUnitOrdering} && ({!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Temporary' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Required')"
+                        ng-class="{'disable-section': !{!unitDataFieldObj}[{!mapFieldObj}.Id]}">
+                        <label class="stamp-duty-label">STAMP DUTY</label>
+                        <div class="row">
+                            <div class="first-column">
+                                <div class="field-label">DEAL VALUE</div>
+                                <div class="field-value searchInputArea dollar-input-section">
+                                    <div>{{ {!unitDataFieldObj}[{!mapFieldObj}.DealValue] | currency }}</div>
+                                </div>
+                            </div>
+                            <div class="second-column">
+                                <div class="field-label dutiable-value">DUTIABLE VALUE (if different)</div>
+                                <div class="field-value searchInputArea dollar-input-section">
+                                    <span class="dollar" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.DutiableValue] || {!unitDataFieldObj}[{!mapFieldObj}.DutiableValue] == 0">$</span>
+                                    <numbers-only 
+                                        input-model-value = "{!unitDataFieldObj}[{!mapFieldObj}.DutiableValue]" 
+                                        id-value = "dutiableValue"
+                                        class-value = "bp-input-text searchInput priceOnlyInput contain-dollar"
+                                        precision-length = "2"
+                                        force-precision-length="true"
+                                        include-blank="true"
+                                        disabled-value="!{!unitDataFieldObj}[{!mapFieldObj}.Id]"
+                                        blur-value="{!scopeMethodName}.blurDutiableValue()"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="first-column">
+                                <div class="field-label">CALCULATOR</div>
+                                <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : {!scopeVarName}[{!mapFieldObj}.dropDownObj]['showApplicableStampDutyList'] }">
+                                    <input autocomplete="off" class="bp-input-text searchInput" id="ApplicableStampDutyField" placeholder="Please select" type="text" ng-disabled="!{!unitDataFieldObj}[{!mapFieldObj}.Id]"
+                                    ng-model="{!unitDataFieldObj}[{!mapFieldObj}.ApplicableStampDutyCalName]" ng-blur="{!scopeMethodName}.blurOnPrimaryDataFields('ApplicableStampDuty', $event)" ng-click="{!scopeMethodName}.clickOnPrimaryDataFields('ApplicableStampDuty')" 
+                                    ng-focus="{!scopeMethodName}.focusOnPrimaryDataFields('ApplicableStampDuty', $event)" ng-keyup="{!scopeMethodName}.keyupOnPrimaryDataFields('ApplicableStampDuty', $event, filteredApplicableStampDuty)" readonly="true" />
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="{!scopeMethodName}.setFocusOnElement('ApplicableStampDutyField')">arrowDown</i>
+                                    <div class="searchResultOverlay" id="ApplicableStampDutyDropDownDiv" ng-class="{'no-results-overlay': filteredApplicableStampDuty.length == 0}">
+                                        <ul>
+                                            <li id="ApplicableStampDuty_{{$index}}" ng-class="{'selected-row': $index == {!scopeVarName}[{!mapFieldObj}.ApplicableStampDutyCurrentIndex] }" 
+                                            ng-mousedown="{!scopeMethodName}.mousedownOnPrimaryDataFields('ApplicableStampDuty', ApplicableStampDuty, $event, $index)" 
+                                            ng-repeat="ApplicableStampDuty in {!scopeVarName}[{!mapFieldObj}.ApplicableStampDutyList] | orderBy:'Name'">
+                                                <div class="fullName">{{ApplicableStampDuty.Name}}</div>
+                                            </li>
+                                            <li ng-if="filteredApplicableStampDuty.length == 0" class="BP_angucomplete-row-NoResults-Msg">
+                                                <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                            </li>
+                                        </ul> 
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="second-column">
+                                <div class="field-label">Amount charged</div>
+                                <div class="field-value searchInputArea dollar-input-section">
+                                    <span class="dollar">$</span>
+                                    <numbers-only 
+                                        id-value="InputForStampDuty"
+                                        class-value="bp-input-text searchInput priceOnlyInput contain-dollar"
+                                        precision-length="2"
+                                        force-precision-length="true"
+                                        input-model-value="{!factoryOptionScopeVar}[{!mapFieldObj}.TotalStampDuty]"
+                                        input-keyup-value="{!scopeMethodName}.enableSaveAction($event,'StampDuty')"
+                                        blur-value = "{!scopeMethodName}.restoreOriginalValueOnBlur($event,'StampDuty')"
+                                        disabled-value="!GroupOnlyPermissions['Override price'].enabled || !{!unitDataFieldObj}[{!mapFieldObj}.Id]"
+                                    />
+                                    <button class="bp-btn bp-btn-normal edit-stamp-duty-save-btn bp-font-12"  
+                                        ng-show="{!scopeVarName}.shownSaveButton == 'StampDuty'" 
+                                        ng-disabled="!{!unitDataFieldObj}[{!mapFieldObj}.Id]"
+                                        ng-mousedown="{!scopeMethodName}.updateStampDutyTotal()" 
+                                        ng-keydown="{!scopeMethodName}.actionOnSaveButton($event,'StampDuty')"
+                                        ng-blur="{!scopeMethodName}.restoreOriginalValueOnBlur($event,'StampDuty')">{{ 'Save_Label' | translate }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <apex:outputPanel rendered="{!showFactoryOptions}">
+                <div class="factory-option-container" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'ORDU' ">
+                    <div class="factory-option-section" ng-class="{'disable-section': (!{!scopeVarName}[{!mapFieldObj}.FactoryOptionDefaultList] || {!scopeVarName}[{!mapFieldObj}.FactoryOptionDefaultList].length == 0) }">
+                        <div class="MB20 multi-select-drop-down-container">
+                            <div class="form-input ">
+                                <div class="factory-option">
+                                    <label class="print-item-label">Factory options</label>
+                                    <multi-select is-justify-content="true" result-list = "{!scopeVarName}[{!mapFieldObj}.FactoryOptionDefaultList]" disable-control="!{!scopeVarName}[{!mapFieldObj}.FactoryOptionDefaultList] || {!scopeVarName}[{!mapFieldObj}.FactoryOptionDefaultList].length == 0 || !({!scopeVarName}[{!mapFieldObj}.IsUnitPricingEnabledForMake] && {!scopeVarName}[{!mapFieldObj}.tempUnitDefaultFOPTMsg] != 'Default factory options not defined')" type = "factory option" message-text = "{!scopeVarName}[{!mapFieldObj}.TempUnitDefaultFOPTMsg]"/> 
+                                </div>
+                                <div class="add-selected-btn-container">
+                                    <button class="bp-btn save-btn bp-btn-normal" ng-disabled = "{!scopeMethodName}.isAddSelectedFactoryOptionBtnDisabled()" ng-click = "{!scopeMethodName}.addSelectedFactoryOption()" ng-class = "{'active-add-selected-btn': {!scopeVarName}[{!mapFieldObj}.SelectedFactoryOptionListID].length > 0, 'bp-cursorNotAllowed': {!scopeMethodName}.isAddSelectedFactoryOptionBtnDisabled() }">
+                                        Add selected
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-class="{'disable-section': (!{!unitDataFieldObj}[{!mapFieldObj}.Id] && (!{!unitDataFieldObj}[{!mapFieldObj}.MakeName] || !{!unitDataFieldObj}[{!mapFieldObj}.ModelName] || (({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')) && (!{!unitDataFieldObj}[{!mapFieldObj}.VendorName] || !{!unitDataFieldObj}[{!mapFieldObj}.CategorySearch])))) }">
+                        <div class="table-responsive temp-unit-factory-option-main-container">
+                            <table>
+                                <col width="10%" />
+                                <col width="50%" ng-if="(!{!isComingFromUnitOrdering} && ({!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Temporary' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Required'))" />
+                                <col width="40%" ng-if="({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'))" />
+                                <col width="15%" />
+                                <col width="15%" />
+                                <col width="10%" ng-if="({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'))" />
+                                <col width="10%" />
+                                <thead>
+                                    <tr>
+                                        <th class="first-child">Type</th>
+                                        <th class="second-child">Item description</th>
+                                        <th class="text-right third-child">Total price</th>
+                                        <th class="text-right fourth-child">Total cost</th>
+                                        <th class="fifth-child" ng-if="({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'))" >Taxable</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat = "factoryRec in {!scopeVarName}[{!mapFieldObj}.FactoryOptionList] track by $index" ng-init = "factoryIndex = $index">
+                                        <td class="first-child">{{factoryRec.Type}}</td>
+                                        <td class="second-child">
+                                            <span ng-if = "{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] != $index || factoryRec.Type == 'Base'">{{factoryRec.ItemDescription}} </span>
+                                            <input ng-if = "{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] == $index && factoryRec.Type != 'Base'" class="large-input"
+                                             type="text" maxlength="255" ng-model = "factoryRec.ItemDescription" autocomplete="off" id = "itemDesc_{{$index}}"
+                                            />
+                                        </td>
+                                        <td class="text-right third-child">
+                                           <span ng-if = "{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] != $index">{{factoryRec.TotalPrice | currency}} 
+                                            <span>
+                                                <bp-flag ng-if="{!scopeVarName}[{!mapFieldObj}.IsForeignExchangeCostingEnabled] && {!unitDataFieldObj}[{!mapFieldObj}.IsForeignVendor]" currencyCode = "{{{!unitDataFieldObj}[{!mapFieldObj}.CurrencyCode]}}"></bp-flag>
+                                            </span>
+                                           </span>
+                                           <span ng-if = "{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] == $index">
+                                                <span class="currency_display bp-grey">$</span>
+                                                <numbers-only 
+                                                    input-model-value = "factoryRec.TotalPrice" 
+                                                    include-negative = "true"
+                                                    include-zero = "true"
+                                                    id-value = "Price_{{$index}}"
+                                                    place-holder-value = "Price"
+                                                    class-value = "text-right"
+                                                    precision-length = "2"
+                                                    disabled-value="{!factoryOptionScopeVar}[{!mapFieldObj}.IsRideawayPricingEnabled]"
+                                                    max-length="10"
+                                                    input-keyup-value="{!scopeMethodName}.calculateTotalFactoryOptionCost()"
+                                                />
+                                        </span>
+                                        </td>
+                                        <td class="text-right fourth-child">
+                                            <span ng-if = "{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] != $index">{{factoryRec.TotalCost | currency}} 
+                                                <span>
+                                                    <bp-flag ng-if="{!scopeVarName}[{!mapFieldObj}.IsForeignExchangeCostingEnabled] && {!unitDataFieldObj}[{!mapFieldObj}.IsForeignVendor]" currencyCode = "{{{!unitDataFieldObj}[{!mapFieldObj}.CurrencyCode]}}"></bp-flag>
+                                                </span>
+                                            </span>
+                                            <span ng-if = "{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] == $index">
+                                                <span class="currency_display bp-grey">$</span>
+                                                <numbers-only 
+                                                    input-model-value = "factoryRec.TotalCost" 
+                                                    include-negative = "({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'))"
+                                                    include-zero = "true"
+                                                    id-value = "Cost_{{$index}}"
+                                                    place-holder-value = "Price"
+                                                    class-value = "text-right"
+                                                    precision-length = "2"
+                                                    max-length="10"
+                                                    input-keyup-value="{!scopeMethodName}.calculateTotalFactoryOptionCost()"
+                                                />
+                                            </span>
+                                        </td>
+                                        <td class="fifth-child" ng-if="({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'))">
+                                            <label class="bp-switch appointentsswitch">
+                                                <input ng-click="{!scopeMethodName}.savePriceAndCostOptionForTempUnit(factoryRec,'isEdit', $event, $index)" ng-if="{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] != $index" ng-model="factoryRec.Taxable" type="checkbox" />
+                                                <input ng-model="factoryRec.Taxable" type="checkbox" ng-if="{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] == $index" />
+                                                <div class="bp-slider round"></div>
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <div class="flex-container items-right">
+                                                <a ng-class="{'bp-cursorNotAllowed': (!{!unitDataFieldObj}[{!mapFieldObj}.Id] && (!{!unitDataFieldObj}[{!mapFieldObj}.MakeName] || !{!unitDataFieldObj}[{!mapFieldObj}.ModelName] || (({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')) && (!{!unitDataFieldObj}[{!mapFieldObj}.VendorName] || !{!unitDataFieldObj}[{!mapFieldObj}.CategorySearch] || !GroupOnlyPermissions['Unit ordering']['create/modify'] || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Cancelled' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Received')))) }" ng-if = "{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] != $index" data-toggle="tooltip" 
+                                                    ng-click = "{!scopeMethodName}.editFactoryOptionLineItem($index)" title=""  tooltip-loader = "tooltip-loader" class="button icon Edit bp-curser-pointer">
+                                                    <i class="bp-icons bp-font-18 bp-fw-100">edit</i>
+                                                    <span class="button-text" aira-hidden="true">Edit</span>
+                                                </a>
+                                                <a ng-if = "{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] != $index && factoryRec.Type != 'Base'" data-toggle="tooltip" title="" ng-class="{'bp-cursorNotAllowed': (!{!unitDataFieldObj}[{!mapFieldObj}.Id] && (!{!unitDataFieldObj}[{!mapFieldObj}.MakeName] || !{!unitDataFieldObj}[{!mapFieldObj}.ModelName] || (({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')) && (!{!unitDataFieldObj}[{!mapFieldObj}.VendorName] || !{!unitDataFieldObj}[{!mapFieldObj}.CategorySearch] || !GroupOnlyPermissions['Unit ordering']['create/modify'] || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Cancelled' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Received')))) }"
+                                                    ng-click = "{!scopeMethodName}.deletePriceAndCostOptionForTempUnit(factoryRec.Id)" tooltip-loader = "tooltip-loader" class="ML5 button icon bp-curser-pointer">
+                                                    <i id="unitPriceAndCostGridDeleteBtn_{{factoryRec.Id}}" class="bp-icons bp-font-18 bp-fw-100 trDeleteBtn">delete</i>
+                                                    <span class="button-text" aira-hidden="true">Delete</span>
+                                                </a>
+                                                <div ng-if = "{!scopeVarName}[{!mapFieldObj}.EditFactoryOptionLineItemIndex] == $index">
+                                                    <button class="bp-blue-font bp-blue-hover save-btn" ng-click = "{!scopeMethodName}.savePriceAndCostOptionForTempUnit(factoryRec,'isEdit', $event, $index)">Save</button>
+                                                    <a ng-if = "factoryRec.Type != 'Base'" data-toggle="tooltip" title="" ng-click = "{!scopeMethodName}.deletePriceAndCostOptionForTempUnit(factoryRec.Id)" tooltip-loader = "tooltip-loader" class="button icon bp-curser-pointer">
+                                                        <i id="unitPriceAndCostGridDeleteBtn_{{factoryRec.Id}}" class="bp-icons bp-font-18 bp-fw-100 trDeleteBtn">delete</i>
+                                                        <span class="button-text" aira-hidden="true">Delete</span>
+                                                    </a>
+                                                </div>
+                                           </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="add-new-entity-container">
+                                        <td ng-if="({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'))" colspan="6">
+                                            <div ng-class="{'bp-cursorNotAllowed': (!{!unitDataFieldObj}[{!mapFieldObj}.Id] && (!{!unitDataFieldObj}[{!mapFieldObj}.MakeName] || !{!unitDataFieldObj}[{!mapFieldObj}.ModelName] || (({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')) && (!{!unitDataFieldObj}[{!mapFieldObj}.VendorName] || !{!unitDataFieldObj}[{!mapFieldObj}.CategorySearch] || !GroupOnlyPermissions['Unit ordering']['create/modify'] || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Cancelled' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Received')))) }"  class="bp-curser-pointer" ng-click = "{!scopeMethodName}.createNewFactoryOption()">
+                                                <i class="bp-icons bp-font-18 bp-blue-font stroke-3 MT-5">addCircle</i> 
+                                                <a ng-class="{'bp-cursorNotAllowed': (!{!unitDataFieldObj}[{!mapFieldObj}.Id] && (!{!unitDataFieldObj}[{!mapFieldObj}.MakeName] || !{!unitDataFieldObj}[{!mapFieldObj}.ModelName] || (({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')) && (!{!unitDataFieldObj}[{!mapFieldObj}.VendorName] || !{!unitDataFieldObj}[{!mapFieldObj}.CategorySearch] || !GroupOnlyPermissions['Unit ordering']['create/modify'] || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Cancelled' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Received')))) }" class="bp-blue-font bp-blue-hover">Add a factory option</a>
+                                            </div>
+                                        </td>
+                                        <td ng-if="!{!isComingFromUnitOrdering} && ({!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Temporary' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Required')" colspan="5">
+                                            <div ng-class="{'bp-cursorNotAllowed': (!{!unitDataFieldObj}[{!mapFieldObj}.Id] && (!{!unitDataFieldObj}[{!mapFieldObj}.MakeName] || !{!unitDataFieldObj}[{!mapFieldObj}.ModelName] || (({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')) && (!{!unitDataFieldObj}[{!mapFieldObj}.VendorName] || !{!unitDataFieldObj}[{!mapFieldObj}.CategorySearch] || !GroupOnlyPermissions['Unit ordering']['create/modify'] || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Cancelled' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Received')))) }"  class="bp-curser-pointer" ng-click = "{!scopeMethodName}.createNewFactoryOption()">
+                                                <i class="bp-icons bp-font-18 bp-blue-font stroke-3 MT-5">addCircle</i> 
+                                                <a ng-class="{'bp-cursorNotAllowed': (!{!unitDataFieldObj}[{!mapFieldObj}.Id] && (!{!unitDataFieldObj}[{!mapFieldObj}.MakeName] || !{!unitDataFieldObj}[{!mapFieldObj}.ModelName] || (({!isComingFromUnitOrdering} || ({!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Temporary' && {!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required')) && (!{!unitDataFieldObj}[{!mapFieldObj}.VendorName] || !{!unitDataFieldObj}[{!mapFieldObj}.CategorySearch] || !GroupOnlyPermissions['Unit ordering']['create/modify'] || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Cancelled' || {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Received')))) }" class="bp-blue-font bp-blue-hover">Add a factory option</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </apex:outputPanel>
+            
+            <div>
+                <c:OptionalUnitDataFields showInEditMode="true" optionalField="{!unitDataFieldObj}" scopeVar="{!scopeVarName}" scopeMethod="{!scopeMethodName}" />
+            </div>
+
+            <div class="user-suggestion show-desktop-view temp-unit-similar-unit-container" ng-if = "{!scopeVarName}[{!mapFieldObj}.similarCOUList].length > 0" >
+                <p class="message">{{ 'This_unit_already_exists_in_your_system' | translate }} </p>
+                <ul ng-repeat = "similarUnitRec in {!scopeVarName}[{!mapFieldObj}.similarCOUList]" ng-class="{'similar-first-customer': $index == 0}">
+                    <li>
+                        <div class = "suggestion-details">    
+                            <p class="sku">
+                                <span>VIN:</span>
+                                <span ng-if="similarUnitRec.VIN != null">{{similarUnitRec.VIN}}</span>
+                                <span ng-if="similarUnitRec.VIN == null" class="vinUnknown">{{'VIN_unknown'| translate }}</span>
+                            </p>
+                            <p class="sku similar-unit-type" ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'STOCK'">
+                                <span class="grey_text">{{similarUnitRec.UnitType}}:</span>
+                                <span class="blue_text">{{similarUnitRec.UniqueId}}</span>
+                            </p>
+                            <p class="sku">
+                                <span ng-if="similarUnitRec.Year">{{similarUnitRec.Year}}<span ng-if="similarUnitRec.MakeName">,</span></span>
+                                <span ng-if="similarUnitRec.MakeName">{{similarUnitRec.MakeName}}<span ng-if="similarUnitRec.ModelName">,</span></span>
+                                <span ng-if="similarUnitRec.ModelName">{{similarUnitRec.ModelName}}<span ng-if="similarUnitRec.SubModelName">,</span></span>
+                                <span ng-if="similarUnitRec.SubModelName">{{similarUnitRec.SubModelName}}<span ng-if="similarUnitRec.Color">,</span></span>
+                                <span ng-if="similarUnitRec.Color">{{similarUnitRec.Color}}</span>
+                            </p>
+                            <div ng-if="{!unitDataFieldObj}[{!mapFieldObj}.UnitType] == 'COU'">Owned by: <p><strong>{{similarUnitRec.CustomerName}}</strong></p></div>
+                            <button class="button secondary text-uppercase transfer-owner-btn" ng-if = "{!scopeMethodName}.TransferOwnership($index) && !similarUnitRec.ActiveOnSection" ng-click="{!scopeMethodName}.openTransFerOwnershipConfirmationPopup($event,$index)" ng-disabled="similarUnitRec.Consignment">{{(similarUnitRec.Consignment) ? 'Consignment': 'Transfer Ownership'}}</button>
+                            <div ng-if="similarUnitRec.ActiveOnSection && {!scopeMethodName}.TransferOwnership($index)" class="similar-status-on-transfer">
+                                <span class="bp-filled-circle sku-status-circle pull-left" ></span>
+                                <span class="bp-bold-font bp-grey-font text-uppercase bp-font-14 sku-status">Active On {{similarUnitRec.ActiveOnSection}}</span>
+                            </div>
+                            <div class="bp-dark-grey1-font" ng-if = "!{!scopeMethodName}.TransferOwnership($index)">
+                                <span class="bp-filled-circle sku-status-circle" ng-class="{'bp-coral-filled-circle': similarUnitRec.Status == 'Reserved', 'bp-cyan-filled-circle': similarUnitRec.Status == 'Sold', 'bp-orange-filled-circle' : similarUnitRec.Status == 'On Order'}"></span>
+                                <span class="bp-bold-font bp-grey-font text-uppercase bp-font-14 sku-status">{{similarUnitRec.Status}}</span>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="deleteConfiramtionPopupforCheckOut transfer-owner-coinfirm-popup" id = "deleteConfirmationPopup">
+                <div class="delete-confirm-container">
+                    <div class="heading">{{{!scopeVarName}.deleteConfirmationModalTitle}}</div>
+                    <div class="deletePopupActionBtns">
+                        <button class="button subtle" ng-click="{!scopeMethodName}.hideDeleteConfirmationPopup()">Cancel</button>
+                        <button class="button alert" ng-click="{!scopeMethodName}.confirmActionOnDeleteConfirmationPopup()">{{{!scopeVarName}.confirmLabel}}</button>
+                    </div>
+                </div>   
+            </div>
+            <div class = "bp-modal-backdrop bp-popup-delete-backdrop-hide" id = "backDrop_Id" ng-click = "{!scopeMethodName}.hideDeleteConfirmationPopup()"></div>
+        </div>
+
+        <div ng-if="{!scopeVarName}.showCreateSingleAndBulkOrderBtn || ({!isComingFromUnitOrdering} && {!unitDataFieldObj}[{!mapFieldObj}.Status] == 'Required')" class="c-modal-window-footer">
+            <span class="c-primary-btn-container order-2">
+                <bp-ng-button ng-if="{!unitDataFieldObj}[{!mapFieldObj}.Status] != 'Required'" name="BULK ORDER" class-value="c-ternary-btn c-btn-modal" action="{!scopeMethodName}.bulkOrder()" disabled-value="{!scopeMethodName}.isSaveAddEditStockCOUBtnDisabled()" />
+            </span>
+            <span class="c-primary-btn-container order-1">
+                <bp-ng-button name="CREATE SINGLE ORDER" class-value="c-ternary-btn c-btn-modal" action="{!scopeMethodName}.createSingleOrder()" disabled-value="{!scopeMethodName}.isSaveAddEditStockCOUBtnDisabled()" />
+            </span>
+            <span class="c-cancelBtn-btn-container order-0">
+                <bp-ng-button name="Cancel" class-value="c-cancel-btn c-btn-modal" action="{!scopeMethodName}.closeAddEditStockCOUModal()" />
+            </span>
+        </div>
+    </bp-ng-modal-window>
+</apex:component>

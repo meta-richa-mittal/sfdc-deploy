@@ -1,0 +1,234 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0" controller="GlobalController">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+    <div class="LoadingDiv" ng-show="!HomeSearchGrid.displayGrid || HomeSearchGrid.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="homeSearchPage" ng-show="!HomeSearchGrid.showCreateAndViewReport">
+        <div class="content bp-wrapper-container">
+            <div class="bp-subHeader">
+                <div class="row container bp-top-header bp-tech-navigation-bar PB0">
+                    <section class="bp-breadcrumb-container">
+                        <nav class="bp-breadcrumb-nav">
+                            <ul>
+                                <li><a ng-click="HomeSearchGrid.MoveToState('homePage');">Home</a></li>
+                                <li><a class="bp-breadcrumb-active">Reporting</a></li>
+                            </ul>
+                        </nav>
+                    </section>
+                    <h1  class="col-lg-9 col-md-8 col-xs-12 bp-hasEyebrow M0 P0">Reporting</h1>
+                    <div class="pull-right bp-new-appointment-but">
+                        <button class="create-new-report-btn" ng-click="HomeSearchGrid.showFilterForm(); HomeSearchGrid.setCreateAndViewReport(true);">
+                            <i class="bp-icons bp-font-14 bp-white-font">expand</i>
+                            <span>New report</span>
+                        </button>
+                    </div>
+                    <div class="col-xs-11  bp-blue-navBar P0 bp-tech-nav">
+                        <ul class=" nav nav-tabs bp-sub-header-menu-item bp-font-14 day-view-header-list">
+                            <li class="bp-active-nav" ng-click="HomeSearchGrid.setActiveTab('Blackpurl reports');">
+                                <a ng-class="{'bp-active-group' : HomeSearchGrid.activeTab == 'Blackpurl reports' }" class="bp-active-group">Blackpurl reports</a>
+                            </li>
+                            <li ng-if="HomeSearchGrid.sharedFiltersList.FilterType.Favorite || HomeSearchGrid.sharedFiltersList.FilterType.Custom || HomeSearchGrid.filterList.FilterType.Custom" class="bp-active-nav" ng-click="HomeSearchGrid.setActiveTab('My custom and shared reports');">
+                                <a class="PL0" ng-class="{'bp-active-group' : HomeSearchGrid.activeTab == 'My custom and shared reports' }">My custom and shared reports</a>
+                            </li>
+                       </ul>
+                    </div>
+                </div>
+           </div>
+	    	<div class="pageContent">
+                <div ng-if="HomeSearchGrid.activeTab == 'Blackpurl reports'" class="blackpurl-report-tab">
+                    <c:HomeSearch_blackpurlReport ></c:HomeSearch_blackpurlReport>
+                </div>
+	            <div ng-if="HomeSearchGrid.activeTab == 'My custom and shared reports'" class="custom-report-tab">
+                    <c:HomeSearch_customReport ></c:HomeSearch_customReport>
+                </div>
+	        </div>
+	    </div>
+    </div>
+    <div ng-show="HomeSearchGrid.showCreateAndViewReport">
+        <c:CreateAndViewReport />
+    </div>
+
+    <div class="modal fade bp-model-dialog select-all-partfifo-confirmation-modal-window" id="selectIncludePartsWithoutActivityConfirmationModalWindow">
+        <div>
+            <div class="modal-content">
+                <div class="modal-body">
+                    <p>This report processes all transactional records for each part and depending on the volume of part records and transactional history could take quite a bit of time to generate.</p>
+                </div>
+                <div class="confirm-cash-drawer-container">
+                    <a class="cancel" data-dismiss="modal" aria-label="Close"  ng-click="HomeSearchGrid.showHideIncludePartsWithoutActivityConfirmation($event,false)">Cancel</a>
+                    <button class="bp-btn bp-btn-normal" ng-click="HomeSearchGrid.showHideIncludePartsWithoutActivityConfirmation($event,true)">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade bp-model-dialog CreateGroupModal CreateFeeModal report-scheduling-modal-window" id="reportScheduling" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">    
+                <div class="modal-header">
+                    <button type="button" class="close bp-close-but CreateGroupModalCloseIcon CreateGroupModal CloseIcon" data-dismiss="modal" aria-label="Close" ng-click = "HomeSearchGrid.hideReportSchedulingModalWindow()" >
+                        <span aria-hidden="true">
+                        <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth">close</i>
+                        </span>
+                    </button>
+                </div>  
+                <div class="modal-body">
+                    <div class="userGroupInfoArea">
+                        <div class="heading">Report Scheduling</div>
+                        <div class ="form">
+                            <div>
+                                <label class = "text-left H300 email-label-width">Report name</label>   
+                                <p class="MB15">{{HomeSearchGrid.popUpFilterName}}</p>
+                            </div>
+                            <div>
+                                <label class = "text-left H300 email-label-width">Emailed to <span class="H301">(comma separated)</span></label>   
+                                <input 
+                                type="text" 
+                                id="EmailInput" 
+                                class="bp-input-text messageText" 
+                                ng-class="{'bp-redborder': HomeSearchGrid.reportScheduling.emailListStr && !HomeSearchGrid.reportScheduling.isEmailStrValid}" 
+                                maxlength="255"
+                                ng-model="HomeSearchGrid.reportScheduling.emailListStr"
+                                ng-blur="HomeSearchGrid.reportScheduling.validateEmailStr()"
+                                placeholder= "Enter email address"
+                                ng-attr-tabindex="{{HomeSearchGrid.reportScheduling.tabIndexValue + 1}}"
+                                />
+                            </div>
+                            <div>
+                                <label class = "text-left H300 email-label-width">Report format</label>   
+                                <div class="bp-cell bp-unitSearch-area bp-customerdropdown customerDropDown searchInputArea selectableDropdown bp-disabled" ng-class="{'showingOverlay' : HomeSearchGrid.reportScheduling.isFocusedReportFormat}">
+                                    <input type="text" id="report-format" class="searchInput bp-input-text" 
+                                    placeholder="Select report format" 
+                                    name="report-format"
+                                    ng-click = "HomeSearchGrid.reportScheduling.toggleReportFormat();"
+                                    ng-blur = "HomeSearchGrid.reportScheduling.toggleReportFormat(true);"
+                                    ng-model="HomeSearchGrid.reportScheduling.reportFormat" readonly="readonly" disabled="true"/>
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-if="!HomeSearchGrid.reportScheduling.isFocusedReportFormat" ng-click = "HomeSearchGrid.reportScheduling.toggleReportFormat();">arrowDown</i>
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-if="HomeSearchGrid.reportScheduling.isFocusedReportFormat" ng-click = "HomeSearchGrid.reportScheduling.toggleReportFormat();">arrowUp</i>
+                                    <div class="searchResultOverlay" id="autocompleteScrollDiv">
+                                        <ul>
+                                            <li ng-repeat = "reportFormat in HomeSearchGrid.reportScheduling.reportFormatList" ng-mousedown="HomeSearchGrid.reportScheduling.selectReport(reportFormat, 'Report');HomeSearchGrid.reportScheduling.toggleReportFormat(true);">
+                                                <div class="fullName">{{reportFormat}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class = "text-left H300 email-label-width">Frequency</label>   
+                                <div class="bp-cell bp-unitSearch-area bp-customerdropdown customerDropDown searchInputArea selectableDropdown" 
+                                    ng-class="{'showingOverlay' : HomeSearchGrid.reportScheduling.DropDownFocusId == 'report-frequency', 'bp-unitSearch-area' : HomeSearchGrid.reportScheduling.DropDownFocusId == 'report-frequency'}">
+                                    <input type="text" 
+                                        id="report-frequency" 
+                                        class="searchInput bp-input-text" 
+                                        placeholder="Select report frequency" 
+                                        name="report-frequency"
+                                        ng-focus="HomeSearchGrid.reportScheduling.setFocusOnDropdown('report-frequency')"
+                                        ng-blur="HomeSearchGrid.reportScheduling.setBlurOnDropdown()"
+                                        ng-model="HomeSearchGrid.reportScheduling.reportFrequency"
+                                        readonly="readonly"
+                                        ng-attr-tabindex="{{HomeSearchGrid.reportScheduling.tabIndexValue + 2}}"
+                                    />
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-if="HomeSearchGrid.reportScheduling.DropDownFocusId != 'report-frequency'" ng-click="HomeSearchGrid.setFocus('report-frequency')">arrowDown</i>
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-if="HomeSearchGrid.reportScheduling.DropDownFocusId == 'report-frequency'" ng-click="HomeSearchGrid.reportScheduling.setBlurOnDropdown()">arrowUp</i>
+                                    <div class="searchResultOverlay" id="autocompleteScrollDiv">
+                                        <ul>
+                                            <li ng-repeat = "reportFrequency in HomeSearchGrid.reportScheduling.reportFrequencyList" ng-mousedown="HomeSearchGrid.reportScheduling.selectReport(reportFrequency, 'Frequency')">
+                                                <div class="fullName">{{reportFrequency}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-if="HomeSearchGrid.reportScheduling.reportFrequency != 'Daily'">
+                                <label class = "text-left H300 email-label-width">On</label>   
+                                <div class="bp-cell bp-unitSearch-area bp-customerdropdown customerDropDown searchInputArea selectableDropdown" 
+                                    ng-class="{'showingOverlay' : HomeSearchGrid.reportScheduling.DropDownFocusId == 'report-on', 'bp-unitSearch-area' : HomeSearchGrid.reportScheduling.DropDownFocusId == 'report-on'}">
+                                    <input type="text" 
+                                    id="report-on" 
+                                    class="searchInput bp-input-text" 
+                                    placeholder="Select report on" 
+                                    name="report-on"
+                                    ng-focus="HomeSearchGrid.reportScheduling.setFocusOnDropdown('report-on')"
+                                    ng-blur="HomeSearchGrid.reportScheduling.setBlurOnDropdown()"
+                                    ng-model="HomeSearchGrid.reportScheduling.reportOn" 
+                                    readonly="readonly" 
+                                    ng-attr-tabindex="{{HomeSearchGrid.reportScheduling.tabIndexValue + 3}}" 
+                                    />
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-if="HomeSearchGrid.reportScheduling.DropDownFocusId != 'report-on'" ng-click="HomeSearchGrid.setFocus('report-on')">arrowDown</i>
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-if="HomeSearchGrid.reportScheduling.DropDownFocusId == 'report-on'" ng-click="HomeSearchGrid.reportScheduling.setBlurOnDropdown()">arrowUp</i>
+                                    <div class="searchResultOverlay" id="autocompleteScrollDiv">
+                                        <ul>
+                                            <li ng-repeat = "reportOn in HomeSearchGrid.reportScheduling.reportOnList" ng-mousedown="HomeSearchGrid.reportScheduling.selectReport(reportOn, 'On')">
+                                                <div class="fullName">{{reportOn}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class = "text-left H300 email-label-width">At</label>   
+                                <div class="bp-cell bp-unitSearch-area bp-customerdropdown customerDropDown searchInputArea selectableDropdown" 
+                                    ng-class="{'showingOverlay' : HomeSearchGrid.reportScheduling.DropDownFocusId == 'report-at', 'bp-unitSearch-area' : HomeSearchGrid.reportScheduling.DropDownFocusId == 'report-at'}">
+                                    <input type="text" 
+                                    id="report-at" 
+                                    class="searchInput bp-input-text" 
+                                    placeholder="Select report at" 
+                                    name="report-at"
+                                    ng-focus="HomeSearchGrid.reportScheduling.setFocusOnDropdown('report-at')"
+                                    ng-blur="HomeSearchGrid.reportScheduling.setBlurOnDropdown()"
+                                    ng-model="HomeSearchGrid.reportScheduling.reportAt" 
+                                    readonly="readonly" 
+                                    ng-attr-tabindex="{{HomeSearchGrid.reportScheduling.tabIndexValue + 4}}" 
+                                    />
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-if="HomeSearchGrid.reportScheduling.DropDownFocusId != 'report-at'" ng-click="HomeSearchGrid.setFocus('report-at')">arrowDown</i>
+                                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-if="HomeSearchGrid.reportScheduling.DropDownFocusId == 'report-at'" ng-click="HomeSearchGrid.reportScheduling.setBlurOnDropdown()">arrowUp</i>
+                                    <div class="searchResultOverlay" id="autocompleteScrollDiv">
+                                        <ul>
+                                            <li ng-repeat = "timeSlotRec in HomeSearchGrid.TimeSlot track by $index" ng-mousedown="HomeSearchGrid.reportScheduling.reportScheduleAt(timeSlotRec)">
+                                                <div class="fullName">{{timeSlotRec}}</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-if="HomeSearchGrid.reportScheduling.nextScheduledOn">
+                                <label class = "text-left H300 email-label-width">Next scheduled on</label>   
+                                <p class="bp-alignment-left">{{HomeSearchGrid.reportScheduling.nextScheduledOn}}</p>
+                            </div>
+                        </div>
+                        <div class="confirm-cash-drawer-container">
+                            <a class="cancel" data-dismiss="modal" aria-label="Close"  ng-click="HomeSearchGrid.reportScheduling.cancelAction()" 
+                                ng-attr-tabindex="{{HomeSearchGrid.reportScheduling.tabIndexValue + 6}}">Cancel</a>
+                            <button class="bp-btn bp-btn-normal" ng-click="HomeSearchGrid.reportScheduling.saveAction()" ng-disabled="!HomeSearchGrid.reportScheduling.validateSchedulingReport()" 
+                                ng-attr-tabindex="{{HomeSearchGrid.reportScheduling.tabIndexValue + 5}}">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <bp-ng-modal-window class="share-report-modal" id-val="reportSharingModal" mobal-window-payload="HomeSearchGrid.ModalWindowPayload" cancel-btn-action="HomeSearchGrid.closeShareReportModal()" primary-btn-action="HomeSearchGrid.confirmShareReportAction()" >
+        <div class="modal-body-content">
+            <div class="report-name-section">
+                <label class="label-header">Report name</label>
+                <p>{{HomeSearchGrid.ModalWindowPayload.reportName}}</p>
+            </div>
+            <div class="share-with-section">
+                <label>Share with</label>
+                <div class="share-with-list">
+                    <ul>
+                        <li ng-repeat="user in HomeSearchGrid.userList">
+                            <span class="chk_tick" ng-class="{'chked' : HomeSearchGrid.isReportSharedWithUser($index)}" ng-click="HomeSearchGrid.selectUnselectUserToShareWith($event, $index);">
+                                <i class="fa fa-check-square chksqure"></i>
+                            </span>
+                            <span>{{user.Name}}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </bp-ng-modal-window>
+</apex:page>

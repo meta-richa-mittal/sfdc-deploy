@@ -1,7 +1,9 @@
 public without sharing class CustomerOwnedUnitTriggerHelper {
     
     public static Boolean isForceStopTrigger = false;
-     // List to store trigger new list
+    public static Boolean forcefullyRunPopulateUnitIdLogic = false;
+    
+    // List to store trigger new list
     public static List<Customer_Owned_Unit__c> customerOwnerUnitNewList = new List<Customer_Owned_Unit__c>();
     
     // List to store trigger old list
@@ -21,21 +23,32 @@ public without sharing class CustomerOwnedUnitTriggerHelper {
     public static Boolean preventOnAccountingSync = false;
     
     private static BaseIntegrationService integrationRec;
+
     /**
     * Name: beforeInsertOperations
     * Desc: Run beforeInsertOperations method
     * @param:   
     **/
     public static void beforeInsertOperations(){
+        validateSKUNumber();
         generateCOUId();
         for(Customer_Owned_Unit__c customerOwnerUnitRec : customerOwnerUnitNewList) {
             if(String.isNotBlank(customerOwnerUnitRec.VIN_Number__c) && customerOwnerUnitRec.VIN_Number__c == 'VIN Unknown') {
                 customerOwnerUnitRec.VIN_Number__c = null;
             }
-            if(customerOwnerUnitRec.Unit_Type__c == 'STOCK' && customerOwnerUnitRec.Publish_in_feeds__c == null) {
-            	customerOwnerUnitRec.Publish_in_feeds__c = true;
+            if(customerOwnerUnitRec.Unit_Type__c == 'STOCK') {
+                if(customerOwnerUnitRec.Publish_in_feeds__c == null) customerOwnerUnitRec.Publish_in_feeds__c = true;
+                if(customerOwnerUnitRec.Date_Stocked_In__c == null) customerOwnerUnitRec.Date_Stocked_In__c = System.today();
+                if(customerOwnerUnitRec.How_Acquired__c == null) customerOwnerUnitRec.How_Acquired__c = 'Add unit';
+                if(customerOwnerUnitRec.Reference_Number__c == null) customerOwnerUnitRec.Reference_Number__c = 'Unknown';
+            }
+            if(customerOwnerUnitRec.Unit_Type__c == 'COU' && customerOwnerUnitRec.Consignment__c) {
+                customerOwnerUnitRec.How_Acquired__c = 'Consignment';
+                customerOwnerUnitRec.Acquired_From__c = customerOwnerUnitRec.Account__c;
+                customerOwnerUnitRec.Acquisition_Cost__c = customerOwnerUnitRec.Agreed_Payout__c;
             }
         }
+        setDefaultProductType();
     }
     
     /**
@@ -143,11 +156,21 @@ public without sharing class CustomerOwnedUnitTriggerHelper {
     }
     
     public static void beforeUpdate() {
+        validateSKUNumber();
     	validateConsignmentUnits();
     	populatesFieldsBeforeUpdate();
         populateCategoryChangeAccountingSyncFields();
         populateNITCJESyncFields();
         populateConsignmentSyncFields();
+        setDefaultProductType();
+        cleanInActiveUnitOptionalFields();
+    }
+    
+    public static void afterUpdate() {
+        setUnitDataForCategoryChangeAccountSync();
+        setUnitDataForNITCJESync();
+        setUnitDataForConsignmentSync();
+        setSKUDataForDP360Sync();
     }
     
     public static void populatesFieldsBeforeUpdate() {
@@ -158,6 +181,24 @@ public without sharing class CustomerOwnedUnitTriggerHelper {
             if(String.isNotBlank(unitRec.VIN_Number__c) && unitRec.VIN_Number__c == 'VIN Unknown') {
                 unitRec.VIN_Number__c = null;
             }
+        }
+    }
+
+    public static void updateCostOnDealUnits() {
+        Set<String> unitIds = new Set<String>();
+        for(Customer_Owned_Unit__c unitRec: customerOwnerUnitNewList) {
+            if(unitRec.Consignment__c && unitRec.Status__c != 'Transferred' && unitRec.Agreed_Payout__c != customerOwnerUnitOldMap.get(unitRec.Id).Agreed_Payout__c) {
+                unitIds.add(unitRec.Id);
+            }
+        }
+        if(!unitIds.isEmpty()) {
+            List<Deal_Item__c> dealItemList = [SELECT Id, Customer_Owned_Unit__r.Agreed_Payout__c FROM Deal_Item__c WHERE Customer_Owned_Unit__c IN: unitIds AND Deal__r.Status__c != 'Invoiced'];
+            for(Deal_Item__c dealItemRec: dealItemList) {
+                dealItemRec.Unit_Cost__c = dealItemRec.Customer_Owned_Unit__r.Agreed_Payout__c;
+            }
+            DealItemTriggerHelper.isForceStopTrigger = true;
+            DMLUtility.updateSobjectList('Deal_Item__c', dealItemList);
+            DealItemTriggerHelper.isForceStopTrigger = false;
         }
     }
     
@@ -174,7 +215,16 @@ public without sharing class CustomerOwnedUnitTriggerHelper {
 	        	} else if(unitRec.Agreed_Payout__c > unitRec.Suggested_Price__c) {
 	        		throw new BlackpurlException('Agreed payout cannot be greater than Suggested price');
 	        	}
+                if(unitRec.Status__c != 'Transferred') {
+                    unitRec.Date_Stocked_In__c = null;
+                }
+                unitRec.How_Acquired__c = 'Consignment';
+                unitRec.Acquired_From__c = unitRec.Account__c;
+                unitRec.Acquisition_Cost__c = unitRec.Agreed_Payout__c;
         	}
+            if(unitRec.Unit_Type__c == 'COU' && !unitRec.Consignment__c) {
+                unitRec.How_Acquired__c = '';
+            }
         	
         	if(unitRec.Id != null && unitRec.Unit_Type__c == 'COU' && (unitRec.Consignment__c != customerOwnerUnitOldMap.get(unitRec.Id).Consignment__c || 
         		(unitRec.Status__c == 'Inactive' && unitRec.Status__c != customerOwnerUnitOldMap.get(unitRec.Id).Status__c))) {
@@ -212,13 +262,13 @@ public without sharing class CustomerOwnedUnitTriggerHelper {
         for(Customer_Owned_Unit__c unitRec : customerOwnerUnitNewList) {
             if(unitRec.Unit_Type__c == 'STOCK' && Trigger.isInsert) {
                 skuList.add(unitRec);
-            } else if(Trigger.isUpdate && unitRec.Unit_Type__c == 'STOCK' && isDP360UnitFieldsUpdated(unitRec)) {
+            } else if(Trigger.isUpdate && (unitRec.Unit_Type__c == 'STOCK' || (unitRec.Consignment__c && unitRec.Unit_Type__c == 'COU')) && isDP360UnitFieldsUpdated(unitRec)) {
                 skuList.add(unitRec);
             }
         }
         if(skuList.size() > 0 && DP360Service.isDP360Enabled()) {
             for(Customer_Owned_Unit__c unitRec : skuList) {
-                unitRec.Available_For_DP360_Sync__c = true;
+                if(DP360Service.isSyncUnitToDP360(unitRec)) unitRec.Available_For_DP360_Sync__c = true;
             }
         }
     }
@@ -233,19 +283,8 @@ public without sharing class CustomerOwnedUnitTriggerHelper {
     }
 
     public static void populatesAccountingSyncFields() {
-        if(QBUtil.isQBEnabled()) {
-            QBSyncFlagService.manageUnitSyncFlag(customerOwnerUnitNewList);
-        } else {
-        	 try {
-	          	if(integrationRec == null) {
-	        	 	integrationRec = IntegrationServiceFactory.getIntegrationServiceInstance('Accounting');
-	        	}
-	        	if(integrationRec != null) {
-	        		IntegrationSyncFlagService.manageUnitSyncFlag(new List<BaseIntegrationService>{integrationRec}, customerOwnerUnitNewList);
-	        	}	
-        	 } catch(exception e){
-	        }	
-        }
+        IntegrationSyncFlagService.manageUnitSyncFlag(customerOwnerUnitNewList);
+        IntegrationSyncFlagService.manageUnitInvoiceJESyncFlag(customerOwnerUnitNewList);
     }
     
     public static void setSKUDataForDP360Sync() {
@@ -253,7 +292,11 @@ public without sharing class CustomerOwnedUnitTriggerHelper {
             Set<Id> unitIdSet = new Set<Id>();
 	        for(Customer_Owned_Unit__c unit : customerOwnerUnitNewList) {
 	            if(unit.Available_For_DP360_Sync__c) {
-	                unitIdSet.add(unit.Id);
+                    if(Trigger.isInsert || (Trigger.isUpdate && isDP360UnitFieldsUpdated(unit) && unit.Unit_Type__c != 'ORDU')) {
+                        unitIdSet.add(unit.Id);
+                    } else if(Trigger.isUpdate && unit.Unit_Type__c == 'ORDU') {
+                        unitIdSet.add(unit.Id);
+                    }
 	            }
 	        }
             if(unitIdSet.size() > 0) {
@@ -263,46 +306,7 @@ public without sharing class CustomerOwnedUnitTriggerHelper {
     }
         
     public static void setCOUDataForAccountSync() {
-        Set<Id> stockUnitIdSet = new Set<Id>();
-        Set<Id> stockUnitIdSetForJE = new Set<Id>();
-        
-        for(Customer_Owned_Unit__c stockUnitRec : customerOwnerUnitNewList) {
-        	if(QBUtil.isQBEnabled()) {
-        		if(stockUnitRec.availForQBSync__c) {
-	                stockUnitIdSet.add(stockUnitRec.Id);
-	            } else if(stockUnitRec.Available_For_QB_Unit_Invoice_JE_Sync__c) {
-					stockUnitIdSetForJE.add(stockUnitRec.Id);
-				} 
-        	} else if(integrationRec != null) {
-            	if(stockUnitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.UNIT_INVOICE).Sync_Flag_API_Name__c) != null && 
-    	    			Boolean.valueOf(stockUnitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.UNIT_INVOICE).Sync_Flag_API_Name__c))) {
-	        		stockUnitIdSet.add(stockUnitRec.Id);
-            	} else if(stockUnitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.UNIT_INVOICE_JE).Sync_Flag_API_Name__c) != null && 
-    	    			Boolean.valueOf(stockUnitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.UNIT_INVOICE_JE).Sync_Flag_API_Name__c))) {
-	        		stockUnitIdSetForJE.add(stockUnitRec.Id);
-            	}
-        	}
-        }
-        if(stockUnitIdSet.size() > 0) {
-        	if(QBUtil.isQBEnabled()) {
-        		UnitService.syncCOUs(stockUnitIdSet);
-        	} else {
-        		if(integrationRec == null) {
-        	 		integrationRec = IntegrationServiceFactory.getIntegrationServiceInstance('Accounting');
-        	 	}
-        		IntegrationBatchService.initiateBatch(stockUnitIdSet, new List<BaseIntegrationService>{integrationRec}, IntegrationUtility.UNIT_INVOICE);
-        	}
-        } else if(stockUnitIdSetForJE.size() > 0) {
-        	if(QBUtil.isQBEnabled()) {
-        		preventOnAccountingSync = true;
-        		UnitInvoiceJournalEntryService.syncUnitInvoiceJE(stockUnitIdSetForJE);
-        	} else {
-        		if(integrationRec == null) {
-        	 		integrationRec = IntegrationServiceFactory.getIntegrationServiceInstance('Accounting');
-        	 	}
-        		IntegrationBatchService.initiateBatch(stockUnitIdSetForJE, new List<BaseIntegrationService>{integrationRec}, IntegrationUtility.UNIT_INVOICE_JE);
-        	}
-        }
+        IntegrationSyncFlagService.checkAndInitiateSyncBatch(customerOwnerUnitNewList, IntegrationUtility.UNIT_INVOICE);  
     }
     
     /*public static void syncInventoryWithDP360() {
@@ -320,117 +324,102 @@ public without sharing class CustomerOwnedUnitTriggerHelper {
         } 
         return;
     }*/
+
+    public static void beforeDelete() {
+        deleteAttachedDocuments();
+    }
     
     public static void populateCategoryChangeAccountingSyncFields() {
-        if(QBUtil.isQBEnabled()) {
-            QBSyncFlagService.manageUnitJESyncFlagOnCategoryChange(customerOwnerUnitNewList, customerOwnerUnitOldMap);
-        }else {
-        	 if(integrationRec == null) {
-        	 	integrationRec = IntegrationServiceFactory.getIntegrationServiceInstance('Accounting');
-        	 }																										
-            if(integrationRec != null) {
-                IntegrationSyncFlagService.manageStockUnitCategorySyncFlag(new List<BaseIntegrationService>{integrationRec}, customerOwnerUnitNewList, customerOwnerUnitOldMap);
-            }
-        }
+        IntegrationSyncFlagService.manageStockUnitCategorySyncFlag( customerOwnerUnitNewList, customerOwnerUnitOldMap);
     }
     
     public static void setUnitDataForCategoryChangeAccountSync() {
-        Set<Id> stockUnitIdSet = new Set<Id>();
-        for(Customer_Owned_Unit__c stockUnitRec : customerOwnerUnitNewList) {
-            if(stockUnitRec.Avail_For_QB_Sync_Category__c) {
-                stockUnitIdSet.add(stockUnitRec.Id);
-            } else if(integrationRec != null) {
-	            if(stockUnitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.STOCK_UNIT_CATEGORY).Sync_Flag_API_Name__c) != null && 
-	                Boolean.valueOf(stockUnitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.STOCK_UNIT_CATEGORY).Sync_Flag_API_Name__c))) {
-	                stockUnitIdSet.add(stockUnitRec.Id);
-	            }
-	        }
-        }
-        if(stockUnitIdSet.size() > 0) {
-            preventOnAccountingSync = true;
-            if(QBUtil.isQBEnabled()) {
-                UnitCategoryService.syncUnits(stockUnitIdSet);
-            } else {
-            	if(integrationRec == null) {
-        	 		integrationRec = IntegrationServiceFactory.getIntegrationServiceInstance('Accounting');
-        	 	}	
-                IntegrationBatchService.initiateBatch(stockUnitIdSet, new List<BaseIntegrationService>{integrationRec}, IntegrationUtility.STOCK_UNIT_CATEGORY);
-            }
-        }
+    	IntegrationSyncFlagService.checkAndInitiateSyncBatch(customerOwnerUnitOldMap, customerOwnerUnitNewList, IntegrationUtility.STOCK_UNIT_CATEGORY);
     }
     
     public static void populateNITCJESyncFields() {
-    	if(QBUtil.isQBEnabled()) {
-            QBSyncFlagService.manageNITCJESyncFlag(customerOwnerUnitNewList, customerOwnerUnitOldMap);
-        } else {
-        	 if(integrationRec == null) {
-        	 	integrationRec = IntegrationServiceFactory.getIntegrationServiceInstance('Accounting');
-        	 }																										
-            if(integrationRec != null) {
-                IntegrationSyncFlagService.manageNITCJESyncFlag(new List<BaseIntegrationService>{integrationRec}, customerOwnerUnitNewList, customerOwnerUnitOldMap);
-            }
-        }
+    	IntegrationSyncFlagService.manageNITCJESyncFlag( customerOwnerUnitNewList, customerOwnerUnitOldMap);
     }
     
     public static void setUnitDataForNITCJESync() {
-    	Set<Id> unitIdSet = new Set<Id>();
-        for(Customer_Owned_Unit__c unitRec : customerOwnerUnitNewList) {
-            if(unitRec.Available_For_QB_NITC_JE_Sync__c) {
-                unitIdSet.add(unitRec.Id);
-            } else if(integrationRec != null) {
-	            if(unitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.UNIT_NITC_JE).Sync_Flag_API_Name__c) != null && 
-	                Boolean.valueOf(unitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.UNIT_NITC_JE).Sync_Flag_API_Name__c))) {
-	                unitIdSet.add(unitRec.Id);
-	            }
-	        }
-        }
-        if(unitIdSet.size() > 0) {
-            preventOnAccountingSync = true;
-            if(QBUtil.isQBEnabled()) {
-                QBUnitNITCJEService.syncUnitNITCJE(unitIdSet);
-            } else {
-            	if(integrationRec == null) {
-        	 		integrationRec = IntegrationServiceFactory.getIntegrationServiceInstance('Accounting');
-        	 	}	
-                IntegrationBatchService.initiateBatch(unitIdSet, new List<BaseIntegrationService>{integrationRec}, IntegrationUtility.UNIT_NITC_JE);
-            }
-        }
+        IntegrationSyncFlagService.checkAndInitiateSyncBatch(customerOwnerUnitNewList, IntegrationUtility.UNIT_NITC_JE);    
     }
     
     public static void populateConsignmentSyncFields() {
-        if(QBUtil.isQBEnabled()) {
-            QBSyncFlagService.manageConsignmentSyncFlag(customerOwnerUnitNewList, customerOwnerUnitOldMap);
-        } else {
-        	 if(integrationRec == null) {
-        	 	integrationRec = IntegrationServiceFactory.getIntegrationServiceInstance('Accounting');
-        	 }																										
-            if(integrationRec != null) {
-                IntegrationSyncFlagService.manageConsignmentSyncFlag(new List<BaseIntegrationService>{integrationRec}, customerOwnerUnitNewList, customerOwnerUnitOldMap);
-            }
-        }
+        IntegrationSyncFlagService.manageConsignmentSyncFlag(customerOwnerUnitNewList, customerOwnerUnitOldMap);
     }
     
     public static void setUnitDataForConsignmentSync() {
-    	Set<Id> consUnitIdSet = new Set<Id>();
-        for(Customer_Owned_Unit__c unitRec : customerOwnerUnitNewList) {
-            if(unitRec.Available_For_QB_Consignment_Sync__c) {
-                consUnitIdSet.add(unitRec.Id);
-            } else if(integrationRec != null) {
-	            if(unitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.Unit_Consignment).Sync_Flag_API_Name__c) != null && 
-	                Boolean.valueOf(unitRec.get(integrationRec.integrationEntityNameToRecMap.get(IntegrationUtility.Unit_Consignment).Sync_Flag_API_Name__c))) {
-                        consUnitIdSet.add(unitRec.Id);
-	            }
-	        }
+        IntegrationSyncFlagService.checkAndInitiateSyncBatch(customerOwnerUnitNewList, IntegrationUtility.Unit_Consignment);    
+    }
+
+    private static void validateSKUNumber() {
+        for(Customer_Owned_Unit__c couRec : customerOwnerUnitNewList){
+            if(couRec.Unit_Type__c == UNIT_TYPE_STOCK && String.isNotBlank(couRec.Stock_Id__c) && couRec.Stock_Id__c.startsWithIgnoreCase('SKU-') && (Trigger.isInsert || customerOwnerUnitOldMap.get(couRec.Id).Stock_Id__c != couRec.Stock_Id__c)){
+                couRec.addError('Manually entered stock numbers cannot begin with SKU-. Please enter a different stock number.');
+            }
         }
-        if(consUnitIdSet.size() > 0) {
-            preventOnAccountingSync = true;
-            if(QBUtil.isQBEnabled()) {
-                QBUnitConsignmentService.syncUnitConsignment(consUnitIdSet);
-            } else {
-            	if(integrationRec == null) {
-        	 		integrationRec = IntegrationServiceFactory.getIntegrationServiceInstance('Accounting');
-        	 	}	
-                IntegrationBatchService.initiateBatch(consUnitIdSet, new List<BaseIntegrationService>{integrationRec}, IntegrationUtility.Unit_Consignment);
+    }
+
+    private static void cleanInActiveUnitOptionalFields() {
+        Set<String> productTypeIds = new Set<String>();
+        for(Customer_Owned_Unit__c couRec : customerOwnerUnitNewList){
+            if(couRec.Product_type__c != null && couRec.Product_type__c != customerOwnerUnitOldMap.get(couRec.Id).Product_type__c){
+                productTypeIds.add(couRec.Product_type__c);
+            }
+        }
+        if(!productTypeIds.isEmpty()) {
+            Map<String, List<Unit_Product_Type_Field__c>> productTypeIdsToFieldMap = new Map<String, List<Unit_Product_Type_Field__c>>();
+            for(Unit_Product_Type_Field__c fieldRec : [SELECT COU_API_Name__c, Unit_Product_Type__c FROM Unit_Product_Type_Field__c WHERE Unit_Product_Type__c IN: productTypeIds AND Active__c = false]) {
+                if(!productTypeIdsToFieldMap.containsKey(fieldRec.Unit_Product_Type__c)) {
+                    productTypeIdsToFieldMap.put(fieldRec.Unit_Product_Type__c, new List<Unit_Product_Type_Field__c>());
+                }
+                productTypeIdsToFieldMap.get(fieldRec.Unit_Product_Type__c).add(fieldRec);
+            }
+            for(Customer_Owned_Unit__c couRec : customerOwnerUnitNewList){
+                if(productTypeIdsToFieldMap.containsKey(couRec.Product_type__c)) {
+                    for(Unit_Product_Type_Field__c fieldRec : productTypeIdsToFieldMap.get(couRec.Product_type__c)) {
+                        couRec.put(fieldRec.COU_API_Name__c, null);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void deleteAttachedDocuments() {
+        List<Document__c> documents = [SELECT Id FROM Document__c WHERE Unit__c IN :customerOwnerUnitOldList];
+        DMLUtility.deleteSobjectList('Document__c', documents);
+    }
+
+    private static void setDefaultProductType() {
+        Boolean isSetDefProductType = false;
+        for(Customer_Owned_Unit__c customerOwnerUnitRec : customerOwnerUnitNewList) {
+            if(customerOwnerUnitRec.Product_type__c == null) {
+                isSetDefProductType = true;
+                break;
+            }
+        }
+        if(!isSetDefProductType) return;
+
+        if(AccessControl.ifObjectFieldIsAccessible('Unit_Product_Type__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
+        List<Unit_Product_Type__c> defUnitPTList = [SELECT Id FROM Unit_Product_Type__c WHERE Default__c = true];
+        if(!defUnitPTList.isEmpty()) {
+            for(Customer_Owned_Unit__c customerOwnerUnitRec : customerOwnerUnitNewList) {
+                if(customerOwnerUnitRec.Product_type__c == null) {
+                    customerOwnerUnitRec.Product_Type__c = defUnitPTList[0].Id;
+                }
+            }
+        }
+    }
+
+    public static void populateStampDutyCalculator() {
+        List<Stamp_Duty_Calculators__c> stampDutyRecord = [SELECT ID FROM Stamp_Duty_Calculators__c WHERE Default__c = true LIMIT 1];
+        List<Business_Profile__c> businessProfileRecord = [SELECT Business_Country__r.Name__c FROM Business_Profile__c WHERE Business_Country__c != null LIMIT 1];
+        if(!stampDutyRecord.isEmpty() && !businessProfileRecord.iSEmpty() && businessProfileRecord[0].Business_Country__r.Name__c == 'Australia') {
+            for(Customer_Owned_Unit__c unitRec : customerOwnerUnitNewList) {
+                if((unitRec.Unit_Type__c == UNIT_TYPE_STOCK || unitRec.Unit_Type__c == UNIT_TYPE_ORDU) && String.isBlank(unitRec.Stamp_Duty_Calculators__c) ) {
+                    unitRec.Stamp_Duty_Calculators__c = Id.valueOf(stampDutyRecord[0].Id);
+                } 
             }
         }
     }

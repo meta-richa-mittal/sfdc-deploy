@@ -11,7 +11,7 @@ global without sharing class PopulateTotalCostOnSOLIBatch implements Database.Ba
     					'Fee__r.Cost_Method__c, Fee__r.Cost_Rate__c, Fee__r.Is_Include_In_Profit_Calculation__c, ' + 
     					'Labour_Code__r.Cost_Method__c, Labour_Code__r.Cost_Rate__c, Sublet__r.Cost_Method__c, Cost__c, Sublet__r.Cost__c, Service_Order_Header__r.Is_Technician_Hours_Costing_Enabled__c, ' + 
     					'(select Adjusted_Cost_Coli__c from CO_Line_Items__r) FROM Service_Order_Line_Item__c ' + 
-    					'WHERE Service_Order_Header__r.Invoice_Number__c != null AND Service_Order_Header__r.Work_Status__c = \'Invoiced\' ' + 
+    					'WHERE Service_Order_Header__r.Invoice_Number__c != null AND Service_Order_Header__r.SO_Status__c = \'' +  ServiceJobUtil.INVOICED + '\' ' + 
     					'LIMIT ' + SOQLUtil.getAvailableQueryRowsLimit(); // AND Total_Cost__c != null  ??
         return Database.getQueryLocator(strQuery); 
     }

@@ -6,6 +6,10 @@
 **/
 @isTest
 public class UnitModelTriggerHelperTest {
+	@testsetup
+    private static void setup(){
+    	TestDataFactory.disableFLSChecks();
+    }
     @isTest
     private static void createUnitModelTest() {
     	Unit_Make__c unitMake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);

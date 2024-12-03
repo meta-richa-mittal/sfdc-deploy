@@ -28,11 +28,16 @@ public without sharing class LabourCodeTriggerHelper {
     public static void updateKitLineItems() {
     	List<Id> labourIdList = new List<Id>();
     	for(Labour_Code__c labourRec : LabourNewList) {
-    		if(LabourNewMap.get(labourRec.Id).Rate__c != LabourOldMap.get(labourRec.Id).Rate__c) {
+    		if(LabourNewMap.get(labourRec.Id).Rate__c != LabourOldMap.get(labourRec.Id).Rate__c || LabourNewMap.get(labourRec.Id).Fixed_Rate__c != LabourOldMap.get(labourRec.Id).Fixed_Rate__c) {
     			labourIdList.add(labourRec.Id);
     		}
     	}
-    	KitLineItemtriggerHelper.updateRetailofKitLineItems('Labour_Code__c', labourIdList);
+        if(!labourIdList.isEmpty()) {
+            List<Kit_Header_Line_Item__c> kitLineItemList = [SELECT Fixed_Price__c, Is_Environmental_Fee__c, Kit_Header__c, Kit_Price__c, Labour_Code__c, Part__c, Retail__c, Fee__c, Retail_Price__c FROM Kit_Header_Line_Item__c WHERE Labour_Code__c IN :labourIdList];
+            if(!kitLineItemList.isEmpty()) {
+                KitLineItemtriggerHelper.setRetailPriceBasedOnDefaultPriceLevel(kitLineItemList);
+                DMLUtility.updateSobjectList('Kit_Header_Line_Item__c', kitLineItemList);
+            }
+        }
     }
-    
 }

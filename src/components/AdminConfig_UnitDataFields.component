@@ -1,0 +1,102 @@
+<apex:component controller="GlobalController">
+    <div class="LoadingDiv" ng-show="AdminConfig.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="GeneralOrgInformation">
+        <div class="settings_Header row">
+            <div class="col-lg-3 col-md-3">
+                <div class="fixedHeaderText bp-pointer-cursor" ng-click="AdminConfig.toogleSectionView('showUnitDataFields');">
+                    <span class="headerlabel">
+                    <i class="fa fa-angle-down" ng-show="AdminConfig.toggleObj.showUnitDataFields" ></i>
+                    <i class="fa fa-angle-right" ng-show="!AdminConfig.toggleObj.showUnitDataFields" ></i>
+                    <span class="divider">|</span>
+                    <span class="T2">{{ 'UNIT_DATA_FIELDS' | translate}}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div id="unitDataField_Setting" ng-show="AdminConfig.toggleObj.showUnitDataFields">
+            <div class="main_section row" >
+                <div class="form" ng-repeat="unitDataField in AdminConfig.unitDataFields">
+                    <div class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{unitDataField.Name}}</label>
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <input class="searchInput form-control inputValueText" ng-model="unitDataField.DisplayLabel" ng-keyup="AdminConfig.IsUnitDataFieldDisabled = false;"/>
+                        </div>
+                        <div ng-if="unitDataField.DisplayLabel" class="convert-btn-section">
+                            <button class="bp-btn bp-btn-normal bp-btn-small" ng-click="AdminConfig.openConvertMiscFieldModal($index)" ng-disabled="unitDataField.IsConversionInProgress">Convert</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="main_section row">
+                <span>
+                <button class="btn btn-default greenBtn pull-right margin8 text-uppercase applyDisable" 
+                ng-class="{'applyDisable' : AdminConfig.IsApplySettingDisabled() }"
+                ng-disabled= "AdminConfig.IsUnitDataFieldDisabled" 
+                ng-click="AdminConfig.saveUnitDataFieldConfig();">{{ 'Save_changes' | translate}}</button>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <bp-ng-modal-window id-val="convertMiscFieldModal" mobal-window-payload="AdminConfig.ModalWindowPayload" cancel-btn-action="AdminConfig.closeMiscFieldModal()" primary-btn-action="AdminConfig.moveAndDeactivateMiscField()" disable-primary-action="AdminConfig.isMoveAndDeactivateMiscBtnDisabled()" class="convert-misc-field-modal">
+        <div class="warning-banner">
+            <c:WarningInfoBanner showInfoBanner="true" iconName="warningFilled" bannerInfo1="This action will move any data values found under the selected Unit data field and will move those values to the optional unit data field you select. When complete the unit data field will be deactivated." bannerInfo2="Only text-based data fields are available for the conversion process. If the data exceeds the maximum character limit, it will be automatically truncated to fit within the allowed length." />
+        </div>
+        <div class="c-form-field-container">
+            <div class="c-form-field">
+                <label>Converting unit data field</label>
+                <div class="field-value">
+                    <p>{{AdminConfig.ModalWindowPayload.convertingUnitDataField}}</p>
+                </div>
+            </div>
+            <div class="c-form-field">
+                <label class="job-status-label">Select a data category</label>
+                <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : AdminConfig.showDataCategoryList }">
+                    <input autocomplete="off" class="bp-input-text searchInput" id="dataCategory" placeholder="Please select" type="text"
+                    ng-model="AdminConfig.selectedCategory" ng-blur="AdminConfig.showDataCategoryList = false;"
+                    ng-focus="AdminConfig.showDataCategoryList = true;" readonly="true" />
+                    <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="AdminConfig.showDataCategoryList = true;">arrowDown</i>
+                    <div class="searchResultOverlay" id="dataCategoryDropDownDiv">
+                        <ul>
+                            <li id="dataCategory_{{$index}}" 
+                            ng-mousedown="AdminConfig.selectDataCategory(category, $index)"
+                            ng-repeat="category in AdminConfig.UnitOptionalFields">
+                                <div class="fullName">{{category.CategoryName}}</div>
+                            </li>
+                        </ul> 
+                    </div>
+                </div>
+            </div>
+            <div class="c-form-field">
+                <label class="job-status-label">Select a data field</label>
+                <div class="field-value bp-cell searchInputArea" ng-class="{'showingOverlay' : AdminConfig.showFieldValuesList }">
+                    <div>
+                        <input autocomplete="off" class="bp-input-text searchInput" id="dataField" placeholder="Please select" type="text"
+                        ng-model="AdminConfig.selectedFieldValue" ng-blur="AdminConfig.showFieldValuesList = false;"
+                        ng-focus="AdminConfig.showFieldValuesList = true;" readonly="true" ng-disabled="!AdminConfig.selectedCategory" />
+                        <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="AdminConfig.showFieldValuesList = true;">arrowDown</i>
+                        <div class="searchResultOverlay" id="dataFieldDropDownDiv">
+                            <ul>
+                                <li id="dataField_{{$index}}" 
+                                ng-mousedown="AdminConfig.selectDataField(dataField)"
+                                ng-repeat="dataField in AdminConfig.UnitOptionalFields[AdminConfig.selectedProductTypeIndex].FieldValuesList">
+                                    <div class="fullName">{{dataField.Name}}</div>
+                                </li>
+                            </ul> 
+                        </div>
+                    </div>
+                    <div>
+                        <p class="misc-info-text">{{AdminConfig.miscUnitFieldInfoText}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </bp-ng-modal-window>
+
+</apex:component>

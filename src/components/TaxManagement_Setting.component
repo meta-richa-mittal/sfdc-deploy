@@ -1,0 +1,530 @@
+<apex:component controller="GlobalController">
+    <div class="LoadingDiv" ng-show="M_TAS.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="setting-tab-content" >
+        <div class="form">
+            <div class="general-section">
+                <div class="row rowLabel">
+                    <div class="col-md-3">
+                        <label class="section-header">{{ 'General_settings' | translate}}</label>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-md-3">
+                        <label class="">{{ 'Tax_id_on_documents' | translate}}</label>
+                    </div>
+                    <div class="col-md-3">
+                        <input class="form-control" ng-model="M_TAS.Settings.TaxSetting.GenConfigObj.TaxId"/>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-md-3">
+                        <label>{{ 'Prices_include_sales_tax' | translate}}</label>
+                    </div>
+                    <div class="col-md-3 labelValueCenter">
+                        <span ng-if="M_TAS.Settings.TaxSetting.GenConfigObj.PriceIncludeTax">Yes</span>
+                        <span ng-if="!M_TAS.Settings.TaxSetting.GenConfigObj.PriceIncludeTax">No</span>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-xs-12 col-md-3">
+                        <label>{{'Trade_tax_credit_can_not_exceed_unit_tax' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <label class="bp-switch">
+                            <input ng-model="M_TAS.Settings.TaxSetting.GenConfigObj.TradeTaxCreditCanNotExceedUnitTax" type="checkbox"/>
+                            <div class="bp-slider round"></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="row rowLabel unit-options">
+                    <div class="col-xs-12 col-md-3">
+                        <label class="align-font">{{ 'Unit_options_that_are_taxed_like_the_unit' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <div class="multi-select-dropdown-wrapper">
+                            <multi-select ng-if="M_TAS.DealUnitOptionsTaxedLikeUnit" result-list="M_TAS.DealUnitOptionsTaxedLikeUnit.unitTaxApplicableOn" type = "option type" select-all-rec = "M_TAS.DealUnitOptionsTaxedLikeUnit.isUnitTaxApplicableOnAllOptionType"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-xs-12 col-md-3">
+                        <label>{{'Group_individual_taxes_on_sales' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <label class="bp-switch">
+                            <input ng-model="M_TAS.Settings.TaxSetting.GenConfigObj.GroupIndividualTaxesOnSales" type="checkbox"/>
+                            <div class="bp-slider round"></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="row rowLabel" ng-if="M_TAS.Settings.TaxSetting.GenConfigObj.GroupIndividualTaxesOnSales">
+                    <div class="col-xs-12 col-md-3">
+                        <label class="normal-font">{{ 'Group_them_as' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <input class="form-control" ng-model="M_TAS.Settings.TaxSetting.GenConfigObj.GroupIndividualSalesTaxAs"/>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-xs-12 col-md-3">
+                        <label>{{'Group_individual_taxes_on_purchases' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <label class="bp-switch">
+                            <input ng-model="M_TAS.Settings.TaxSetting.GenConfigObj.GroupIndividualTaxesOnPurchase" type="checkbox"/>
+                            <div class="bp-slider round"></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="row rowLabel" ng-if="M_TAS.Settings.TaxSetting.GenConfigObj.GroupIndividualTaxesOnPurchase">
+                    <div class="col-xs-12 col-md-3">
+                        <label class="normal-font">{{ 'Group_them_as' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <input class="form-control" ng-model="M_TAS.Settings.TaxSetting.GenConfigObj.GroupIndividualPurchaseTaxAs"/>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="account-type-section">
+                <div class="row P10">
+                    <div class="table-responsive">
+                        <h2 class="section-header">{{ 'Account_types_tax_exemptions' | translate}}</h2>
+                        <div class="bp-scrollable-table">
+                            <table class="bp-editable-table bp-grey-back-table">
+                                <col width="26%" />
+                                <col width="26%" />
+                                <col width="30%" />
+                                <col width="7%" />
+                                <col width="7%" />
+                                <col width="4%" />
+                                <thead>
+                                    <th>Account type</th>
+                                    <th>Applies to</th>
+                                    <th>Tax exemptions</th>
+                                    <th class="bp-z-index1">Default</th>
+                                    <th class="bp-z-index1">Active</th>
+                                    <th></th>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="accountRec in M_TAS.Settings.TaxSetting.AccountTypeData track by $index">
+                                        <td class="first-column">{{accountRec.AccountType}}</td>
+                                        <td>{{accountRec.AppliesTo}}</td>
+                                        <td>{{accountRec.TaxExemptions}}</td>
+                                        <td>
+                                            <label class="bp-switch">
+                                                <input type="checkbox" ng-model="accountRec.IsDefault" ng-click = "F_TAS.preventDefaultAction($event)" />
+                                                <div class="bp-slider round"></div>
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <label class="bp-switch">
+                                                <input type="checkbox" ng-model="accountRec.IsActive" ng-click = "F_TAS.preventDefaultAction($event)" />
+                                                <div class="bp-slider round"></div>
+                                            </label>
+                                        </td>
+                                        <td>
+                                            <a class="button icon edit" ng-click = "F_TAS.openAddEditAccountTypeModalWindow(accountRec.Id)">
+                                                <i class="bp-icons bp-font-14 bp-fw-100">edit</i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row P10">
+                    <button class="btn btn-default greenBtn pull-right margin8" ng-disabled="" ng-click="F_TAS.openAddEditAccountTypeModalWindow();">{{ 'Add_new_account_type' | translate}}</button>
+                </div>
+            </div>
+
+            <div class="automatic-tax-section" ng-if="M_TAS.IsAutomaticTaxRates">
+                <div class="row P10">
+                    <div class="table-responsive">
+                        <h2 class="section-header">{{ 'Automatic_tax_rate_controls' | translate}}</h2>
+                        <div class="bp-scrollable-table">
+                            <table class="bp-editable-table automatic-tax-table bp-grey-back-table">
+                                <col width="34%" />
+                                <col width="33%" />
+                                <col width="33%" />
+                                <thead>
+                                    <th></th>
+                                    <th>Tax category</th>
+                                    <th>Forms label</th>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="taxRate in M_TAS.Settings.TaxSetting.AutomaticTaxRates track by $index">
+                                        <td>{{taxRate.TaxName}}</td>
+                                        <td>
+                                            <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.AutomaticTaxRates[$index].CategoryId" 
+                                                ng-options="category.Id as category.Name for category in M_TAS.Settings.TaxSetting.TaxSettingMasterData.CategoryList"></select>
+                                        </td>
+                                        <td>
+                                            <input class="form-control" ng-model="taxRate.FormsLabel" ng-class="{'red-border': taxRate.isFormLabelEmpty}" ng-blur="taxRate.isFormLabelEmpty = !taxRate.FormsLabel" />
+                                        </td>
+                                    </tr>
+                                    <tr class="automated-default-tax-rate"> 
+                                        <td class="default-rate-lbl pt10">Current default tax rates</td>
+                                        <td class="pt10">       
+                                            <button class="bp-btn bp-btn-normal bp-btn-small" ng-click="F_TAS.refreshAutomatedTaxRates()">Check for updates</button>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    <tr ng-repeat="taxRate in M_TAS.Settings.TaxSetting.AutomaticTaxRatesNonGrouped" class="automated-default-tax-rate">
+                                        <td class="align-items-center display-flex-element" ng-if="!(taxRate.TaxRate == 0 && taxRate.TaxName == 'District Tax')">
+                                            <div class="width50">{{taxRate.TaxName}}</div>
+                                            <div class="tax-rate-name width50">{{taxRate.TaxRateStr}}</div>
+                                        </td>
+                                        <td class="tax-rate-name width50" ng-if="!(taxRate.TaxRate == 0 && taxRate.TaxName == 'District Tax')">{{taxRate.AutomatedTaxName}}</td>
+                                        <td ng-if="!(taxRate.TaxRate == 0 && taxRate.TaxName == 'District Tax')"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="taxes-state-controls">
+                                <div class="automated-default-tax-rate"> 
+                                    <p class="default-rate-lbl pt10">{{ 'States_which_you_collected_remit_sales_taxes_for' | translate}}</p>
+                                </div>
+                                <table class="bp-editable-table automatic-tax-table bp-grey-back-table">
+                                    <col width="50%" />
+                                    <col width="30%" />
+                                    <col width="20%" />
+                                    <tbody>
+                                        <tr ng-repeat="taxCalc in M_TAS.Settings.TaxSetting.AutoTaxStateControls.AutoTaxCalcStateList" class="automated-default-tax-rate">
+                                            <td class="align-items-center display-flex-element">
+                                                <div class="tax-rate-name width50">{{taxCalc.FormattedName}}</div>
+                                                <div class="width50">
+                                                    <div ng-if="taxCalc.IsLocalState">(local)</div>
+                                                    <a ng-if="!taxCalc.IsLocalState" class="button icon delete" ng-click="F_TAS.deleteAutoTaxCalcState(taxCalc.Id, $index)">
+                                                        <span aira-hidden="true" class="button-text">Delete</span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                            <td class="width50"></td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="nonCalcTaxSection">
+                                    <div class="bp-cell searchInputArea" ng-class="{'showingOverlay' : M_TAS.showNonCalcTaxDropdown }">
+                                        <input class="bp-input-text searchInput" type="text" ng-focus="M_TAS.showNonCalcTaxDropdown = true;" id="nonCalcTaxInputId" placeholder="Select a state"
+                                            ng-blur="M_TAS.showNonCalcTaxDropdown = false;"
+                                            ng-model="M_TAS.selectedNonTaxCalcState" autocomplete="off" readonly="true" />
+                                        <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click="M_TAS.showNonCalcTaxDropdown = true;">arrowDown</i>
+                                        <div class="searchResultOverlay" id="nonCalcTaxDropdownDiv">
+                                            <ul>
+                                                <li id="NonAutoTaxCalc_{{$index}}"
+                                                    ng-mousedown="F_TAS.selectNonAutoTaxCalcState(NonAutoTaxCalc, $index)" 
+                                                    ng-repeat="NonAutoTaxCalc in M_TAS.Settings.TaxSetting.AutoTaxStateControls.NonAutoTaxCalcStateList">
+                                                    <div class="fullName">{{NonAutoTaxCalc.FormattedName}}</div>
+                                                </li>
+                                            </ul> 
+                                        </div>
+                                    </div>
+                                    <div class="deal-auto-enable-tax">
+                                        <label>For deals, auto enable Tax based on customer address</label>
+                                        <label class="bp-switch">
+                                            <input ng-model="M_TAS.Settings.TaxSetting.AutoTaxStateControls.IsAutoEnableTaxOnDealByCustomerAddress" type="checkbox"/>
+                                            <div class="bp-slider round"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accrued-tax-section">
+                <div class="row rowLabel">
+                    <div class="col-md-3">
+                        <label class="section-header">{{ 'Accrued_tax_controls' | translate}}</label>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-md-3">
+                        <label class="">{{ 'Accrue_input_tax_until_units_are_sold' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <label class="bp-switch">
+                            <input ng-model="M_TAS.Settings.TaxSetting.AccruedTaxObj.AccrueTradeTaxUntilUnitSold" type="checkbox"/>
+                            <div class="bp-slider round"></div>
+                        </label>
+                    </div>
+                </div>
+                <div ng-if="M_TAS.Settings.TaxSetting.AccruedTaxObj.AccrueTradeTaxUntilUnitSold">
+                    <div class="row rowLabel">
+                        <div class="col-md-3">
+                            <label>{{ 'Enable_tax_accrual_on_order_units_by_default' | translate}}</label>
+                        </div>
+                        <div class="col-xs-12 col-md-3">
+                            <label class="bp-switch">
+                                <input ng-model="M_TAS.Settings.TaxSetting.AccruedTaxObj.EnableTaxAccrualOnOrderUnitsByDefault" type="checkbox"/>
+                                <div class="bp-slider round"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row rowLabel">
+                        <div class="col-xs-12 col-md-3">
+                            <label>{{'Notional_input_tax_category' | translate}}</label>
+                        </div>
+                        <div class="col-xs-12 col-md-3">
+                            <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.AccruedTaxObj.NationalInputTaxCategory" 
+                                ng-options="tax.Id as tax.Name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.CategoryList"></select>
+                        </div>
+                    </div>
+                    <div class="row rowLabel">
+                        <div class="col-xs-12 col-md-3">
+                            <label>{{ 'Sales_tax_liability_category' | translate}}</label>
+                        </div>
+                        <div class="col-xs-12 col-md-3">
+                            <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.AccruedTaxObj.SalesTaxLiabilityCategory" 
+                                ng-options="tax.Id as tax.Name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.CategoryList"></select>
+                        </div>
+                    </div>
+                    <div class="row rowLabel">
+                        <div class="col-xs-12 col-md-3">
+                            <label>{{'Purchase_tax_liability_category' | translate}}</label>
+                        </div>
+                        <div class="col-xs-12 col-md-3">
+                            <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.AccruedTaxObj.PurchaseTaxLiabilityCategory" 
+                                ng-options="tax.Id as tax.Name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.CategoryList"></select>
+                        </div>
+                    </div>
+                    <div class="row rowLabel">
+                        <div class="col-xs-12 col-md-3">
+                            <label>{{ 'Notional_input_tax_expense_category' | translate}}</label>
+                        </div>
+                        <div class="col-xs-12 col-md-3">
+                            <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.AccruedTaxObj.NationalInputTaxExpenseCategory" 
+                                ng-options="tax.Id as tax.Name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.CategoryList"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="default-applicable-tax-section">
+                <div class="row rowLabel">
+                    <div class="col-md-3">
+                        <label class="section-header">{{ 'Default_applicable_tax_codes' | translate}}</label>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-md-3">
+                        <label class="">{{ 'Default_tax_on_parts' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.DefaultTaxObj.PartTax" 
+                            ng-options="tax.id as tax.name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.SalesTaxList"></select>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-md-3">
+                        <label>{{ 'Default_tax_on_labor' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.DefaultTaxObj.LaborTax" 
+                            ng-options="tax.id as tax.name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.SalesTaxList"></select>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-xs-12 col-md-3">
+                        <label>{{'Default_tax_on_fees' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.DefaultTaxObj.FeeTax" 
+                            ng-options="tax.id as tax.name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.SalesTaxList"></select>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-xs-12 col-md-3">
+                        <label>{{ 'Default_tax_on_units' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.DefaultTaxObj.UnitTax" 
+                            ng-options="tax.id as tax.name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.SalesTaxList"></select>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-xs-12 col-md-3">
+                        <label>{{'Default_tax_on_vendor_products' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.DefaultTaxObj.VendorProductTax" 
+                            ng-options="tax.id as tax.name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.SalesTaxList"></select>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-xs-12 col-md-3">
+                        <label>{{ 'Default_tax_on_claim_deductibles' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.DefaultTaxObj.ClaimDeductiblesTax" 
+                            ng-options="tax.id as tax.name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.SalesTaxList"></select>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-xs-12 col-md-3">
+                        <label>{{ 'Default_tax_on_internal_service' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.DefaultTaxObj.InternalServiceTax" 
+                            ng-options="tax.id as tax.name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.SalesTaxList"></select>
+                    </div>
+                </div>
+                <div class="row rowLabel">
+                    <div class="col-xs-12 col-md-3">
+                        <label>{{ 'Default_tax_on_vendor_purchases' | translate}}</label>
+                    </div>
+                    <div class="col-xs-12 col-md-3">
+                        <select class="form-control" ng-model="M_TAS.Settings.TaxSetting.DefaultTaxObj.VendorPurchaseTax" 
+                            ng-options="tax.id as tax.name for tax in M_TAS.Settings.TaxSetting.TaxSettingMasterData.PurchaseTaxList"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row P10 apply-setting-btn">
+                <button class="btn btn-default greenBtn pull-right margin8" ng-disabled="F_TAS.isApplySettingBtnDisabled()" ng-click="F_TAS.saveTaxControlsAndSettings();">{{ 'Apply_settings' | translate}}</button>
+            </div>
+        </div>
+
+        <bp-ng-modal-window id-val="add-edit-account-type" mobal-window-payload="M_TAS.ModalWindowPayload" cancel-btn-action="F_TAS.closeAddEditAccountModalWindow()" primary-btn-action="F_TAS.saveAccountType()" disable-primary-action="F_TAS.isSaveAccountTypePrimaryBtnDisabled()">
+            <div>
+                <header>
+                    <label class="line-height-xlarge H600 M0 bp-first-letter-capitalize" ng-if="!M_TAS.Settings.AccountTypeJson.Id">{{ 'Add_Account_Type' | translate}}</label>
+                    <label class="line-height-xlarge H600 M0 bp-first-letter-capitalize" ng-if="M_TAS.Settings.AccountTypeJson.Id">{{ 'Edit_Account_Type' | translate}}</label>
+                </header>
+               <section class="section-container tax-exmp-container">
+                    <div class="account-type-container">
+                        <label class="H300">{{'Account_type_name' | translate}}</label>
+                        <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                            <input  type="text" id="account-type-input" class="bp-autocomplete-input  bp-input-text  manage-long-salesperson-person" placeholder="{{ 'Define_a_name' | translate }}"
+                                ng-class="{'bp-redborder' : M_TAS.AccountTypeValidationModal['AccountType']['isError'] == true}"
+                                ng-model = "M_TAS.Settings.AccountTypeJson.AccountType" autocomplete="off"
+                                maxlength="20"
+                                ng-blur = "F_TAS.validateFieldWithKey('AccountType', M_TAS.Settings.AccountTypeJson.Id)"
+                                />
+                        </div>
+                    </div>
+                    <div class="account-type-container">
+                        <label class="H300">{{'Applies_to' | translate}}</label> 
+                        <div class = "bp-autocomplete-Wrapper autocomplete_v2">
+                            <div class="input-section">
+                                <span class = "bp-autocomplete-image-icon">
+                                    <i class="bp-icons bp-font-14 bp-blue-font bp-cursor-pointer downArrow stroke-3 MT-3" ng-click= "M_TAS.showAppliesToDropDown = true;">arrowDown</i>
+                                </span>
+                                <input  type="text" id="applies-to-input" class="bp-autocomplete-input bp-cursor-pointer bp-input-text  manage-long-salesperson-person" placeholder="{{'Please_select' | translate }}"
+                                    autocomplete="off" ng-model = "M_TAS.Settings.AccountTypeJson.AppliesTo"
+                                    ng-focus = "M_TAS.showAppliesToDropDown = true;" ng-blur = "M_TAS.showAppliesToDropDown = false;F_TAS.validateFieldWithKey('AppliesTo', M_TAS.Settings.AccountTypeJson.Id)"
+                                    ng-class="{'bp-redborder' : M_TAS.AccountTypeValidationModal['Appliesto']['isError'] == true}"
+                                    ng-disabled = "M_TAS.Settings.AccountTypeJson.IsDefault || (!M_TAS.Settings.AccountTypeJson.IsUpdatable && M_TAS.Settings.AccountTypeJson.Id)"
+                                    ng-keyup="M_TAS.keyPressNavigationOnDropdownElements($event, 'applies-to-drop-down-div', 'appliesto',  M_TAS.AppliesToList)"
+                                    readonly="readonly"/> 
+                            </div>
+                            <div class = "bp-autocomplete-dropdown-wrapper" ng-if="M_TAS.showAppliesToDropDown" id = "applies-to-drop-down-div">
+                                <ul>
+                                    <li ng-repeat = "appliesToRec in M_TAS.AppliesToList" id = "appliesto_{{$index}}"
+                                        ng-class="{'selected-row': $index == M_TAS.currentDropDownIndex}"
+                                        ng-mousedown = "F_TAS.setAppliesTo(appliesToRec.Name)">
+                                        <div class="form-group-info col-xs-12 P0">
+                                            <span >{{appliesToRec.Name}}</span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tax-exem-container">
+                        <label class="H300 MB21">Select exemptions or specify rate overrides that apply for the account type</label>
+                        <div class="tax-exam-table-container">
+                            <table class="bp-editable-table tax-exem-table">
+                                <col width="35%" />
+                                <col width="15%" />
+                                <col width="20%" />
+                                <col width="10%" />
+                                <col width="15%" />
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase">Tax name</th>
+                                        <th class="text-uppercase">Tax type</th>
+                                        <th class="text-uppercase">Tax rate</th>
+                                        <th class="text-uppercase exempt-header">Exempt</th>
+                                        <th class="text-uppercase">Rate override</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="taxExmpRec in M_TAS.Settings.AccountTypeJson.copyTaxExemptionsList track by $index">
+                                        <td>{{taxExmpRec.SalesTaxName}}</td>
+                                        <td>{{taxExmpRec.TaxType}}</td>
+                                        <td>{{taxExmpRec.RateStr}}</td>
+                                        <td class="exempt-td">
+                                            <input class="dummy-checkbox-input" type = "checkbox" id="checkbox-{{$index}}" ng-change="F_TAS.changeTaxExemptCheckBox($index)" ng-model="taxExmpRec.IsSelected"/>
+                                            <label class="label-as-checkbox" for = "checkbox-{{$index}}"></label>
+                                        </td>
+                                        <td class="rate-override">
+                                            <div ng-if="!M_TAS.IsAutomaticTaxRates || M_TAS.Settings.TaxSetting.GenConfigObj.PriceIncludeTax || taxExmpRec.IsSelected || (taxExmpRec.SalesTaxName == 'District Tax' && taxExmpRec.RateStr == 'Automated')">
+                                                <input class="form-control" readonly="true"/>
+                                            </div>
+                                            <div ng-if="M_TAS.IsAutomaticTaxRates && !M_TAS.Settings.TaxSetting.GenConfigObj.PriceIncludeTax && !taxExmpRec.IsSelected && !(taxExmpRec.SalesTaxName == 'District Tax' && taxExmpRec.RateStr == 'Automated')">
+                                                <numbers-only class-value="form-control small width200" 
+                                                precision-length="4" 
+                                                include-negative="false" 
+                                                max-value="100"
+                                                min-value="0"      
+                                                default-value="taxExmpRec.RateOverride"
+                                                input-model-value="taxExmpRec.RateOverride"
+                                                include-percent-symbol="true"
+                                                blur-value="F_TAS.blurRateOverride($index)"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="active-default-slider" ng-if="M_TAS.Settings.AccountTypeJson.Id">
+                            <div class="account-type-active">
+                                <span class="H300 default-text">Active</span>
+                                <label class="bp-switch">
+                                    <input type="checkbox" ng-checked= "M_TAS.Settings.AccountTypeJson.IsActive"
+                                        ng-click = "F_TAS.changeActiveFlagForAccountType(M_TAS.Settings.AccountTypeJson.Id,$event,M_TAS.Settings.AccountTypeJson.AppliesTo,M_TAS.Settings.AccountTypeJson.IsUpdatable)"/>
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                            <div class="account-type-default">
+                                <span class="H300 default-text" >Default</span>
+                                <label class="bp-switch">
+                                    <input type="checkbox" ng-checked= "M_TAS.Settings.AccountTypeJson.IsDefault"
+                                        ng-click = "F_TAS.changeDefaultFlagForAccountType(M_TAS.Settings.AccountTypeJson.Id,$event,M_TAS.Settings.AccountTypeJson.AppliesTo)" />
+                                    <div class="bp-slider round"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </bp-ng-modal-window>
+
+        <bp-ng-modal-window id-val="change-default-account-type" mobal-window-payload="M_TAS.changeDefault.ModalWindowPayload" cancel-btn-action="F_TAS.closeChangeDefaultAccountTypeModalWindow()" primary-btn-action="F_TAS.confirmChangeDefault()">
+            <div>
+                <header>
+                    <label class="line-height-xlarge H600 M0 bp-first-letter-capitalize">Change Account type</label>
+                </header>
+                <section class="section-container">
+                    <label>You are changing the default account type</label>
+                    <div class="M0">
+                        <label>From:</label>
+                        <span>{{M_TAS.Settings.defaultAccountTypeList.AccountType}}</span>
+                    </div>
+                    <div class="M0">
+                        <label>To:</label>
+                        <span>{{M_TAS.Settings.AccountTypeJson.AccountType}}</span>
+                    </div>
+                </section>
+            </div>
+        </bp-ng-modal-window>
+    </div>
+</apex:component>

@@ -1,0 +1,236 @@
+<apex:page standardStylesheets="false" 
+            showChat="false" 
+            showHeader="false" 
+            sidebar="false" 
+            applyBodyTag="false"
+            applyHtmlTag="false"
+            Controller="NewPrintMerchandiseCtrl"
+            renderAs="pdf"
+            >
+<html>
+    <head>
+        <style>
+            body {
+                float: left;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0px;
+                font-family: sans-serif;
+            }
+            .header-section{
+                margin-bottom: 9px;
+                clear: both;
+            }
+            .c-pull-left {
+                float: left;
+            }
+            .c-pull-right {
+                float: right;
+            }
+            .store-info {
+                text-align: right;
+                width: 350px;
+                
+            }
+            .store-info label {
+                font-weight: bold;
+                font-size: 11px;
+                line-height: 11px;
+                color: #000;
+                text-transform: uppercase;
+                margin-bottom: 5px;
+                width: 100%;
+            }
+            .store-info p {
+                text-align: right;
+                width: 350px;
+                color: #000;
+                margin: 0px;
+                padding: 0px;
+                
+            }
+            .store-info p.tax-heading {
+                font-size: 18px;
+                line-height: 21px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            .store-info .tax-heading {
+                font-size: 18px;
+                line-height: 21px;
+                font-weight: bold;
+                margin-bottom: 7px;
+            }
+            .store-info p.company-name {
+                font-size: 11px;
+                line-height: 13px;
+                font-weight: bold;
+                margin-bottom: 4px;
+            }
+            .store-info p.company-address {
+                font-size: 10px;
+                line-height: 10px;
+                margin-bottom: 3px;
+            }
+            .store-info p.tax-id-info {
+                font-size: 10px;
+                line-height: 10px;
+            }
+            .customer-info-container {
+                margin-top: 5px;
+            }
+            .customer-info-container.fs11 {
+                font-size: 11px;
+            }
+            .customer-info-container .second-row {
+                margin-top: 10px;
+            }
+            .customer-info-container .customer-info-section {
+                width: 710px;
+            }
+            .customer-info-container .customer-info-section .first-container {
+                width: 250px;
+            }
+            .customer-info-container .customer-info-section  label{
+                font-weight: bold;
+                line-height: 11px;
+                color: #000;
+                text-transform: uppercase;
+                margin-bottom: 5px;
+                width: 100%;
+            }
+            .customer-info-container .customer-info-section .first-container .customer-name {
+                font-weight: bold;
+                line-height: 11px;
+                color: #000;
+                width:100%;
+                margin-bottom: 3px;
+            }
+            .customer-info-container .customer-info-section .first-container .customer-address {
+                font-weight: normal;
+                line-height: 10px;
+                color: #000; 
+                width: 250px;
+            }
+            .customer-info-container .customer-info-section .first-container .customer-address1 {
+                font-weight: normal;
+                line-height: 10px;
+                color: #000; 
+                margin-bottom: 3px;
+            }
+            .customer-info-container .customer-info-section .second-container {
+                width: 250px;
+            }
+            .customer-info-container .customer-info-section .second-container label {
+                height: 11px;
+            }
+            .customer-info-container .customer-info-section .second-container p {
+                font-weight: normal;
+                line-height: 11px;
+                color: #000;
+                width: 100%;
+            }
+            .customer-info-container .customer-info-section .second-container p .width100 {
+                width: 100%;
+            }
+            .customer-other-info {
+                margin-bottom: 3px;
+                line-height: 10px;
+                font-weight: normal;
+            }
+            .customer-info-container .customer-info-section .second-container p  .customer-other-info .email-container {
+                width: 90px;
+            }
+            .M0 {
+                margin: 0px !important;
+            }
+            .bold {
+                font-weight: bold;
+            }
+            .customer-info-container{
+                width: 710px;
+                margin-bottom: 20px;
+            }
+            .PL2 {
+                padding-right: 2px;
+            }
+            .invoice-info p {
+                line-height: 10px;
+                width: 200px !important;
+            }
+            .invoice-info {
+                width: 200px;
+            }
+            .second-container.ship-to {
+                position: absolute;
+                left: 300px;
+            }
+            .ML50 {
+                margin-left: 50px !important;
+            }
+            .customer-info-section.second-row .ship-to-section label {
+                width: 51px;
+            }
+            .customer-info-section.second-row .ship-to-section div {
+                width: 185px;
+                float: left;
+            }
+            .contact-label {
+                font-weight: bold;
+            }
+            .contact-name {
+                padding-left: 10px;
+            }
+            .barcode-po {
+                margin-top: 1px;
+            }
+            .MB3 {
+                margin-bottom: 3px !important;
+            }
+
+            .merchandise-header, .deal-merchandise-header, .service-job-header {
+                display: flex; 
+                float: left;
+                width :710px; 
+                background: #FFF;
+                border-bottom : solid black; 
+                font-family: Arial Unicode MS,sans-serif;
+                color: #000; 
+                padding: 6px 0px 2px 0px; 
+                margin: 0px;
+                font-size:14px;
+                font-weight: bold;
+            }
+            .merchandise-label, .deal-merchandise-label, .service-job-label {
+                width: 50%;
+            }
+            .sold-by {
+                width: 50%;
+                text-align: right;
+                text-transform: none;
+            }
+            .company-logo-right {
+                position: absolute;
+                right: 0px;
+            }
+            .company-logo-left {
+                position: absolute;
+                left: 0px;
+            }
+        </style>
+    </head>
+ <body>
+    <c:StandardDocumentHeader headerText="PARTS PICK TICKET" 
+        shipToLabel="SHIP TO"
+        orderLabel="ORDER#"></c:StandardDocumentHeader>
+
+    <!--  Merchandise Section Starts Here -->
+    <c:PrintMerchandiseComp ></c:PrintMerchandiseComp>
+    <c:PrintDealMerchandiseComp ></c:PrintDealMerchandiseComp>
+    <!--  Service Job Section Starts Here -->
+    <c:PrintServiceJobDetails ></c:PrintServiceJobDetails>
+        
+ </body>
+</html>
+ </apex:page>

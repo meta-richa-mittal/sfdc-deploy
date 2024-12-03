@@ -7,18 +7,19 @@
 public without sharing class UnitOrderingService {
     
     public static List<UnitOrderingWrapper.VendorWrapper> getVendorsList(){
-        List<Account> vendorsList = [select Id, Name, Purchase_Tax__c,
-                                        (select Id from Customer_Owned_Units1__r where Unit_Type__c = 'ORDU' AND Status__c = 'On Order')
-                                        from Account 
-                                        where Is_Vendor__c = true
-                                            AND Unit_Purchases__c = true]; 
+        List<Account> vendorsList = [select Id, Name, Purchase_Tax__c, Country__c, Country__r.Name__c, Country__r.Currency_Code__c, Is_Foreign_Vendor__c, 
+                                    Country__r.Currency_Name__c, Country__r.Flag_Encoded__c, Country__r.Conversion_Rate_With_Markup__c, Country__r.Backward_Conversion_Rate__c
+                                    from Account where Is_Vendor__c = true AND Unit_Purchases__c = true]; 
+
+        List<AggregateResult> orduCountViaVendorList = [Select COUNT(ID) orduCount, Vendor__c from Customer_Owned_Unit__c where Unit_Type__c = 'ORDU' AND Status__c = 'On Order' AND  Vendor__c In: vendorsList Group By Vendor__c];
                                         
-        List<UnitOrderingWrapper.VendorWrapper> vendorList = new UnitOrderingWrapper.VendorWrapper().convertToWrapperList(vendorsList);
+        List<UnitOrderingWrapper.VendorWrapper> vendorList = new UnitOrderingWrapper.VendorWrapper().convertToWrapperList(vendorsList, orduCountViaVendorList);
         return vendorList;
     }
     
     public static UnitOrderingWrapper.VendorWrapper getVendorDetailsById(String vendorId){
-        List<Account> vendorsList = [select Id, Name, Purchase_Tax__c 
+        List<Account> vendorsList = [select Id, Name, Purchase_Tax__c, Country__c, Country__r.Name__c, Country__r.Currency_Code__c, Is_Foreign_Vendor__c, 
+                                        Country__r.Currency_Name__c, Country__r.Flag_Encoded__c, Country__r.Conversion_Rate_With_Markup__c, Country__r.Backward_Conversion_Rate__c   
                                         from Account 
                                         where Is_Vendor__c = true
                                             AND Id = :vendorId]; 
@@ -40,7 +41,7 @@ public without sharing class UnitOrderingService {
     }   
     
     public static List<UnitOrderingWrapper.UnitOrderWrapper> getActiveOrderList(String vendorId) {
-        return getActiveOrderList(vendorId, new Map<String, String>{'Unit_Number__c' => 'ASC'});
+        return new UnitOrderingWrapper.UnitOrderWrapper().convertToWrapperList(SOQLUtil.getActiveOrderList(vendorId, new Map<String, String>{'Formatted_Name__c' => 'ASC'}));
     }
     
     public static List<UnitOrderingWrapper.UnitOrderWrapper> getActiveOrderList(String vendorId, String JSONString) {
@@ -50,34 +51,9 @@ public without sharing class UnitOrderingService {
         if(UnitOrderingWrapper.fieldLabelToFieldAPINameMap.containsKey(sortAttrs.FieldLabel)) {
             fieldNameToSortOrderMap.put(UnitOrderingWrapper.fieldLabelToFieldAPINameMap.get(sortAttrs.FieldLabel), sortAttrs.SortingOrder);
         }
-        return getActiveOrderList(vendorId, fieldNameToSortOrderMap);
+        return new UnitOrderingWrapper.UnitOrderWrapper().convertToWrapperList(SOQLUtil.getActiveOrderList(vendorId, fieldNameToSortOrderMap));
     }
     
-    public static List<UnitOrderingWrapper.UnitOrderWrapper> getActiveOrderList(String vendorId, Map<String, String> fieldNameToSortOrderMap){
-        String query = 'SELECT Id, Name, Unit_Number__c, Stock_Id__c, Year__c, Cylinders__c, Tax_Amount__c, Make_Name__c, Colour__c,Model_Name__c, Sub_Model__c, ' 
-        			+ 'Model_Detail__c, Status__c, Factory_Order_No__c,CreatedDate, Total_Cost__c, VIN_Number__c, Vendor__r.Purchase_Tax__r.Rate__c, Overridden_Total_Cost_With_Tax__c, Total_Cost_With_Tax__c, ' 
-                    + 'Invoice_Number__c, Stocked_In_DateTime__c, Unit_Model__c, Unit_Model__r.Name__c, Sub_Model__r.Sub_Model_Name__c, Compliance_Date__c, ' 
-                    + 'Registration_Serial__c, Year_Of_1st_Rego__c, Date_Expected__c, Date_Ordered__c, Unit_Purchase_Tax__c, Unit_Purchase_Tax__r.Rate__c';
-        query += ', (SELECT Id, Name, Deal__r.CO_Header__r.Name FROM Deals_Units_Junction__r)';
-        query += ' FROM Customer_Owned_Unit__c';
-        query += ' WHERE Vendor__c = :vendorId AND Unit_Type__c = \'ORDU\' AND Status__c = \'On Order\' Order BY ';
-        
-        String orderByClause = '';
-        for(String fieldName : fieldNameToSortOrderMap.keySet()) {
-            orderByClause += fieldName + ' ' + fieldNameToSortOrderMap.get(fieldName) + ', '; 
-        }
-        if(orderByClause.length() > 0) {
-            orderByClause = orderByClause.subString(0, orderByClause.length() - 2);
-            query += orderByClause;
-        } else {
-            query += 'Unit_Number__c ASC';
-        }
-        
-        List<Customer_Owned_Unit__c> couList = Database.query(query);                                       
-        List<UnitOrderingWrapper.UnitOrderWrapper> unitList = new UnitOrderingWrapper.UnitOrderWrapper().convertToWrapperList(couList);
-        return unitList;
-    }
-        
     public static void cancelOrderedUnit(String unitId) {
         Customer_Owned_Unit__c unitRec = new Customer_Owned_Unit__c(Id = unitId);
         unitRec.Status__c = 'Cancelled';
@@ -118,57 +94,67 @@ public without sharing class UnitOrderingService {
         }
         unitPriceAndCostRec.Total_Price__c = unitPriceAndCostObj.TotalPrice; 
         unitPriceAndCostRec.Total_Cost__c = unitPriceAndCostObj.TotalCost;
+        unitPriceAndCostRec.Taxable__c = unitPriceAndCostObj.Taxable != null ? unitPriceAndCostObj.Taxable : true;
         unitPriceAndCostRec.Customer_Owned_Unit__c = unitPriceAndCostObj.UnitId != null ? unitPriceAndCostObj.UnitId : unitId;
         unitPriceAndCostRec.Factory_Option__c = unitPriceAndCostObj.FactoryOptionId;
 
         return unitPriceAndCostRec;
     }
     
-    public static List<UnitOrderingWrapper.UnitOrderWrapper> getOrderHistoryList(String vendorId) {
-        return getOrderHistoryList(vendorId, new Map<String, String>{'Stocked_In_DateTime__c' => 'DESC'});
+    private static List<UnitOrderingWrapper.UnitOrderWrapper> updateFieldsInWrapper(List<UnitOrderingWrapper.UnitOrderWrapper> unitOrderWrapperList) {
+        // Create set of order units
+        Set<String> orderUnitIdSet = new Set<String>();
+        for(UnitOrderingWrapper.UnitOrderWrapper unitOrderWrapper : unitOrderWrapperList) {
+            orderUnitIdSet.add(unitOrderWrapper.UnitId);
+        }
+        // Get Stocked units created from Ordered units and Create Map of Order Unit To Stock Unit Rec
+        Map<String, Customer_Owned_Unit__c> orderUnitIdToStockUnitRecMap = new Map<String, Customer_Owned_Unit__c>(); 
+        for(Customer_Owned_Unit__c unitRec : [SELECT Id, Referenced_Unit__c, Deal_Item__c, (SELECT Deal__r.CO_Header__r.Name, Deal__r.CO_Header__r.Id, Deal__r.CO_Header__r.Customer_Name__c FROM Deals_Units_Junction__r) FROM Customer_Owned_Unit__c WHERE Referenced_Unit__c IN : orderUnitIdSet]) {
+            if(!orderUnitIdToStockUnitRecMap.containsKey(unitRec.Referenced_Unit__c)) {
+                orderUnitIdToStockUnitRecMap.put(unitRec.Referenced_Unit__c, unitRec);
+            }
+        }
+        // Update fields values in wrapper list
+        for(UnitOrderingWrapper.UnitOrderWrapper unitOrderWrapper : unitOrderWrapperList) {
+            // Check for cancelled order and not be added on deal units
+            if(orderUnitIdToStockUnitRecMap.get(unitOrderWrapper.UnitId) != null && orderUnitIdToStockUnitRecMap.get(unitOrderWrapper.UnitId).Deal_Item__c != null) {
+                for(Deal_Item__c dealItemRec: orderUnitIdToStockUnitRecMap.get(unitOrderWrapper.UnitId).Deals_Units_Junction__r) {
+					if(dealItemRec.Id == orderUnitIdToStockUnitRecMap.get(unitOrderWrapper.UnitId).Deal_Item__c) {
+                        unitOrderWrapper.CoId = dealItemRec.Deal__r.CO_Header__r.Id;
+                        unitOrderWrapper.CoNumber = dealItemRec.Deal__r.CO_Header__r.Name;
+                        unitOrderWrapper.CustomerName = dealItemRec.Deal__r.CO_Header__r.Customer_Name__c;
+						break;	
+					}
+				}
+            }
+        }
+        // Return updated wrapper
+        return unitOrderWrapperList;
     }
-    
-    public static List<UnitOrderingWrapper.UnitOrderWrapper> getOrderHistoryList(String vendorId, String JSONString) {
-        UnitOrderingWrapper.SortingAttrs sortAttrs = (UnitOrderingWrapper.SortingAttrs) System.JSON.deserialize(jSONString, UnitOrderingWrapper.SortingAttrs.class);
-        
+
+    public static List<UnitOrderingWrapper.UnitOrderWrapper> getOrderHistoryList(String filterJson, String JSONString) {
+        UnitOrderingWrapper.UnitOrderingFilterWrapper filterObj = (UnitOrderingWrapper.UnitOrderingFilterWrapper) System.JSON.deserialize(filterJson, UnitOrderingWrapper.UnitOrderingFilterWrapper.class);
         Map<String, String> fieldNameToSortOrderMap = new Map<String, String>();
-        if(UnitOrderingWrapper.fieldLabelToFieldAPINameMap.containsKey(sortAttrs.FieldLabel)) {
-            fieldNameToSortOrderMap.put(UnitOrderingWrapper.fieldLabelToFieldAPINameMap.get(sortAttrs.FieldLabel), sortAttrs.SortingOrder);
-        }
-        return getOrderHistoryList(vendorId, fieldNameToSortOrderMap);
-    }
-     
-    public static List<UnitOrderingWrapper.UnitOrderWrapper> getOrderHistoryList(String vendorId, Map<String, String> fieldNameToSortOrderMap){
-        String query = 'SELECT Id, Name, Unit_Number__c, Stock_Id__c, Year__c, Cylinders__c, Tax_Amount__c, Make_Name__c, Colour__c, Model_Name__c, Sub_Model__c, '
-        				+ 'Model_Detail__c, Status__c, Factory_Order_No__c, CreatedDate, Total_Cost__c, VIN_Number__c, Vendor__r.Purchase_Tax__r.Rate__c, Overridden_Total_Cost_With_Tax__c, Total_Cost_With_Tax__c, '
-        				+ 'Invoice_Number__c, Stocked_In_DateTime__c, Unit_Model__c, Unit_Model__r.Name__c, Sub_Model__r.Sub_Model_Name__c, Compliance_Date__c, '
-        				+ 'Registration_Serial__c, Year_Of_1st_Rego__c, Date_Expected__c, Date_Ordered__c, Unit_Purchase_Tax__c, Unit_Purchase_Tax__r.Rate__c';
-        query += ' FROM Customer_Owned_Unit__c';
-        query += ' WHERE Vendor__c = :vendorId AND Unit_Type__c = \'ORDU\' AND (Status__c = \'Cancelled\' OR Status__c = \'Received\') ORDER BY ';
-        
-        String orderByClause = '';
-        for(String fieldName : fieldNameToSortOrderMap.keySet()) {
-            orderByClause += fieldName + ' ' + fieldNameToSortOrderMap.get(fieldName) + ', '; 
-        }
-        if(orderByClause.length() > 0) {
-            orderByClause = orderByClause.subString(0, orderByClause.length() - 2);
-            query += orderByClause;
+        if(String.isNotBlank(JSONString)) {
+            UnitOrderingWrapper.SortingAttrs sortAttrs = (UnitOrderingWrapper.SortingAttrs) System.JSON.deserialize(jSONString, UnitOrderingWrapper.SortingAttrs.class);
+            if(UnitOrderingWrapper.fieldLabelToFieldAPINameMap.containsKey(sortAttrs.FieldLabel)) {
+                fieldNameToSortOrderMap.put(UnitOrderingWrapper.fieldLabelToFieldAPINameMap.get(sortAttrs.FieldLabel), sortAttrs.SortingOrder);
+            }
         } else {
-            query += 'CreatedDate DESC';
+            fieldNameToSortOrderMap.put('Stocked_In_DateTime__c', 'DESC');
         }
-        
-        List<Customer_Owned_Unit__c> couList = Database.query(query);                   
-        
-        List<UnitOrderingWrapper.UnitOrderWrapper> unitList = new UnitOrderingWrapper.UnitOrderWrapper().convertToWrapperList(couList);
-        return unitList;
+
+        List<UnitOrderingWrapper.UnitOrderWrapper> unitOrderWrapperList = new UnitOrderingWrapper.UnitOrderWrapper().convertToWrapperList(SOQLUtil.getOrderHistoryList(filterObj, fieldNameToSortOrderMap));
+        return updateFieldsInWrapper(unitOrderWrapperList);
     }
-    
-    
+
     public static List<UnitOrderingWrapper.UnitDetailsWrapper> getUnitDetails(String unitId){
         List<Customer_Owned_Unit__c> COUList = SOQLUtil.getUnitByFieldName(new Map<String, String>{'Id' => unitId});
         List<UnitOrderingWrapper.UnitDetailsWrapper> couWrapperRec = new List<UnitOrderingWrapper.UnitDetailsWrapper>();
         for(Customer_Owned_Unit__c couRec : COUList) {
-            couWrapperRec.add(new UnitOrderingWrapper.UnitDetailsWrapper(couRec));
+            UnitOrderingWrapper.UnitDetailsWrapper couObj = new UnitOrderingWrapper.UnitDetailsWrapper(couRec);
+            couObj.UnitInfo.UnitOptionalFields = UnitProductTypeService.getUnitOptionalFieldsData(couRec.Product_Type__c, couRec.Id);
+            couWrapperRec.add(couObj);
         }  
         return couWrapperRec;
         
@@ -177,7 +163,14 @@ public without sharing class UnitOrderingService {
     public static String saveUnitDetails(String jSONString){
         try {
 	        UnitOrderingWrapper.UnitDetailsWrapper unitObj = (UnitOrderingWrapper.UnitDetailsWrapper) System.JSON.deserialize(jSONString, UnitOrderingWrapper.UnitDetailsWrapper.class);    	
-	        Customer_Owned_Unit__c unitRec = ViewUnitCtrl.setUnitFields(unitObj.UnitInfo); 
+	        
+            if(unitObj != null &&  unitObj.UnitInfo != null && unitObj.UnitInfo.IsAccruePurchaseTaxUntilThisUnitIsSold != null && unitObj.UnitInfo.IsAccruePurchaseTaxUntilThisUnitIsSold) {
+                if(unitObj.UnitInfo.VendorId != null && ForeignExchangeUtil.isForeignVendor(unitObj.UnitInfo.VendorId)) {
+                    throw new BlackPurlException(Constants.restrictionErrorForForeignVendor);
+                }
+            }
+
+            Customer_Owned_Unit__c unitRec = ViewUnitCtrl.setUnitFields(unitObj.UnitInfo); 
 	        
 	        if(unitObj.UnitInfo.Make == null) {
 	        	List<Unit_Make__c> makeList = [Select Name from Unit_Make__c where Name =: unitObj.UnitInfo.MakeName];
@@ -233,9 +226,9 @@ public without sharing class UnitOrderingService {
 	        if(unitObj.UnitInfo.Id != null) {
 	            unitRec.Id = unitObj.UnitInfo.Id;
 	        }
-        if(unitRec.Id == null) {
-        	Unit_Service.populateNotesByModelSubmodelDesc(unitRec);
-        }
+            if(unitRec.Id == null) {
+                Unit_Service.populateNotesByModelSubmodelDesc(unitRec);
+            }
 	        
 	        // Save Tags for units 
 	        if(unitObj.UnitInfo.AssignedTags != null && unitObj.UnitInfo.AssignedTags.size() > 0) {
@@ -258,7 +251,7 @@ public without sharing class UnitOrderingService {
     }
     
     private static void validateAndSetDateFields(UnitWrapper.UnitInfoWrapper unitInfo, Customer_Owned_Unit__c unitRec) {
-    	if(unitInfo != null) {
+    	if(unitInfo != null && unitInfo.Status != 'Temporary') {
 			unitRec.Date_Ordered__c = String.isNotBlank(unitInfo.OrderedDate) ? 
 	        						HomeSearchFilterInterface.getDateFromString(unitInfo.OrderedDate).Date() : Date.today();
 	        if(String.isNotBlank(unitInfo.ExpectedDate)) {
@@ -272,7 +265,7 @@ public without sharing class UnitOrderingService {
     
     public static String receiveUnits(String jSONString) {
         
-        List<UnitOrderingWrapper.UnitOrderWrapper> orderedUnits = (List<UnitOrderingWrapper.UnitOrderWrapper>) System.JSON.deserialize(jSONString, List<UnitOrderingWrapper.UnitOrderWrapper>.class);
+        UnitReceivingWrapper receivingObj = (UnitReceivingWrapper) System.JSON.deserialize(jSONString, UnitReceivingWrapper.class);
         if(AccessControl.ifObjectFieldIsAccessible('Customer_Owned_Unit__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
         if(AccessControl.ifObjectFieldIsCreateable('Customer_Owned_Unit__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_CREATEABLE); }
         if(AccessControl.ifObjectFieldIsUpdateable('Customer_Owned_Unit__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_UPDATEABLE); }
@@ -280,13 +273,17 @@ public without sharing class UnitOrderingService {
         if(AccessControl.ifObjectFieldIsCreateable('Unit_Price_Cost__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_CREATEABLE); }
 
         Set<id> unitIds = new set<id>();
-        for(UnitOrderingWrapper.UnitOrderWrapper unit : orderedUnits) {
+        for(UnitOrderingWrapper.UnitOrderWrapper unit : receivingObj.OrderedUnits) {
             unitIds.add(unit.UnitId);
         }
 
         Decimal totalUnitCost = 0;
-        List<Customer_Owned_Unit__c> orderedUnitList = [SELECT id, (SELECT Total_Cost__c FROM Unit_Prices_Costs__r WHERE Total_Cost__c != null) FROM Customer_Owned_Unit__c WHERE Id IN :unitIds];
+        Map<Id, Account> orderUnitIdToVendorMap = new Map<Id, Account>();
+        List<Customer_Owned_Unit__c> orderedUnitList = [SELECT id, Vendor__r.Is_Foreign_Vendor__c, Vendor__r.Country__r.Conversion_Rate_With_Markup__c, (SELECT Total_Cost__c FROM Unit_Prices_Costs__r WHERE Total_Cost__c != null) FROM Customer_Owned_Unit__c WHERE Id IN :unitIds];
         for(Customer_Owned_Unit__c unit : orderedUnitList) {
+            if(unit.Vendor__r.Is_Foreign_Vendor__c) {
+                orderUnitIdToVendorMap.put(unit.Id, unit.Vendor__r);
+            }
             for(Unit_Price_Cost__c upc : unit.Unit_Prices_Costs__r) {
                 totalUnitCost += upc.Total_Cost__c;
             }  
@@ -295,11 +292,11 @@ public without sharing class UnitOrderingService {
             }
         }
         
-		orderedUnits = upsertMakeModelSubModelForUnit(orderedUnits);
+		receivingObj.OrderedUnits = upsertMakeModelSubModelForUnit(receivingObj.OrderedUnits);
 		
         Map<String, Customer_Owned_Unit__c> orderedUnitsIdToReceivedUnitMap = new Map<String, Customer_Owned_Unit__c>();
         List<String> invoiceNumbers = new List<String>();
-        for(UnitOrderingWrapper.UnitOrderWrapper unit : orderedUnits) {
+        for(UnitOrderingWrapper.UnitOrderWrapper unit : receivingObj.OrderedUnits) {
             invoiceNumbers.add(unit.InvoiceNumber); // List to validate InvoiceNumber(s) Duplicacy
             
             Customer_Owned_Unit__c cou = new Customer_Owned_Unit__c();
@@ -307,10 +304,12 @@ public without sharing class UnitOrderingService {
             cou.VIN_Number__c = unit.VIN;
             cou.Invoice_Number__c = unit.InvoiceNumber;
             cou.Status__c = 'Received';
+            if(orderUnitIdToVendorMap.containsKey(unit.UnitId) && orderUnitIdToVendorMap.get(unit.UnitId).Is_Foreign_Vendor__c) {
+                cou.FX_Conversion_Rate__c = orderUnitIdToVendorMap.get(unit.UnitId).Country__r.Conversion_Rate_With_Markup__c;
+            }
             cou.ORDU_Stock_Id__c = unit.StockNumber;
             cou.Stock_Id__c = null;
             cou.Stocked_In_DateTime__c = String.isNotBlank(unit.StockedInDateTime) ? HomeSearchFilterInterface.getDateFromString(unit.StockedInDateTime) : system.now();
-            cou.Is_Ordered_Unit_Added_To_Deal__c = false;
             cou.Unit_Make__c = unit.MakeId;
             cou.Unit_Model__c = unit.ModelId;
             cou.Sub_Model__c = unit.SubModelId;
@@ -330,7 +329,7 @@ public without sharing class UnitOrderingService {
             try {
                 Map<String, Customer_Owned_Unit__c> orderedUnitsIdToStockUnitMap = new Map<String, Customer_Owned_Unit__c>();
                 
-                //Step 1: Update Customer_Owned_Unit__c with VIN, InoviceNumber, status as “Received” 
+                //Step 1: Update Customer_Owned_Unit__c with VIN, InoviceNumber, status as "Received"
                 
                 if(!orderedUnitsIdToReceivedUnitMap.isEmpty()) {
                     update orderedUnitsIdToReceivedUnitMap.values();
@@ -346,19 +345,23 @@ public without sharing class UnitOrderingService {
                     for(String fieldName : CustomerOwnedUnit.fieldsList()) {
                         query += fieldName + ', ';
                     }
-                    query += 'Invoice_Number__c, Is_Accrue_Purchase_Tax_Until_Unit_Sold__c, (SELECT Id, Deal__r.Status__c FROM Deals_Units_Junction__r) ';
+                    query += 'Invoice_Number__c, Is_Accrue_Purchase_Tax_Until_Unit_Sold__c, Deal_Item__c, Deal_Item__r.Deal__r.Status__c, (SELECT Id, Deal__r.Status__c FROM Deals_Units_Junction__r) ';
                     Set<String> params = orderedUnitsIdToReceivedUnitMap.keySet();
                     query += ' from Customer_Owned_Unit__c where Id In :params';
                     receivedUnitsList = Database.query(query);
                     
-                    //Step 2.2: Cloning & Creating as Stock Units with an “Available” status and “STOCK” type
+                    //Step 2.2: Cloning & Creating as Stock Units with an "Available" status and "STOCK" type
                     String defaultUnitSalesTaxId = Configurations__c.getInstance().Default_Tax_on_Unit__c;
                     Map<String, Customer_Owned_Unit__c> receivedUnitIdToStockUnitsMap = new Map<String, Customer_Owned_Unit__c>();
                     for(Customer_Owned_Unit__c receivedUnit : receivedUnitsList) {
                         SObject stockUnit = receivedUnit.clone(false, false, false, false);
                         stockUnit.put('Id',null);
+                        
+                        if(orderUnitIdToVendorMap.containsKey(receivedUnit.Id) && orderUnitIdToVendorMap.get(receivedUnit.Id).Is_Foreign_Vendor__c) {
+                            stockUnit.put('FX_Conversion_Rate__c', orderUnitIdToVendorMap.get(receivedUnit.Id).Country__r.Conversion_Rate_With_Markup__c);
+                        }
                         stockUnit.put('Unit_Type__c','Stock');
-                        if(receivedUnit.Deals_Units_Junction__r.size() > 0 && receivedUnit.Deals_Units_Junction__r[0].Deal__r.Status__c == 'In Progress') {
+                        if(receivedUnit.Deal_Item__c != null && receivedUnit.Deal_Item__r.Deal__r.Status__c == 'In Progress') {
                         	stockUnit.put('Status__c','Reserved');
                         } else {
                         	stockUnit.put('Status__c','Available');
@@ -368,6 +371,11 @@ public without sharing class UnitOrderingService {
                         stockUnit.put('Unit_Id__c',null);
                         stockUnit.put('Date_Stocked_In__c', receivedUnit.Stocked_In_DateTime__c != null ? receivedUnit.Stocked_In_DateTime__c.date(): Date.today());
                         stockUnit.put('Referenced_Unit__c', receivedUnit.Id);
+                        stockUnit.put('Stamp_Duty_Calculators__c', receivedUnit.Stamp_Duty_Calculators__c);
+                        stockUnit.put('How_Acquired__c', 'Purchase');
+                        stockUnit.put('Reference_Number__c', receivedUnit.Invoice_Number__c);
+                        stockUnit.put('Acquired_From__c', receivedUnit.Vendor__c);
+                        stockUnit.put('Acquisition_Cost__c', receivedUnit.Total_Cost__c);
                         if(receivedUnit.Is_Accrue_Purchase_Tax_Until_Unit_Sold__c) {
                         	receivedUnit.Total_Cost__c = receivedUnit.Total_Cost__c != null ? receivedUnit.Total_Cost__c : 0;
                         	receivedUnit.Tax_Amount__c = receivedUnit.Tax_Amount__c != null ? receivedUnit.Tax_Amount__c : 0;
@@ -394,15 +402,21 @@ public without sharing class UnitOrderingService {
                     List<Unit_Price_Cost__c> newUnitPriceCostItems = new List<Unit_Price_Cost__c>();
                     for(Unit_Price_Cost__c upc : unitPriceCostItemsOfOrderedUnits) {
                         SObject upcItem = upc.clone(false, false, false, false);
+                        if(orderUnitIdToVendorMap.containsKey(upc.Customer_Owned_Unit__c) && orderUnitIdToVendorMap.get(upc.Customer_Owned_Unit__c).Is_Foreign_Vendor__c) {
+                            upcItem.put('Total_Cost__c', ForeignExchangeUtil.getConvertedAmountInLocalCurrency(upc.Total_Cost__c, orderUnitIdToVendorMap.get(upc.Customer_Owned_Unit__c).Country__r.Conversion_Rate_With_Markup__c));
+                        }
                         upcItem.put('Customer_Owned_Unit__c', receivedUnitIdToStockUnitsMap.get(upc.Customer_Owned_Unit__c).Id);
                         upcItem.put('Ref_No__c', orderedUnitsIdToReceivedUnitMap.get(upc.Customer_Owned_Unit__c).Invoice_Number__c);
                     	upcItem.put('Related_Ordered_Unit_Price_Cost__c', upc.Id);
+                        if(upcItem.get('Adjustment_Date__c') == null){
+                            upcItem.put('Adjustment_Date__c', DateTime.newInstance(receivedUnitIdToStockUnitsMap.get(upc.Customer_Owned_Unit__c).Date_Stocked_In__c, Time.newInstance(0, 0, 0, 0)));
+                        }
                         newUnitPriceCostItems.add((Unit_Price_Cost__c) upcItem);
                     }
+                    newUnitPriceCostItems.addAll(createLCAOnStockUnits(receivingObj.LandedCostAdjustments, receivedUnitIdToStockUnitsMap.values()));
                     if(!newUnitPriceCostItems.isEmpty()) {
                         insert newUnitPriceCostItems;
-                    }
-                    
+                    }                   
                     updateDealItems(newUnitPriceCostItems, unitPriceCostItemsOfOrderedUnits, receivedUnitsList, receivedUnitIdToStockUnitsMap);
                     updateDealServiceUnits(receivedUnitIdToStockUnitsMap);
                 }
@@ -420,6 +434,81 @@ public without sharing class UnitOrderingService {
             return BPUtility.getEncodedString('{"DuplicateInvoiceNumbers" : "'+ duplicateInvoiceNumbers +'","HasError" : true, "ErrorMessage" : "' + (alreadyReceivedCOUs.isEmpty()? Label.Duplicate_Invoice_Number_Error_Msg : Label.Unit_Already_Received_Error_Msg) + '"}');
         }
         return 'SUCCESS';
+    }
+    
+    private static List<Unit_Price_Cost__c> createLCAOnStockUnits(List<UnitWrapper.PriceAndCostTrackingWrapper> landedCostAdjustments, List<Customer_Owned_Unit__c> receivedUnits) {
+        List<Unit_Price_Cost__c> upcInsertList = new List<Unit_Price_Cost__c>();
+        if(landedCostAdjustments != null && receivedUnits != null && !receivedUnits.isEmpty()) {
+            Map<Id, Decimal> foreignVendorIdToConversionRateMap = getForeignVendorIdToConversionRateMap(landedCostAdjustments);
+            Integer noOfUnitsReceived = receivedUnits.size();
+            Integer counter = 1;
+            for(Customer_Owned_Unit__c receivedUnit : receivedUnits) {
+                for(UnitWrapper.PriceAndCostTrackingWrapper lcaObj : landedCostAdjustments) {
+                    if(lcaObj.TotalCost != null && lcaObj.TotalCost != 0) {
+                        if(counter == 1) {  //LCA is distributed among all units and her cost is divided once because we are directly setting cost of LCA object. In next looping it is automatically distributed cost as pass by reference
+                            lcaObj.TotalCost = lcaObj.TotalCost.divide(noOfUnitsReceived, 2, System.RoundingMode.DOWN);
+                        }
+                        Unit_Price_Cost__c baseUPCRec = setUnitPriceAndCostBasicFields(lcaObj, foreignVendorIdToConversionRateMap.get(lcaObj.VendorId));
+                        baseUPCRec.Adjustment_Date__c = receivedUnit.Stocked_In_DateTime__c;
+                        if(noOfUnitsReceived > 1 && String.isNotBlank(baseUPCRec.Vendor_Reference_Number__c)) {
+                            baseUPCRec.Vendor_Reference_Number__c += '-' + counter;
+                        }
+                        baseUPCRec.Customer_Owned_Unit__c = receivedUnit.Id;
+                        upcInsertList.add(baseUPCRec);
+                    }
+                }
+                counter++;
+            }
+        }
+        return upcInsertList;
+    }
+
+    private static Unit_Price_Cost__c setUnitPriceAndCostBasicFields(UnitWrapper.PriceAndCostTrackingWrapper unitPriceAndCostObj, Decimal conversionRateWithMarkup) {
+        Unit_Price_Cost__c unitPriceAndCostRec = new Unit_Price_Cost__c(Id = unitPriceAndCostObj.Id);
+        unitPriceAndCostRec.Type__c = unitPriceAndCostObj.Type;
+        unitPriceAndCostRec.Ref_No__c = unitPriceAndCostObj.RefNo;
+        unitPriceAndCostRec.Item_Description__c = unitPriceAndCostObj.ItemDescription;
+        unitPriceAndCostRec.Qty__c = unitPriceAndCostObj.Quantity;
+        unitPriceAndCostRec.Price__c = unitPriceAndCostObj.Price;
+        unitPriceAndCostRec.Total_Price__c = unitPriceAndCostObj.TotalPrice != null ? unitPriceAndCostObj.TotalPrice : 0; 
+        unitPriceAndCostRec.Total_Cost__c = unitPriceAndCostObj.TotalCost;
+        unitPriceAndCostRec.Adjustment_Date__c = String.isNotBlank(unitPriceAndCostObj.AdjustmentDate) ? HomeSearchFilterInterface.getDateFromString(unitPriceAndCostObj.AdjustmentDate) : system.today();
+        if(unitPriceAndCostRec.Type__c == 'Factory' || unitPriceAndCostRec.Type__c == 'Base') {
+            unitPriceAndCostRec.Price__c = unitPriceAndCostRec.Total_Price__c;
+        }
+        if(String.isNotBlank(unitPriceAndCostObj.UnitId)) {
+            unitPriceAndCostRec.Customer_Owned_Unit__c = unitPriceAndCostObj.UnitId;
+        }
+        if(String.isNotBlank(unitPriceAndCostObj.CategoryId)) {
+            unitPriceAndCostRec.Category__c = unitPriceAndCostObj.CategoryId;
+        }
+        if(String.isNotBlank(unitPriceAndCostObj.ApplicableTaxID)) {
+            unitPriceAndCostRec.Applicable_Tax__c = unitPriceAndCostObj.ApplicableTaxID;
+        }
+        if(String.isNotBlank(unitPriceAndCostObj.VendorId)) {
+            unitPriceAndCostRec.Vendor__c = (String.isNotBlank(unitPriceAndCostObj.VendorId) ? unitPriceAndCostObj.VendorId	 : null);
+            unitPriceAndCostRec.Vendor_Reference_Number__c = unitPriceAndCostObj.VendorReferenceNumber;
+            if(unitPriceAndCostObj.IsForeignVendor != null && unitPriceAndCostObj.IsForeignVendor) {
+                conversionRateWithMarkup = (conversionRateWithMarkup != null && conversionRateWithMarkup != 0) ? conversionRateWithMarkup : 1;
+                unitPriceAndCostRec.Total_Foreign_Cost__c = unitPriceAndCostObj.TotalCost;
+                unitPriceAndCostRec.FX_Conversion_Rate__c = conversionRateWithMarkup;
+                unitPriceAndCostRec.Total_Cost__c = ForeignExchangeUtil.getConvertedAmountInLocalCurrency(unitPriceAndCostRec.Total_Foreign_Cost__c, conversionRateWithMarkup);
+            }
+        }
+        return unitPriceAndCostRec;
+    }
+
+    private static Map<Id, Decimal> getForeignVendorIdToConversionRateMap(List<UnitWrapper.PriceAndCostTrackingWrapper> landedCostAdjustments) {
+        Map<Id, Decimal> foreignVendorIdToConversionRateMap = new Map<Id, Decimal>();
+        if(landedCostAdjustments != null) {
+            for(UnitWrapper.PriceAndCostTrackingWrapper lcaObj : landedCostAdjustments) {
+                if(String.isNotBlank(lcaObj.VendorId) && lcaObj.IsForeignVendor != null && lcaObj.IsForeignVendor) {
+                    foreignVendorIdToConversionRateMap.put(lcaObj.VendorId, null);
+                }
+            }
+            foreignVendorIdToConversionRateMap = ForeignExchangeUtil.getConversionRateWithMarkupByVendorIds(foreignVendorIdToConversionRateMap.keySet());
+        }
+        return foreignVendorIdToConversionRateMap;
     }
     
     public static List<UnitOrderingWrapper.UnitOrderWrapper> upsertMakeModelSubModelForUnit(List<UnitOrderingWrapper.UnitOrderWrapper> orderedUnits) {
@@ -534,9 +623,11 @@ public without sharing class UnitOrderingService {
     private static void updateDealItems(List<Unit_Price_Cost__c> skuPriceCostItems, List<Unit_Price_Cost__c> unitPriceCostItemsOfOrderedUnits,List<Customer_Owned_Unit__c> ordUnitList, Map<String, Customer_Owned_Unit__c> receivedUnitIdToStockUnitsMap) {
     	List<Deal_Item__c> dealItemListToUpdate = new List<Deal_Item__c>();
         for(Customer_Owned_Unit__c ordUnit : ordUnitList) {
-        	if(ordUnit.Deals_Units_Junction__r.size() > 0 && receivedUnitIdToStockUnitsMap.containsKey(ordUnit.Id) ) {
-            	Deal_Item__c dealItemRec = new Deal_Item__c(Id = ordUnit.Deals_Units_Junction__r[0].Id, Customer_Owned_Unit__c = receivedUnitIdToStockUnitsMap.get(ordUnit.Id).Id);
-            	dealItemListToUpdate.add(dealItemRec);
+            if(receivedUnitIdToStockUnitsMap.containsKey(ordUnit.Id) ) {
+                for(Deal_Item__c diRec: ordUnit.Deals_Units_Junction__r) {
+                    Deal_Item__c dealItemRec = new Deal_Item__c(Id = diRec.Id, Customer_Owned_Unit__c = receivedUnitIdToStockUnitsMap.get(ordUnit.Id).Id);
+                    dealItemListToUpdate.add(dealItemRec);
+                }
             }
         }
         
@@ -623,11 +714,10 @@ public without sharing class UnitOrderingService {
      * @return: List unit ordering wrapper
     **/
     public static List<UnitOrderingWrapper.UnitOrderWrapper> setUnitsPurchaseTax(Set<String> unitIdSet, String purchaseTaxId) {
-		List<Customer_Owned_Unit__c> couList = [Select Id, Name, Unit_Purchase_Tax__c, Unit_Purchase_Tax__r.Rate__c, Total_Price__c, Unit_Number__c, Stock_Id__c, Year__c, Cylinders__c, Tax_Amount__c, Make_Name__c, 
-                                                Colour__c, Model_Name__c, Sub_Model__c, Model_Detail__c, Status__c, Factory_Order_No__c,CreatedDate, Total_Cost__c, VIN_Number__c, Invoice_Number__c, Overridden_Total_Cost_With_Tax__c, Total_Cost_With_Tax__c, 
-                                                Stocked_In_DateTime__c, Unit_Model__c, Unit_Model__r.Name__c, Sub_Model__r.Sub_Model_Name__c, Registration_Serial__c, Year_Of_1st_Rego__c, Date_Expected__c, Date_Ordered__c, Compliance_Date__c, 
-                                                Vendor__r.Purchase_Tax__r.Rate__c, Unit_Type__c, (Select Type__c, Total_Cost__c, Total_Price__c from Unit_Prices_Costs__r), (SELECT Id, Name, Deal__r.CO_Header__r.Name FROM Deals_Units_Junction__r) 
-                                                from Customer_Owned_Unit__c where Id In :unitIdSet Order BY Unit_Number__c ASC];
+        String query = 'SELECT ' + String.join(UnitOrderingWrapper.fieldsListForOrderUnit(), ',') 
+                        + ', (Select Type__c, Total_Cost__c, Total_Price__c from Unit_Prices_Costs__r) FROM Customer_Owned_Unit__c WHERE Id In :unitIdSet Order BY Unit_Number__c ASC';
+        List<Customer_Owned_Unit__c> couList = (List<Customer_Owned_Unit__c>)Database.query(query);
+        
         List<Sales_Tax__c> purchaseTaxList = [SELECT Id, Name__c, Rate__c  FROM Sales_Tax__c WHERE Active__c = true AND Tax_Type__c = 'Purchase' AND Id =: purchaseTaxId Limit 1];
         List<Applicable_Taxes__c> applicableTaxList = new List<Applicable_Taxes__c>();
 
@@ -642,14 +732,14 @@ public without sharing class UnitOrderingService {
             Decimal totalTaxAmount = 0;
             if(!TaxCalculation.IsEnhancedTaxCalculationApplicable) {
 				if(purchaseTaxList.size() > 0 && purchaseTaxList[0].Rate__c != null) {
-            		totalTaxAmount = (couRec.Total_Cost__c * purchaseTaxList[0].Rate__c) / 100;
+            		totalTaxAmount = (couRec.Taxable_Cost__c * purchaseTaxList[0].Rate__c) / 100;
             	}
 			} else { // Logic to handle Enhanced tax calculation 
 				for(Applicable_Taxes__c appTaxRec : applicableTaxList) {
 					if(appTaxRec.Sales_Tax_Item__r.Rate_Type__c == TaxManagementService.FIXED_RATE) {
-						totalTaxAmount += (couRec.Total_Cost__c * appTaxRec.Sales_Tax_Item__r.Rate__c) / 100;
+						totalTaxAmount += (couRec.Taxable_Cost__c * appTaxRec.Sales_Tax_Item__r.Rate__c) / 100;
 					} else {
-						totalTaxAmount += TaxCalculation.getEnhancedTaxAmount(couRec.Total_Cost__c, appTaxRec.Sales_Tax_Item__r);
+						totalTaxAmount += TaxEngine.getEnhancedTaxAmount(couRec.Taxable_Cost__c, appTaxRec.Sales_Tax_Item__r);
 					}
 		        }
 			}
@@ -662,7 +752,7 @@ public without sharing class UnitOrderingService {
         }
         return unitList;
 	}
-	
+
 	//To create bulk specified number of units that are replica of passed unitId 
     public static BulkOrderingResponseWrapper createBulkUnits(String unitId, Integer numberOfUnits) {
         List<Customer_Owned_Unit__c> unitList = SOQLUtil.getUnitByFieldName(new Map<String, String>{'Id' => unitId});
@@ -727,9 +817,23 @@ public without sharing class UnitOrderingService {
         return responseObj;
     }
 
+  	public static List<UnitOrderingWrapper.UnitOrderWrapper> getRequiredUnitListForOrder() {
+        return new UnitOrderingWrapper.UnitOrderWrapper().convertToWrapperList(SOQLUtil.getRequiredUnitListForOrder());
+    }
+    
+    public static String removeOrderUnitExistOnCO(String unitId) {
+        String response = dealService.saveUnitStatus(unitId, 'Required');
+        return response;
+    }
+
     public class BulkOrderingResponseWrapper {
         public String response;
         public Integer totalUnitsCreated = 0;
         public String responseStatus;
+    }
+
+    public class UnitReceivingWrapper {
+        public List<UnitWrapper.PriceAndCostTrackingWrapper> LandedCostAdjustments;
+        public List<UnitOrderingWrapper.UnitOrderWrapper> OrderedUnits;
     }
 }

@@ -1,0 +1,39 @@
+<apex:component controller="GlobalController">
+    <div>
+        <div class="gridLoadingDiv LoaderStyle"  ng-show="AdminConfig.isPageStartLoading">
+            <c:BPLoading />
+        </div>
+        <div class="GeneralOrgInformation">
+            <div class="settings_Header row">
+                <div class="col-lg-3 col-md-3">
+                    <div class="fixedHeaderText bp-pointer-cursor" ng-click="AdminConfig.toogleSectionView('showJWTCode');">
+                        <span class="headerlabel">
+                        <i class="fa fa-angle-down" ng-show="AdminConfig.toggleObj.showJWTCode" ></i>
+                        <i class="fa fa-angle-right" ng-show="!AdminConfig.toggleObj.showJWTCode" ></i>
+                        <span class="divider">|</span>
+                        <span class="T2">JWT CODE</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div id="generalOrgInformation_Setting" ng-show="AdminConfig.toggleObj.showJWTCode">
+                <div class="main_section row" >
+                    <div>
+                        <button class="btn btn-default greenBtn margin8" ng-click="AdminConfig.generateJWTCode()" ng-disabled="AdminConfig.jwtCode">Generate code</button>
+                        <div ng-if="AdminConfig.jwtCode" class="jwt-code-section">
+                            <p>This code will not be saved for future reference.</p>
+                            <p>Copy/paste this code to whomever it needs to be sent to.</p>
+                            <div class="jwt-code">
+                                <label>{{AdminConfig.jwtCode}}</label>
+                                <button id="copyToClipboard" ng-click="AdminConfig.copyToClipboard()">
+                                    Copy to clipboard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</apex:component>

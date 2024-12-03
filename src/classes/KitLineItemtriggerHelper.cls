@@ -96,7 +96,7 @@ global without sharing class KitLineItemtriggerHelper {
 			// Fixed price line item
 			if(khli.Fixed_Price__c == true){
 				// make the kit price to default price for fixed line item record
-				if(khli.Kit_Price__c == null || (Trigger.isUpdate && !oldMap.get(khli.Id).Fixed_Price__c)) {
+				if(khli.Kit_Price__c == null || (Trigger.isUpdate && !oldMap.get(khli.Id).Fixed_Price__c && khli.Kit_Price__c == oldMap.get(khli.Id).Kit_Price__c && khli.Qty_Needed__c > 0)) {
 					khli.Kit_Price__c = khli.Retail__c;
 				}
     			Double fixedTotal = (kitHeaderToNewFixedTotal.containsKey(khli.Kit_Header__c)) ? kitHeaderToNewFixedTotal.get(khli.Kit_Header__c) : 0;
@@ -135,8 +135,7 @@ global without sharing class KitLineItemtriggerHelper {
 						    												 		 Qty_Needed__c,
 						    												 		 Total__c
 						    												 		 FROM Kit_Header_Line_Items__r
-						    												 		 WHERE Qty_Needed__c > 0
-						    												 		 AND Id NOT IN: khlisList
+						    												 		 WHERE Id NOT IN: khlisList
 						    												 )
 						    												 FROM  Kit_Header__c
 						    												 WHERE Id IN: kitHeaderToLineItemsMap.keySet()
@@ -327,12 +326,17 @@ global without sharing class KitLineItemtriggerHelper {
         Decimal retailPrice = khliRec.Retail_Price__c;
         if(priceLevelFieldToPartFieldAPINameMap.containsKey(priceLevel_baseValue)) {
             Decimal baseValue;
-            if(partRec.get(priceLevelFieldToPartFieldAPINameMap.get(priceLevel_baseValue)) == null) {
+			String pricingField = priceLevelFieldToPartFieldAPINameMap.get(priceLevel_baseValue);
+            if(!priceLevel_baseValue.containsIgnoreCase('Average_Cost__c') && partRec.get(priceLevelFieldToPartFieldAPINameMap.get(priceLevel_baseValue)) == null) {
                 baseValue = 0;
             } else {
-                baseValue = Decimal.valueOf(String.valueOf(partRec.get(priceLevelFieldToPartFieldAPINameMap.get(priceLevel_baseValue))));
+				if(pricingField.containsIgnoreCase('Average_Cost__c') && (partRec.Average_Cost__c == null || partRec.Average_Cost__c == 0)) {
+					baseValue = partRec.Last_Cost__c != null ? partRec.Last_Cost__c : 0;
+				} else {
+					baseValue = Decimal.valueOf(String.valueOf(partRec.get(pricingField)));
+				}
                 priceLevel_discount = (priceLevel_discount != null) ? priceLevel_discount : 0;
-                retailPrice = baseValue + (baseValue * priceLevel_discount / 100);
+                retailPrice = (baseValue + (baseValue * priceLevel_discount / 100)).setScale(2, RoundingMode.HALF_UP);
             }
         }
         return retailPrice;

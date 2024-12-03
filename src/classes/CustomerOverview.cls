@@ -78,7 +78,7 @@ public without sharing class CustomerOverview {
     **/
     public String getCustomerPreferredContactsOptions(){
 		String ObjectApi_name = 'Account';
-		String fieldName = 'Preferred_Contact__c';
+		String fieldName = Constants.Namespace + 'Preferred_Contact__c';
 		String liElementsForPreferredContacts = '';
 		
 		Map<String, Schema.SObjectType> globalDesMap = Schema.getGlobalDescribe();
@@ -178,7 +178,7 @@ public without sharing class CustomerOverview {
     	Map<String, String> countryToStatesHtmlMap = new Map<String, String>();
 		Map<String, List<State__c>> countryToStatesMap = new Map<String, List<State__c>>();
 		
-		List<State__c> stateRecords = [Select Id, Name__c, Default__c, Country__r.Name__c from State__c limit : Limits.getLimitDMLRows() - Limits.getDMLRows()];
+		List<State__c> stateRecords = [Select Id, Name__c, Display_Name__c, Default__c, Country__r.Name__c from State__c limit : Limits.getLimitDMLRows() - Limits.getDMLRows()];
         
         for(State__c st : stateRecords){
         	List<State__c> statesList = (countryToStatesMap.containsKey(st.Country__r.Name__c)) ? countryToStatesMap.get(st.Country__r.Name__c): new List<State__c>();
@@ -189,10 +189,10 @@ public without sharing class CustomerOverview {
         for(String countryName : countryToStatesMap.keySet()){
         	String statesHtmlStr ='';
         	for(State__c st : countryToStatesMap.get(countryName)) {
-	        	statesHtmlStr += '<li><a value="' + st.Name__c + '">' + st.Name__c + '</a></li>';
+	        	statesHtmlStr += '<li><a value="' + st.Display_Name__c + '">' + st.Display_Name__c + '</a></li>';
 	        	
 	        	if(st.Default__c){
-	        		defaultState = st.Name__c;
+	        		defaultState = st.Display_Name__c;
 	        	}
 	        }
 	        countryToStatesHtmlMap.put(countryName, statesHtmlStr);

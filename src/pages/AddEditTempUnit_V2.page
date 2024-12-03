@@ -1,0 +1,10 @@
+<apex:page sidebar="false" showheader="false" standardstylesheets="false" controller="GlobalController">
+
+    <c:AddEditUnitModal isComingFromCO="true" showFactoryOptions="true" scopeVarName="M_AddEditUnit" scopeMethodName="F_AddEditUnit" unitDataFieldObj="M_AddEditUnit.unitRec" mapFieldObj="M_AddEditUnit.mapPrimaryDataField" fieldValidationObj="M_AddEditUnit.UnitValidation" factoryOptionScopeVar="M_AddEditUnit.UnitPriceData" />
+    <div class="LoadingDiv" ng-show="M_AddEditUnit.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    
+</apex:page>

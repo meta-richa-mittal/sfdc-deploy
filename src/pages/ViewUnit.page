@@ -1,0 +1,1549 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0"  controller="GlobalController">
+  <c:AttachmentPopup />
+  <c:Customer_mini_page_layout />
+  <div>
+    <route-loading-indicator></route-loading-indicator>
+    <div ng-cloak="ng-cloak"> <!-- ng-if="!isRouteLoading"  -->
+        <div class="content">
+            <!-- Side panel start -->   
+            <div class="col-lg-2 col-md-2 sidePanel ">
+                <div class="clearfix"></div>
+                <div class="sidepaneluserinfo row">  <!-- orderNumber -->
+                    <p>
+                        <span class="vinUnknown" ng-if="viewUnitModel.unitDetailData.UnitInfo.VIN == 'VIN Unknown'">{{viewUnitModel.unitDetailData.UnitInfo.VIN}}</span>
+                        <span class="text-uppercase T3 bp-word-break-all bp-lh-15" ng-if="viewUnitModel.unitDetailData.UnitInfo.VIN != 'VIN Unknown'">{{viewUnitModel.unitDetailData.UnitInfo.VIN}}</span>
+                    </p>
+                    <p>
+                        <span class="text-uppercase T7" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.unitDetailData.UnitInfo.FactoryOrderNo==''">{{ 'unit_Label' | translate }} # </span>
+                        <span class="text-uppercase T7" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.unitDetailData.UnitInfo.FactoryOrderNo!=''">{{ 'FO' | translate }} # </span>
+                        <span class="text-uppercase T7" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType !='ORDU'">{{viewUnitModel.unitDetailData.UnitInfo.UnitType}} # <span class="T2">{{viewUnitModel.unitDetailData.UnitInfo.UnitId}}</span></span>
+                        <span class="text-uppercase T6" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.unitDetailData.UnitInfo.FactoryOrderNo==''">{{viewUnitModel.unitDetailData.UnitInfo.UnitId}}</span> 
+                        <span class="text-uppercase T6" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.unitDetailData.UnitInfo.FactoryOrderNo!=''">{{viewUnitModel.unitDetailData.UnitInfo.FactoryOrderNo}}</span> 
+                    </p>
+                    <p>
+                        <button class="Servicegray T10 btn" id="VO_workflow_sidepanel_info_div1_button1" ng-click="" ng-show="" type="button">{{ 'Label_Status' | translate }}:</button>
+                        <span class="unitStatus" ng-class="{'RedColour' : viewUnitModel.unitDetailData.UnitInfo.StatusColor == 'Red', 
+                                                            'userStatus' : viewUnitModel.unitDetailData.UnitInfo.StatusColor == 'Green', 
+                                                            'T7' : viewUnitModel.unitDetailData.UnitInfo.StatusColor == 'Black'}">
+                                                            {{viewUnitModel.unitDetailData.UnitInfo.Status}}</span>
+                    </p>
+                    <div ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'ORDU' && viewUnitModel.unitDetailData.UnitInfo.Status != 'Temporary' && viewUnitModel.unitDetailData.UnitInfo.Status != 'Required'">
+                        <button class="c-btn c-ternary-btn" ng-disabled="viewUnitModel.isReceiveBtnDisabled()" ng-click="viewUnitModel.MoveToState('ViewUnit.UnitReceivingDialog', viewUnitModel.unitDetailData.UnitInfo.VendorId)">Receive</button>
+                        <button class="c-btn c-ternary-btn" ng-disabled="viewUnitModel.isOrderMoreBtnDisabled()" ng-click="viewUnitModel.OpenBulkOrderModalWindow()">Order more</button>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+                <div class="unitCustomerSection" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'COU'">
+                    <div class="sidepaneluserinfo row">
+                        <div class="userimg">
+                            </div>
+                        <div class="userNameblock">
+                            <p>
+                                <span class="vendorName" ng-if="viewUnitModel.unitDetailData.UnitInfo.CustomerType == 'Individual'">  
+                                    <a ng-mouseover="viewUnitModel.showCustomerInfoOverlay($event, viewUnitModel.unitDetailData.UnitInfo.Customer);"  
+                                    ng-mouseleave="viewUnitModel.hideCustomerInfoOverlay();" id="CO_workflow_sidepanel_cust_name_link">
+                                        {{viewUnitModel.unitDetailData.UnitInfo.CustomerFirstName}} {{viewUnitModel.unitDetailData.UnitInfo.CustomerLastName}}
+                                    </a>
+                                </span>
+                                <span class="vendorName" ng-if="viewUnitModel.unitDetailData.UnitInfo.CustomerType != 'Individual'">  
+                                    <a ng-mouseover="viewUnitModel.showCustomerInfoOverlay($event, viewUnitModel.unitDetailData.UnitInfo.Customer);"  
+                                    ng-mouseleave="viewUnitModel.hideCustomerInfoOverlay();" id="CO_workflow_sidepanel_cust_name_link">
+                                        {{viewUnitModel.unitDetailData.UnitInfo.BusinessName}}
+                                    </a>
+                                </span>
+                            </p>
+                        </div>
+                </div>
+                <div class="clearfix"></div>
+                </div>
+                <div class="clearfix"></div>
+                           
+                <!-- left panel links -->
+                <div class="leftPanelLinks">
+                    <a class="row T10 mainSectionLink" ng-class="{'active' : viewUnitModel.activeSidepanelink =='#InfoSection'}" href="#InfoSection"
+                        ng-click="viewUnitModel.sidepanelLink($event, 'Info')"><span class="alphabetLetter">{{viewUnitModel.LeftSideHeadingLables.Info}}</span> {{ 'Page_Section_Info' | translate }}</a>
+                    <a class="row T10 subSectionLink" href="#InfoSection" ng-click="viewUnitModel.sidepanelLink($event, 'Info')"> <span
+                        class="alphabetLetter"></span>{{ 'Label_General' | translate }}</a>
+                    <a class="row T10 subSectionLink" href="#Info_Notes" ng-click="viewUnitModel.sidepanelLink($event, 'Info')"> <span
+                        class="alphabetLetter"></span>{{ 'Label_Notes' | translate }}</a>   
+                    <div ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU'">
+                        <a class="row T10 mainSectionLink" ng-class="{'active' : viewUnitModel.activeSidepanelink =='#PriceAndCostTrackingSection'}" href="#PriceAndCostTrackingSection"
+                            ng-click="viewUnitModel.sidepanelLink($event, 'PriceAndCostTracking')"><span class="alphabetLetter">{{viewUnitModel.LeftSideHeadingLables.PriceAndCostTracking}}</span>{{ 'Price_cost_tracking' | translate }}</a> 
+                        <a class="row T10 subSectionLink" href="#PriceAndCostTrackingSection" ng-click="viewUnitModel.sidepanelLink($event, 'PriceAndCostTracking')"> <span
+                            class="alphabetLetter"></span>{{ 'Summary' | translate }}</a>
+                        <a class="row T10 subSectionLink" href="#PriceAndCostTracking_Detail" ng-click="viewUnitModel.sidepanelLink($event, 'PriceAndCostTracking')"> <span
+                            class="alphabetLetter"></span>{{ 'Detail' | translate }}</a>
+                    </div>
+                
+                    <div ng-show="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' && viewUnitModel.unitDetailData.UnitInfo.VendorId != null && viewUnitModel.unitDetailData.UnitInfo.VendorId != undefined && viewUnitModel.unitDetailData.UnitInfo.VendorId !=''">    
+                        <a class="row T10 mainSectionLink" ng-class="{'active' : viewUnitModel.activeSidepanelink =='#OrderingSection'}" href="#OrderingSection"
+                        ng-click="viewUnitModel.sidepanelLink($event, 'Ordering')"><span class=" alphabetLetter">{{viewUnitModel.LeftSideHeadingLables.Ordering}}</span> {{ 'Label_Ordering' | translate }}</a>
+                        <a class="row T10 subSectionLink" href="#OrderingSection" ng-click="viewUnitModel.sidepanelLink($event, 'Ordering')"> <span
+                            class="alphabetLetter"></span>{{ 'Summary' | translate }}</a>
+                    </div>
+                
+                    <div ng-if="viewUnitModel.unitDetailData.ServiceOrdersList.length > 0 && GroupOnlyPermissions['Service job']['view']">
+                        <a class="row T10 mainSectionLink" ng-class="{'active' : viewUnitModel.activeSidepanelink =='#HistorySection'}" href="#HistorySection"
+                        ng-click="viewUnitModel.sidepanelLink($event, 'History')">
+                            <span class="alphabetLetter">{{viewUnitModel.LeftSideHeadingLables.History}}</span>{{ 'Service_history' | translate }}
+                        </a>
+                    </div>
+                    <a class="row T10 mainSectionLink" ng-class="{'active' : viewUnitModel.activeSidepanelink =='#OwnersSection'}" href="#OwnersSection"
+                    ng-click="viewUnitModel.sidepanelLink($event, 'Owners')" 
+                    ng-show="viewUnitModel.unitDetailData.OwnerList.length > 1 && viewUnitModel.unitDetailData.OwnerList.length !=undefined">
+                        <span class="alphabetLetter">{{viewUnitModel.LeftSideHeadingLables.Owners}}</span>{{ 'Owners' | translate }}</a>
+                </div>
+            
+            </div>
+        
+            <!-- End Left Side Bar -->
+        
+            <!-- Start Center Panel -->
+            <div class="col-lg-10 col-md-10 mainSection">
+            <!-- fixed headers -->
+                <div class=" sectionHeader row fixedRow">
+                    <!-- fixed header for info section -->
+                    <div class="col-lg-6 col-md-6" ng-show="viewUnitModel.activeSidepanelink =='#InfoSection'">
+                        <div class="fixedHeaderText">
+                            <span class="headerlabel">
+                                <i class="fa fa-angle-right"
+                                    ng-show="!viewUnitModel.displaySections.Info"
+                                    ng-Click="viewUnitModel.displaySections.Info = true">
+                                </i> 
+                                <i class="fa fa-angle-down" 
+                                    ng-show="viewUnitModel.displaySections.Info"
+                                    ng-Click="viewUnitModel.displaySections.Info = false">
+                                </i> 
+                                <span class="divider">|</span>
+                                <span class="T2">{{viewUnitModel.LeftSideHeadingLables.Info}}  {{ 'Page_Section_Info' | translate }}</span>
+                                <span class="printIcon" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'ORDU' && viewUnitModel.unitDetailData.UnitInfo.Status != 'Temporary' && viewUnitModel.unitDetailData.UnitInfo.Status != 'Required'">
+                                    <i class="bp-icons bp-font-20 bp-blue-font" data-toggle="tooltip" ng-click="viewUnitModel.printUnitRecord()" title="Print" data-original-title="Print">printFilled</i>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                    <!-- fixed header for Price & Cost Tracking section -->
+                    <div ng-show="viewUnitModel.unitDetailData != undefined && viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU'">
+                        <div class="col-lg-6 col-md-6" ng-show="viewUnitModel.activeSidepanelink =='#PriceAndCostTrackingSection'">
+                            <div class="fixedHeaderText">
+                                <span class="headerlabel">
+                                    <i class="fa fa-angle-right"
+                                        ng-show="!viewUnitModel.displaySections.PriceAndCostTracking"
+                                        ng-Click="viewUnitModel.displaySections.PriceAndCostTracking = true">
+                                    </i> 
+                                    <i class="fa fa-angle-down" 
+                                        ng-show="viewUnitModel.displaySections.PriceAndCostTracking"
+                                        ng-Click="viewUnitModel.displaySections.PriceAndCostTracking = false">
+                                    </i> 
+                                    <span class="divider">|</span>
+                                    <span class="T2">{{viewUnitModel.LeftSideHeadingLables.PriceAndCostTracking}} {{ 'Price_cost_tracking' | translate }}</span>
+                                </span>
+                                <span class="ActionIcons pull-left " ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK'">
+                                    <div class="dropdown selectDropdown checkboxDropdown" >
+                                        <button class="btn dropdown-toggle" type="button" data-toggle="dropdown"> {{ 'Label_Actions' | translate }}
+                                            <span class="caret"></span>
+                                        </button>
+                                        <!-- START: Added by kajal - 11/17/2016 - #1293 -->
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a ng-click="viewUnitModel.addUnitPriceAndCostItem()"> {{ 'Add_Adjustment' | translate }}</a>
+                                            </li>
+                                            <li ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' && viewUnitModel.unitDetailData.UnitInfo.NITCAmount != null && viewUnitModel.unitDetailData.UnitInfo.NITCAmount != 0
+                                            			&& viewUnitModel.unitDetailData.UnitInfo.Status != 'Sold' && !viewUnitModel.unitDetailData.UnitInfo.NITCClaimedManually">
+                                                <a ng-click="viewUnitModel.openManuallyClaimNITCConfirmation()"> {{ 'Manually_claim_NITC' | translate }}</a>
+                                            </li>
+                                        </ul>
+                                        <!-- END: Added by kajal - 11/17/2016 - #1293 -->
+                                    </div>
+                                </span> 
+                            </div>
+                        </div>
+                    </div>
+                    <!-- fixed header for Ordering section -->
+                    <div ng-show="viewUnitModel.activeSidepanelink =='#OrderingSection'">
+                        <div class="col-lg-6 col-md-6" ng-show="viewUnitModel.unitDetailData != undefined && viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK'&& viewUnitModel.unitDetailData.UnitInfo.VendorId != null && viewUnitModel.unitDetailData.UnitInfo.VendorId != undefined && viewUnitModel.unitDetailData.UnitInfo.VendorId !=''" >
+                            <div class="fixedHeaderText">
+                                <span class="headerlabel">
+                                    <i class="fa fa-angle-right"
+                                        ng-show="!viewUnitModel.displaySections.Ordering"
+                                        ng-Click="viewUnitModel.displaySections.Ordering = true">
+                                    </i> 
+                                    <i class="fa fa-angle-down" 
+                                        ng-show="viewUnitModel.displaySections.Ordering"
+                                        ng-Click="viewUnitModel.displaySections.Ordering = false">
+                                    </i> 
+                                    <span class="divider">|</span>
+                                    <span class="T2 "> {{viewUnitModel.LeftSideHeadingLables.Ordering}}  {{ 'Label_Ordering' | translate }}</span>
+                                </span>
+                                
+                            </div>
+                        </div>
+                    </div> 
+
+                    <div class="col-lg-6 col-md-6" ng-show="viewUnitModel.activeSidepanelink =='#HistorySection' && viewUnitModel.unitDetailData.ServiceOrdersList.length > 0 && 
+                                                             GroupOnlyPermissions['Service job']['view']"><!-- Edited by kajal 30th april, 2017 #1940 -->
+                        <div class="fixedHeaderText">
+                            <span class="headerlabel">
+                                <i class="fa fa-angle-right"
+                                    ng-show="!viewUnitModel.displaySections.History"
+                                    ng-Click="viewUnitModel.displaySections.History = true">
+                                </i> 
+                                <i class="fa fa-angle-down" 
+                                    ng-show="viewUnitModel.displaySections.History"
+                                    ng-Click="viewUnitModel.displaySections.History = false">
+                                </i> 
+                                <span class="divider">|</span>
+                                <span class="T2">{{viewUnitModel.LeftSideHeadingLables.History}} {{ 'Service_history' | translate }}</span><!-- Edited by kajal 30th april, 2017 #1940 -->
+                            </span>
+                        </div>
+                    </div>
+                    <!-- fixed header for Owners section -->
+                    <div ng-show="viewUnitModel.activeSidepanelink =='#OwnersSection'">  
+                        <div class="col-lg-6 col-md-6" ng-show="viewUnitModel.unitDetailData.OwnerList.length > 1 && viewUnitModel.unitDetailData.OwnerList.length != undefined" >
+                            <div class="fixedHeaderText">
+                                <span class="headerlabel">
+                                    <i class="fa fa-angle-right"
+                                        ng-show="!viewUnitModel.displaySections.Owners"
+                                        ng-Click="viewUnitModel.displaySections.Owners = true">
+                                    </i> 
+                                    <i class="fa fa-angle-down" 
+                                        ng-show="viewUnitModel.displaySections.Owners"
+                                        ng-Click="viewUnitModel.displaySections.Owners = false">
+                                    </i> 
+                                    <span class="divider">|</span>
+                                    <span class="T2">{{viewUnitModel.LeftSideHeadingLables.Owners}} {{ 'Owners' | translate }}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- search bar -->
+                    <div class="col-lg-6 col-md-6 fixedContent">
+                        <div class="fa-icons">
+                            <i class="fa fa-refresh fa-2x fa-fw" ng-class="{'fa-spin' : viewUnitModel.isrefresh}"
+                                ng-click="viewUnitModel.refreshUnit();">
+                            </i>
+                        </div>
+                        <button class="flatBtn" ng-click="viewUnitModel.editUnit()" ng-disabled="viewUnitModel.unitDetailData.UnitInfo.IsGenericUnit || !viewUnitModel.isEditButtonEnabled() || !GroupOnlyPermissions['Stock units']['enabled']" type="button"
+                            ng-class="{'permissionDisabledButton': !GroupOnlyPermissions['Stock units']['enabled']}">{{ 'Edit_Label' | translate }}</button>
+                        <div class="fa-icons pull-right">
+                            <i class="fa fa-floppy-o"></i>
+                            <i class="fa fa-cog"></i>
+                        </div>        
+
+                        <div class="col-lg-7 col-md-6 searchToAdd pull-right searchBox">        
+                            <div class="input-group" ng-class="{'activeSearchDiv' : viewUnitModel.searchDivActive}">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn C5 LabelBtn">
+                                        <span class="T5 text-uppercase" style="color: #939CA9;"> {{ 'Label_To' | translate }}:</span>
+                                        <span style="color: #FFFFFF;">{{viewUnitModel.selectedItem}}</span>
+                                    </button>
+                                    <button type="button" class="btn C5 dropdown-toggle caretBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <span class="caret"></span>
+                                        <span class="sr-only"> {{ 'Label_Toggle_Dropdown' | translate }}</span>
+                                    </button>
+                                        <ul class="dropdown-menu">
+                                        <li><a href="#InfoSection" ng-click="viewUnitModel.dropDownItem($event, 'Info')"> {{ 'Page_Section_Info' | translate }}</a></li>
+                                        <!-- For : You haven't added anything yet! -->
+                                        <li ng-show="viewUnitModel.unitDetailData != undefined && viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU'"><a href="#PriceAndCostTrackingSection" ng-click="viewUnitModel.dropDownItem($event, 'PriceAndCostTracking')">{{ 'Price_cost_tracking' | translate }}</a></li>
+                                       
+                                        <li ng-show="viewUnitModel.unitDetailData != undefined && viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' && viewUnitModel.unitDetailData.UnitInfo.VendorId != null && viewUnitModel.unitDetailData.UnitInfo.VendorId != undefined && viewUnitModel.unitDetailData.UnitInfo.VendorId !=''"><a href="#OrderingSection" ng-click="viewUnitModel.dropDownItem($event, 'Ordering')">{{viewUnitModel.LeftSideHeadingLables.Ordering}}   {{ 'Label_Ordering' | translate }}</a></li>  
+                                        <li ng-if="viewUnitModel.unitDetailData.ServiceOrdersList.length > 0 && GroupOnlyPermissions['Service job']['view']">
+                                        <a href="#HistorySection" ng-click="viewUnitModel.dropDownItem($event, 'History')">{{ 'Service_history' | translate }}</a></li>
+                                        <li ng-show="viewUnitModel.unitDetailData.OwnerList.length > 1 && viewUnitModel.unitDetailData.OwnerList.length !=undefined">
+                                            <a href="#OwnersSection" ng-click="viewUnitModel.dropDownItem($event, 'Owners')">{{ 'Owners' | translate }}</a></li>
+                                        <!-- For : You haven't added anything yet! -->
+                                        <li role="separator" class="divider"></li>
+                                        <li class="text-uppercase"><a > {{ 'Label_Advanced' | translate }}  {{ 'Label_Search' | translate }}</a></li>
+                                           
+                                        </ul>
+                                    </div>
+                                    <!-- /btn-group -->
+                                    
+                                    <div class="inner-addon right-addon" ng-show="!viewUnitModel.isSearchToAddVisible">
+                                        <i class="fa fa-search fa-flip-horizontal"></i>
+                                        <input type="text" placeholder="Search To add" ng-disabled = "!viewUnitModel.isSearchToAddVisible"
+                                            style="height: 30px; width: 100%; border: none; padding-left: 5px; outline: none; font-size: 12px;"/>
+                                    </div>
+                                    
+                                    <div class="inner-addon right-addon neVendorOrderAutocomplete-container" 
+                                        ng-show="viewUnitModel.isSearchToAddVisible">
+                                        <i class="fa fa-search fa-flip-horizontal"></i>
+                                     <c:SearchToAddHtml />
+                                    </div>
+                                </div>
+                            </div>
+                          
+              </div>
+           
+                    <!-- search bar -->
+                </div>
+            <!-- fixed headers -->
+                <!-- ******************************************************* start of info section ******************************************************* -->
+                <div id="InfoSection" >
+                    <div class="main_section row main_section_margin_top" ng-show="viewUnitModel.displaySections.Info">
+                        
+                        <div ng-if="COUModal.ActiveDealNotificationWrapperList.length > 0 ">
+                            <div  class="UnitExistsOnCO" ng-repeat = "activeDealeNotificationRec in COUModal.ActiveDealNotificationWrapperList">
+                            <span > 
+                                <i class="bp-icons bp-font-18">infoV2</i>
+                               </span>
+                               <div class="align-item">
+                                    <span class="H300"  ng-if ="activeDealeNotificationRec.DealStatus == 'Invoiced' && activeDealeNotificationRec.DealItemType == 'Unit'">{{ 'Deal_invoiced_unit_message' | translate }}</span>
+                                    <span class="H300" ng-if ="activeDealeNotificationRec.DealStatus != 'Invoiced' &&  activeDealeNotificationRec.DealItemType == 'Unit'">{{ 'Deal_uninvoiced_unit_message ' | translate }}</span>
+                                    <span class="H300" ng-if ="activeDealeNotificationRec.DealItemType != 'Unit'">{{ 'Deal_tradedIn_message ' | translate }}</span>
+                                    <a class="H300 bp-blue-font" ui-sref="CustomerOrder_V2({Id:activeDealeNotificationRec.CoId })" target="_blank"> {{activeDealeNotificationRec.CoNumber}}</a>
+                                    <span class="H300 ">, {{activeDealeNotificationRec.DealStatus}} to </span>
+                                    <a class="bp-blue-font H300" ui-sref="ViewCustomer({Id:activeDealeNotificationRec.CustomerId})" target="_blank"> {{activeDealeNotificationRec.CustomerName}} </a>
+                               </div>
+                            </div>
+                        </div>
+
+                        <div id="Info_General" class="Info_General">
+                            <p class="actionRow T2">
+                                <span class="sectionText">{{ 'Label_General' | translate }}</span>
+                                <span class="ActionIcons">
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" title="General Information"></i>
+                                </span> 
+                            </p>
+                            <div class="row rowGeneral general-info-section">
+                                <div class="subsectionGeneral">
+                                    <div class="general_info_part">
+                                        <div class="vin-cou-section">
+                                            <div class="vin">
+                                                <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.VIN != null && viewUnitModel.unitDetailData.UnitInfo.VIN != ''">
+                                                    <div class="labelWidth part_general_column"> 
+                                                        <span>    
+                                                            <label class="T7" for="labelFirstName">VIN/SN</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth" >
+                                                        <span class="vinUnknown" ng-if="viewUnitModel.unitDetailData.UnitInfo.VIN == 'VIN Unknown'">{{viewUnitModel.unitDetailData.UnitInfo.VIN}}</span>
+                                                        <span class="T14_1 bp-word-break-all bp-lh-15" ng-if="viewUnitModel.unitDetailData.UnitInfo.VIN != 'VIN Unknown'">{{viewUnitModel.unitDetailData.UnitInfo.VIN}}</span>
+                                                    </div>
+                                                </div>
+                                                <div ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'COU'">
+                                                    <div class="row owner-section">
+                                                        <div class="labelWidth part_general_column"> 
+                                                            <span>    
+                                                                <span class="T7" for="labelFirstName">Owner</span>
+                                                            </span>
+                                                        </div>
+                                                        <div  class="fieldValueWidth">
+                                                            <span class="T14_1 bp-word-break-all bp-lh-15 bp-blue-font">
+                                                                <span ng-if="viewUnitModel.unitDetailData.UnitInfo.CustomerType == 'Individual'">  
+                                                                    <a ui-sref="ViewCustomer({Id:viewUnitModel.unitDetailData.UnitInfo.Customer})" target="_blank">{{viewUnitModel.unitDetailData.UnitInfo.CustomerFirstName}} {{viewUnitModel.unitDetailData.UnitInfo.CustomerLastName}}</a>
+                                                                </span>
+                                                                <span ng-if="viewUnitModel.unitDetailData.UnitInfo.CustomerType != 'Individual'">  
+                                                                    <a ui-sref="ViewCustomer({Id:viewUnitModel.unitDetailData.UnitInfo.Customer})" target="_blank">{{viewUnitModel.unitDetailData.UnitInfo.BusinessName}}</a>
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.BillingStreet">
+                                                        <div class="labelWidth part_general_column"> 
+                                                            <span>    
+                                                                <span class="T7" for="labelFirstName"></span>
+                                                            </span>
+                                                        </div>
+                                                        <div  class="fieldValueWidth">
+                                                            <span class="T7" for="labelFirstName">{{viewUnitModel.unitDetailData.UnitInfo.BillingStreet}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="labelWidth part_general_column"> 
+                                                            <span>    
+                                                                <span class="T7" for="labelFirstName"></span>
+                                                            </span>
+                                                        </div>
+                                                        <div  class="fieldValueWidth">
+                                                            <span class="T7" for="labelFirstName" ng-bind="((viewUnitModel.unitDetailData.UnitInfo.BillingCity && (viewUnitModel.unitDetailData.UnitInfo.BillingState || viewUnitModel.unitDetailData.UnitInfo.BillingCountry || viewUnitModel.unitDetailData.UnitInfo.BillingPostalCode)) ? viewUnitModel.unitDetailData.UnitInfo.BillingCity + ', ' : viewUnitModel.unitDetailData.UnitInfo.BillingCity) +
+                                                                ((viewUnitModel.unitDetailData.UnitInfo.BillingState && (viewUnitModel.unitDetailData.UnitInfo.BillingCountry || viewUnitModel.unitDetailData.UnitInfo.BillingPostalCode)) ? viewUnitModel.unitDetailData.UnitInfo.BillingState + ', ' : viewUnitModel.unitDetailData.UnitInfo.BillingState) +
+                                                                ((viewUnitModel.unitDetailData.UnitInfo.BillingCountry && viewUnitModel.unitDetailData.UnitInfo.BillingPostalCode) ? viewUnitModel.unitDetailData.UnitInfo.BillingCountry + ', ' : viewUnitModel.unitDetailData.UnitInfo.BillingCountry) + 
+                                                                (viewUnitModel.unitDetailData.UnitInfo.BillingPostalCode)">
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="unit">
+                                                <div class="row stock-cou">
+                                                    <div class="labelWidth part_general_column"> 
+                                                        <span>    
+                                                            <label class="stockNumber" for="labelFirstName" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' ">Stock #</label>
+                                                            <label class="stockNumber" for="labelFirstName" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'ORDU' || viewUnitModel.unitDetailData.UnitInfo.UnitType == 'COU' ">Unit #</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth" >
+                                                        <span class="T14_1 bp-word-break-all bp-lh-15 bp-blue-font">{{viewUnitModel.unitDetailData.UnitInfo.UnitId}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="phone-email-section" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'COU'">
+                                                    <div class="row owner-section phone-email">
+                                                        <div class="part_general_column"> 
+                                                            <span>    
+                                                                <span class="stockNumber" for="labelFirstName"></span>
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <span class="T14_1 bp-word-break-all bp-lh-15 bp-blue-font"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" ng-if="viewUnitModel.setPrefferedPhone()">
+                                                        <div class="part_general_column"> 
+                                                            <span>    
+                                                                <span class="phone-label">Ph:</span>
+                                                                <span class="T7" for="labelFirstName" ng-bind="viewUnitModel.setPrefferedPhone()"></span>
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <span class="T14_1 bp-word-break-all bp-lh-15 bp-blue-font"></span>
+                                                        </div>
+
+                                                        <div class="part_general_column cellNo" ng-if="viewUnitModel.unitDetailData.UnitInfo.FormattedOtherPhone"> 
+                                                            <span>    
+                                                                <span class="phone-label">Cell:</span>
+                                                                <span class="T7" for="labelFirstName">{{viewUnitModel.unitDetailData.UnitInfo.FormattedOtherPhone}}</span>
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <span class="T14_1 bp-word-break-all bp-lh-15 bp-blue-font"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" ng-if="viewUnitModel.setPrefferedEmail()">
+                                                        <div class="part_general_column"> 
+                                                            <span>    
+                                                                <span class="email-label">E:</span>
+                                                                <span class="T7" for="labelFirstName" ng-bind="viewUnitModel.setPrefferedEmail()">{{viewUnitModel.unitDetailData.UnitInfo.prefferedEmail}}</span>
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <span class="T14_1 bp-word-break-all bp-lh-15 bp-blue-font"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="make-model-section">
+                                            <div class="make-model">
+                                                <div class="row">
+                                                    <div class="labelWidth part_general_column"> 
+                                                        <span>    
+                                                        <label class="T7 " for="labelFirstName">{{ 'Make_Object_Display_Label' | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth" >
+                                                        <span class="T3" >{{(viewUnitModel.unitDetailData.UnitInfo.MakeName) ? viewUnitModel.unitDetailData.UnitInfo.MakeName : '- - -'}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="labelWidth part_general_column">
+                                                        <span>    
+                                                        <label class="T7 " for="labelFirstName">{{ Custom_Label_Model | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth" >
+                                                        <span class="T3">{{(viewUnitModel.unitDetailData.UnitInfo.ModelName) ? viewUnitModel.unitDetailData.UnitInfo.ModelName : '- - -'}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row unitSubModel">
+                                                    <div class="labelWidth part_general_column">
+                                                        <span>
+                                                            <label class="T7 " for="labelFirstName">Submodel</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth" >
+                                                        <span class="T3">{{(viewUnitModel.unitDetailData.UnitInfo.SubModelName) ? viewUnitModel.unitDetailData.UnitInfo.SubModelName : '- - -'}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                            <label class="T7 " for="labelFirstName">{{ 'Label_Year' | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth " >
+                                                        <span class="T3">{{(viewUnitModel.unitDetailData.UnitInfo.Year) ? viewUnitModel.unitDetailData.UnitInfo.Year : '- - -'}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.Status!=null && viewUnitModel.unitDetailData.UnitInfo.Status!=''">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                        <label class="T7 " for="labelFirstName">{{ 'Label_Status' | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth " >
+                                                        <span class="unitStatus" ng-class="{'green' : (viewUnitModel.unitDetailData.UnitInfo.Status == 'Available' || viewUnitModel.unitDetailData.UnitInfo.Status == 'Active'), 
+                                                            'red' : (viewUnitModel.unitDetailData.UnitInfo.Status == 'Reserved' || viewUnitModel.unitDetailData.UnitInfo.Status == 'Sold'), 
+                                                            'grey' : (viewUnitModel.unitDetailData.UnitInfo.Status == 'Transferred' || viewUnitModel.unitDetailData.UnitInfo.Status == 'Temporary'),
+                                                            'orange': (viewUnitModel.unitDetailData.UnitInfo.Status == 'On Order')}">
+                                                            {{viewUnitModel.unitDetailData.UnitInfo.Status}}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                            <label class="T7 " for="labelFirstName">{{ 'New_unit' | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth " >
+                                                        <span class="chk_tick" id="sameAsBA" ng-class="{'chked': viewUnitModel.unitDetailData.UnitInfo.IsNewUnit}">
+                                                            <i class="fa fa-check-square chksqure"></i>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="row applicable-stamp-duty" ng-if="viewUnitModel.companyLocale == 'Australia' && viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU' ">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                            <label class="T7 " for="labelFirstName">{{ 'Applicable_stamp_duty' | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth" >
+                                                        <span class="T3">{{(viewUnitModel.unitDetailData.UnitInfo.ApplicableStampDutyCalName) ? viewUnitModel.unitDetailData.UnitInfo.ApplicableStampDutyCalName : '- - -'}}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="image-section">
+                                                <div class="subsectionGeneral" ng-if="viewUnitModel.unitDetailData.ImageList.length == 0">
+                                                    <div class="box">
+                                                        <div class="primary-image camera" data-toggle="modal" data-target="#UploadAttachmentPopup" ng-click="viewUnitModel.uploadImageAction()">
+                                                            <i class="bp-icons bp-font-60 bp-dark-grey1-font bp-cursor-pointer font-opacity bp-blue-hover">cameraCircleFilled</i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="image-slider-section">
+                                                        <div></div>
+                                                        <div>
+                                                            <div class="row Mgr20 add-more-image-container" ng-if = "viewUnitModel.unitDetailData.NonPrimaryImageList.length < 50">
+                                                                <div class="col-xs-12 customer_general_column">
+                                                                    <button class="button hollow label_favorite" data-toggle="modal" data-target="#UploadAttachmentPopup" 
+                                                                        ng-click="viewUnitModel.uploadImageAction()">Add Image</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="subsectionGeneral" ng-if="viewUnitModel.unitDetailData.ImageList.length > 0">
+                                                    <div class="box">
+                                                        <img class="primary-image" ng-src="{{viewUnitModel.unitDetailData.primaryImage.AttchmentURL}}" />
+                                                        <div class="overlay" ng-click="viewUnitModel.openImageCarousel(viewUnitModel.unitDetailData.primaryImage.AttchmentURL, viewUnitModel.unitDetailData.primaryImage.DocId)" data-toggle="modal" data-target="#carousel-modal">
+                                                            <div class="overlay-container pull-left">
+                                                                <span class="pull-right" data-toggle="tooltip" title="Delete" id="unit_image__delete_0">
+                                                                    <i class="bp-icons bp-font-18 bp-white-font bp-cursor-pointer bp-fw-100" ng-click="viewUnitModel.FileUpload.deleteImage($event, viewUnitModel.unitDetailData.primaryImage.DocId);">delete</i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="image-slider-section">
+                                                        <div>
+                                                            <div class="image-slider-container" ng-if = "viewUnitModel.unitDetailData.NonPrimaryImageList.length > 0">
+                                                                <div class="col-md-12 small-multi-image-container P0" ng-style="{'max-width': ((viewUnitModel.unitDetailData.NonPrimaryImageList.length == 1) ? '95px' : ((viewUnitModel.unitDetailData.NonPrimaryImageList.length == 2) ? '195px' : ''))}">
+                                                                    <div class = "small-multi-image-inner-container">
+                                                                        <div class="col-md-3 P0 box" ng-repeat="image in viewUnitModel.unitDetailData.NonPrimaryImageList">
+                                                                            <img ng-src="{{image.AttchmentURL}}" class="small-image"/>
+                                                                            <div class="overlay" ng-click="viewUnitModel.openImageCarousel(image.AttchmentURL, image.DocId)" data-toggle="modal" data-target="#carousel-modal">
+                                                                                <div class="overlay-container pull-left">
+                                                                                    <span class="pull-left" data-toggle="tooltip" title="Set as primary image" id="unit_image_pin_$index">
+                                                                                        <i class="bp-icons bp-font-15 bp-white-font" ng-class="{'bp-pointer-cursor': !image.IsPrimary, 'icon_fill_yellow-hover': image.IsPrimary}" ng-click="viewUnitModel.FileUpload.pinImage($event, $index, image.DocId, image.AttachmentId);">pinFilled</i>
+                                                                                    </span>
+                                                                                    <span class="pull-right" data-toggle="tooltip" title="Delete" id="unit_image__delete_$index">
+                                                                                        <i class="bp-icons bp-font-15 bp-white-font" ng-click="viewUnitModel.FileUpload.deleteImage($event, image.DocId);">delete</i>
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <button class="slider-btn leftLst" ng-disabled = "viewUnitModel.disableLeft"  ng-click = "viewUnitModel.rotateCarousel('left')"></button>
+                                                                <button class="slider-btn rightLst" ng-disabled = "viewUnitModel.disableRight"  ng-click = "viewUnitModel.rotateCarousel('right')"></button>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="row Mgr20 add-more-image-container" ng-if = "viewUnitModel.unitDetailData.NonPrimaryImageList.length < 50">
+                                                                <div class="col-xs-12 customer_general_column">
+                                                                    <button class="button hollow label_favorite" data-toggle="modal" data-target="#UploadAttachmentPopup" 
+                                                                        ng-click="viewUnitModel.uploadImageAction()">Add Image</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="product-type-section">
+                                            <div class="product-type">
+                                                <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'ORDU' ">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                            <label class="T7 " for="labelFirstName">FO #</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth" >
+                                                        <span class="T3">{{(viewUnitModel.unitDetailData.UnitInfo.FactoryOrderNo) ? viewUnitModel.unitDetailData.UnitInfo.FactoryOrderNo : '- - -'}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                            <label class="T7 " for="labelFirstName">Product type</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth" >
+                                                        <span class="T3">{{viewUnitModel.unitDetailData.UnitInfo.ProductType}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.DateIn && (viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' || (viewUnitModel.unitDetailData.UnitInfo.UnitType == 'COU' && viewUnitModel.unitDetailData.UnitInfo.Consignment))">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                            <label class="T7 " for="labelFirstName">{{ 'Date_stocked_in' | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth " >
+                                                        <span class="T3">{{viewUnitModel.unitDetailData.UnitInfo.DateIn}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.DateOut && (viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' || (viewUnitModel.unitDetailData.UnitInfo.UnitType == 'COU' && viewUnitModel.unitDetailData.UnitInfo.Consignment))">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                            <label class="T7 " for="labelFirstName">{{ 'Date_stocked_out' | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth " >
+                                                        <span class="T3">{{viewUnitModel.unitDetailData.UnitInfo.DateOut}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.Age && viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU'">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                            <label class="T7 " for="labelFirstName">Age (days)</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth " >
+                                                        <span class="T3">{{viewUnitModel.unitDetailData.UnitInfo.Age}}</span>
+                                                        <span class="T3" ng-if="viewUnitModel.unitDetailData.UnitInfo.Age>1">{{ 'Label_Days' | translate }}</span>
+                                                        <span class="T3" ng-if="viewUnitModel.unitDetailData.UnitInfo.Age<=1">{{ 'Label_Day' | translate }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.CategoryName && ((viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU') || (viewUnitModel.unitDetailData.UnitInfo.UnitType == 'COU' && viewUnitModel.unitDetailData.UnitInfo.Consignment))">
+                                                    <div class="labelWidth  part_general_column">
+                                                        <span>    
+                                                            <label class="T7 " for="labelFirstName">{{ 'SalesTaxGridItem_Category' | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div  class="fieldValueWidth " >
+                                                        <span class="T3">{{viewUnitModel.unitDetailData.UnitInfo.CategoryName}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row assign-tag-wrapper" ng-if="viewUnitModel.unitDetailData.UnitInfo.AssignedTags">
+                                                    <div class="labelWidth part_general_column">
+                                                        <span>
+                                                            <label class="T7" for="labelFirstName">Assigned tags</label>
+                                                        </span>
+                                                    </div>
+                                                    <div class="fieldValueWidth" >
+                                                        <ul class="tag-ul-list">
+                                                            <li class="tag-list" ng-repeat = "AssignedTagsRec in viewUnitModel.unitDetailData.UnitInfo.AssignedTags">
+                                                                <span class="tag-name-span">{{AssignedTagsRec}}</span>
+                                                            </li>
+                                                        </ul>
+                                                        <div ng-if="viewUnitModel.unitDetailData.UnitInfo.AssignedTags.length == 0">
+                                                            <span class="tag-name-span">- - -</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="location-section">
+                                                <div>
+                                                    <div class="row">
+                                                        <div class="labelWidth part_general_column"> 
+                                                            <span>    
+                                                                <label class="T7 " for="labelFirstName">{{ 'Label_Location' | translate }}</label>
+                                                            </span>
+                                                        </div>
+                                                        <div  class="fieldValueWidth" >
+                                                            <span class="T3">{{(viewUnitModel.unitDetailData.UnitInfo.Location) ? viewUnitModel.unitDetailData.UnitInfo.Location : '- - -'}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU' ">
+                                                        <div class="labelWidth part_general_column">
+                                                            <span>
+                                                                <label class="T7" for="labelFirstName">{{ 'ViewLabour_Taxable' | translate }}</label>
+                                                            </span>
+                                                        </div>
+                                                        <div>
+                                                            <span class="chk_tick" id="isTaxable" ng-class="{'chked': viewUnitModel.unitDetailData.UnitInfo.IsTaxable}">
+                                                                <i class="fa fa-check-square chksqure"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU' && viewUnitModel.unitDetailData.UnitInfo.IsTaxable">
+                                                        <div class="labelWidth part_general_column"> 
+                                                            <span>Applicable tax</span>
+                                                        </div>
+                                                        <div  class="fieldValueWidth" >
+                                                            <span class="T3">{{viewUnitModel.unitDetailData.UnitInfo.ApplicableTaxName}}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' ">
+                                                    <div class="labelWidth part_general_column">
+                                                        <span>
+                                                            <label class="T7" for="labelFirstName">{{ 'Publish_in_feeds' | translate }}</label>
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="chk_tick" id="isPublishInFeeds" ng-class="{'chked': viewUnitModel.unitDetailData.UnitInfo.IsPublishInFeeds}">                            
+                                                            <i class="fa fa-check-square chksqure"></i>
+                                                        </span>
+                                                    </div>                                                
+                                                </div>
+                                                
+                                                <div ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType=='COU'">
+                                                    <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.Status == 'Active' && !viewUnitModel.unitDetailData.UnitInfo.Consignment">
+                                                        <div class="part_general_column"> 
+                                                            <span>    
+                                                                <button class="button transfer-ownership-button hollow" ng-disabled="viewUnitModel.unitDetailData.UnitInfo.IsGenericUnit" ng-click = "viewUnitModel.showTransferModelWindow()">Transfer ownership</button>
+                                                            </span>
+                                                        </div>
+                                                        <div class="fieldValueWidth" >
+                                                            <span class="T3"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.Consignment">
+                                                        <div class="part_general_column consignment-container"> 
+                                                            <div>
+                                                                <span>Consignment</span>
+                                                            </div>
+                                                        </div>
+                                                        <div  class="fieldValueWidth" >
+                                                            <span class="T3"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.Consignment">
+                                                        <div class="labelWidth part_general_column"> 
+                                                            <span>{{ 'Label_SuggestedPrice' | translate }}</span>
+                                                        </div>
+                                                        <div  class="fieldValueWidth" >
+                                                            <span class="T3">{{viewUnitModel.unitDetailData.UnitInfo.SuggestedPrice | currency}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" ng-if="viewUnitModel.unitDetailData.UnitInfo.Consignment">
+                                                        <div class="labelWidth part_general_column"> 
+                                                            <span>{{'Label_AgreedPayout' | translate}}</span>
+                                                        </div>
+                                                        <div  class="fieldValueWidth" >
+                                                            <span class="T3">{{viewUnitModel.unitDetailData.UnitInfo.AgreedPayout | currency}}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <brp-button id-val="BrpArticleViewUnit" ng-if="viewUnitModel.unitDetailData.UnitInfo.VIN && viewUnitModel.unitDetailData.UnitInfo.IsBRPUnit && viewUnitModel.isBRPEnabled" vin-number="viewUnitModel.unitDetailData.UnitInfo.VIN" formatted-unit-details="viewUnitModel.unitDetailData.UnitInfo.FormattedUnitDetails"></brp-button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div id="Info_Notes" class="Info_Notes">
+                            <p class="actionRow T2">
+                                <span class="sectionText">{{ 'Label_Notes' | translate }}</span>
+                                <span class="ActionIcons">
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" title="Notes about the unit"></i>
+                                </span> 
+                            </p>
+                            <div class="row rowNotes">
+                                <div class="col-md-12 col-lg-12 subsectionGeneral">
+                                    <textarea ng-if="viewUnitModel.unitDetailData.UnitInfo.isNoteEditable" type="text" id="unitNotes" class="notesEdit" rows="4"
+                                    placeholder="Notes about the unit" ng-blur="viewUnitModel.UpdateUnitNotes()" 
+                                    ng-model="viewUnitModel.unitDetailData.UnitInfo.Notes" ng-focus="viewUnitModel.selectalltext()"></textarea>
+                                    <p ng-if="!viewUnitModel.unitDetailData.UnitInfo.isNoteEditable" ng-click="viewUnitModel.editNote($event)" ng-bind-html="viewUnitModel.checkForValidURL(viewUnitModel.unitDetailData.UnitInfo.Notes)"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="optional-unit-data">
+                            <c:OptionalUnitDataFields scopeVar="viewUnitModel" scopeMethod="viewUnitModel" optionalField="viewUnitModel.unitDetailData.UnitInfo" />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- For : You haven't added anything yet! -->
+                <!-- <div ng-if="viewUnitModel.VendorOrderHeader.VendorId!=null && viewUnitModel.VendorOrderHeader.VendorId != ''"> -->
+                <!-- For : You haven't added anything yet! -->
+                
+                <!-- ******************************************************* end of info section ********************************************************* -->
+                <!-- ******************************************************* header for Price & Cost Tracking section ******************************************************* -->
+                <div class="sectionHeader row" ng-show="viewUnitModel.unitDetailData != undefined && viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU'"
+                    style="margin-top: 48px"> <!-- Scroll Issue: style="margin-top: 48px": Added By Pooja  -->
+                    <div class="col-lg-6 col-md-6">
+                        <div class="fixedHeaderText">
+                            <span class="headerlabel">
+                                <i class="fa fa-angle-right"
+                                    ng-show="!viewUnitModel.displaySections.PriceAndCostTracking"
+                                    ng-Click="viewUnitModel.displaySections.PriceAndCostTracking = true">
+                                </i> 
+                                <i class="fa fa-angle-down"
+                                    ng-show="viewUnitModel.displaySections.PriceAndCostTracking"
+                                    ng-Click="viewUnitModel.displaySections.PriceAndCostTracking = false">
+                                </i> 
+                                <span class="divider">|</span>
+                                <span class="T2">{{viewUnitModel.LeftSideHeadingLables.PriceAndCostTracking}} {{ 'Price_cost_tracking' | translate }}</span>
+                            </span>
+                            <span class="ActionIcons pull-left " ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK'">
+                                <div class="dropdown selectDropdown checkboxDropdown">
+                                    <button class="btn dropdown-toggle" type="button" data-toggle="dropdown"> {{ 'Label_Actions' | translate }}
+                                        <span class="caret"></span>
+                                    </button>
+                                    <!-- START: Added by kajal - 11/17/2016 - #1293 -->
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a ng-click="viewUnitModel.addUnitPriceAndCostItem()"> {{ 'Add_Adjustment' | translate }}</a>
+                                        </li>
+                                        <li ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' && viewUnitModel.unitDetailData.UnitInfo.NITCAmount != null && viewUnitModel.unitDetailData.UnitInfo.NITCAmount != 0
+                                        			&& viewUnitModel.unitDetailData.UnitInfo.Status != 'Sold' && !viewUnitModel.unitDetailData.UnitInfo.NITCClaimedManually">
+                                            <a ng-click="viewUnitModel.openManuallyClaimNITCConfirmation()"> {{ 'Manually_claim_NITC' | translate }}</a>
+                                        </li>
+                                    </ul>
+                                    <!-- END: Added by kajal - 11/17/2016 - #1293 -->
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!-- ******************************************************* header for Price & Cost Tracking section ******************************************************* -->
+                <!-- ******************************************************* body for Price & Cost Tracking section ******************************************************* -->
+                <div class="PriceAndCostTrackingSectionClass" id="PriceAndCostTrackingSection" ng-show="viewUnitModel.unitDetailData != undefined && viewUnitModel.unitDetailData.UnitInfo.UnitType != 'COU'">
+                                                                                                                            <!-- class="PriceAndCostTrackingSectionClass": Added By Pooja 24 Jan. 2017 -->
+                    <div class="main_section row" ng-show="viewUnitModel.displaySections.PriceAndCostTracking">
+                        <div class="PriceAndCostTracking_SummaryClass" id="PriceAndCostTracking_Summary"> <!-- class="PriceAndCostTracking_SummaryClass": Added By Pooja 24 Jan. 2017 -->
+                            <p class="actionRow T2">
+                                <span class="sectionText">{{ 'Summary' | translate }}</span>
+                            </p>
+                            <div class="gid_container_Customer">
+                              
+                                <table class="table">
+                                                   
+                                                    <col width="20%"/>
+                                                    <col width="10%"/>
+                                                    <col width="10%" ng-show="GroupOnlyPermissions['Unit costs']['enabled']"/>
+                                                    <col width="10%" ng-show="GroupOnlyPermissions.Costs['read only']"/>
+                                                    <col width="10%" ng-show="GroupOnlyPermissions.Costs['read only']"/>
+                                                    <col width="10%"/>
+                                                    <col width="{{(viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.IsForeignExchangeCostingEnabled && viewUnitModel.unitDetailData.VendorInfo.IsForeignVendor) ? '10%' : '40%'}}"/>
+                                                    <col width="10%" ng-show="!(GroupOnlyPermissions.Costs['read only'])"/>
+                                                    <col width="10%" ng-show="!(GroupOnlyPermissions.Costs['read only'])"/>
+                                                    <thead>
+                                                        <tr class="tableHeader">
+                                                            <th class="padding5"></th>
+                                                            <th class="padding5 text-uppercase">{{ 'Pricing' | translate }} </th>
+                                                            <th class="padding5 text-uppercase" ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{ 'Costing' | translate }}</th>
+                                                            <th class="padding5 text-uppercase" ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{ 'Profit' | translate }}</th>
+                                                            <th></th>
+                                                            <th class="padding5 text-uppercase text-right" ng-show="GroupOnlyPermissions['Unit costs']['enabled'] && viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.IsForeignExchangeCostingEnabled && viewUnitModel.unitDetailData.VendorInfo.IsForeignVendor">{{ 'Costing' | translate }}<bp-flag currencyCode = "{{viewUnitModel.unitDetailData.VendorInfo.CurrencyCode}}"></bp-flag></th>
+                                                            <th ng-show="!(GroupOnlyPermissions.Costs['read only'])"></th>
+                                                            <th ng-show="!(GroupOnlyPermissions.Costs['read only'])"></th>
+                                                        </tr>
+                                                    </thead>
+                                                     <tbody>
+                                                        <tr >
+                                                            <td>{{ 'Base_unit' | translate }}</td>
+                                                            <td class="text-right priceAndCostSummary">{{viewUnitModel.BaseUnitTotalPrice | currency}}</td>
+                                                            <td class="text-right priceAndCostSummary" ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.BaseUnitTotalCost | currency}}</td>
+                                                            <td class="text-right priceAndCostSummary" ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.BaseUnitTotalProfit | currency}}</td>
+                                                            <td ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.BaseUnitProfitPercentage | number : 2}}%</td>
+                                                            <td class="text-right priceAndCostSummary" ng-show="GroupOnlyPermissions.Costs['read only'] && viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.IsForeignExchangeCostingEnabled && viewUnitModel.unitDetailData.VendorInfo.IsForeignVendor">{{viewUnitModel.BaseUnitTotalCostFx | currency}}</td>
+                                                            <td ng-show="!(GroupOnlyPermissions.Costs['read only'])"></td>
+                                                            <td ng-show="!(GroupOnlyPermissions.Costs['read only'])"></td>
+                                                            <td ng-show="!(GroupOnlyPermissions.Costs['read only'])"></td>
+                                                        </tr>
+                                                        <tr >
+                                                            <td>{{ 'Factory_options' | translate }}</td>
+                                                            <td class="text-right priceAndCostSummary">{{viewUnitModel.FactoryUnitTotalPrice | currency}}</td>
+                                                            <td class="text-right priceAndCostSummary" ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.FactoryUnitTotalCost | currency}}</td>
+                                                            <td class="text-right priceAndCostSummary" ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.FactoryUnitTotalProfit | currency}}</td>
+                                                            <td ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.FactoryUnitProfitPercentage | number : 2}}%</td>
+                                                            <td class="text-right priceAndCostSummary" ng-show="GroupOnlyPermissions.Costs['read only'] && viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.IsForeignExchangeCostingEnabled && viewUnitModel.unitDetailData.VendorInfo.IsForeignVendor">{{viewUnitModel.FactoryUnitTotalCostFx | currency}}</td>
+                                                            <td ng-show="!(GroupOnlyPermissions.Costs['read only'])"></td>
+                                                            <td ng-show="!(GroupOnlyPermissions.Costs['read only'])"></td>
+                                                            <td ng-show="!(GroupOnlyPermissions.Costs['read only'])"></td>
+                                                        </tr>
+                                                        <tr >
+                                                            <td>{{ 'Dealer_installed_options' | translate }}</td>
+                                                            <td class="text-right priceAndCostSummary">{{viewUnitModel.DealerUnitTotalPrice | currency}}</td>
+                                                            <td class="text-right priceAndCostSummary" ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.DealerUnitTotalCost | currency}}</td>
+                                                            <td class="text-right priceAndCostSummary" ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.DealerUnitTotalProfit | currency}}</td>
+                                                            <td ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.DealerUnitProfitPercentage | number : 2}}%</td>
+                                                            <td class="text-right priceAndCostSummary" ng-show="GroupOnlyPermissions.Costs['read only'] && viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.IsForeignExchangeCostingEnabled && viewUnitModel.unitDetailData.VendorInfo.IsForeignVendor">{{viewUnitModel.DealerUnitTotalCostFx | currency}}</td>
+                                                            <td ng-show="!(GroupOnlyPermissions.Costs['read only'])"></td>
+                                                            <td ng-show="!(GroupOnlyPermissions.Costs['read only'])"></td>
+                                                            <td ng-show="!(GroupOnlyPermissions.Costs['read only'])"></td>
+                                                        </tr>
+                                                        <tr >
+                                                            <td></td>
+                                                            <td class="text-right priceAndCostSummary border-top1g">{{viewUnitModel.BaseUnitTotalPrice + viewUnitModel.FactoryUnitTotalPrice + viewUnitModel.DealerUnitTotalPrice | currency}}</td>
+                                                            <td class="text-right priceAndCostSummary border-top1g" ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{viewUnitModel.BaseUnitTotalCost + viewUnitModel.FactoryUnitTotalCost +  viewUnitModel.DealerUnitTotalCost | currency}}</td>
+                                                            <td class="text-right priceAndCostSummary"></td>
+                                                            <td></td>
+                                                            <td class="text-right priceAndCostSummary border-top1g" ng-show="GroupOnlyPermissions['Unit costs']['enabled'] && viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.IsForeignExchangeCostingEnabled && viewUnitModel.unitDetailData.VendorInfo.IsForeignVendor">{{viewUnitModel.BaseUnitTotalCostFx + viewUnitModel.FactoryUnitTotalCostFx +  viewUnitModel.DealerUnitTotalCostFx | currency}}</td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                        <tr ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' && viewUnitModel.unitDetailData.UnitInfo.NITCAmount != null">
+                                                            <td class="NITCDetails">{{ 'NITC_amount' | translate }}</td>
+                                                            <td class="text-left priceAndCostSummary NITCDetails" colspan="3">{{viewUnitModel.unitDetailData.UnitInfo.NITCAmount | currency}}<span>{{viewUnitModel.unitDetailData.UnitInfo.NITCStatus}}</span></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                </div>
+                            </div>
+
+                        <div id="PriceAndCostTracking_Detail" class="PriceAndCostTracking_Detail">
+                            <p class="actionRow T2 ML20" > <!-- ML20: class added by Pooja 24 Jan. 2017 -->
+                                <span class="sectionText">{{ 'Detail' | translate }}</span>
+                                <i class="fa fa-plus cou_plus_icon" ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK'" ng-click="viewUnitModel.addUnitPriceAndCostItem(DealHeaderIndex);"></i><!-- Added by kajal 11/17/2016 - #1293 -->
+                            </p>
+                           <!--  <div class="row rowDetail" >
+                                Detail
+                            </div> -->
+                           <!--Starts here  -->
+                             <div > 
+                                 <div class="gid_container_Customer" ng-if="viewUnitModel.unitDetailData.PriceAndCostTrackingWrapperList.length > 0">  <!-- ng-if="viewUnitModel.unitDetailData.PriceAndCostTrackingWrapperList.length > 0": Added By Pooja 25 Jan. 2017 -->
+                              
+                                <table class="table table-rules" id="PriceAndCostTable">
+                                                    <col width="10%"/><!-- <col width="12%"/> -> <col width="11%"/> : Changed By pooja 24 Jan. 2017-->
+                                                    <col width="10%"/><!-- <col width="12%"/> -> <col width="11%"/> : Changed By pooja 24 Jan. 2017-->
+                                                    <col width="auto"/>
+                               
+                                                    <col width="15%"/>
+                                                    <col width="15%" ng-show="GroupOnlyPermissions['Unit costs']['enabled']"/>
+                                                    <col width="10%"/>
+                                                    <col width="5%"/>
+                                                    
+                                                    <thead>
+	                                                    <tr  class="tableHeader T3 C2">
+	                                                        <th>{{ 'Type' | translate }}</th>
+	                                                        <th>{{ 'Label_ref' | translate }}</th>
+	                                                        <th> {{ 'Part_Object_Item_Description' | translate }}</th>
+	                                                       <!-- <th class="text-center ">{{ 'Label_Quantity' | translate }}</th>
+	                                                        <th class="text-right ">{{ 'Label_Price' | translate }}</th>  -->
+	                                                        <th class="text-right ">{{ 'Label_Total_Price' | translate }}</th>
+	                                                        <th class="text-right " ng-show="GroupOnlyPermissions['Unit costs']['enabled']">{{ 'Total_Cost' | translate }}<bp-flag ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.IsForeignExchangeCostingEnabled && viewUnitModel.unitDetailData.VendorInfo.IsForeignVendor" currencyCode = "{{viewUnitModel.unitDetailData.VendorInfo.CurrencyCode}}" ></bp-flag></th>
+	                                                        <th class="text-right" > {{ 'Date' | translate }}</th>
+	                                                        <th>&nbsp;</th>
+	                                                    </tr>
+                                                    </thead>
+                                                     <tbody >
+                                                        <tr ng-repeat-start = "priceAndCost in viewUnitModel.unitDetailData.PriceAndCostTrackingWrapperList"
+                                                           
+                                                            id="PriceAndCost_item_row{{$index}}" ng-class="{'elementOverBackdrop' : viewUnitModel.editIndex == $index, 'odd': $index % 2 != 0}">
+                                                           
+                                                            <td class="ptp10" ng-click="viewUnitModel.editPriceAndCostGridItem($index)">{{priceAndCost.Type}}
+                                               
+                                                            </td>
+                                                            <td class="ptp10" ng-click="viewUnitModel.editPriceAndCostGridItem($index)">
+                                                                <span ng-if="{!IsLoadNewCustomerOrder}">
+                                                                    <a ui-sref="CustomerOrder_V2({Id: priceAndCost.CoHeaderId})" ng-if="priceAndCost.CoHeaderId != undefined &&
+                                                                    priceAndCost.CoHeaderId != null && priceAndCost.CoHeaderId != ''">
+                                                                        {{priceAndCost.RefNo}}
+                                                                    </a>
+                                                                </span>
+                                                                <span ng-if="{!!IsLoadNewCustomerOrder}">
+                                                                    <a ui-sref="CustomerOrder({Id: priceAndCost.CoHeaderId})" ng-if="priceAndCost.CoHeaderId != undefined &&
+                                                                    priceAndCost.CoHeaderId != null && priceAndCost.CoHeaderId != ''">
+                                                                        {{priceAndCost.RefNo}}
+                                                                    </a>
+                                                                </span>
+                                                                <span ng-if="priceAndCost.CoHeaderId == undefined ||
+                                                                priceAndCost.CoHeaderId == null || priceAndCost.CoHeaderId == ''">{{priceAndCost.RefNo}}</span>
+                                                            </td>
+                                                            <td class="ptp10" ng-click="viewUnitModel.editPriceAndCostGridItem($index)"><div class="pricecost-section-item-desc">{{priceAndCost.ItemDescription}}</div></td>
+                                                            <td  ng-click="viewUnitModel.editPriceAndCostGridItem($index)" class="ptp10 text-right" ng-show="!(viewUnitModel.PriceAndCost_editRow[$index].isEdit && viewUnitModel.isPriceAndTotalPriceEditable())">
+                                                            {{priceAndCost.TotalPrice | currency}}</td>
+                                                           <td class="ptp10 text-right price-input" 
+                                                            ng-show="viewUnitModel.PriceAndCost_editRow[$index].isEdit && viewUnitModel.isPriceAndTotalPriceEditable() && GroupOnlyPermissions['Unit costs']['enabled']"
+                                                            id="TotalPriceTd_{{$index}}">
+                                                                <custprice-only-input id-value="TotalPrice_{{$index}}"
+                                                                          class-value="form-control text-center"
+                                                                          max-length = "16" 
+                                                                          precision-length = "2" 
+                                                                          input-value = "priceAndCost.TotalPrice"
+                                                                          input-model = "viewUnitModel" 
+                                                                          validation-modal = "viewUnitModel.priceValidationModal"
+                                                                          validation-modal-key = "TotalPrice"
+                                                                          ng-keydown="viewUnitModel.numberOnly($event); viewUnitModel.totalPriceFieldRowTabOut($event, $index, false);"
+                                                                          blur-value="viewUnitModel.priceFieldRowBlur(event, $index, false)"/>
+                                                            </td> 
+                                                             <!-- START: Edited by kajal 3rd may 2017 -->
+                                                            <td class="ptp10 text-right" ng-show="((!(viewUnitModel.PriceAndCost_editRow[$index].isEdit && viewUnitModel.isPriceAndTotalPriceEditable()
+                                                             && priceAndCost.Type == 'Factory' )) || viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK') && GroupOnlyPermissions['Unit costs']['enabled']">
+                                                            {{priceAndCost.TotalCost | currency}}
+                                                        	<bp-flag ng-if="viewUnitModel.unitDetailData.UnitInfo.UnitType=='ORDU' && viewUnitModel.IsForeignExchangeCostingEnabled && viewUnitModel.unitDetailData.VendorInfo.IsForeignVendor" currencyCode = "{{viewUnitModel.unitDetailData.VendorInfo.CurrencyCode}}" ></bp-flag>
+                                                            </td>
+                                                             <td class="ptp10 text-right price-input" 
+                                                            ng-show="viewUnitModel.PriceAndCost_editRow[$index].isEdit && viewUnitModel.isPriceAndTotalPriceEditable() && priceAndCost.Type == 'Factory' && GroupOnlyPermissions.Costs['read only'] && viewUnitModel.unitDetailData.UnitInfo.UnitType != 'STOCK'"
+                                                            id="TotalCostTd_{{$index}}">
+                                                                <custprice-only-input id-value="TotalCost_{{$index}}"
+                                                                          class-value="form-control text-center"
+                                                                          max-length = "16" 
+                                                                          precision-length = "2" 
+                                                                          input-value = "priceAndCost.TotalCost"
+                                                                          input-model = "viewUnitModel" 
+                                                                          validation-modal = "viewUnitModel.priceValidationModal"
+                                                                          validation-modal-key = "TotalCost"
+                                                                          ng-keydown="viewUnitModel.numberOnly($event); viewUnitModel.totalCostFieldRowTabOut($event, $index);"
+                                                                          blur-value="viewUnitModel.priceFieldRowBlur(event, $index, false)"/>
+                                                            </td>  
+                                                            <!-- END: Edited by kajal 3rd may 2017 -->
+                                                            
+                                                            <td class="ptp10 text-right" ng-click="viewUnitModel.editPriceAndCostGridItem($index)" >{{priceAndCost.AdjustmentDate.replace('/', '-').replace('/','-')}}</td>
+                                                            <td><a href='' class="toggle-open text-right" ng-model="$parent.ToggleThis[$index]" ng-class="{'opened' : $parent.ToggleThis[$index]}" ng-click="ToggleAcc($index)"></a></td>
+      
+                                                        </tr>
+                                                        <tr class="detail-fold" ng-class="{'opened' : $parent.ToggleThis[$index]}" ng-repeat-end = "ng-repeat-end">
+                                                           <td colspan="7">
+                                                               <section class="tabular-data two-fold medium">
+                                                               <div class="column">
+                                                                  <dl ng-if="GroupOnlyPermissions['Unit costs']['enabled']">
+	                                                                  <dt>{{"Label_Profit_Amount" | translate}}</dt>
+	                                                                  <dd>{{priceAndCost.ProfitAmount | currency }}</dd>
+                                                                  </dl>
+                                                                  <dl ng-if="GroupOnlyPermissions['Unit costs']['enabled']">
+	                                                                  <dt>{{"Label_Profit_Percentage" | translate}}</dt>
+	                                                                  <dd>{{priceAndCost.ProfiltPercentage | number : 2}}%</dd>
+                                                                  </dl>
+                                                                  <dl class="no-border"  ng-if="priceAndCost.Type != 'Dealer' && priceAndCost.RefNo.startsWith('UA-')">
+	                                                                  <dt>{{"Label_Category" | translate}}</dt>
+	                                                                  <dd>{{priceAndCost.CategoryName}} <span ng-if="priceAndCost.CategoryName === null || priceAndCost.CategoryName === ''" class="grey-text">- - - - -</span></dd>
+                                                                  </dl>
+                                                               </div> 
+                                                               <div class="column">
+	                                                                 <dl ng-if="priceAndCost.Type == 'Dealer'">
+		                                                                  <dt>{{"Label_Quantity_Full" | translate}}</dt>
+		                                                                  <dd>{{priceAndCost.Quantity}}</dd>
+	                                                                  </dl>
+	                                                                 
+	                                                                  <dl ng-if="priceAndCost.Type == 'Dealer'">
+		                                                                  <dt>{{"Label_Price" | translate}}</dt>
+		                                                                  <dd>{{priceAndCost.Price | currency}}</dd>
+	                                                                  </dl> 
+	                                                                  
+	                                                                  <dl  ng-if="priceAndCost.Type != 'Dealer' && priceAndCost.RefNo.startsWith('UA-') && priceAndCost.VendorId != null">
+		                                                                  <dt>{{"Label_Vendor" | translate}}</dt>
+		                                                                  <dd>{{priceAndCost.VendorName}} <span ng-if="priceAndCost.VendorName === null || priceAndCost.VendorName === ''" class="grey-text">- - - - -</span></dd>
+	                                                                  </dl> 
+	                                                                  
+	                                                                  <dl ng-if="priceAndCost.Type != 'Dealer' && priceAndCost.RefNo.startsWith('UA-') && priceAndCost.VendorId != null">
+		                                                                  <dt>{{"Label_Vendor_RefNo" | translate}}</dt>
+		                                                                  <dd>{{priceAndCost.VendorReferenceNumber}}  <span ng-if="priceAndCost.VendorReferenceNumber === null || priceAndCost.VendorReferenceNumber === ''" class="grey-text">- - - - -</span></dd>
+	                                                                  </dl> 
+
+                                                                      <dl  ng-if="priceAndCost.Type != 'Dealer' && priceAndCost.RefNo.startsWith('UA-') && priceAndCost.CustomerId != null">
+                                                                        <dt>{{"Label_Customer" | translate}}</dt>
+                                                                        <dd>{{priceAndCost.CustomerName}} <span ng-if="priceAndCost.CustomerName === null || priceAndCost.CustomerName === ''" class="grey-text">- - - - -</span></dd>
+                                                                      </dl> 
+                                                                    
+                                                                      <dl ng-if="priceAndCost.Type != 'Dealer' && priceAndCost.RefNo.startsWith('UA-') && priceAndCost.CustomerId != null">
+                                                                        <dt>{{"Label_Customer_RefNo" | translate}}</dt>
+                                                                        <dd>{{priceAndCost.CustomerReferenceNumber}}  <span ng-if="priceAndCost.CustomerReferenceNumber === null || priceAndCost.CustomerReferenceNumber === ''" class="grey-text">- - - - -</span></dd>
+                                                                      </dl>
+
+                                                                      <dl ng-if="priceAndCost.Type != 'Dealer' && priceAndCost.RefNo.startsWith('UA-') && (priceAndCost.VendorId != null || priceAndCost.CustomerId != null)">
+                                                                        <dt>{{"Applicable_tax_Label" | translate}}</dt>
+                                                                        <dd>{{priceAndCost.ApplicableTaxName}}  <span ng-if="priceAndCost.ApplicableTaxName === null || priceAndCost.ApplicableTaxName === ''" class="grey-text">- - - - -</span></dd>
+                                                                      </dl>
+                                                                  </div>
+                                                               </section>
+                                                           </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                </div>
+                            </div>
+                            <!-- ends here -->
+                        </div>
+                    </div>
+                </div>
+                <!-- ******************************************************* body for Price & Cost Tracking section ******************************************************* -->
+                <!-- ******************************************************* header for Ordering section ******************************************************* -->
+                <!-- START: commented by kajal 30th april, 2017 #1940 -->
+                <div class="sectionHeader row" ng-show="viewUnitModel.unitDetailData != undefined && viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK'&& viewUnitModel.unitDetailData.UnitInfo.VendorId != null && viewUnitModel.unitDetailData.UnitInfo.VendorId != undefined && viewUnitModel.unitDetailData.UnitInfo.VendorId !=''">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="fixedHeaderText">
+                            <span class="headerlabel">
+                                <i class="fa fa-angle-right"
+                                    ng-show="!viewUnitModel.displaySections.Ordering"
+                                    ng-Click="viewUnitModel.displaySections.Ordering = true">
+                                </i> 
+                                <i class="fa fa-angle-down"
+                                    ng-show="viewUnitModel.displaySections.Ordering"
+                                    ng-Click="viewUnitModel.displaySections.Ordering = false">
+                                </i> 
+                                <span class="divider">|</span>
+                                <span class="T2 ">{{viewUnitModel.LeftSideHeadingLables.Ordering}}  {{ 'Label_Ordering' | translate }}</span>
+                            </span>
+                            
+                        </div>
+                    </div>
+                </div>
+                <!-- END: commented by kajal 30th april, 2017 #1940 -->
+                <!-- ******************************************************* header for Ordering section ******************************************************* -->
+                <!-- ******************************************************* body for Ordering section ******************************************************* -->
+                <!-- START: commented by kajal 30th april, 2017 #1940 -->
+                <div id="OrderingSection" ng-show="viewUnitModel.unitDetailData != undefined && viewUnitModel.unitDetailData.UnitInfo.UnitType == 'STOCK' && viewUnitModel.unitDetailData.UnitInfo.VendorId != null && viewUnitModel.unitDetailData.UnitInfo.VendorId != undefined && viewUnitModel.unitDetailData.UnitInfo.VendorId !=''">
+                    <div class="main_section row" ng-show="viewUnitModel.displaySections.Ordering">
+                        <div id="Ordering_Summary" class="Ordering_Summary">
+                            <p class="actionRow T2 MB30">
+                                            <span class="sectionText">{{ 'Summary' | translate }}</span>
+                             </p>
+                            <div class="row rowOrderingSummaryTop">
+                                <div class="col-lg-4 col-md-4 rowOrderingSummaryTopMain"> 
+                                    <div class="col-lg-2 col-md-2 OrderingSummaryImgDiv"> 
+                                        <img src="{!Application_Images}/UnitImage.png"/></div>
+                                    <div class="col-lg-10 col-md-10 vendorInfoDiv"> 
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.VendorName!=null && viewUnitModel.unitDetailData.VendorInfo.VendorName !=''">
+                                            <div class="col-lg-12 col-md-12 cardFields"> 
+                                                <span class="T3_1 vendorEmail">    
+                                                   {{viewUnitModel.unitDetailData.VendorInfo.VendorName}}
+                                                </span>
+                                            </div>
+                                        </div>      
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.VendorEmail!=null && viewUnitModel.unitDetailData.VendorInfo.VendorEmail !=''">
+                                            <div class="col-lg-4 col-md-4 cardFields"> 
+                                                <span>    
+                                                    <label class="T7 " for="labelFirstName">{{ 'Label_Email' | translate }}</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-8 col-md-8">   
+                                                <span class="T3_1 vendorEmail">{{viewUnitModel.unitDetailData.VendorInfo.VendorEmail}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.VendorPhone!=null && viewUnitModel.unitDetailData.VendorInfo.VendorPhone!=''"> 
+                                            <div class="col-lg-4 col-md-4 cardFields">
+                                                <span>    
+                                                    <label class="T7 " for="labelFirstName">{{ 'Label_Phone' | translate }}</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-8 col-md-8">
+                                                <span class="T3">{{viewUnitModel.unitDetailData.VendorInfo.VendorPhone | tel}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.VendorAccount!=null && viewUnitModel.unitDetailData.VendorInfo.VendorAccount!=''">
+                                            <div class="col-lg-4 col-md-4 cardFields">
+                                                <span>    
+                                                    <label class="T7 " for="labelFirstName">{{ 'Account' | translate }} #</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-8 col-md-8">
+                                                <span class="T3">{{viewUnitModel.unitDetailData.VendorInfo.VendorAccount}}</span>
+                                            </div>
+                                        </div>
+                                    
+                                    </div>
+                                </div>
+                                <div class="col-lg-8 col-md-8"></div>
+                            </div>
+                            <div class="row rowOrderingSummaryBottom">
+                                
+                                <div class="col-md-4 col-lg-4 subsectionGeneral">
+                                    <div class="ordering_summary">
+                                        
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.DateOrdered!=null && viewUnitModel.unitDetailData.VendorInfo.DateOrdered!=''">
+                                            <div class="col-lg-5 col-md-5 part_general_column">
+                                                <span>    
+                                                <label class="T7" for="labelFirstName">{{ 'Date_ordered' | translate }}</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-7 col-md-7">
+                                                <span class="T3">{{viewUnitModel.unitDetailData.VendorInfo.DateOrdered}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.UnitOrderNo!=null && viewUnitModel.unitDetailData.VendorInfo.UnitOrderNo!=''">
+                                            <div class="col-lg-5 col-md-5 part_general_column">
+                                                <span>
+                                                    <label class="T7" for="labelFirstName">{{ 'Unit_ordering' | translate }} #</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-7 col-md-7">
+                                                <span><a class="T6" ng-click="viewUnitModel.populateLeftSideHeadingLables()" ui-sref="ViewUnit({Id: viewUnitModel.unitDetailData.VendorInfo.ReferencedUnitId})">{{viewUnitModel.unitDetailData.VendorInfo.UnitOrderNo}}</a></span>
+                                            </div>
+                                        </div>
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.FactoryOrderNo!=null && viewUnitModel.unitDetailData.VendorInfo.FactoryOrderNo!=''"> 
+                                            <div class="col-lg-5 col-md-5 part_general_column">
+                                                <span>
+                                                    <label class="T7" for="labelFirstName">{{ 'Factory_Order' | translate }} #</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-7 col-md-7">
+                                                <span class="T3">{{viewUnitModel.unitDetailData.VendorInfo.FactoryOrderNo}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.VendorInvoiceNo!=null && viewUnitModel.unitDetailData.VendorInfo.VendorInvoiceNo!=''"> 
+                                            <div class="col-lg-5 col-md-5 part_general_column">
+                                                <span>
+                                                    <label class="T7" for="labelFirstName">{{ 'Invoice_Object_Display_Label' | translate }} #</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-7 col-md-7">
+                                                <span class="T3">{{viewUnitModel.unitDetailData.VendorInfo.VendorInvoiceNo}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.InvoiceDate!=null && viewUnitModel.unitDetailData.VendorInfo.InvoiceDate!=''">
+                                            <div class="col-lg-5 col-md-5 part_general_column">
+                                                <span>
+                                                    <label class="T7" for="labelFirstName">{{ 'Invoice_Page_Invoice_Date' | translate }}</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-7 col-md-7">
+                                                <span class="T3">{{viewUnitModel.unitDetailData.VendorInfo.InvoiceDate}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="row" ng-if="viewUnitModel.unitDetailData.VendorInfo.TotalInvoice!=null && viewUnitModel.unitDetailData.VendorInfo.TotalInvoice!=''">
+                                            <div class="col-lg-5 col-md-5 part_general_column">
+                                                <span>
+                                                    <label class="T7" for="labelFirstName">{{ 'Total_invoice' | translate }}</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-7 col-md-7">
+                                                <span class="T3">{{viewUnitModel.unitDetailData.VendorInfo.TotalInvoice | currency}}</span>
+                                                <bp-flag ng-if="viewUnitModel.IsForeignExchangeCostingEnabled && viewUnitModel.unitDetailData.VendorInfo.IsForeignVendor" currencyCode = "{{viewUnitModel.unitDetailData.VendorInfo.CurrencyCode}}"></bp-flag>
+                                            </div>
+                                        </div>
+                                        <div class="row" >
+                                            <div class="col-lg-5 col-md-5 part_general_column">
+                                                <span>
+                                                    <label class="T7" for="labelFirstName">{{ 'Manufactured' | translate }}</label>
+                                                </span>
+                                            </div>
+                                            <div class="col-lg-7 col-md-7">
+                                                <span class="T3">{{viewUnitModel.unitDetailData.VendorInfo.Manufactured}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- END: commented by kajal 30th april, 2017 #1940 -->
+                <!-- ******************************************************* body for Ordering section ******************************************************* -->
+                <!-- ******************************************************* header for Floorplan section ******************************************************* -->
+                <!-- START: commented by kajal 30th april, 2017 #1940 -->
+                <!-- END: commented by kajal 30th april, 2017 #1940 -->
+                <!-- ******************************************************* body for Floorplan section ******************************************************* -->
+                <!-- ******************************************************* header for History section ******************************************************* -->
+                <div class="sectionHeader row" ng-if="viewUnitModel.unitDetailData.ServiceOrdersList.length > 0 && GroupOnlyPermissions['Service job']['view']"><!-- Edited by kajal 30th april, 2017 #1940 -->
+                    <div class="col-lg-6 col-md-6">
+                        <div class="fixedHeaderText">
+                            <span class="headerlabel">
+                                <i class="fa fa-angle-right"
+                                    ng-show="!viewUnitModel.displaySections.History"
+                                    ng-Click="viewUnitModel.displaySections.History = true">
+                                </i> 
+                                <i class="fa fa-angle-down"
+                                    ng-show="viewUnitModel.displaySections.History"
+                                    ng-Click="viewUnitModel.displaySections.History = false">
+                                </i> 
+                                <span class="divider">|</span>
+                                <span class="T2">{{viewUnitModel.LeftSideHeadingLables.History}} {{ 'Service_history' | translate }}</span><!-- Edited by kajal 30th april, 2017 #1940 -->
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!-- ******************************************************* header for History section ******************************************************* -->
+                <!-- ******************************************************* body for History section ******************************************************* -->
+                <div class="HistorySectionClass" id="HistorySection" ng-if="viewUnitModel.unitDetailData.ServiceOrdersList.length > 0 && GroupOnlyPermissions['Service job']['view']"><!-- Edited by kajal 30th april, 2017 #1940 -->
+                    <div class="main_section row" ng-show="viewUnitModel.displaySections.History">
+                        <div id="History">
+                            <p class="actionRow T2 ML20"> <!-- ML20: class Added By Pooja 24 Jan. 2017 -->
+                                <span class="sectionText">{{ 'Service_history' | translate }}</span><!-- Edited by kajal 30th april, 2017 #1940 -->
+                                <!-- <span class="actionText"> {{ 'Label_Actions' | translate }}</span> -->
+                                <span class="ActionIcons">
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" title="Service history about the unit"></i>
+                                </span>
+                            </p>
+                            <!-- <div class="row rowHistory" >
+                                History
+                            </div> --> <!-- Commented By Pooja 24 Jan. 2017 -->
+
+                            <!-- Start: Added By Pooja 24 Jan. 2017 -->
+                            <!-- Start: UnitHistory SOHeader grid -->
+                            <div class="unitHistory_grid_container_class gid_container_Customer" id="unitHistory_grid_container_id"
+                                ng-if="viewUnitModel.unitDetailData.ServiceOrdersList.length > 0">
+                                <table class="table" id="unitHistory_SOHeader_grid_container_id">
+                                    <colgroup>
+                                        <col width="2%"/>
+                                        <col width="3%"/>
+                                        <col width="11%"/>
+                                        <col width="11%"/>
+                                        <col width="12%"/>
+                                        <col width="25%"/>
+                                        <col width="12%"/>
+                                        <col width="11%"/>
+                                        <col width="11%"/>
+                                        <col width="2%"/>
+                                    </colgroup>
+                                    <thead>
+                                        <tr class="tableHeader T3 C2">
+                                            <th></th>
+                                            <th></th>
+                                            <th>{{ 'CO_Object_Short_Display_Label' | translate }}#</th>
+                                            <th>{{ 'Label_Status' | translate }}</th>
+                                            <th>{{ 'Label_Type' | translate }}</th>
+                                            <th>{{ 'Label_Concern' | translate }}</th>
+                                            <th class="text-right">{{ 'Label_Total' | translate }}</th>
+                                            <th class="text-right">{{ 'Mileage_out' | translate }}</th>
+                                            <th class="text-center">{{ 'Last_modified' | translate }}</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody ng-class-even="'C2'" class="parentBody"  ng-repeat="SOHeader in viewUnitModel.unitDetailData.ServiceOrdersList"><!--  ng-repeat="" -->
+                                        <tr>
+                                            <td class="bgW"></td>
+                                            <td>
+                                                <i class="fa fa-wrench Plr5 FC7 F18"></i>
+                                            </td>
+                                            <td>
+                                                <span ng-if="{!IsLoadNewCustomerOrder}">
+                                                    <a ui-sref="CustomerOrder_V2({Id: SOHeader.COHeaderId})">{{SOHeader.COHeaderNumber}}</a>
+                                                </span>
+                                                <span ng-if="{!!IsLoadNewCustomerOrder}">
+                                                    <a ui-sref="CustomerOrder({Id: SOHeader.COHeaderId})">{{SOHeader.COHeaderNumber}}</a>
+                                                </span>
+                                            </td>
+                                            <td>{{SOHeader.WorkStatus}}</td>
+                                            <td>{{SOHeader.SOType}}</td>
+                                            <td>{{SOHeader.Concern}}</td>
+                                            <td class="text-right">{{SOHeader.Total | currency}}</td>
+                                            <td class="text-right">{{SOHeader.MileageOut}}</td>
+                                            
+                                            <td class="text-center">{{SOHeader.LastModified}}</td>
+                                            <td class="bgW"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                    </div>
+                    <!-- End: UnitHistory SOHeader grid -->
+                    <!-- End: Added By Pooja 24 Jan. 2017 -->
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+                <!-- ******************************************************* body for History section ******************************************************* -->
+                <!-- ******************************************************* header for Owners section ******************************************************* -->
+                <div class="sectionHeader row" ng-show="viewUnitModel.unitDetailData.OwnerList.length > 1 && viewUnitModel.unitDetailData.OwnerList.length !=undefined">
+                    <div class="col-lg-6 col-md-6">
+                        <div class="fixedHeaderText">
+                            <span class="headerlabel">
+                                <i class="fa fa-angle-right"
+                                    ng-show="!viewUnitModel.displaySections.Owners"
+                                    ng-Click="viewUnitModel.displaySections.Owners = true">
+                                </i> 
+                                <i class="fa fa-angle-down"
+                                    ng-show="viewUnitModel.displaySections.Owners"
+                                    ng-Click="viewUnitModel.displaySections.Owners = false">
+                                </i> 
+                                <span class="divider">|</span>
+                                <span class="T2">{{viewUnitModel.LeftSideHeadingLables.Owners}} {{ 'Owners' | translate }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!-- ******************************************************* header for Owners section ******************************************************* -->
+                <!-- ******************************************************* body for Owners section ******************************************************* -->
+                <div id="OwnersSection" ng-show="viewUnitModel.unitDetailData.OwnerList.length > 1 && viewUnitModel.unitDetailData.OwnerList.length !=undefined">
+                    <div class="main_section row" ng-show="viewUnitModel.displaySections.Owners">
+                        <div id="Owners">
+                            <p class="actionRow T2">
+                                <span class="sectionText">{{ 'Owners' | translate }}</span>
+                                <!-- <span class="actionText"> {{ 'Label_Actions' | translate }}</span> -->
+                                <span class="ActionIcons">
+                                    <i class="fa fa-question-circle" data-toggle="tooltip" title="Owners of the unit"></i><!--  title="{{ViewPart.helpText['General']}}" -->
+                                </span> 
+                            </p>
+                            <div class="row rowOwners" >
+                                
+                                <!-- START: OWNERS section -->
+                                <div class="main_section_COU row" id="Owners_Items">
+                                    <div ng-show="viewUnitModel.unitDetailData.OwnerList.length > 1 && viewUnitModel.unitDetailData.OwnerList.length !=undefined">
+                                        <div class="gid_container_Customer " id="VO_Order_block_grid_container">
+                                            <table class="table unitOwnersTable" id="UnitOwnersItem_Grid">
+                                                 <col width="2%"/>
+                                                 <col width="3%"/>
+                                                 <col width="16%"/>
+                                                 <col width="33%"/>
+                                                 <col width="25%"/>
+                                                 <col width="25%"/>
+                                                 <col width="1%"/>
+                                                 <tr  class="tableHeader T3 C2">
+                                                     <th></th>
+                                                     <th></th>
+                                                     <th>{{ 'Label_Date' | translate }}</th>
+                                                     <th class="text-center ">{{ 'Unit_ID' | translate }}</th>
+                                                     <th>{{ 'Label_Source' | translate }}</th>
+                                                     <th>{{ 'Label_Customer' | translate }}</th>
+                                                     <th></th>
+                                                 </tr>
+                                                 <tbody ng-repeat="owners in viewUnitModel.unitDetailData.OwnerList track by $index"><!-- "owners in viewUnitModel.OwnersData track by $index" ng-init="AOHeaderIndex = $index" > -->
+                                                     <tr class="clickable_row" id="rowGroup{{$index}}" rel="vogroup_item_row{{$index}}_edit"  
+                                                           ng-class-even="'C2'">
+                                                         
+                                                         <td class="startEndTd"></td>
+                                                         <td></td>
+                                                         <td id="VO_Group_block_grid_container_tbody_tr_td_2_{{$index}}" class="T7 ">
+                                                              {{ owners.CreatedDate }}
+                                                         </td>
+                                                         <td id="VO_Group_block_grid_container_tbody_tr_td_3_{{$index}}" class="T7 text-center">
+                                                             <span ng-if="$index==0" class="T3">{{ owners.UnitId }}</span>
+                                                             <span ng-if="$index!=0" class="inactiveOwners">
+                                                                 <a ui-sref="ViewUnit({Id: owners.Id})" id="unit_id_link" class="T6">
+                                                                     {{ owners.UnitId }}
+                                                                 </a>
+                                                             </span>
+                                                         </td>
+                                                         <td id="VO_Group_block_grid_container_tbody_tr_td_4_{{$index}}" class="T7 ">
+                                                             {{owners.Source}}
+                                                         </td>
+                                                         <td id="VO_Group_block_grid_container_tbody_tr_td_5_{{$index}}" class="T7">
+                                                             {{ owners.CustomerName}}
+                                                         </td>
+                                                         <td class="startEndTd"></td>
+                                                     </tr>
+                                                     
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                        
+                        <!-- END: OWNERS section -->
+                               
+                            </div> 
+                        </div>
+                    </div>
+                </div>
+                <!-- ******************************************************* body for Owners section ******************************************************* -->
+                <!-- For : You haven't added anything yet! -->
+                <!-- </div> -->
+                <!-- For : You haven't added anything yet! -->
+                <div class="modal fade CreateGroupModal CreateFeeModal setCashDrawerModalWindow bp-cp-modal-dialog transfer-owner-ship-container" id="transferOwnership" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+			        <div class="modal-dialog" role="document">
+			            <div class="modal-content">
+			                <div class="modal-header">
+			                    <button type="button" class="close CreateGroupModalCloseIcon" data-dismiss="modal" aria-label="Close">
+			                    <span aria-hidden="true">
+			                        <i class="bp-icons bp-font-12 bp-white-font bp-fw-100 closeiconWidth MT15">close</i>
+			                    </span>
+			                    </button>
+			                </div>
+			                <div class="modal-body">
+							    <div class="userGroupInfoArea">
+							       	<div class="heading">Transfer ownership</div>
+			                        <p class="label-text">Search for a customer</p>
+							    	<div>
+							    		<autocompletev2 id="autocompletev2Id" template-name="Customer" section-name="transferOwnership" section-id="transferOwnership" selected-customer-id = "{{viewUnitModel.unitDetailData.UnitInfo.Customer}}" default-value="viewUnitModel.transferOwnershipJson.CustomerName"/>
+							    	</div>
+							    	<footer>
+							    		<button class="button subtle" ng-click="viewUnitModel.transferOwnershipclosePopup();">Cancel</button>
+							    		<button class="button secondary" ng-click="viewUnitModel.transferUnitOwnership()" ng-disabled = "!viewUnitModel.transferOwnershipJson.CustomerName">Confirm transfer</button>
+							    	</footer>
+							    </div>
+							</div>
+						</div>
+					</div>
+				</div>
+                <div class="bottomGreyDiv"></div>
+            </div>
+        <brp-article-modal-window id-val="BrpArticleViewUnit" ng-if="viewUnitModel.brpArticleModalWindowPayload" modal-window-payload="viewUnitModel.brpArticleModalWindowPayload" cancel-btn-action="viewUnitModel.hideModalWindow('BrpArticleViewUnit');"></brp-article-modal-window>   
+        </div>
+        <!-- START: Manually Claim NITC confirmation block -->
+	    <div class="ConfirmBox-overlayNew" id="ManuallyClaimNITCConfirmBox">
+	        <div>
+	            <div class="modal-content">
+	                <div class="modal-header">
+	                    <button type="button" class="close" aria-label="Close"
+	                        ng-click="viewUnitModel.closeManuallyClaimNITCConfirmation()">
+	                        <span aria-hidden="true">&times;</span>
+	                    </button>
+	                    <h4 class="modal-title">{{ 'Manually_claim_NITC' | translate }}</h4>
+	                </div>
+	                <div class="modal-body">
+	                    <p>{{ 'Continuing_will_force_the_Notional_Input_Tax_Credit_to_be_claimed_now' | translate }}.</p>
+	                    <p>{{ 'Process_is_not_reversible' | translate }}.</p>
+	                    <br /> {{ 'Are_you_sure_you_want_to_continue' | translate }}?
+	                </div>
+	                <div class="modal-footer">
+	                    <button type="button" class="btn btn-primary"
+	                        ng-click="viewUnitModel.processManuallyClaimNITC()">{{ 'Label_Yes' | translate }}</button>
+	                    <button type="button" class="btn btn-default"
+	                        ng-click="viewUnitModel.closeManuallyClaimNITCConfirmation()">{{ 'Label_No' | translate }}</button>
+	                </div>
+	            </div>
+	
+	        </div>
+	    </div>
+	    <!-- END: Manually Claim NITC confirmation block -->
+        <div class="modal modal-fullscreen fade backdropsSearchFilter" ng-click="viewUnitModel.savePriceAndCostGridItem();" ></div>
+        <div class="fadein" ui-view="AddUnitPriceAndCostView" autoscroll='false'></div> 
+        <div class="fadein viewA" ui-view="EditUnit" autoscroll='false'></div>
+        <div class="fadein viewA" ui-view="UnitReceiving" autoscroll='false'></div>
+        </div>
+        </div>
+        <div class="LoadingDiv" ng-show="viewUnitModel.isLoading || M_UO.isLoading">
+            <div class="loadingIconContainer">
+                <c:BPLoading />
+            </div>
+        </div>
+        <full-page-modal id-value="carousel-modal" ng-class-value="{'carousel-modal': true}" close-action="viewUnitModel.closeCarouselModal()">
+            <bp-ng-carousel image-list="viewUnitModel.unitDetailData.ImageList"
+                current-viewing-img-id="viewUnitModel.currentViewingImgDocId" current-viewing-img-url="viewUnitModel.currentViewingImgURL">
+            </bp-ng-carousel>
+        </full-page-modal>
+        <bp-ng-modal-window id-val="bulkOrderModalWindow" disable-primary-action = "viewUnitModel.numberOfUnits > 50" mobal-window-payload="viewUnitModel.bulkOrderModalWindowPayload" cancel-btn-action="viewUnitModel.hideModalWindow('bulkOrderModalWindow');" primary-btn-action="viewUnitModel.loadBulkData()">
+            <p class="delete-info" ng-if="!viewUnitModel.isAllowBulkOrdering && viewUnitModel.bulkDataUploadResult.responseStatus != 'Error'">
+                {{ 'Cannot_bulk_order_when_a_VIN_or_Stock_number_has_been_specified' | translate }} 
+            </p>
+            <div class="delete-info c-sub-heading banner-container coral-light2 MB20" ng-if="viewUnitModel.bulkDataUploadResult.responseStatus == 'Error' && viewUnitModel.isAllowBulkOrdering">
+                <i class="bp-icons bp-font-18 bp-red-font MT-3">warningFilled</i>
+                <div>
+                    <p>{{viewUnitModel.bulkDataUploadResult.response}}</p>
+                </div>
+            </div>
+            <div  class="delete-info" ng-if="viewUnitModel.isAllowBulkOrdering">
+                <p ng-if = "viewUnitModel.bulkDataUploadResult.responseStatus != 'Error'"> {{'You_are_ordering_the_following_unit' | translate}} </p>
+                <div class="unit-info">
+                    <span>{{(viewUnitModel.unitDetailData.UnitInfo.IsNewUnit) ? 'New' : 'Old'}}</span>
+                    <span>{{viewUnitModel.unitDetailData.UnitInfo.MakeName}}</span>
+                    <span>{{viewUnitModel.unitDetailData.UnitInfo.ModelName}}</span>
+                    <span>{{viewUnitModel.unitDetailData.UnitInfo.SubModelName}}</span>
+                    <span>{{viewUnitModel.unitDetailData.UnitInfo.Year}}</span>
+                    <span><span ng-if="viewUnitModel.unitDetailData.UnitInfo.ExteriorColour" class="comma">,</span>{{viewUnitModel.unitDetailData.UnitInfo.ExteriorColour}}</span>
+                </div>
+                <div class="input-container">
+                    <label>{{ 'How_many_of_this_unit_are_you_ordering' | translate }}?</label>
+                    <numbers-only 
+                        class-value="c-secondary-input  c-input-search"
+                        max-length="50"
+                        include-blank="true"
+                        input-model-value="viewUnitModel.numberOfUnits"
+                        id-value="bulkHandlingInputId" 
+                        disabled-value ="viewUnitModel.bulkDataUploadResult.responseStatus == 'Error'"
+                    />
+                    <span ng-if = "viewUnitModel.numberOfUnits > 50" class="error-message">{{'Cannot_order_more_than_50_units' | translate}}</span>
+                </div>
+            </div>
+        </bp-ng-modal-window>
+</apex:page>

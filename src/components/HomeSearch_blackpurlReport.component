@@ -1,0 +1,61 @@
+<apex:component>
+    <div class="select-report-header">
+        <h3 class="select-report">Select a report from the list or <a class="bp-blue-font bp-blue-hover" ng-click="HomeSearchGrid.showFilterForm(); HomeSearchGrid.setCreateAndViewReport(true)">create a new report</a></h3>
+        <div class="dashboard first-column">
+            <div class="section" ng-repeat="blackpurlReportKey in HomeSearchGrid.blackpurlReportsOrderFirstColumn">
+                <h3>{{blackpurlReportKey}}</h3>
+                <ul>
+                    <li ng-repeat="commonfilterval in HomeSearchGrid.blackpurlReportsList[blackpurlReportKey]" ng-mouseover="show = true" ng-mouseleave="show = false" class="parent-list">
+                        <i class="bp-icons bp-font-14 bp-blue-font report-scheduling-cal-icon-common" ng-if="commonfilterval.ScheduleReportObj.IsReportScheduled" title="{{HomeSearchGrid.getScheduledReportTooltip(commonfilterval)}}" data-toggle="tooltip">calendarFilled</i>
+                        <div class="filter-type-label" ng-click="HomeSearchGrid.applySavedFilter(commonfilterval, 'Common', 'Common'); HomeSearchGrid.setCreateAndViewReport(true);">{{commonfilterval.FilterLabel}}</div>
+                        <span class="col-md-1 col-sm-1 P0 dropdown-toggle" data-toggle="dropdown" role="button" ng-show="show"><i class="fa fa-cog "></i></span>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a class="T7" ng-class="{'bp-disabled': commonfilterval.ScheduleReportObj.showLoading}" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && commonfilterval.ScheduleReportObj.IsReportSchedulable" ng-click="HomeSearchGrid.scheduleReport(commonfilterval)">{{(commonfilterval.ScheduleReportObj.IsReportScheduled ? 'Edit_report_scheduling' : 'Report_scheduling') | translate }}</a>
+                                <i class="spinner-loading-icon" ng-if="commonfilterval.ScheduleReportObj.showLoading">
+                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200px" height="200px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+                                        <circle cx="50" cy="50" fill="none" stroke="#3384FF" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138">
+                                            <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50" keyTimes="0;1"></animateTransform>
+                                        </circle>
+                                    </svg>
+                                </i>
+                            </li>
+                            <li ng-click="HomeSearchGrid.deleteScheduledReport(commonfilterval.Id, 'Common', commonFilter.FilterLabel)" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && commonfilterval.ScheduleReportObj.IsReportScheduled">
+                                <a class="T7">{{ 'Delete_report_scheduling' | translate }}</a>
+                            </li>
+                            <li><a class="T7" ng-click="HomeSearchGrid.renameOrCopyCustomFilter(commonfilterval.Id, commonfilterval.FilterLabel, true)">{{ 'Copy' | translate }}</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="dashboard second-column">
+            <div class="section" ng-repeat="blackpurlReportKey in HomeSearchGrid.blackpurlReportsOrderSecondColumn">
+                <h3>{{blackpurlReportKey}}</h3>
+                <ul>
+                    <li ng-repeat="commonfilterval in HomeSearchGrid.blackpurlReportsList[blackpurlReportKey]" ng-mouseover="show = true" ng-mouseleave="show = false" class="parent-list">
+                        <i class="bp-icons bp-font-14 bp-blue-font report-scheduling-cal-icon-common" ng-if="commonfilterval.ScheduleReportObj.IsReportScheduled" title="{{HomeSearchGrid.getScheduledReportTooltip(commonfilterval)}}" data-toggle="tooltip">calendarFilled</i>
+                        <div class="filter-type-label" ng-click="HomeSearchGrid.applySavedFilter(commonfilterval, 'Common', 'Common'); HomeSearchGrid.setCreateAndViewReport(true);">{{commonfilterval.FilterLabel}}</div>
+                        <span class="col-md-1 col-sm-1 P0 dropdown-toggle" data-toggle="dropdown" role="button" ng-show="show"><i class="fa fa-cog "></i></span>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a class="T7" ng-class="{'bp-disabled': commonfilterval.ScheduleReportObj.showLoading}" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && commonfilterval.ScheduleReportObj.IsReportSchedulable" ng-click="HomeSearchGrid.scheduleReport(commonfilterval)">{{(commonfilterval.ScheduleReportObj.IsReportScheduled ? 'Edit_report_scheduling' : 'Report_scheduling') | translate }}</a>
+                                <i class="spinner-loading-icon" ng-if="commonfilterval.ScheduleReportObj.showLoading">
+                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200px" height="200px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+                                        <circle cx="50" cy="50" fill="none" stroke="#3384FF" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138">
+                                            <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50" keyTimes="0;1"></animateTransform>
+                                        </circle>
+                                    </svg>
+                                </i>
+                            </li>
+                            <li ng-click="HomeSearchGrid.deleteScheduledReport(commonfilterval.Id, 'Common', commonFilter.FilterLabel)" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && commonfilterval.ScheduleReportObj.IsReportScheduled">
+                                <a class="T7">{{ 'Delete_report_scheduling' | translate }}</a>
+                            </li>
+                            <li><a class="T7" ng-click="HomeSearchGrid.renameOrCopyCustomFilter(commonfilterval.Id, commonfilterval.FilterLabel, true)">{{ 'Copy' | translate }}</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</apex:component>

@@ -13,6 +13,9 @@ global without sharing class GlobalSearchCtrl {
     global static String getGlobalSearchResult(String searchQueryJson) {
         searchQueryJson = BPUtility.getDecodedString(searchQueryJson);
         GlobalSearchResultsWrapper.GlobalQueryJSON globalQueryJSON = (GlobalSearchResultsWrapper.GlobalQueryJSON)System.JSON.deserialize(searchQueryJson, GlobalSearchResultsWrapper.GlobalQueryJSON.class);
+        globalQueryJSON.FromIndex = globalQueryJSON.FromIndex != null ? globalQueryJSON.FromIndex : 0;
+        globalQueryJSON.ToIndex = globalQueryJSON.ToIndex != null ? globalQueryJSON.ToIndex : MAX_RECORDS_TO_DISPLAY;
+        
         GenericSearchUtil.QueryJSON queryJSON= new GenericSearchUtil.QueryJSON();
         queryJSON.SearchText = globalQueryJSON.GlobalSearchText;
         queryJSON.SearchableObjects = '';
@@ -20,34 +23,51 @@ global without sharing class GlobalSearchCtrl {
         
         String objectAPIName = '';
         
-        Set<String> objectNameSetToSearch = displayObjectNameToObjectAPINameMap.keySet();
+        Set<String> objectNameSetToSearch = String.isBlank(globalQueryJSON.GlobalSearchKeyword) ? displayObjectNameToObjectAPINameMap.keySet() : 
+                                                new Set<String>(globalQueryJSON.GlobalSearchKeyword.split(','));
         List<String> objectNameListToSearch = HomeSearchUtil.filterListBasedOnPermissions(new List<String>(objectNameSetToSearch), HomeSearchUtil.objectNameToPermissionNameMap);       
-        for(String objectName : objectNameListToSearch) {
-            if(objectName != 'People' && (String.isBlank(globalQueryJSON.GlobalSearchKeyword) || (String.isNotBlank(globalQueryJSON.GlobalSearchKeyword) && 
-                            (((globalQueryJSON.GlobalSearchKeyword).equalsIgnoreCase(objectName) || (displayObjNameDuplicateObjNameMap.containsKey(globalQueryJSON.GlobalSearchKeyword) && objectName == displayObjNameDuplicateObjNameMap.get(globalQueryJSON.GlobalSearchKeyword))))))) {
+        for(String objectName: objectNameListToSearch) {
+            if(objectName != 'People') {
                 objectAPIName = displayObjectNameToObjectAPINameMap.get(objectName);
                 queryJSON.SearchableObjects += objectAPIName + ',';
-                
-                if(String.isNotBlank(globalQueryJSON.GlobalSearchKeyword) && objectName == 'Customers') {
-                    queryJSON.FilterValues.add(new GenericSearchUtil.FilterJSON('Is_Customer__c', '=', 'true', 'Account'));
-                } else if(String.isNotBlank(globalQueryJSON.GlobalSearchKeyword) && objectName == 'Vendors') {
-                    queryJSON.FilterValues.add(new GenericSearchUtil.FilterJSON('Is_Vendor__c', '=', 'true', 'Account'));
+
+                // adding filters
+                if(String.isNotBlank(globalQueryJSON.GlobalSearchKeyword)) {
+                    if(objectNameSetToSearch.contains('Customers') && objectNameSetToSearch.contains('Vendors')) {
+                        queryJSON.FilterValues.add(new GenericSearchUtil.FilterJSON(null, null, '(Is_Customer__c = true OR Is_Vendor__c = true)', 'Account'));
+                    } else if(objectName == 'Customers') {
+                        queryJSON.FilterValues.add(new GenericSearchUtil.FilterJSON('Is_Customer__c', '=', 'true', 'Account'));
+                    } else if(objectName == 'Vendors') {
+                        queryJSON.FilterValues.add(new GenericSearchUtil.FilterJSON('Is_Vendor__c', '=', 'true', 'Account'));
+                    } else if(objectName == 'Inventory Unit') {
+                        queryJSON.FilterValues.add(new GenericSearchUtil.FilterJSON('Unit_Type__c', '=', '\'STOCK\'', 'Customer_Owned_Unit__c'));
+                    } else if(objectName == 'Customer Unit') {
+                        queryJSON.FilterValues.add(new GenericSearchUtil.FilterJSON('Unit_Type__c', '=', '\'COU\'', 'Customer_Owned_Unit__c'));
+                    } else if(objectName == 'Order Unit') {
+                        queryJSON.FilterValues.add(new GenericSearchUtil.FilterJSON('Unit_Type__c', '=', '\'ORDU\'', 'Customer_Owned_Unit__c'));
+                    }
                 }
-               
+
                 if(String.isNotBlank(globalQueryJSON.GlobalSearchKeywordKey) 
                     && (globalQueryJSON.GlobalSearchKeywordKey.equalsIgnoreCase('skit')
-                        || globalQueryJSON.GlobalSearchKeywordKey.equalsIgnoreCase('Service Kit'))){
+                        || globalQueryJSON.GlobalSearchKeywordKey.equalsIgnoreCase('Service Kit'))) {
                         queryJSON.FilterValues.add(new GenericSearchUtil.FilterJSON('Service_Kit__c', '=', 'true', 'Kit_Header__c'));
                 }
             }
         }
-        queryJSON.SearchableObjects = queryJSON.SearchableObjects.subString(0, queryJSON.SearchableObjects.length() - 1);
-        List<GenericSearchUtil.SearchedSObjectWrapper> sortedResults = GenericSearchCtrl.getGobalSearchResults(queryJSON, globalQueryJSON.GlobalSearchKeyword);
-        List<SObject> searchedResultsList = new List<SObject>();
-        for(Integer counter=0; counter<MAX_RECORDS_TO_DISPLAY && counter<sortedResults.size() ; counter++){
-            searchedResultsList.add(sortedResults[counter].SearchedObj);
+        
+        GlobalSearchResultsWrapper globalSearchResults;
+        if(String.isNotBlank(queryJSON.SearchableObjects)) {
+            queryJSON.SearchableObjects = queryJSON.SearchableObjects.subString(0, queryJSON.SearchableObjects.length() - 1);
+            List<GenericSearchUtil.SearchedSObjectWrapper> sortedResults = GenericSearchCtrl.getGobalSearchResults(queryJSON, globalQueryJSON.GlobalSearchKeyword);
+            List<SObject> searchedResultsList = new List<SObject>();
+            for(Integer counter=globalQueryJSON.FromIndex; counter<globalQueryJSON.ToIndex && counter<sortedResults.size(); counter++) {
+                searchedResultsList.add(sortedResults[counter].SearchedObj);
+            }
+            globalSearchResults = new GlobalSearchResultsWrapper(sortedResults.size(), searchedResultsList, objectNameSetToSearch);
+        } else {
+            globalSearchResults = new GlobalSearchResultsWrapper(0, new List<sObject>(), objectNameSetToSearch);
         }
-        GlobalSearchResultsWrapper globalSearchResults = new GlobalSearchResultsWrapper(sortedResults.size(), searchedResultsList);
         return BPUtility.getEncodedString(System.JSON.serialize(globalSearchResults, true));
     }
     
@@ -82,7 +102,7 @@ global without sharing class GlobalSearchCtrl {
             }*/
             
             if(objectName != 'People' && (String.isBlank(searchKeyword) || (String.isNotBlank(searchKeyword) && 
-                            ((searchKeyword.equalsIgnoreCase(objectName) || (displayObjNameDuplicateObjNameMap.containsKey(searchKeyword) && objectName == displayObjNameDuplicateObjNameMap.get(searchKeyword))))))) {
+                            (searchKeyword.equalsIgnoreCase(objectName))))) {
                 objectAPIName = displayObjectNameToObjectAPINameMap.get(objectName);
                 query = 'SELECT '; 
                 for(String fieldsName : HomeSearchUtil.searchableObjectToFieldsMap.get(objectAPIName)){
@@ -207,14 +227,16 @@ global without sharing class GlobalSearchCtrl {
                                                                                                     //'Customer Payments' => 'CO_Invoice_Payment__c',
                                                                                                     'Vendor Orders'     => 'Vendor_Order_Header__c',
                                                                                                     'Vendor Return' => 'Return_VO_Header__c',
+                                                                                                    'Vendor Credit' => 'Return_CR_Header__c',
                                                                                                     'Vendor Receivings' => 'Vendor_Receiving_Header__c',
                                                                                                     'Vendor Invoices'   => 'Vendor_Invoicing_Header__c',
                                                                                                     'Item Categories'   => 'Category__c',
                                                                                                     'Price Levels'      => 'Price_Level__c',
                                                                                                     'Sales Taxes'       => 'Sales_Tax__c',
-                                                                                                    'Inventory Unit'   => 'Customer_Owned_Unit__c' //Added by Pooja 8 Dec. 2016
+                                                                                                    'Inventory Unit'   => 'Customer_Owned_Unit__c',
+                                                                                                    'Contact'          => 'Contact',
+                                                                                                    'Customer Unit'   => 'Customer_Owned_Unit__c',
+                                                                                                    'Order Unit'   => 'Customer_Owned_Unit__c'
                                                                                                 };
-    
-    public static Map<String, String> displayObjNameDuplicateObjNameMap = new Map<String, String>{'Vendor Orders' => 'Vendor Return'
-                                                                                                };
+     
 }

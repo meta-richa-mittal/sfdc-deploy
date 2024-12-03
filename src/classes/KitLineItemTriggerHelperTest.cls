@@ -6,6 +6,10 @@
 **/
 @isTest
 private class KitLineItemTriggerHelperTest {
+	@testSetup
+    private static void setupTestData() {
+		TestDataFactory.disableFLSChecks();
+   }
 
     static testMethod void processBeforeInsertTest() {
         Account vendor = TestUtil.createVendor(true, 'Test Vendor');

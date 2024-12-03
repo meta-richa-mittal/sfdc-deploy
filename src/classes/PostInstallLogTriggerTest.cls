@@ -3,6 +3,7 @@ public without sharing class PostInstallLogTriggerTest {
 
     @TestSetup
     public static void createTestData() {
+        TestDataFactory.disableFLSChecks();
         Post_Install_Log__c postInstallLogRec = new Post_Install_Log__c();  
         postInstallLogRec.Status__c = 'Pending';
         postInstallLogRec.Script_Name__c = 'Test post install Script';

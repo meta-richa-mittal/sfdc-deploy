@@ -1,0 +1,23 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="MergeCustomerCtrl" sidebar="false" 
+	applyHtmlTag="false" applyBodyTag="false" contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('CustomerMergeServices', ['$q', function ($q) {
+            return {
+                getCustomerOpenARBalance: function(customerId) {
+                    return RemoteActionService($q, '{!$RemoteAction.MergeCustomerCtrl.getCustomerOpenARBalance}', customerId);
+                },
+                mergeCustomers: function(mergeJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.MergeCustomerCtrl.mergeCustomers}', mergeJson);
+                },
+                getCustomerRelatedRecordsSummary: function(customerId) {
+                    return RemoteActionService($q, '{!$RemoteAction.MergeCustomerCtrl.getCustomerRelatedRecordsSummary}', customerId);
+                },
+                getCustomerDetailsById: function(customerId) {
+                    return RemoteActionService($q, '{!$RemoteAction.MergeCustomerCtrl.getCustomerDetailsById}', customerId);
+                },
+            }
+        }]);  
+        return Routing_AppJs_PK;
+    }); 
+</apex:page>

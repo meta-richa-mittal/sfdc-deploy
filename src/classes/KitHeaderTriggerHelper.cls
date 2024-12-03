@@ -71,7 +71,6 @@ global without sharing class KitHeaderTriggerHelper {
     												 		 Qty_Needed__c,
     												 		 Total__c
     												 		 FROM Kit_Header_Line_Items__r
-    												 		 WHERE Qty_Needed__c > 0
     												 )
     												 FROM  Kit_Header__c
     												 WHERE Id IN: kitHeaderIds
@@ -124,6 +123,9 @@ global without sharing class KitHeaderTriggerHelper {
     		
     		Double desiredUnFixedTotal = kitHeader.Fixed_Price__c - fixedItemTotal;
     		Double Adjustment = (unFixedItemTotal != 0) ? (desiredUnFixedTotal / unFixedItemTotal) : 1;
+			if(Adjustment < 0) {
+				Adjustment *= -1;
+			}
     		
             for(Kit_Header_Line_Item__c khli : unFixedLineItemsMap.values()) {
     			khli.Kit_Price__c = (khli.Retail__c * Adjustment).setScale(2, RoundingMode.HALF_UP);

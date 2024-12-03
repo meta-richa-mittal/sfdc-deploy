@@ -27,29 +27,34 @@ public without sharing class OptionAndFeeTriggerHelper {
     }
     
     public static void beforeUpdateCalculation() {
-    	if(isCalculatePriceLevel && !isTriggerExecute) {
+    	if(isCalculatePriceLevel && (COTriggerHelper.isResetPricing != null && COTriggerHelper.isResetPricing) && !isTriggerExecute) {
     		priceLevelCalculation();
     	}
+		if(GeneralConfiguration.getConfigurations().Tax_Included_Pricing__c && isCustomerPLUpdate && (COTriggerHelper.isRecalculateTaxes == null || !COTriggerHelper.isRecalculateTaxes)) {
+			for(Option_Fee__c optionFeeRec : OptionAndFeeNewList) {
+				if(optionFeeRec.Price__c != null && optionFeeRec.Sales_Tax_Percentage__c != null) {
+					optionFeeRec.Price_When_Tax_Included__c = (optionFeeRec.Price__c * (1 + optionFeeRec.Sales_Tax_Percentage__c/100)).setScale(2, RoundingMode.HALF_UP);
+				}
+    		}
+		}
     }
     
     public static void afterInsertCalculation() {
     	salesTaxCalculation(Trigger.new);
-    	//updateTotalOnDeal(OptionAndFeeNewList);
-    	//updateRideawayPricing(OptionAndFeeNewList);
     }
     
     public static void afterUpdateCalculation() {
-    	if(isCustomerPLUpdate || TaxCalculation.IsEnhancedTaxCalculationApplicable) {
+    	if((isCustomerPLUpdate && (COTriggerHelper.isRecalculateTaxes != null && COTriggerHelper.isRecalculateTaxes)) || TaxCalculation.IsEnhancedTaxCalculationApplicable) {
     		salesTaxCalculation(Trigger.new);
     		isCustomerPLUpdate = false;
     	}
     	updateTotalOnDeal(OptionAndFeeNewList);
-    	updateRideawayPricing(OptionAndFeeNewList);
+    	updateRideawayPricingAndStampDutyCalculation(OptionAndFeeNewList);
     }
     
     public static void afterDeleteCalculation() {
     	updateTotalOnDeal(OptionAndFeeOldList);
-    	updateRideawayPricing(OptionAndFeeOldList);
+    	updateRideawayPricingAndStampDutyCalculation(OptionAndFeeOldList);
     }
         
 	private static void setOptionStatus() {
@@ -93,11 +98,11 @@ public without sharing class OptionAndFeeTriggerHelper {
             dealItemIdSet.add(optionFeeRec.Deal_Item__c); 
             if(optionFeeRec.Part__c != null) {
             	partIdSet.add(optionFeeRec.Part__c);
-            } else if(optionFeeRec.Fee__c != null) {
+            } else if(!COTriggerHelper.isRetainItemPrices && optionFeeRec.Fee__c != null) {
             	feeIdSet.add(optionFeeRec.Fee__c);
             } else if(optionFeeRec.Labour_Code__c != null) {
             	labourIdSet.add(optionFeeRec.Labour_Code__c);
-            } else if(optionFeeRec.Product__c != null) {
+            } else if(!COTriggerHelper.isRetainItemPrices && optionFeeRec.Product__c != null) {
             	productIdSet.add(optionFeeRec.Product__c);
             }
         }
@@ -151,7 +156,7 @@ public without sharing class OptionAndFeeTriggerHelper {
         String partPriceBase; 
         Decimal laborRate;                                                                                  
 		for(Option_Fee__c optionFeeRec : OptionAndFeeNewList) {
-            if(optionFeeRec.Deal_Kit_Header__c != null) {
+            if(optionFeeRec.Deal_Kit_Header__c != null || (COTriggerHelper.isRetainItemPrices && optionFeeRec.Part__c == null && optionFeeRec.Labour_Code__c == null)) {
                 continue;
             }
         	discount = (dealItemIdTodealItemRecMap.get(optionFeeRec.Deal_Item__c).Discount_Markup_From_Prive_Level__c == null) ? 0 : dealItemIdTodealItemRecMap.get(optionFeeRec.Deal_Item__c).Discount_Markup_From_Prive_Level__c;
@@ -170,12 +175,23 @@ public without sharing class OptionAndFeeTriggerHelper {
         if(optionFeeRec.Part__c != null) {
 	        String pricingField = TaxCalculation.getPricingFieldByPLBaseValueField(priceLevel_baseValueField);
 	        
-	        if(partIdToPartRecordMap.get(optionFeeRec.Part__c).get(pricingField) == null) {
+	        if(!pricingField.containsIgnoreCase('Average_Cost__c') && partIdToPartRecordMap.get(optionFeeRec.Part__c).get(pricingField) == null) {
 	            partIdToPartRecordMap.get(optionFeeRec.Part__c).put(pricingField, 0);
 	            optionFeeRec.Retail__c = 0;
 	        } else {
-	            Decimal baseValue = Decimal.valueOf(String.valueOf(partIdToPartRecordMap.get(optionFeeRec.Part__c).get(pricingField)));
-	            
+				Decimal baseValue;
+				if(pricingField.containsIgnoreCase('Average_Cost__c') && (partIdToPartRecordMap.get(optionFeeRec.Part__c).Average_Cost__c == null || partIdToPartRecordMap.get(optionFeeRec.Part__c).Average_Cost__c == 0)) {
+					baseValue = partIdToPartRecordMap.get(optionFeeRec.Part__c).Last_Cost__c != null ? partIdToPartRecordMap.get(optionFeeRec.Part__c).Last_Cost__c : 0;
+				} else {
+					baseValue = Decimal.valueOf(String.valueOf(partIdToPartRecordMap.get(optionFeeRec.Part__c).get(pricingField)));
+				}
+				if((Trigger.isInsert || isCustomerPLUpdate) && isTaxIncludingPricing) {
+                    if(priceLevel_discountMarkup == 0 && !TaxCalculation.COST_FIELDS_SET.contains(pricingField)) {
+                        optionFeeRec.Price_When_Tax_Included__c = baseValue.setScale(2, RoundingMode.HALF_UP);
+                    } else {
+                        optionFeeRec.Price_When_Tax_Included__c = null;
+                    }
+                } 
                 if(optionFeeRec.Deal_Kit_Header__c != null) {
                     optionFeeRec.Retail__c = baseValue;
                 } else {
@@ -186,9 +202,6 @@ public without sharing class OptionAndFeeTriggerHelper {
 		                }
 		                Decimal preTaxPricing = baseValue / (1 + (appTaxRate / 100));
                         optionFeeRec.Retail__c = preTaxPricing + (preTaxPricing * priceLevel_discountMarkup / 100);
-                        if(Trigger.isInsert) {
-                            optionFeeRec.Price_When_Tax_Included__c = baseValue;
-                        }
 		            } else {
                         optionFeeRec.Retail__c = baseValue + (baseValue * priceLevel_discountMarkup / 100);
 		            }
@@ -237,6 +250,7 @@ public without sharing class OptionAndFeeTriggerHelper {
                 	optionFeeRec.Retail__c = laborRate;
             	}
             }
+			optionFeeRec.Retail__c = rate = (optionFeeRec.Retail__c != null ? optionFeeRec.Retail__c : 0);
             if(isTaxIncludingPricing) {
             	appTaxRate = labourIdToLabourRecordMap.get(optionFeeRec.Labour_Code__c).Applicable_Tax__r.Rate__c;
             	if(appTaxRate == -100 || appTaxRate == null) { // To handle divide by zero error
@@ -284,166 +298,19 @@ public without sharing class OptionAndFeeTriggerHelper {
     		return;
     	}
         isTriggerExecute = true;
-        Set<String> dealIdSet = new Set<String>();
         // Tax Exemption List
-        List<Option_Fee__c> optionAndFeeList = [SELECT Part__c, Part__r.Taxable__c, Part__r.Applicable_Tax__c, Part__r.Applicable_Tax__r.Rate__c, Deal_Kit_Header__c,
-        												Fee__c, Fee__r.Applicable_Tax__c, Fee__r.Applicable_Tax__r.Rate__c, Qty__c, 
+        List<Option_Fee__c> optionAndFeeList = [SELECT Applicable_Tax__c, Part__c, Part__r.Taxable__c, Part__r.Applicable_Tax__c, Part__r.Applicable_Tax__r.Rate__c, Deal_Kit_Header__c,
+        												Fee__c, Fee__r.Taxable__c, Fee__r.Applicable_Tax__c, Fee__r.Applicable_Tax__r.Rate__c, Qty__c, Deal_Item__r.Deal__r.Is_Tax_Based_On_Customer_Address__c, 
         												Labour_Code__c, Labour_Code__r.Taxable__c, Labour_Code__r.Applicable_Tax__c, Labour_Code__r.Applicable_Tax__r.Rate__c,
         												Product__c, Product__r.Type__c, Product__r.Taxable__c, Product__r.Applicable_Tax__c, Product__r.Applicable_Tax__r.Rate__c, Price_When_Tax_Included__c,
         												Deal_Item__r.Deal__r.CO_Header__c, Deal_Item__r.Deal__r.CO_Header__r.Customer__c, Price__c, Deal_Item__r.Deal__c,
-        												Deal_Item__r.Applicable_Tax__c, Deal_Item__r.Applicable_Tax__r.Rate__c,
-        												Deal_Item__r.Discount_Markup_From_Prive_Level__c,
+        												Deal_Item__r.Applicable_Tax__c, Deal_Item__r.Applicable_Tax__r.Rate__c, Deal_Item__r.Taxable__c, Deal_Item__r.Unit_Tax_Applicable_On__c, 
+        												Deal_Item__r.Discount_Markup_From_Prive_Level__c, Sales_Tax_Percentage__c, 
         												(Select Id from Individual_Taxes__r)  
     													FROM Option_Fee__c where Id IN: optionAndFeeIdList AND Deal_Kit_Header__c = null AND Deal__r.Invoice_Number__c = null];
     	
-    	Set<Id> customerIdSet = new Set<Id>();
-    	Set<Id> coHeaderIds = new Set<Id>();
     	
-    	List<Individual_Tax__c> individualTaxList = new List<Individual_Tax__c>();
-    	for(Option_Fee__c optionAndFeeRec : optionAndFeeList) {
-    		if(optionAndFeeRec.Deal_Item__r.Deal__r.CO_Header__r.Customer__c != null && 
-    			!customerIdSet.contains(optionAndFeeRec.Deal_Item__r.Deal__r.CO_Header__r.Customer__c)) {
-    			customerIdSet.add(optionAndFeeRec.Deal_Item__r.Deal__r.CO_Header__r.Customer__c);
-    			coHeaderIds.add(optionAndFeeRec.Deal_Item__r.Deal__r.CO_Header__c);
-    		}
-    		individualTaxList.addAll(optionAndFeeRec.Individual_Taxes__r);
-    		dealIdSet.add(optionAndFeeRec.Deal_Item__r.Deal__c);
-    	}
-    	
-    	if((isCustomerPLUpdate || TaxCalculation.IsEnhancedTaxCalculationApplicable) && individualTaxList.size() > 0) {
-        	if(AccessControl.ifObjectIsDeletable('Individual_Tax__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_DELETABLE); } 		
-    		delete individualTaxList;
-    	}
-    	
-    	// Get list of Tax Exemptions for given coHeader ids
-        Map<Id, Set<Id>> coHeaderIdToSalesTaxItemIdsMap = TaxCalculation.getCOHeaderIdToTaxExemptionsIds(coHeaderIds);
-        
-        // Entity Tax Rate
-        List<Id> salesTaxIdList = new List<Id>();
-        
-        for(Option_Fee__c optionAndFeeRec : optionAndFeeList) {
-            if(optionAndFeeRec.Deal_Item__r.Applicable_Tax__c != null && ((optionAndFeeRec.Part__c != null && optionAndFeeRec.Part__r.Taxable__c) || (optionAndFeeRec.Labour_Code__c != null && optionAndFeeRec.Labour_Code__r.Taxable__c) || (optionAndFeeRec.Product__c != null && optionAndFeeRec.Product__r.Taxable__c && optionAndFeeRec.Product__r.Type__c == Constants.SUBLET))) {
-                salesTaxIdList.add(optionAndFeeRec.Deal_Item__r.Applicable_Tax__c);
-            } else if(optionAndFeeRec.Fee__r.Applicable_Tax__c != null) {
-                salesTaxIdList.add(optionAndFeeRec.Fee__r.Applicable_Tax__c);
-            } else if((optionAndFeeRec.Product__c != null && optionAndFeeRec.Product__r.Type__c != Constants.SUBLET) && optionAndFeeRec.Product__r.Applicable_Tax__c != null) {
-                salesTaxIdList.add(optionAndFeeRec.Product__r.Applicable_Tax__c);
-        	}
-        }
-        
-        List<Option_Fee__c> optionAndFeeListToUpdate = new List<Option_Fee__c>();
-        optionAndFeeListToUpdate.addAll(calculateSalesTax(salesTaxIdList, coHeaderIdToSalesTaxItemIdsMap, optionAndFeeList));
-        
-        if(optionAndFeeListToUpdate.size() > 0) {
-			DMLUtility.updateSobjectList('Option_Fee__c', optionAndFeeListToUpdate);
-        }
-    }
-    
-    private static List<Option_Fee__c> calculateSalesTax(List<Id> salesTaxIdList, Map<Id, Set<Id>> coHeaderIdToSalesTaxItemIdsMap, List<Option_Fee__c> optionAndFeeList) {
-        if(AccessControl.ifObjectFieldIsAccessible('Applicable_Taxes__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
-        List<Applicable_Taxes__c> applicableTaxList = TaxManagementSOQLUtil.getApplicableTaxListBySalesTaxIdList(salesTaxIdList);
-        
-        Map<Id, List<Applicable_Taxes__c>> salesTaxIdToAppTaxRecordsMap = new Map<Id, List<Applicable_Taxes__c>>();
-        
-        for(Applicable_Taxes__c appTax : applicableTaxList) {
-            List<Applicable_Taxes__c> appTaxRecordList = new List<Applicable_Taxes__c>();
-            if(salesTaxIdToAppTaxRecordsMap.containsKey(appTax.Sales_Tax__c)) {
-                appTaxRecordList = salesTaxIdToAppTaxRecordsMap.get(appTax.Sales_Tax__c);
-            } 
-            appTaxRecordList.add(appTax);
-            salesTaxIdToAppTaxRecordsMap.put(appTax.Sales_Tax__c, appTaxRecordList);
-        }
-        
-        Map<Id, Decimal> salesTaxIdToTaxRateMap = new Map<Id, Decimal>();
-        for(Id salesTaxId : salesTaxIdToAppTaxRecordsMap.keyset()) {
-            Decimal salesTaxRate = 0;
-            for(Applicable_Taxes__c appTax : salesTaxIdToAppTaxRecordsMap.get(salesTaxId)) {
-                salesTaxRate += appTax.Sales_Tax_Item__r.Rate__c;
-            }
-            salesTaxIdToTaxRateMap.put(salesTaxId, salesTaxRate);
-        }
-        
-        List<Sobject> optionAndFeeListToUpdate = new List<Sobject>();
-        List<Individual_Tax__c> individualTaxToInsert = new List<Individual_Tax__c>();
-        Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
-        for(Option_Fee__c optionAndFeeRec : optionAndFeeList) {
-            Id salesTaxId;
-            if(optionAndFeeRec.Deal_Item__r.Applicable_Tax__c != null && ((optionAndFeeRec.Part__c != null && optionAndFeeRec.Part__r.Taxable__c) || (optionAndFeeRec.Labour_Code__c != null && optionAndFeeRec.Labour_Code__r.Taxable__c) || (optionAndFeeRec.Product__c != null && optionAndFeeRec.Product__r.Taxable__c && optionAndFeeRec.Product__r.Type__c == Constants.SUBLET))) {
-                salesTaxId = optionAndFeeRec.Deal_Item__r.Applicable_Tax__c;
-            } else if(optionAndFeeRec.Fee__r.Applicable_Tax__c != null) {
-                salesTaxId = optionAndFeeRec.Fee__r.Applicable_Tax__c;
-            } else if((optionAndFeeRec.Product__c != null && optionAndFeeRec.Product__r.Type__c != Constants.SUBLET) && optionAndFeeRec.Product__r.Applicable_Tax__c != null) {
-                salesTaxId = optionAndFeeRec.Product__r.Applicable_Tax__c;
-            }
-            
-            if(salesTaxId == null) {
-            	if(isTaxIncludingPricing && optionAndFeeRec.Price__c != null) {
-            		optionAndFeeRec.Price_When_Tax_Included__c = optionAndFeeRec.Price__c;
-            	}
-            	optionAndFeeRec.Applicable_Tax__c = salesTaxId;
-            	optionAndFeeRec.Sales_Tax_Percentage__c = 0;
-            	optionAndFeeListToUpdate.add(optionAndFeeRec);
-            	continue;
-            }  
-            optionAndFeeRec.Applicable_Tax__c = salesTaxId;
-            
-            Decimal exemptionRate = 0;
-            if(salesTaxIdToAppTaxRecordsMap.containsKey(salesTaxId)) {
-                for(Applicable_Taxes__c appTax : salesTaxIdToAppTaxRecordsMap.get(salesTaxId)) {
-                    if(optionAndFeeRec.Deal_Item__r.Deal__r.CO_Header__r.Customer__c != null && 
-                    	coHeaderIdToSalesTaxItemIdsMap.get(optionAndFeeRec.Deal_Item__r.Deal__r.CO_Header__c).contains(appTax.Sales_Tax_Item__c)) {
-                        exemptionRate += appTax.Sales_Tax_Item__r.Rate__c;
-                    
-                    } else { 
-                    	Individual_Tax__c individualTaxRec = new Individual_Tax__c();
-                    	individualTaxRec.Option_Fee__c = optionAndFeeRec.Id;
-						individualTaxRec.Sales_Tax_Item__c = appTax.Sales_Tax_Item__c;
-                    	if(!TaxCalculation.IsEnhancedTaxCalculationApplicable || appTax.Sales_Tax_Item__r.Rate_Type__c == TaxManagementService.FIXED_RATE) {
-                    		individualTaxRec.Tax_Rate__c = appTax.Sales_Tax_Item__r.Rate__c; 
-                    	} else {
-                    		optionAndFeeRec.Qty__c = optionAndFeeRec.Qty__c != null ? optionAndFeeRec.Qty__c : 1;
-            				optionAndFeeRec.Price__c = optionAndFeeRec.Price__c != null ? optionAndFeeRec.Price__c : 0;
-            	
-                    		Decimal taxableAmount = (optionAndFeeRec.Qty__c * optionAndFeeRec.Price__c);
-                    		individualTaxRec.Enhanced_Tax_Amount__c = TaxCalculation.getEnhancedTaxAmount(taxableAmount, appTax.Sales_Tax_Item__r);
-                    	}
-                    	individualTaxRec.Sales_Tax_Item__c = appTax.Sales_Tax_Item__c; 
-                    	individualTaxToInsert.add(individualTaxRec);
-                    }
-                } 
-            }
-            Decimal rate = 0;
-            if(salesTaxIdToTaxRateMap.containsKey(salesTaxId)) {
-                rate = salesTaxIdToTaxRateMap.get(salesTaxId);
-            }
-            optionAndFeeRec.Sales_Tax_Percentage__c = rate - exemptionRate;
-            Decimal price = OptionAndFeeNewMap.get(optionAndFeeRec.Id).Price__c;
-            if(isUpdatePriceWhenTaxIncluded(optionAndFeeRec, exemptionRate) || optionAndFeeRec.Price_When_Tax_Included__c == null) { // exemptionRate != 0 || 
-            	optionAndFeeRec.Price_When_Tax_Included__c = (price * (1 + optionAndFeeRec.Sales_Tax_Percentage__c/100)).setScale(2, RoundingMode.HALF_UP);
-            }
-            optionAndFeeListToUpdate.add(optionAndFeeRec);
-        }
-        if(individualTaxToInsert.size() > 0) {
-			DMLUtility.insertSobjectList('Individual_Tax__c', individualTaxToInsert);
-        }
-        return optionAndFeeListToUpdate;
-    }
-    
-    private static Boolean isUpdatePriceWhenTaxIncluded(Option_Fee__c optionAndFeeRec, Decimal exemptionRate) {
-    	if(optionAndFeeRec.Deal_Item__r.Discount_Markup_From_Prive_Level__c == 0) {
-    		if(exemptionRate != 0 && (optionAndFeeRec.Fee__c != null || (optionAndFeeRec.Product__c != null && optionAndFeeRec.Product__r.Type__c != 'Sublet'))) {
-    			return true;
-	    	} else if(optionAndFeeRec.Part__c != null && optionAndFeeRec.Part__r.Applicable_Tax__c != optionAndFeeRec.Deal_Item__r.Applicable_Tax__c) {
-	    		return true;
-	    	} else if(optionAndFeeRec.Labour_Code__c != null && optionAndFeeRec.Labour_Code__r.Applicable_Tax__c != optionAndFeeRec.Deal_Item__r.Applicable_Tax__c) {
-	    		return true;
-	    	} else if((optionAndFeeRec.Product__c != null && optionAndFeeRec.Product__r.Type__c == Constants.SUBLET) && optionAndFeeRec.Product__r.Applicable_Tax__c != optionAndFeeRec.Deal_Item__r.Applicable_Tax__c) {
-	    		return true;
-	    	}
-    	} else {
-    		return true;
-    	}
-    	return false;
+		TaxEngine.applySalesTaxonOptionFeeList(optionAndFeeList);
     }
     
     public static void updateDealTotal(Set<String> dealIdSet) {
@@ -452,18 +319,23 @@ public without sharing class OptionAndFeeTriggerHelper {
     	}
     	Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
     	
-    	List<Deal__c> dealList = [Select Total__c, Type__c, Deal_Tax_Total__c, CO_Header__c, CO_Header__r.Deal_Total__c, F_I_Total__c, F_I_Tax_Total__c, Sales_Tax_Total__c, 
-    									(Select Price__c, Qty__c, Part__c, Labour_Code__c, Fee__c, Product__c, Product__r.Type__c, Price_When_Tax_Included__c, Sales_Tax_Percentage__c,
-    									Deal_Item__c from Options_Fees__r), 
-    									(Select Type__c, Agreed_Value__c, Actual_Cash_Value__c, Default_Unit_Sales_Tax_Percentage__c, Stamp_Duty_Total__c, Lien_Payout__c from Deal_Items__r),
+    	List<Deal__c> dealList = [Select Deal_Section_Trade_Only__c, Total__c, Type__c, Deal_Tax_Total__c, CO_Header__r.Deal_Total__c, F_I_Total__c, F_I_Tax_Total__c, Sales_Tax_Total__c, 
+    									Is_Tax_Based_On_Customer_Address__c, 
+                                        (Select Price__c, Cost__c, Qty__c, Product__r.Type__c, Price_When_Tax_Included__c, Sales_Tax_Percentage__c,
+										Applicable_Tax__c, Deal_Item__r.Unit_Tax_Applicable_On__c, Part__r.Average_Cost__c, Part__r.Last_Cost__c, Labour_Code__r.Cost_Method__c, Deal_Kit_Header__c, 
+										Labour_Code__r.Cost_Rate__c, Product__r.Cost__c, Product__r.Cost_Method__c, Fee__r.Cost_Method__c, Fee__r.Is_Include_In_Profit_Calculation__c, 
+										CO_Line_Item__c, Service_Order_Line_Item__c, Status__c, Fee__r.Cost_Rate__c from Options_Fees__r), 
+    									(Select Taxable__c, Applicable_Tax__c, Type__c, Agreed_Value__c, Actual_Cash_Value__c, Customer_Owned_Unit__r.Total_Cost__c,
+                                        Default_Unit_Sales_Tax_Percentage__c, Stamp_Duty_Total__c, Customer_Owned_Unit__r.Consignment__c, Customer_Owned_Unit__r.Agreed_Payout__c, Lien_Payout__c from Deal_Items__r),
     									(select Taxable_Amount_for_Section_Header__c, Tax_Rate__c, Sales_Tax_Item__r.Name__c from Individual_Taxes__r), 
-    									(Select Id, F_I_Product_Tax_Total__c, F_I_Total__c from Deal_Finances__r)
+										(select Id, Price__c, Applicable_Tax__c from F_I_Products__r WHERE Applicable_Tax__c != null), 
+    									(Select Id, F_I_Product_Tax_Total__c, F_I_Total__c, Withheld_F_I_Total__c, Total_Commission__c from Deal_Finances__r)
     								from Deal__c where Id IN: dealIdSet];
     	Map<String, List<Deal_Unit_Price_Cost__c>> dealIdToDealUnitPriceCostListMap = getDealIdToDealUnitPriceCostListMap(dealList);							
 		populateTotalsOnDeal(dealList, dealIdToDealUnitPriceCostListMap);
     }
     
-    private static Map<String, List<Deal_Unit_Price_Cost__c>> getDealIdToDealUnitPriceCostListMap(List<Deal__c> dealList) {
+    public static Map<String, List<Deal_Unit_Price_Cost__c>> getDealIdToDealUnitPriceCostListMap(List<Deal__c> dealList) {
     	Set<String> dealItemIdSet = new Set<String>();
     	for(Deal__c dealRec : dealList) {
     		for(Deal_Item__c dealItemRec : dealRec.Deal_Items__r) {
@@ -474,7 +346,7 @@ public without sharing class OptionAndFeeTriggerHelper {
     	}
 		
 		List<Deal_Unit_Price_Cost__c> dealUnitPriceAndCostList = 
-				[Select Deal_Item__r.Deal__c, Total_Price__c, Type__c, Deal_Item__c, Tax_Amount__c, Price_When_Tax_Included__c, Qty__c, Price__c, Sales_Tax_Percentage__c,	
+				[Select Applicable_Tax__c, Deal_Item__r.Deal__c, Total_Price__c, Type__c, Deal_Item__c, Tax_Amount__c, Price_When_Tax_Included__c, Qty__c, Price__c, Sales_Tax_Percentage__c,	
 				    (select Taxable_Amount__c, Tax_Rate__c, Form_Label__c, Sales_Tax_Item__r.Name__c
 							from Individual_Taxes__r) from Deal_Unit_Price_Cost__c where Deal_Item__c IN: dealItemIdSet];
 							
@@ -497,29 +369,14 @@ public without sharing class OptionAndFeeTriggerHelper {
 		
 		Map<String, List<Individual_Tax__c>> dealIdToRelatedIndividualTaxListMap = new Map<String, List<Individual_Tax__c>>();
 		if(!isTaxIncludingPricing) {
-    		List<Individual_Tax__c> individualTaxList = [select Taxable_Amount__c, Tax_Rate__c, Option_Fee__r.Deal_Item__c, Option_Fee__r.Deal__c, 
-    														Deal_Unit_Price_Cost__r.Deal_Item__r.Deal__c, Deal_Unit_Price_Cost__r.Deal_Item__c, Deal_Item__r.Deal__c, 
-	    													Form_Label__c, Applicable_Tax__c, List_Tax_items_on_forms__c,
-	    													Enhanced_Tax_Amount__c, Sales_Tax_Item__r.Name__c  
-	    												from Individual_Tax__c
-	    												where  Option_Fee__r.Deal__c IN: dealList
-	    													OR Deal_Unit_Price_Cost__r.Deal_Item__r.Deal__c IN: dealList
-	    													OR (Deal_Item__r.Deal__c IN: dealList AND Deal_Item__r.Type__c = 'Trade In')];
+			List<Individual_Tax__c> individualTaxList = TaxEngine.calculateDealTaxesByInvoice(dealList, dealIdToDealUnitPriceCostListMap);
+			
 	    	for(Individual_Tax__c individualTaxRec : individualTaxList) {
-	    		String dealId;
-	    		if(String.isNotBlank(individualTaxRec.Option_Fee__c)) {
-	    			dealId = individualTaxRec.Option_Fee__r.Deal__c;
-	    		} else if(String.isNotBlank(individualTaxRec.Deal_Unit_Price_Cost__c)) {
-	    			dealId = individualTaxRec.Deal_Unit_Price_Cost__r.Deal_Item__r.Deal__c;
-	    		} else if(String.isNotBlank(individualTaxRec.Deal_Item__c)) {
-	    			dealId = individualTaxRec.Deal_Item__r.Deal__c;
-	    		}
-	    		if(!dealIdToRelatedIndividualTaxListMap.containsKey(dealId)) {
-	    			dealIdToRelatedIndividualTaxListMap.put(dealId, new List<Individual_Tax__c>{individualTaxRec});
+	    		if(!dealIdToRelatedIndividualTaxListMap.containsKey(individualTaxRec.Deal__c)) {
+	    			dealIdToRelatedIndividualTaxListMap.put(individualTaxRec.Deal__c, new List<Individual_Tax__c>{individualTaxRec});
 	    		} else {
-	    			dealIdToRelatedIndividualTaxListMap.get(dealId).add(individualTaxRec);
+	    			dealIdToRelatedIndividualTaxListMap.get(individualTaxRec.Deal__c).add(individualTaxRec);
 	    		}
-	    		
 	    	}
 		}
         
@@ -527,7 +384,7 @@ public without sharing class OptionAndFeeTriggerHelper {
         List<Sales_Tax_Item__c> salesTaxItemList = [select Forms_Label__c, Name__c from Sales_Tax_Item__c limit: SOQLUtil.getAvailableQueryRowsLimit()];
         for(Deal__c dealRec : dealList) {
     		//Decimal total = 0;
-    		dealRec.Sales_Tax_Total__c = 0;
+    		dealRec.Sales_Tax_Total__c = dealRec.Withheld_F_I_Total__c = 0;
     		Decimal totalSalesTax = 0;
     		Decimal partTotal = 0;
     		Decimal laborTotal = 0;
@@ -543,6 +400,7 @@ public without sharing class OptionAndFeeTriggerHelper {
     		Decimal tradeInTotal = 0;
     		Decimal tradeInTaxTotal = 0;
     		Decimal lienPayoutTotal = 0;
+			Decimal financeCommissionTotal = 0;
     		
     		//Pre Tax Deal Totals
     		Decimal preTaxUnitTotal = 0; 
@@ -552,40 +410,51 @@ public without sharing class OptionAndFeeTriggerHelper {
     		Decimal preTaxOtherProductTotal = 0;
     		Decimal preTaxFeeTotal = 0;
     		
+			for(Deal_Item__c dealItemRec : dealRec.Deal_Items__r) {
+				Deal_Item__c dealItem;
+				if(dealItemRec.Type__c == 'Unit') {
+					dealItem = new Deal_Item__c(Id = dealItemRec.Id, Part_Total__c = 0, Fee_Total__c = 0, 
+					Labour_Total__c = 0, Warranty_Product_Total__c = 0, Sublet_Total__c = 0, Other_Product_Total__c = 0, Base_Price__c = 0, 
+					Factory_Option_Total__c = 0, Dealer_Option_Total__c = 0, Unit_Cost__c = (dealItemRec.Customer_Owned_Unit__r.Consignment__c) ? dealItemRec.Customer_Owned_Unit__r.Agreed_Payout__c : dealItemRec.Customer_Owned_Unit__r.Total_Cost__c,
+					Unit_Option_Cost__c = 0, Fee_Total_Included_In_Profitability__c = 0);
+				} else if(dealItemRec.Actual_Cash_Value__c != null) {
+					dealItem = new Deal_Item__c(Id = dealItemRec.Id, Unit_Cost__c = (dealItemRec.Actual_Cash_Value__c * -1));
+				}
+				if(dealItem != null) dealItemIdToRecMap.put(dealItemRec.Id, dealItem);
+			}
+
     		for(Option_Fee__c optionFeeRec : dealRec.Options_Fees__r) {
-    			if(optionFeeRec.Deal_Item__c != null && !dealItemIdToRecMap.containsKey(optionFeeRec.Deal_Item__c)) {
-    				Deal_Item__c dealItemRec = new Deal_Item__c(Id = optionFeeRec.Deal_Item__c, Part_Total__c = 0, Fee_Total__c = 0, Labour_Total__c = 0, 
-    					Warranty_Product_Total__c = 0, Sublet_Total__c = 0, Other_Product_Total__c = 0, Base_Price__c = 0, Factory_Option_Total__c = 0, Dealer_Option_Total__c = 0);
-    				dealItemIdToRecMap.put(optionFeeRec.Deal_Item__c, dealItemRec);
-    			}
     			optionFeeRec.Price__c = (optionFeeRec.Price__c != null) ? optionFeeRec.Price__c : 0;
     			optionFeeRec.Price_When_Tax_Included__c = (optionFeeRec.Price_When_Tax_Included__c != null) ? optionFeeRec.Price_When_Tax_Included__c : 0;
     			optionFeeRec.Qty__c = (optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0;
     			optionFeeRec.Sales_Tax_Percentage__c = (optionFeeRec.Sales_Tax_Percentage__c != null) ? optionFeeRec.Sales_Tax_Percentage__c : 0;
     			
+				Deal_Item__c dealItemRec = dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c);
+				dealItemRec.Unit_Option_Cost__c += getOptionAndFeeCost(optionFeeRec);
     			if(!isTaxIncludingPricing) {
 		    		if(optionFeeRec.Part__c != null) {
 		    			partTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			preTaxPartTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-		    			dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Part_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    			dealItemRec.Part_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    		} else if(optionFeeRec.Labour_Code__c != null) {
 		    			laborTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			preTaxLaborTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-		    			dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Labour_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    			dealItemRec.Labour_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    		} else if(optionFeeRec.Fee__c != null) {
 		    			feeTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			preTaxFeeTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-		    			dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Fee_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    			dealItemRec.Fee_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+						dealItemRec.Fee_Total_Included_In_Profitability__c += (optionFeeRec.Fee__r.Is_Include_In_Profit_Calculation__c ? (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP) : 0);	
 		    		} else if(optionFeeRec.Product__c != null) {
 		    			if(optionFeeRec.Product__r.Type__c == Constants.WARRANTY_PLAN) {
 		    				warrantyProductTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-		    				dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Warranty_Product_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    				dealItemRec.Warranty_Product_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			} else if(optionFeeRec.Product__r.Type__c == Constants.SUBLET) {
 		    				subletTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-		    				dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Sublet_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    				dealItemRec.Sublet_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			} else {
 		    				otherProductTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-		    				dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Other_Product_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    				dealItemRec.Other_Product_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			}
 		    			//It will include all 4 type of products for home search
 		    			preTaxOtherProductTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
@@ -596,28 +465,29 @@ public without sharing class OptionAndFeeTriggerHelper {
     				if(optionFeeRec.Part__c != null) {
 		    			partTotal += (optionFeeRec.Qty__c * optionFeeRec.Price_When_Tax_Included__c).setScale(2, RoundingMode.HALF_UP);
 		    			preTaxPartTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-		    			dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Part_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    			dealItemRec.Part_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 
 		    		} else if(optionFeeRec.Labour_Code__c != null) {
 		    			laborTotal += (optionFeeRec.Qty__c * optionFeeRec.Price_When_Tax_Included__c).setScale(2, RoundingMode.HALF_UP);
 		    			preTaxLaborTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-		    			dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Labour_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    			dealItemRec.Labour_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			
 		    		} else if(optionFeeRec.Fee__c != null) {
 		    			feeTotal += (optionFeeRec.Qty__c * optionFeeRec.Price_When_Tax_Included__c).setScale(2, RoundingMode.HALF_UP);
 		    			preTaxFeeTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
-		    			dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Fee_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    			dealItemRec.Fee_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+						dealItemRec.Fee_Total_Included_In_Profitability__c += (optionFeeRec.Fee__r.Is_Include_In_Profit_Calculation__c ? (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP) : 0);	
 		    			
 		    		} else if(optionFeeRec.Product__c != null) {
 		    			if(optionFeeRec.Product__r.Type__c == Constants.WARRANTY_PLAN) {
 		    				warrantyProductTotal += (optionFeeRec.Qty__c * optionFeeRec.Price_When_Tax_Included__c).setScale(2, RoundingMode.HALF_UP);
-		    				dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Warranty_Product_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    				dealItemRec.Warranty_Product_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			} else if(optionFeeRec.Product__r.Type__c == Constants.SUBLET) {
 		    				subletTotal += (optionFeeRec.Qty__c * optionFeeRec.Price_When_Tax_Included__c).setScale(2, RoundingMode.HALF_UP);
-		    				dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Sublet_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    				dealItemRec.Sublet_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			}  else {
 		    				otherProductTotal += (optionFeeRec.Qty__c * optionFeeRec.Price_When_Tax_Included__c).setScale(2, RoundingMode.HALF_UP);
-		    				dealItemIdToRecMap.get(optionFeeRec.Deal_Item__c).Other_Product_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
+		    				dealItemRec.Other_Product_Total__c += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
 		    			}
 		    			//It will include all 4 type of products for home search
 		    			preTaxOtherProductTotal += (optionFeeRec.Qty__c * optionFeeRec.Price__c).setScale(2, RoundingMode.HALF_UP);
@@ -629,11 +499,7 @@ public without sharing class OptionAndFeeTriggerHelper {
     		
     		if(dealIdToDealUnitPriceCostListMap.containsKey(dealRec.Id)) {
     			for(Deal_Unit_Price_Cost__c dupcRec : dealIdToDealUnitPriceCostListMap.get(dealRec.Id)) {
-    				if(dupcRec.Deal_Item__c != null && !dealItemIdToRecMap.containsKey(dupcRec.Deal_Item__c)) {
-	    				Deal_Item__c dealItemRec = new Deal_Item__c(Id = dupcRec.Deal_Item__c, Base_Price__c = 0, Factory_Option_Total__c = 0, 
-	    															Dealer_Option_Total__c = 0);
-	    				dealItemIdToRecMap.put(dupcRec.Deal_Item__c, dealItemRec);
-	    			}
+    				Deal_Item__c dealItemRec = dealItemIdToRecMap.get(dupcRec.Deal_Item__c);
 	    			
     				dupcRec.Price__c = (dupcRec.Price__c != null) ? dupcRec.Price__c : 0;
 	    			dupcRec.Price_When_Tax_Included__c = (dupcRec.Price_When_Tax_Included__c != null) ? dupcRec.Price_When_Tax_Included__c : 0;
@@ -643,11 +509,11 @@ public without sharing class OptionAndFeeTriggerHelper {
     				Decimal preTaxTotalPrice = (((dupcRec.Price__c != null) ? dupcRec.Price__c : 0) * ((dupcRec.Qty__c != null) ? dupcRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
 	    			
                     if(dupcRec.Type__c == 'Base') {
-	    				dealItemIdToRecMap.get(dupcRec.Deal_Item__c).Base_Price__c += preTaxTotalPrice;
+	    				dealItemRec.Base_Price__c += preTaxTotalPrice;
 	    			} else if(dupcRec.Type__c == 'Factory') {
-	    				dealItemIdToRecMap.get(dupcRec.Deal_Item__c).Factory_Option_Total__c += preTaxTotalPrice;
+	    				dealItemRec.Factory_Option_Total__c += preTaxTotalPrice;
 	    			} else if(dupcRec.Type__c == 'Dealer') {
-	    				dealItemIdToRecMap.get(dupcRec.Deal_Item__c).Dealer_Option_Total__c += preTaxTotalPrice;
+	    				dealItemRec.Dealer_Option_Total__c += preTaxTotalPrice;
 	    			}
 	    			
     				if(!isTaxIncludingPricing) {
@@ -689,16 +555,21 @@ public without sharing class OptionAndFeeTriggerHelper {
     		
     		for(Deal_Finance__c dealFinanceRec : dealRec.Deal_Finances__r) {
 				fAndITotal += (dealFinanceRec.F_I_Total__c != null) ? dealFinanceRec.F_I_Total__c.setScale(2, RoundingMode.HALF_UP) : 0;
-				fAndITaxTotal += (dealFinanceRec.F_I_Product_Tax_Total__c != null) ? dealFinanceRec.F_I_Product_Tax_Total__c.setScale(2, RoundingMode.HALF_UP) : 0;
-    		}
+				if(isTaxIncludingPricing) {
+					fAndITaxTotal += (dealFinanceRec.F_I_Product_Tax_Total__c != null) ? dealFinanceRec.F_I_Product_Tax_Total__c.setScale(2, RoundingMode.HALF_UP) : 0;
+				}
+				dealRec.Withheld_F_I_Total__c += (dealFinanceRec.Withheld_F_I_Total__c != null) ? dealFinanceRec.Withheld_F_I_Total__c.setScale(2, RoundingMode.HALF_UP) : 0;
+				financeCommissionTotal += (dealFinanceRec.Total_Commission__c != null) ? dealFinanceRec.Total_Commission__c.setScale(2, RoundingMode.HALF_UP) : 0;
+			}
     		
-    		if(!isRunningScript && !isTaxIncludingPricing && dealIdToRelatedIndividualTaxListMap.containsKey(dealRec.Id)) {
+    		if(!isRunningScript && !isTaxIncludingPricing) {
 	    		totalSalesTax = 0;
-		    	
-		    	Map<String, Decimal> salesTaxNameToTaxValue = TaxCalculation.getTaxAmountWithFormLabel(dealIdToRelatedIndividualTaxListMap.get(dealRec.Id), salesTaxItemList);
-		    	for(String taxName : salesTaxNameToTaxValue.keySet()) {
-	                totalSalesTax += salesTaxNameToTaxValue.get(taxName); 
-	            }
+		    	if(dealIdToRelatedIndividualTaxListMap.containsKey(dealRec.Id)) {
+					Map<String, Decimal> salesTaxNameToTaxValue = TaxCalculation.getTaxAmountWithFormLabel(dealIdToRelatedIndividualTaxListMap.get(dealRec.Id), salesTaxItemList);
+					for(String taxName : salesTaxNameToTaxValue.keySet()) {
+						totalSalesTax += salesTaxNameToTaxValue.get(taxName); 
+					}
+				}
 			}
 		
     		dealRec.Deal_Tax_Total__c = (isRunningScript ? dealRec.Deal_Tax_Total__c : totalSalesTax);
@@ -718,6 +589,7 @@ public without sharing class OptionAndFeeTriggerHelper {
             dealRec.F_I_Total__c = fAndITotal.setScale(2, RoundingMode.HALF_UP);
             dealRec.F_I_Tax_Total__c = fAndITaxTotal.setScale(2, RoundingMode.HALF_UP);
             dealRec.Lien_Payout_Total__c = lienPayoutTotal.setScale(2, RoundingMode.HALF_UP);
+			dealRec.Total_Finance_Commission__c = financeCommissionTotal.setScale(2, RoundingMode.HALF_UP);
             
             // Pre Tax Deal totals
             dealRec.Pre_Tax_Unit_Price_And_Cost_Total__c = preTaxUnitTotal.setScale(2, RoundingMode.HALF_UP);
@@ -732,7 +604,7 @@ public without sharing class OptionAndFeeTriggerHelper {
     	if(dealListToUpdate.size() > 0) {
 			DMLUtility.updateSobjectList('Deal__c', dealListToUpdate);
     		
-    		if(dealItemIdToRecMap.size() > 0) {
+    		if(!dealItemIdToRecMap.isEmpty()) {
     			DealItemTriggerHelper.isForceStopTrigger = true;
 				DMLUtility.updateSobjectList('Deal_Item__c', dealItemIdToRecMap.values());
 	    		DealItemTriggerHelper.isForceStopTrigger = false;
@@ -772,19 +644,22 @@ public without sharing class OptionAndFeeTriggerHelper {
     	TaxCalculation.populateOrderTotal(coHeaderIdToRecMapToUpdate);
     }
     
-    public static void updateRideawayPricing(List<Option_Fee__c> optionFeeList) {
+    public static void updateRideawayPricingAndStampDutyCalculation(List<Option_Fee__c> optionFeeList) {
     	Set<String> dealItemIdSet = new Set<String>();
     	for(Option_Fee__c optionFeeRec : optionFeeList) {
     		dealItemIdSet.add(optionFeeRec.Deal_Item__c);
     	}
-    	updateRideawayPricingCalculation(dealItemIdSet);
+    	updateRideawayPricingAndStampDuty(dealItemIdSet);
     }
     
-    public static void updateRideawayPricingCalculation(Set<String> dealItemIdSet) {
+    public static void updateRideawayPricingAndStampDuty(Set<String> dealItemIdSet) {
     	if(GeneralConfiguration.getCompanyLocale() == 'Australia') {
 	    	if(dealItemIdSet.size() > 0) { 
 		    	Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
-		    	List<Deal_Item__c> dealItemList = [Select Is_Rideaway_Pricing_Enabled__c, Rideaway_Pricing_Total__c, 
+		    	List<Deal_Item__c> dealItemList = [Select Is_Rideaway_Pricing_Enabled__c, Rideaway_Pricing_Total__c,Stamp_Duty_Total__c, Dutiable_Value__c, Stamp_Duty_Calculators__c, Stamp_Duty_Calculators__r.Calculation_Method__c, 
+													Stamp_Duty_Calculators__r.L1_Per__c, Stamp_Duty_Calculators__r.L1_Rate__c, Stamp_Duty_Calculators__r.L1_Value__c, Stamp_Duty_Calculators__r.L2_Per__c, Stamp_Duty_Calculators__r.L2_Rate__c, 
+													Stamp_Duty_Calculators__r.L2_Value__c, Stamp_Duty_Calculators__r.L3_Per__c, Stamp_Duty_Calculators__r.L3_Rate__c, Stamp_Duty_Calculators__r.L3_Value__c, Stamp_Duty_Calculators__r.L4_Per__c, 
+													Stamp_Duty_Calculators__r.L4_Rate__c, Stamp_Duty_Calculators__r.L4_Value__c, Stamp_Duty_Calculators__r.Maximum__c, Stamp_Duty_Calculators__r.Minimum__c, 
     												(Select Price__c, Price_When_Tax_Included__c, Qty__c, Sales_Tax_Percentage__c, Fee__c, Product__c from Options_Fees__r 
     													WHERE Part__c != null OR Labour_Code__c != null OR Fee__c != null OR (Product__c != null AND Product__r.Type__c = 'Sublet')),
     												(Select Price__c, Price_When_Tax_Included__c, Qty__c, Sales_Tax_Percentage__c, Total_Price__c, Type__c from Deal_Unit_Prices_Costs__r)
@@ -792,41 +667,39 @@ public without sharing class OptionAndFeeTriggerHelper {
     											
 				List<Sobject> sobjectlistToUpdate = new List<Sobject>();
 				for(Deal_Item__c dealItemRec : dealItemList) {
-					if(dealItemRec.Is_Rideaway_Pricing_Enabled__c) {
-						Decimal partsAndLaborTotal = 0;
-						Decimal feeTotal = 0;
-                        Decimal subletTotal = 0;
-						for(Option_Fee__c optionFeeRec : dealItemRec.Options_Fees__r) {
-							if(!isTaxIncludingPricing) {
-								if(optionFeeRec.Fee__c != null) {
-									feeTotal += (((optionFeeRec.Price__c != null) ? optionFeeRec.Price__c : 0) * ((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
-								} else if(optionFeeRec.Product__c != null) {
-                                    subletTotal += (((optionFeeRec.Price__c != null) ? optionFeeRec.Price__c : 0) * ((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
-								} else {
-									partsAndLaborTotal += (((optionFeeRec.Price__c != null) ? optionFeeRec.Price__c : 0) * ((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
-								}
+					Decimal partsAndLaborTotal = 0;
+					Decimal feeTotal = 0;
+					Decimal subletTotal = 0;
+					for(Option_Fee__c optionFeeRec : dealItemRec.Options_Fees__r) {
+						if(!isTaxIncludingPricing) {
+							if(optionFeeRec.Fee__c != null) {
+								feeTotal += (((optionFeeRec.Price__c != null) ? optionFeeRec.Price__c : 0) * ((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
+							} else if(optionFeeRec.Product__c != null) {
+								subletTotal += (((optionFeeRec.Price__c != null) ? optionFeeRec.Price__c : 0) * ((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
 							} else {
-								if(optionFeeRec.Fee__c != null) {
-									feeTotal += (((optionFeeRec.Price_When_Tax_Included__c != null) ? optionFeeRec.Price_When_Tax_Included__c : ((optionFeeRec.Price__c * (1 + optionFeeRec.Sales_Tax_Percentage__c/100))).setScale(2, RoundingMode.HALF_UP)) * 
-											((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
-								} else if(optionFeeRec.Product__c != null) {
-                                    subletTotal += (((optionFeeRec.Price_When_Tax_Included__c != null) ? optionFeeRec.Price_When_Tax_Included__c : ((optionFeeRec.Price__c * (1 + optionFeeRec.Sales_Tax_Percentage__c/100))).setScale(2, RoundingMode.HALF_UP)) *
-                                            ((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
-                                } else {
-									partsAndLaborTotal += (((optionFeeRec.Price_When_Tax_Included__c != null) ? optionFeeRec.Price_When_Tax_Included__c : ((optionFeeRec.Price__c * (1 + optionFeeRec.Sales_Tax_Percentage__c/100))).setScale(2, RoundingMode.HALF_UP)) * 
-											((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
-								}
+								partsAndLaborTotal += (((optionFeeRec.Price__c != null) ? optionFeeRec.Price__c : 0) * ((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
+							}
+						} else {
+							if(optionFeeRec.Fee__c != null) {
+								feeTotal += (((optionFeeRec.Price_When_Tax_Included__c != null) ? optionFeeRec.Price_When_Tax_Included__c : ((optionFeeRec.Price__c * (1 + optionFeeRec.Sales_Tax_Percentage__c/100))).setScale(2, RoundingMode.HALF_UP)) * 
+										((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
+							} else if(optionFeeRec.Product__c != null) {
+								subletTotal += (((optionFeeRec.Price_When_Tax_Included__c != null) ? optionFeeRec.Price_When_Tax_Included__c : ((optionFeeRec.Price__c * (1 + optionFeeRec.Sales_Tax_Percentage__c/100))).setScale(2, RoundingMode.HALF_UP)) *
+										((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
+							} else {
+								partsAndLaborTotal += (((optionFeeRec.Price_When_Tax_Included__c != null) ? optionFeeRec.Price_When_Tax_Included__c : ((optionFeeRec.Price__c * (1 + optionFeeRec.Sales_Tax_Percentage__c/100))).setScale(2, RoundingMode.HALF_UP)) * 
+										((optionFeeRec.Qty__c != null) ? optionFeeRec.Qty__c : 0)).setScale(2, RoundingMode.HALF_UP);
 							}
 						}
-						sobjectlistToUpdate.add(dealItemRec);
-						Deal_Unit_Price_Cost__c basePriceRec = updateBasePriceAndStampDuty(dealItemRec, partsAndLaborTotal, feeTotal, subletTotal, isTaxIncludingPricing);
-						if(basePriceRec.Id != null) {
-							sobjectlistToUpdate.add(basePriceRec);
-						}
+					}
+					sobjectlistToUpdate.add(dealItemRec);
+					Deal_Unit_Price_Cost__c basePriceRec = updateBasePriceAndStampDuty(dealItemRec, partsAndLaborTotal, feeTotal, subletTotal, isTaxIncludingPricing);
+					if(basePriceRec != null && basePriceRec.Id != null) {
+						sobjectlistToUpdate.add(basePriceRec);
 					}
 				}
 				
-				if(sobjectlistToUpdate.size() > 0) {
+				if(!sobjectlistToUpdate.isEmpty()) {
 					sobjectlistToUpdate.sort();
 					if(!AccessControl.ifObjectFieldIsUpdateable('Deal_Item__c')) { throw new BlackPurlException('Deal_Item__c' + DMLUtility.NOT_UPDATABLE); }
 					if(!AccessControl.ifObjectFieldIsUpdateable('Deal_Unit_Price_Cost__c')) { throw new BlackPurlException('Deal_Unit_Price_Cost__c' + DMLUtility.NOT_UPDATABLE); }
@@ -837,10 +710,10 @@ public without sharing class OptionAndFeeTriggerHelper {
     }
     
     private static Deal_Unit_Price_Cost__c updateBasePriceAndStampDuty(Deal_Item__c dealItemRec, Decimal partsAndLaborTotal, Decimal feeTotal, Decimal subletTotal, Boolean isTaxIncludingPricing) {
-    	Decimal stampDutyRate = GeneralConfiguration.getStampDutyRate();
 		Decimal totalFactoryOption = 0;
 		Decimal totalDealerInstalledOption = 0;
-		Deal_Unit_Price_Cost__c basePriceRec = new Deal_Unit_Price_Cost__c();
+		Decimal totalBasePrice = 0;
+		Deal_Unit_Price_Cost__c basePriceRec;
 		
 		for(Deal_Unit_Price_Cost__c dealUnitPriceCostRec : dealItemRec.Deal_Unit_Prices_Costs__r) {
 			if(dealUnitPriceCostRec.Type__c == 'Factory'){
@@ -848,38 +721,71 @@ public without sharing class OptionAndFeeTriggerHelper {
 			} else if(dealUnitPriceCostRec.Type__c == 'Dealer') {
 				totalDealerInstalledOption += (dealUnitPriceCostRec.Total_Price__c != null) ? dealUnitPriceCostRec.Total_Price__c : 0;
 			} else if(dealUnitPriceCostRec.Type__c == 'Base') {
+				totalBasePrice += (dealUnitPriceCostRec.Total_Price__c != null) ? dealUnitPriceCostRec.Total_Price__c : 0;
 				basePriceRec = dealUnitPriceCostRec;
 			}
 		}
-		Decimal minStampDuty = 0;
-		if((totalFactoryOption + totalDealerInstalledOption) > 100) {
-			minStampDuty = ((Math.ceil((totalFactoryOption + totalDealerInstalledOption) / 100) * 100) * (stampDutyRate / 100));
-		}
+		Decimal minStampDuty = StampDutyService.getCalculatedStampDuty(dealItemRec, (dealItemRec.Dutiable_Value__c != null ? dealItemRec.Dutiable_Value__c : (totalFactoryOption + totalDealerInstalledOption + partsAndLaborTotal + subletTotal)));
 		
     	Decimal minRideawayPricingTotal = totalFactoryOption + totalDealerInstalledOption + partsAndLaborTotal + feeTotal + subletTotal + minStampDuty;
     	dealItemRec.Rideaway_Pricing_Total__c = (dealItemRec.Rideaway_Pricing_Total__c != null) ? dealItemRec.Rideaway_Pricing_Total__c : 0;
-    	if(minRideawayPricingTotal > dealItemRec.Rideaway_Pricing_Total__c) {
+    	if(dealItemRec.Is_Rideaway_Pricing_Enabled__c && minRideawayPricingTotal > dealItemRec.Rideaway_Pricing_Total__c) {
     		dealItemRec.Rideaway_Pricing_Total__c = minRideawayPricingTotal;
     		dealItemRec.Stamp_Duty_Total__c = minStampDuty;
     	} else {
-			Decimal subTotal = dealItemRec.Rideaway_Pricing_Total__c - feeTotal - subletTotal;
-			subTotal = (subTotal / ( 1 + (stampDutyRate/100))).setScale(2, RoundingMode.HALF_UP);
-			if(subTotal < 100) {
-				dealItemRec.Stamp_Duty_Total__c = 0;
-			} else {
-				Decimal roundedUpAmount = (Math.ceil(subTotal/100) * 100);
-				Decimal stampDutyTotal = (roundedUpAmount * (stampDutyRate/100)).setScale(2, RoundingMode.HALF_UP);
-				dealItemRec.Stamp_Duty_Total__c = stampDutyTotal;
-			}
+			Decimal subTotal = dealItemRec.Is_Rideaway_Pricing_Enabled__c ? (dealItemRec.Rideaway_Pricing_Total__c - feeTotal) : (totalBasePrice + totalFactoryOption + totalDealerInstalledOption + partsAndLaborTotal + subletTotal);
+			dealItemRec.Stamp_Duty_Total__c = StampDutyService.getCalculatedStampDuty(dealItemRec, (dealItemRec.Dutiable_Value__c != null ? dealItemRec.Dutiable_Value__c : subTotal));
     	}
 		
-   		Decimal totalBasePrice = dealItemRec.Rideaway_Pricing_Total__c - (dealItemRec.Stamp_Duty_Total__c + totalFactoryOption + totalDealerInstalledOption + partsAndLaborTotal + feeTotal + subletTotal);
-   		if(isTaxIncludingPricing) {
-			basePriceRec.Price_When_Tax_Included__c = (totalBasePrice/((basePriceRec.Qty__c != null || basePriceRec.Qty__c == 0) ? basePriceRec.Qty__c : 1));
-			basePriceRec.Price__c = (basePriceRec.Price_When_Tax_Included__c/(1 + (basePriceRec.Sales_Tax_Percentage__c/100)));
-		} else {
-			basePriceRec.Price__c = (totalBasePrice/((basePriceRec.Qty__c != null || basePriceRec.Qty__c == 0) ? basePriceRec.Qty__c : 1));
+   		if(dealItemRec.Is_Rideaway_Pricing_Enabled__c && basePriceRec != null) {
+			totalBasePrice = dealItemRec.Rideaway_Pricing_Total__c - (dealItemRec.Stamp_Duty_Total__c + totalFactoryOption + totalDealerInstalledOption + partsAndLaborTotal + feeTotal + subletTotal);
+			if(isTaxIncludingPricing) {
+				basePriceRec.Price_When_Tax_Included__c = (totalBasePrice/((basePriceRec.Qty__c != null || basePriceRec.Qty__c == 0) ? basePriceRec.Qty__c : 1));
+				basePriceRec.Price__c = (basePriceRec.Price_When_Tax_Included__c/(1 + (basePriceRec.Sales_Tax_Percentage__c/100)));
+			} else {
+				basePriceRec.Price__c = (totalBasePrice/((basePriceRec.Qty__c != null || basePriceRec.Qty__c == 0) ? basePriceRec.Qty__c : 1));
+			}
+			return basePriceRec;
 		}
-		return basePriceRec;
+		return null;
     }
+
+	public static Decimal getOptionAndFeeCost(Option_Fee__c ofRec) {
+		ofRec.Qty__c = (ofRec.Qty__c != null) ? ofRec.Qty__c : 0;				
+		Decimal cost = (ofRec.Cost__c != null) ? ofRec.Cost__c : 0;
+		if(ofRec.Part__c != null && !DealService.isOptionCommitted(ofRec)) {
+			cost = ofRec.Part__r.Average_Cost__c != null && ofRec.Part__r.Average_Cost__c != 0 ? 
+								ofRec.Part__r.Average_Cost__c : (ofRec.Part__r.Last_Cost__c != null ? ofRec.Part__r.Last_Cost__c : 0);
+		} else if(ofRec.Labour_Code__c != null && !DealService.isOptionCommitted(ofRec)) {
+			if(GeneralConfiguration.isTechnicianHoursCostingEnabled()) {
+				cost = GeneralConfiguration.getDefaultTechnicianCostingRate();
+			} else {
+				if(ofRec.Labour_Code__r.Cost_Method__c == 'Fixed Cost' && ofRec.Labour_Code__r.Cost_Rate__c != null) {
+					cost = ofRec.Labour_Code__r.Cost_Rate__c;
+				} else if(ofRec.Labour_Code__r.Cost_Method__c == 'Percent Retail' && ofRec.Labour_Code__r.Cost_Rate__c != null) {
+					cost = ((ofRec.Price__c * ofRec.Labour_Code__r.Cost_Rate__c)/100);
+				}
+			}
+		} else if(ofRec.Product__c != null) {
+			if(ofRec.Product__r.Type__c != Constants.SUBLET || !DealService.isOptionCommitted(ofRec)) {
+				if(ofRec.Product__r.Cost_Method__c == 'Fixed Cost' && ofRec.Product__r.Cost__c != null) {
+					cost = ofRec.Product__r.Cost__c;
+				} else if(ofRec.Product__r.Cost_Method__c == 'Percent Retail' && ofRec.Product__r.Cost__c != null) {
+					cost = ((ofRec.Price__c * ofRec.Product__r.Cost__c)/100);
+				}
+			}
+		} else if(ofRec.Fee__c != null) {
+			if(!ofRec.Fee__r.Is_Include_In_Profit_Calculation__c) {
+				cost = 0;
+			}
+			if(ofRec.Deal_Kit_Header__c == null || ofRec.Status__c == Constants.UNCOMIITTED) {
+				if(ofRec.Fee__r.Cost_Method__c == 'Fixed Cost' && ofRec.Fee__r.Cost_Rate__c != null) {
+					cost = ofRec.Fee__r.Cost_Rate__c;
+				} else if(ofRec.Fee__r.Cost_Method__c == 'Percent Retail' && ofRec.Fee__r.Cost_Rate__c != null) {
+					cost = ((ofRec.Price__c * ofRec.Fee__r.Cost_Rate__c)/100);
+				}
+			}
+		}
+		return (ofRec.Qty__c * cost).setScale(2, RoundingMode.HALF_UP);
+	}
 }

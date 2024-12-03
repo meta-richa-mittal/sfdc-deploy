@@ -1,0 +1,185 @@
+<apex:component >
+    <div class="select-report-header">
+        <h3 class="select-report">Select a report from the list or <a class = "bp-blue-font bp-blue-hover" ng-click="HomeSearchGrid.showFilterForm(); HomeSearchGrid.setCreateAndViewReport(true);">create a new report</a></h3>
+        <div class="dashboard first-column">
+            <div class="section homeSearchFilterList" ng-if="HomeSearchGrid.filterList.FilterType.Favorite.length > 0">
+                <h3>Favorites</h3>
+                <ul>
+                    <li ng-repeat="favoriteFilter in HomeSearchGrid.filterList.FilterType.Favorite | orderBy:'FilterLabel'" ng-mouseover="show = true" ng-mouseleave="show = false" class="parent-list">
+                        <i class="bp-icons bp-font-14 bp-blue-font report-scheduling-cal-icon-common" ng-if="favoriteFilter.ScheduleReportObj.IsReportScheduled">calendarFilled</i>
+                        <div class="filter-type-label" ng-click="HomeSearchGrid.applySavedFilter(favoriteFilter, 'favorite', 'favorite'); HomeSearchGrid.setCreateAndViewReport(true);">{{favoriteFilter.FilterLabel}}</div>
+                        <span class="col-md-1 col-sm-1 P0 dropdown-toggle" data-toggle="dropdown" role="button" ng-show="show"><i class="fa fa-cog "></i></span>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a class="T7" ng-class="{'bp-disabled': favoriteFilter.ScheduleReportObj.showLoading}" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && favoriteFilter.ScheduleReportObj.IsReportSchedulable" ng-click="HomeSearchGrid.scheduleReport(favoriteFilter)">{{(favoriteFilter.ScheduleReportObj.IsReportScheduled ? 'Edit_report_scheduling' : 'Report_scheduling') | translate }}</a>
+                                <i class="spinner-loading-icon" ng-if = "favoriteFilter.ScheduleReportObj.showLoading">
+                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200px" height="200px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+                                        <circle cx="50" cy="50" fill="none" stroke="#3384FF" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138">
+                                            <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50" keyTimes="0;1"></animateTransform>
+                                        </circle>
+                                    </svg>
+                                </i>
+                            </li>
+                            <li ng-click="HomeSearchGrid.deleteScheduledReport(favoriteFilter.Id, 'Favorite')" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && favoriteFilter.ScheduleReportObj.IsReportScheduled">
+                                <a  class="T7" >{{ 'Delete_report_scheduling' | translate }}</a>
+                            </li>
+                            <li ng-click="HomeSearchGrid.markFilterFav(favoriteFilter.Id, false)">
+                                <a  class="T7" >{{ 'Remove_From_Favorites' | translate }}</a>
+                            </li>
+                            <li ng-click="HomeSearchGrid.openShareSelectedFilterModal(favoriteFilter.Id, favoriteFilter.FilterLabel, 'favorite')">
+                                <a class="T7">{{ 'Share' | translate }}</a>
+                            </li>
+                            <li ng-click="HomeSearchGrid.renameOrCopyCustomFilter(favoriteFilter.Id, favoriteFilter.FilterLabel, false)"
+                                ng-hide="favoriteFilter.IsCommon">
+                                <a class="T7">{{ 'Rename' | translate }}</a>
+                            </li>
+                            <li ng-click="HomeSearchGrid.renameOrCopyCustomFilter(favoriteFilter.Id, favoriteFilter.FilterLabel, true)">
+                                <a class="T7">{{ 'Copy' | translate }}</a>
+                            </li>
+                            <li ng-click="HomeSearchGrid.confirmDelete(favoriteFilter.Id, favoriteFilter.FilterLabel)"
+                                ng-hide="favoriteFilter.IsCommon">
+                                <a class="T7">{{ 'Delete_Label' | translate }}</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="section" ng-if="(!HomeSearchGrid.filterList.FilterType.Favorite && (HomeSearchGrid.sharedFiltersList.FilterType.Favorite.length > 0 || HomeSearchGrid.sharedFiltersList.FilterType.Custom.length > 0))">
+                <h3>Shared with me</h3>
+                <ul>
+                    <li class="parent-list"  ng-mouseover="show = true" ng-mouseleave="show = false" 
+                        ng-repeat="favoriteFilter  in HomeSearchGrid.sharedFiltersList.FilterType.Favorite | orderBy:'FilterLabel'">
+                        <div class="filter-type-label" ng-click="HomeSearchGrid.applySavedFilter(favoriteFilter, 'favorite', 'sharedWithMe'); HomeSearchGrid.setCreateAndViewReport(true);">
+                            {{favoriteFilter.FilterLabel}} [{{favoriteFilter.UserAlias}}]
+                        </div>
+                        <span class="col-md-1 col-sm-1 P0 dropdown-toggle pull-left" data-toggle="dropdown" role="button"  ng-show="show"><i class="fa fa-cog PT5 "></i></span>
+                        <ul class="dropdown-menu" role="menu">
+                            <li ng-click="HomeSearchGrid.openDeleteSharedReportConfirmationModal(favoriteFilter.Id, favoriteFilter.FilterLabel)"
+                                ng-hide="favoriteFilter.IsCommon">
+                                <a class="T7">{{ 'Delete_Label' | translate }}</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="parent-list" ng-repeat="customFilter  in HomeSearchGrid.sharedFiltersList.FilterType.Custom | orderBy:'FilterLabel'" 
+                        ng-mouseover="show = true" ng-mouseleave="show = false">
+                        <div class="filter-type-label"
+                            ng-click="HomeSearchGrid.applySavedFilter(customFilter, 'Custom', 'sharedWithMe'); HomeSearchGrid.setCreateAndViewReport(true);">
+                            {{customFilter.FilterLabel}} [{{customFilter.UserAlias}}]
+                        </div>
+                        <span class="col-md-1 col-sm-1 P0 dropup dropdown-toggle" data-toggle="dropdown" role="button" ng-show="show"><i class="fa fa-cog PT5  "></i></span>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a class="T7" ng-click="HomeSearchGrid.openDeleteSharedReportConfirmationModal(customFilter.Id, customFilter.FilterLabel)">Delete</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="section" ng-if="((HomeSearchGrid.filterList.FilterType.Favorite.length > 0 && (HomeSearchGrid.sharedFiltersList.FilterType.Favorite.length > 0 || HomeSearchGrid.sharedFiltersList.FilterType.Custom.length > 0) && HomeSearchGrid.filterList.FilterType.Custom) || (!HomeSearchGrid.filterList.FilterType.Favorite && !(HomeSearchGrid.sharedFiltersList.FilterType.Favorite.length > 0 || HomeSearchGrid.sharedFiltersList.FilterType.Custom.length > 0) && HomeSearchGrid.filterList.FilterType.Custom))">
+                <h3>Custom</h3>
+                <ul>
+                    <li class="parent-list" ng-repeat="customFilter  in HomeSearchGrid.filterList.FilterType.Custom | orderBy:'FilterLabel'" 
+                        ng-mouseover="show = true" ng-mouseleave="show = false">
+                        <i class="bp-icons bp-font-14 bp-blue-font report-scheduling-cal-icon-common" ng-if="customFilter.ScheduleReportObj.IsReportScheduled">calendarFilled</i>
+                        <div class="filter-type-label" ng-click="HomeSearchGrid.applySavedFilter(customFilter, 'Custom', 'Custom'); HomeSearchGrid.setCreateAndViewReport(true);">
+                            {{customFilter.FilterLabel}}
+                        </div>
+                        <span class="col-md-1 col-sm-1 P0 dropup dropdown-toggle" data-toggle="dropdown" role="button" ng-show="show"><i class="fa fa-cog PT5  "></i></span>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a class="T7" ng-class="{'bp-disabled': customFilter.ScheduleReportObj.showLoading}" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && customFilter.ScheduleReportObj.IsReportSchedulable" ng-click="HomeSearchGrid.scheduleReport(customFilter)">{{(customFilter.ScheduleReportObj.IsReportScheduled ? 'Edit_report_scheduling' : 'Report_scheduling') | translate }}</a>
+                                <i class="spinner-loading-icon" ng-if = "customFilter.ScheduleReportObj.showLoading">
+                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200px" height="200px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+                                        <circle cx="50" cy="50" fill="none" stroke="#3384FF" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138">
+                                            <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50" keyTimes="0;1"></animateTransform>
+                                        </circle>
+                                    </svg>
+                                </i>
+                            </li>
+                            <li ng-click="HomeSearchGrid.deleteScheduledReport(customFilter.Id, 'Custom')" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && customFilter.ScheduleReportObj.IsReportScheduled">
+                                <a  class="T7" >{{ 'Delete_report_scheduling' | translate }}</a>
+                            </li>
+                            <li ng-click="HomeSearchGrid.openShareSelectedFilterModal(customFilter.Id, customFilter.FilterLabel, 'custom')">
+                                <a class="T7">{{ 'Share' | translate }}</a>
+                            </li>
+                            <li><a class="T7" ng-click="HomeSearchGrid.renameOrCopyCustomFilter(customFilter.Id, customFilter.FilterLabel, false)">Rename</a></li>
+                            <li ng-click="HomeSearchGrid.renameOrCopyCustomFilter(customFilter.Id, customFilter.FilterLabel, true)">
+                                <a class="T7">{{ 'Copy' | translate }}</a>
+                            </li>
+                            <li><a class="T7" ng-click="HomeSearchGrid.confirmDelete(customFilter.Id, customFilter.FilterLabel)">Delete</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="dashboard second-column">
+            <div class="section" ng-if="HomeSearchGrid.filterList.FilterType.Favorite.length > 0 && (HomeSearchGrid.sharedFiltersList.FilterType.Favorite.length > 0 || HomeSearchGrid.sharedFiltersList.FilterType.Custom.length > 0)">
+                <h3>Shared with me</h3>
+                <ul>
+                    <li class="parent-list"  ng-mouseover="show = true" ng-mouseleave="show = false" 
+                        ng-repeat="favoriteFilter  in HomeSearchGrid.sharedFiltersList.FilterType.Favorite | orderBy:'FilterLabel'">
+                        <div class="filter-type-label" ng-click="HomeSearchGrid.applySavedFilter(favoriteFilter, 'favorite', 'sharedWithMe'); HomeSearchGrid.setCreateAndViewReport(true);">
+                            {{favoriteFilter.FilterLabel}} [{{favoriteFilter.UserAlias}}]
+                        </div>
+                        <span class="col-md-1 col-sm-1 P0 dropdown-toggle pull-left" data-toggle="dropdown" role="button"  ng-show="show"><i class="fa fa-cog PT5 "></i></span>
+                        <ul class="dropdown-menu" role="menu">
+                            <li ng-click="HomeSearchGrid.openDeleteSharedReportConfirmationModal(favoriteFilter.Id, favoriteFilter.FilterLabel)"
+                                ng-hide="favoriteFilter.IsCommon">
+                                <a class="T7">{{ 'Delete_Label' | translate }}</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="parent-list" ng-repeat="customFilter  in HomeSearchGrid.sharedFiltersList.FilterType.Custom | orderBy:'FilterLabel'" 
+                        ng-mouseover="show = true" ng-mouseleave="show = false">
+                        <div class="filter-type-label"
+                            ng-click="HomeSearchGrid.applySavedFilter(customFilter, 'Custom', 'sharedWithMe'); HomeSearchGrid.setCreateAndViewReport(true);">
+                            {{customFilter.FilterLabel}} [{{customFilter.UserAlias}}]
+                        </div>
+                        <span class="col-md-1 col-sm-1 P0 dropup dropdown-toggle" data-toggle="dropdown" role="button" ng-show="show"><i class="fa fa-cog PT5  "></i></span>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a class="T7" ng-click="HomeSearchGrid.openDeleteSharedReportConfirmationModal(customFilter.Id, customFilter.FilterLabel)">Delete</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="section" ng-if="(HomeSearchGrid.filterList.FilterType.Custom && ((HomeSearchGrid.filterList.FilterType.Favorite.length > 0 && !(HomeSearchGrid.sharedFiltersList.FilterType.Favorite.length > 0 || HomeSearchGrid.sharedFiltersList.FilterType.Custom.length > 0)) || (!HomeSearchGrid.filterList.FilterType.Favorite && (HomeSearchGrid.sharedFiltersList.FilterType.Favorite.length > 0 || HomeSearchGrid.sharedFiltersList.FilterType.Custom.length > 0))))">
+                <h3>Custom</h3>
+                <ul>
+                    <li class="parent-list" ng-repeat="customFilter  in HomeSearchGrid.filterList.FilterType.Custom | orderBy:'FilterLabel'" 
+                        ng-mouseover="show = true" ng-mouseleave="show = false">
+                        <i class="bp-icons bp-font-14 bp-blue-font report-scheduling-cal-icon-common" ng-if="customFilter.ScheduleReportObj.IsReportScheduled">calendarFilled</i>
+                        <div class="filter-type-label" ng-click="HomeSearchGrid.applySavedFilter(customFilter, 'Custom', 'Custom'); HomeSearchGrid.setCreateAndViewReport(true);">
+                            {{customFilter.FilterLabel}}
+                        </div>
+                        <span class="col-md-1 col-sm-1 P0 dropup dropdown-toggle" data-toggle="dropdown" role="button" ng-show="show"><i class="fa fa-cog PT5  "></i></span>
+                        <ul class="dropdown-menu" role="menu">
+                            <li>
+                                <a class="T7" ng-class="{'bp-disabled': customFilter.ScheduleReportObj.showLoading}" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && customFilter.ScheduleReportObj.IsReportSchedulable" ng-click="HomeSearchGrid.scheduleReport(customFilter)">{{(customFilter.ScheduleReportObj.IsReportScheduled ? 'Edit_report_scheduling' : 'Report_scheduling') | translate }}</a>
+                                <i class="spinner-loading-icon" ng-if = "customFilter.ScheduleReportObj.showLoading">
+                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200px" height="200px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
+                                        <circle cx="50" cy="50" fill="none" stroke="#3384FF" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138">
+                                            <animateTransform attributeName="transform" type="rotate" repeatCount="indefinite" dur="1s" values="0 50 50;360 50 50" keyTimes="0;1"></animateTransform>
+                                        </circle>
+                                    </svg>
+                                </i>
+                            </li>
+                            <li ng-click="HomeSearchGrid.deleteScheduledReport(customFilter.Id, 'Custom')" ng-if="HomeSearchGrid.reportScheduling.isReportSchedulingActionAvailable() && customFilter.ScheduleReportObj.IsReportScheduled">
+                                <a  class="T7" >{{ 'Delete_report_scheduling' | translate }}</a>
+                            </li>
+                            <li ng-click="HomeSearchGrid.openShareSelectedFilterModal(customFilter.Id, customFilter.FilterLabel, 'custom')">
+                                <a class="T7">{{ 'Share' | translate }}</a>
+                            </li>
+                            <li><a class="T7" ng-click="HomeSearchGrid.renameOrCopyCustomFilter(customFilter.Id, customFilter.FilterLabel, false)">Rename</a></li>
+                            <li ng-click="HomeSearchGrid.renameOrCopyCustomFilter(customFilter.Id, customFilter.FilterLabel, true)">
+                                <a class="T7">{{ 'Copy' | translate }}</a>
+                            </li>
+                            <li><a class="T7" ng-click="HomeSearchGrid.confirmDelete(customFilter.Id, customFilter.FilterLabel)">Delete</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+   </div>
+</apex:component>

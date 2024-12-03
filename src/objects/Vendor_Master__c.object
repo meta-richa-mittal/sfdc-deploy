@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>false</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>Category__c</fullName>
+        <externalId>false</externalId>
+        <label>Category</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Cost_New__c</fullName>
+        <externalId>false</externalId>
+        <label>Cost</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Cost__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Cost (Not Used)</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Description_EN__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Description EN</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Description_FR__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Description FR</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Generate_PF_MS_Job_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>Generate PF MS Job Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Generate_PF_Webhook_Response__c</fullName>
+        <externalId>false</externalId>
+        <label>Generate PF Webhook Response</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Is_Import_Successful__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Import Successful</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Update_Available__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Update Available</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Last_Imported_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Imported Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Last Modified By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Vendor_Masters</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Modified Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Mfg_Num__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Mfg Num</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Other_Cost_New__c</fullName>
+        <externalId>false</externalId>
+        <label>Other Cost</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Other_Cost__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Other Cost (Not Used)</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Other_Price_New__c</fullName>
+        <externalId>false</externalId>
+        <label>Other Price</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Other_Price__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Other Price (Not Used)</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Part_Num__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Part Num</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Partner_Vendor_Master_Identifier__c</fullName>
+        <externalId>false</externalId>
+        <label>Partner Vendor Master Identifier</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Pkg_Qty__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Pkg Qty</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Price_File_Location_URL__c</fullName>
+        <externalId>false</externalId>
+        <label>Price File Location URL</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Price_New__c</fullName>
+        <externalId>false</externalId>
+        <label>Price</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Price__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Price (Not Used)</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Price_File_Import_Status__c</fullName>
+        <externalId>false</externalId>
+        <label>Price File Import Status</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>false</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Queued for import</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Import in progress</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Review errors</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Review import</fullName>
+                    <default>false</default>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>Replaced_By__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Replaced By</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Replaces__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Replaces</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>SKU_Num__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>SKU Num</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Vendor_Name__c</fullName>
+        <caseSensitive>false</caseSensitive>
+        <externalId>false</externalId>
+        <label>Vendor Price File Name</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>true</unique>
+    </fields>
+    <fields>
+        <fullName>Blackpurl_Vendor__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Blackpurl Vendor</label>
+        <lookupFilter>
+            <active>true</active>
+            <filterItems>
+                <field>Account.Is_Vendor__c</field>
+                <operation>equals</operation>
+                <value>True</value>
+            </filterItems>
+            <isOptional>false</isOptional>
+        </lookupFilter>
+        <referenceTo>Account</referenceTo>
+        <relationshipLabel>Vendor Masters</relationshipLabel>
+        <relationshipName>Vendor_Masters</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+	</fields>
+	<fields>
+        <fullName>Vendor_Master_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Vendor Master Type</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>BRP Parts Master</fullName>
+                    <default>false</default>
+                </value>
+            <value>
+                <fullName>Automated</fullName>
+                <default>false</default>
+            </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <label>Vendor Master</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>Is_Update_Available__c</columns>
+        <columns>Partner_Vendor_Master_Identifier__c</columns>
+        <columns>Vendor_Name__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <nameField>
+        <displayFormat>VM-{00000000}</displayFormat>
+        <label>Vendor Master Name</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Vendor Masters</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ReadWrite</sharingModel>
+    <webLinks>
+        <fullName>Subscribe</fullName>
+        <availability>online</availability>
+        <description>Used to subscribe the provided Partner Vendor Master Identifier</description>
+        <displayType>button</displayType>
+        <linkType>javascript</linkType>
+        <masterLabel>Subscribe</masterLabel>
+        <openType>onClickJavaScript</openType>
+        <protected>false</protected>
+        <url>{!REQUIRESCRIPT(&quot;/soap/ajax/56.0/connection.js&quot;)}
+{!REQUIRESCRIPT(&quot;/soap/ajax/56.0/apex.js&quot;)}
+
+var apexClassRec = sforce.connection.query(&quot;SELECT NamespacePrefix FROM ApexClass where Name Like &apos;%Constants&apos;&quot;);
+var nameSpace = apexClassRec.getArray(&quot;records&quot;)[0].NamespacePrefix ;
+
+if(nameSpace != &quot;&quot; &amp;&amp; nameSpace != null &amp;&amp; nameSpace != undefined) {
+    nameSpace += &quot;/&quot;;
+} else {
+    nameSpace = &quot;&quot;;
+}
+
+var partnerVMName = &quot;{!Vendor_Master__c.Partner_Vendor_Master_Identifier__c}&quot;;
+if(partnerVMName != null &amp;&amp; partnerVMName != &quot;&quot; &amp;&amp; partnerVMName != undefined) {
+    var hasError = sforce.apex.execute(nameSpace + &quot;VendorMasterSubscriberCtrl&quot;,&quot;subscribeAction&quot;,{vendorMasterName:partnerVMName});
+    if(hasError == &apos;true&apos;) {
+		alert(&apos;Some error occurred. Please see error logs for more detail&apos;);
+	} else {
+		alert(&apos;Subscribe action completed. Click OK button to refresh the page.&apos;);
+		window.location.reload();
+	}
+} else {
+	alert(&quot;Partner Vendor Master Identifier is required&quot;);
+}</url>
+    </webLinks>
+    <webLinks>
+        <fullName>Unsubscribe_and_delete</fullName>
+        <availability>online</availability>
+        <description>It will unsubscribe the price file and after that will delete the VM record.</description>
+        <displayType>button</displayType>
+        <linkType>javascript</linkType>
+        <masterLabel>Unsubscribe and delete</masterLabel>
+        <openType>onClickJavaScript</openType>
+        <protected>false</protected>
+        <url>{!REQUIRESCRIPT(&quot;/soap/ajax/56.0/connection.js&quot;)}
+    {!REQUIRESCRIPT(&quot;/soap/ajax/56.0/apex.js&quot;)}
+
+    var apexClassRec = sforce.connection.query(&quot;SELECT NamespacePrefix FROM ApexClass where Name Like &apos;%Constants&apos;&quot;);
+    var nameSpace = apexClassRec.getArray(&quot;records&quot;)[0].NamespacePrefix ;
+
+    if(nameSpace != &quot;&quot; &amp;&amp; nameSpace != null &amp;&amp; nameSpace != undefined) {
+        nameSpace += &quot;/&quot;;
+    } else {
+        nameSpace = &quot;&quot;;
+    }
+
+    var partnerVMName = &quot;{!Vendor_Master__c.Partner_Vendor_Master_Identifier__c}&quot;;
+    var vmId = &quot;{!Vendor_Master__c.Id}&quot;;
+    if(partnerVMName != null &amp;&amp; partnerVMName != &quot;&quot; &amp;&amp; partnerVMName != undefined) {
+        var hasError = sforce.apex.execute(nameSpace + &quot;VendorMasterSubscriberCtrl&quot;,&quot;unsubscribeAndDeleteAction&quot;,{vendorMasterId:vmId, partnerVendorMasterName:partnerVMName});
+        if(hasError == &apos;true&apos;) {
+            alert(&apos;Some error occurred. Please see error logs for more detail&apos;);
+        } else {
+            alert(&apos;Unsubscribed and deleted successfully.&apos;);
+            window.open(&apos;/&apos; + vmId.substring(0, 3),&apos;_self&apos;);
+        }
+    } else {
+        alert(&quot;Partner Vendor Master Identifier is required&quot;);
+    }</url>
+    </webLinks>
+</CustomObject>

@@ -6,6 +6,10 @@
 **/
 @isTest
 private class DealKH_RecalculationTest {
+    @testSetup
+    private static void setupTestData() {
+		TestDataFactory.disableFLSChecks();
+   }
      
     static testmethod void calculatePriceForDealKitInsertionTest(){
        
@@ -20,7 +24,7 @@ private class DealKH_RecalculationTest {
         insert coHeader;
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        DealService.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
         dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -51,7 +55,7 @@ private class DealKH_RecalculationTest {
         
         test.startTest();
         DealWrapper.OptionAndFeeInfo optionAndFeeObj = new DealWrapper.OptionAndFeeInfo(optionAndFeeRec);
-        BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
+        BPUtility.getDecodedString(DealService.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
         test.stoptest();
         Deal_Kit_Header__c dealKHObj = [select id from Deal_Kit_Header__c ];
         optionAndFeeRec.Deal_Kit_Header__c = dealKHObj.id;
@@ -73,7 +77,7 @@ private class DealKH_RecalculationTest {
         insert coHeader;
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        DealService.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
         dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -104,7 +108,7 @@ private class DealKH_RecalculationTest {
         
         test.startTest();
         DealWrapper.OptionAndFeeInfo optionAndFeeObj = new DealWrapper.OptionAndFeeInfo(optionAndFeeRec);
-        BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
+        BPUtility.getDecodedString(DealService.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
         test.stoptest();
         system.assert(true,true);
     }
@@ -158,7 +162,7 @@ private class DealKH_RecalculationTest {
         insert coHeader;
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        DealService.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
         dealItemRec.Unit_Model__c = unitmodel.Id;    
@@ -202,7 +206,7 @@ private class DealKH_RecalculationTest {
         insert coHeader;
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        DealService.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
         dealItemRec.Unit_Model__c = unitmodel.Id;    
@@ -246,7 +250,7 @@ private class DealKH_RecalculationTest {
         insert coHeader;
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        DealService.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
         dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -276,7 +280,7 @@ private class DealKH_RecalculationTest {
         
         test.startTest();
         DealWrapper.OptionAndFeeInfo optionAndFeeObj = new DealWrapper.OptionAndFeeInfo(optionAndFeeRec);
-        String JsonVal = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
+        String JsonVal = BPUtility.getDecodedString(DealService.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
         test.stoptest();
         system.assertEquals(true,JsonVal.length()>0);
     }
@@ -295,7 +299,7 @@ private class DealKH_RecalculationTest {
         insert coHeader;
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        DealService.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
         dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -325,7 +329,7 @@ private class DealKH_RecalculationTest {
         
         test.startTest();
         DealWrapper.OptionAndFeeInfo optionAndFeeObj = new DealWrapper.OptionAndFeeInfo(optionAndFeeRec);
-        BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
+        BPUtility.getDecodedString(DealService.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
         test.stoptest();
         system.assert(true,true);
     }
@@ -343,7 +347,7 @@ private class DealKH_RecalculationTest {
         insert coHeader;
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        DealService.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
         dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -373,9 +377,9 @@ private class DealKH_RecalculationTest {
         
         test.startTest();
         DealWrapper.OptionAndFeeInfo optionAndFeeObj = new DealWrapper.OptionAndFeeInfo(optionAndFeeRec);
-        BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
-        Deal_Kit_Header__c dealKitHeaderRecord = [select id,Tax_Amount__c,Kit_Header__r.Kit_Unique_Name__c,Actual_Kit_Price__c,Deal_Item__r.Deal__r.Co_Header__c,Is_Fixed_Price__c,Fixed_Price__c,Is_Install__c,Service_Kit__c,Is_Fixed_Kit_Header_CO__c,Can_Split__c from Deal_Kit_Header__c];
-        List<Option_Fee__c> optionFeeRecord = [select id,Deal__c,Is_Install__c,Price__c,Deal_Item__c,Qty__c,Part__c,Part__r.AvailableParts__c, Part__r.Non_Inventory_Part__c,Fee__c,Labour_Code__c,Product__c,Product__r.Type__c,Deal_Kit_Header__c,Is_Fixed_Price__c,Is_Fixed_Kit_Line_Item_CO__c,Fixed_Price__c,Item_Code__c,Item_Description__c,Status__c,Is_Environmental_Fee__c,Sales_Tax_Percentage__c, CO_Line_Item__r.Qty_To_Order__c, Service_Order_Line_Item__r.CO_Line_Item__r.Qty_To_Order__c, Part__r.Part_Number__c, Part__r.Description__c from Option_Fee__c ];
+        BPUtility.getDecodedString(DealService.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
+        Deal_Kit_Header__c dealKitHeaderRecord = [select id,Tax_Amount__c,Kit_Header__r.Kit_Unique_Name__c,Actual_Kit_Price__c,Deal_Item__r.Deal__r.Co_Header__c,Is_Fixed_Price__c,Fixed_Price__c,Is_Install__c,Service_Kit__c,Is_Fixed_Kit_Header_CO__c,Can_Split__c, UUID__c from Deal_Kit_Header__c];
+        List<Option_Fee__c> optionFeeRecord = [select id, Part__r.Vendor__r.Is_Foreign_Vendor__c, Deal__c,Is_Install__c,Price__c,Deal_Item__c,Qty__c,Part__c,Part__r.AvailableParts__c, Part__r.Non_Inventory_Part__c,Fee__c,Labour_Code__c,Product__c,Product__r.Type__c,Deal_Kit_Header__c,Is_Fixed_Price__c,Is_Fixed_Kit_Line_Item_CO__c,Fixed_Price__c,Item_Code__c,Item_Description__c,Status__c,Is_Environmental_Fee__c,Sales_Tax_Percentage__c, CO_Line_Item__r.Qty_To_Order__c, Service_Order_Line_Item__r.CO_Line_Item__r.Qty_To_Order__c, Part__r.Part_Number__c, Part__r.Description__c, UUID__c from Option_Fee__c ];
         DealWrapper.DealKitHeader DealKitHeaderObj = new DealWrapper.DealKitHeader(dealKitHeaderRecord,optionFeeRecord,true);
         String Message = DealKH_Recalculation.updateDealKitHeader(DealKitHeaderObj);
         test.stopTest();
@@ -395,7 +399,7 @@ private class DealKH_RecalculationTest {
         insert coHeader;
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        DealService.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
         dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -425,10 +429,11 @@ private class DealKH_RecalculationTest {
         
         test.startTest();
         DealWrapper.OptionAndFeeInfo optionAndFeeObj = new DealWrapper.OptionAndFeeInfo(optionAndFeeRec);
-        BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
-        Deal_Kit_Header__c dealKitHeaderRecord = [select id,Tax_Amount__c,Kit_Header__r.Kit_Unique_Name__c,Actual_Kit_Price__c,Deal_Item__r.Deal__r.Co_Header__c,Is_Fixed_Price__c,Fixed_Price__c,Is_Install__c,Service_Kit__c,Is_Fixed_Kit_Header_CO__c,Can_Split__c from Deal_Kit_Header__c];
+        BPUtility.getDecodedString(DealService.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
+        Deal_Kit_Header__c dealKitHeaderRecord = [select id,UUID__c,Tax_Amount__c,Kit_Header__r.Kit_Unique_Name__c,Actual_Kit_Price__c,Deal_Item__r.Deal__r.Co_Header__c,Is_Fixed_Price__c,Fixed_Price__c,Is_Install__c,Service_Kit__c,Is_Fixed_Kit_Header_CO__c,Can_Split__c from Deal_Kit_Header__c];
         dealKitHeaderRecord.Fixed_Price__c=45;
-        List<Option_Fee__c> optionFeeRecord = [select id,Deal__c,Is_Install__c,Price__c,Deal_Item__c,Qty__c,Part__c,Part__r.AvailableParts__c, Part__r.Non_Inventory_Part__c,Fee__c,Labour_Code__c,Product__c,Product__r.Type__c,Deal_Kit_Header__c,Is_Fixed_Price__c,Is_Fixed_Kit_Line_Item_CO__c,Fixed_Price__c,Item_Code__c,Item_Description__c,Status__c,Sales_Tax_Percentage__c, Is_Environmental_Fee__c, CO_Line_Item__r.Qty_To_Order__c, Service_Order_Line_Item__r.CO_Line_Item__r.Qty_To_Order__c, Part__r.Part_Number__c, Part__r.Description__c from Option_Fee__c ];
+        List<Option_Fee__c> optionFeeRecord = [select id, Part__r.Vendor__r.Is_Foreign_Vendor__c, Deal__c,Is_Install__c,Price__c,Deal_Item__c,Qty__c,Part__c,Part__r.AvailableParts__c, Part__r.Non_Inventory_Part__c,Fee__c,Labour_Code__c,Product__c,Product__r.Type__c,Deal_Kit_Header__c,Is_Fixed_Price__c,Is_Fixed_Kit_Line_Item_CO__c,Fixed_Price__c,Item_Code__c,Item_Description__c,Status__c,Sales_Tax_Percentage__c, Is_Environmental_Fee__c, CO_Line_Item__r.Qty_To_Order__c, Service_Order_Line_Item__r.CO_Line_Item__r.Qty_To_Order__c, Part__r.Part_Number__c, Part__r.Description__c, UUID__c from Option_Fee__c ];
+
         DealWrapper.DealKitHeader DealKitHeaderObj = new DealWrapper.DealKitHeader(dealKitHeaderRecord,optionFeeRecord,true);
         String Message = DealKH_Recalculation.updateDealKitHeader(DealKitHeaderObj);
         test.stopTest();
@@ -448,7 +453,7 @@ private class DealKH_RecalculationTest {
         insert coHeader;
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        DealService.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
         dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -480,10 +485,10 @@ private class DealKH_RecalculationTest {
         
         test.startTest();
         DealWrapper.OptionAndFeeInfo optionAndFeeObj = new DealWrapper.OptionAndFeeInfo(optionAndFeeRec);
-        BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
-        Deal_Kit_Header__c dealKitHeaderRecord = [select id,Tax_Amount__c,Kit_Header__r.Kit_Unique_Name__c,Actual_Kit_Price__c,Deal_Item__r.Deal__r.Co_Header__c,Is_Fixed_Price__c,Fixed_Price__c,Is_Install__c,Service_Kit__c,Is_Fixed_Kit_Header_CO__c,Can_Split__c from Deal_Kit_Header__c];
+        BPUtility.getDecodedString(DealService.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealItems[0].Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
+        Deal_Kit_Header__c dealKitHeaderRecord = [select id,UUID__c,Tax_Amount__c,Kit_Header__r.Kit_Unique_Name__c,Actual_Kit_Price__c,Deal_Item__r.Deal__r.Co_Header__c,Is_Fixed_Price__c,Fixed_Price__c,Is_Install__c,Service_Kit__c,Is_Fixed_Kit_Header_CO__c,Can_Split__c from Deal_Kit_Header__c];
         dealKitHeaderRecord.Fixed_Price__c=45;
-        List<Option_Fee__c> optionFeeRecord = [select id,Deal__c,Is_Install__c,Price__c,Deal_Item__c,Qty__c,Part__c,Part__r.AvailableParts__c,Part__r.Non_Inventory_Part__c,Fee__c,Labour_Code__c,Product__c,Product__r.Type__c,Deal_Kit_Header__c,Is_Fixed_Price__c,Is_Fixed_Kit_Line_Item_CO__c,Fixed_Price__c,Item_Code__c,Item_Description__c,Status__c,Sales_Tax_Percentage__c, Is_Environmental_Fee__c, CO_Line_Item__r.Qty_To_Order__c, Service_Order_Line_Item__r.CO_Line_Item__r.Qty_To_Order__c, Part__r.Part_Number__c, Part__r.Description__c from Option_Fee__c ];
+        List<Option_Fee__c> optionFeeRecord = [select id, Part__r.Vendor__r.Is_Foreign_Vendor__c, Deal__c,Is_Install__c,Price__c,Deal_Item__c,Qty__c,Part__c,Part__r.AvailableParts__c,Part__r.Non_Inventory_Part__c,Fee__c,Labour_Code__c,Product__c,Product__r.Type__c,Deal_Kit_Header__c,Is_Fixed_Price__c,Is_Fixed_Kit_Line_Item_CO__c,Fixed_Price__c,Item_Code__c,Item_Description__c,Status__c,Sales_Tax_Percentage__c, Is_Environmental_Fee__c, CO_Line_Item__r.Qty_To_Order__c, Service_Order_Line_Item__r.CO_Line_Item__r.Qty_To_Order__c, Part__r.Part_Number__c, Part__r.Description__c, UUID__c from Option_Fee__c ];
         DealWrapper.DealKitHeader DealKitHeaderObj = new DealWrapper.DealKitHeader(dealKitHeaderRecord,optionFeeRecord,true);
         String Message = DealKH_Recalculation.UpdateDealKitLineItem(DealKitHeaderObj,optionAndFeeObj);
         test.stopTest();
@@ -504,7 +509,7 @@ private class DealKH_RecalculationTest {
         CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
         insert coHeader;
 
-        DealWrapper dealWrapperObj = (DealWrapper)Json.deserialize(BPUtility.getDecodedString(CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id))),DealWrapper.class);
+        DealWrapper dealWrapperObj = (DealWrapper)Json.deserialize(BPUtility.getDecodedString(DealService.createDeal(BPUtility.getEncodedString(coHeader.Id))),DealWrapper.class);
         Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
         List<Deal__c> dealList = [Select id, (Select Id from Deal_Items__r) from Deal__c where CO_Header__c = :coHeader.Id];
@@ -531,7 +536,7 @@ private class DealKH_RecalculationTest {
         insert new List<Unit_Price_Cost__c>{unitPriceAndCostBase};
         
         test.startTest();
-        dealWrapperObj = (DealWrapper)Json.deserialize(BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(
+        dealWrapperObj = (DealWrapper)Json.deserialize(BPUtility.getDecodedString(DealService.addUnitToDeal(BPUtility.getEncodedString(
                         dealList[0].Deal_Items__r[0].Id),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id))),
                         DealWrapper.class);
             
@@ -542,7 +547,7 @@ private class DealKH_RecalculationTest {
         optionAndFeeRecWithPart.Deal_Kit_Header__c =  kitHeader.Id;
 
         DealWrapper.OptionAndFeeInfo optionAndFeeObj = new DealWrapper.OptionAndFeeInfo(optionAndFeeRecWithPart);
-        BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
+        BPUtility.getDecodedString(DealService.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(JSON.serialize(optionAndFeeObj))));
         
         List<Option_Fee__c> optionAndFeeList = [SELECT Id, Price__c, Labour_Code__c, Fee__c, Part__c,(SELECT Enhanced_Tax_Amount__c,Sales_Tax_Item_Name__c,Tax_Rate__c FROM Individual_Taxes__r) 
             FROM Option_Fee__c WHERE Deal_Item__c =: dealWrapperObj.UnitList[0].DealItemObj.Id];

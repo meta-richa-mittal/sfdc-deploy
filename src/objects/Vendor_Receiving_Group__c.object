@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>Cost__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+	    <fullName>Discount__c</fullName>
+	    <defaultValue>0.00</defaultValue>
+	    <externalId>false</externalId>
+	    <label>Discount</label>
+	    <precision>5</precision>
+	    <required>false</required>
+	    <scale>2</scale>
+	    <trackTrending>false</trackTrending>
+	    <type>Percent</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Last Modified By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Vendor_Receiving_Groups</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Modified Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Migration_Id__c</fullName>
+        <externalId>true</externalId>
+        <label>Migration Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Needed_By__c</fullName>
+        <defaultValue>TODAY()</defaultValue>
+        <externalId>false</externalId>
+        <label>Needed By</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Order__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Order</label>
+        <precision>14</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Ignore_Current_Cost_Update__c</fullName>
+	    <defaultValue>false</defaultValue>
+	    <description>In order to ignore part cost update when user actions learn more button and make changes in current VRG cost update setting from true to false on modal, we turn this flag ON considering that while finalizing receiving we will ignore this group from updating part cost.</description>
+	    <externalId>false</externalId>
+	    <inlineHelpText>To ignore part current cost update while finalizing vendor receiving.</inlineHelpText>
+	    <label>Ignore Current Cost Update</label>
+	    <trackTrending>false</trackTrending>
+	    <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Order_As_Individual_Item__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Order As Individual Item</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Order_Lot__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Order Lot</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Is_Packaged_Part__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Packaged Part</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Order_Lots__c</fullName>
+        <externalId>false</externalId>
+        <label>Order Lots</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Package_Qty__c</fullName>
+        <externalId>false</externalId>
+        <label>Package Qty</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>   
+    <fields>
+        <fullName>Package_Unit__c</fullName>
+        <externalId>false</externalId>
+        <label>Package Unit</label>
+        <length>25</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Part__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Part</label>
+        <referenceTo>Part__c</referenceTo>
+        <relationshipLabel>Vendor Receiving Group Parts</relationshipLabel>
+        <relationshipName>Vendor_Receiving_Group_Parts</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Per_Unit_Cost__c</fullName>
+        <description>For packaged part it will be the cost of 1 package and for non-packaged part or sublet  it will be the cost of individual item (Cost__c)</description>
+        <externalId>false</externalId>
+        <inlineHelpText>For packaged part it will be the cost of 1 package and for non-packaged part or sublet it will be the cost of individual item (Cost__c)</inlineHelpText>
+        <label>Per Unit Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Recieved__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Recieved</label>
+        <precision>14</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Service_Order_Line_Item__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Service Order Line Item</label>
+        <referenceTo>Service_Order_Line_Item__c</referenceTo>
+        <relationshipLabel>Vendor Receiving Groups</relationshipLabel>
+        <relationshipName>Vendor_Receiving_Groups</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Sublet__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Sublet Type Vendor Product</description>
+        <externalId>false</externalId>
+        <label>Sublet</label>
+        <lookupFilter>
+            <active>true</active>
+            <filterItems>
+                <field>Product__c.Type__c</field>
+                <operation>equals</operation>
+                <value>Sublet</value>
+            </filterItems>
+            <isOptional>false</isOptional>
+        </lookupFilter>
+        <referenceTo>Product__c</referenceTo>
+        <relationshipLabel>Vendor Receiving Groups</relationshipLabel>
+        <relationshipName>Vendor_Receiving_Groups</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Total__c</fullName>
+        <defaultValue>0</defaultValue>
+        <externalId>false</externalId>
+        <label>Total</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Vendor_Receiving_Header__c</fullName>
+        <externalId>false</externalId>
+        <label>Vendor Receiving Header</label>
+        <referenceTo>Vendor_Receiving_Header__c</referenceTo>
+        <relationshipLabel>Vendor Receiving Groups</relationshipLabel>
+        <relationshipName>Vendor_Receiving_Groups</relationshipName>
+        <relationshipOrder>0</relationshipOrder>
+        <reparentableMasterDetail>false</reparentableMasterDetail>
+        <trackTrending>false</trackTrending>
+        <type>MasterDetail</type>
+        <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    </fields>
+    <fields>
+        <fullName>Cost_Update_Reviewed__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>To track if user changed cost update setting or not.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>To track if user changed cost update setting or not.</inlineHelpText>
+        <label>Cost Update Reviewed</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <label>Vendor Receiving Group</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>Vendor_Receiving_Header__c</columns>
+        <columns>Cost__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <nameField>
+        <displayFormat>VG-{000000}</displayFormat>
+        <label>Name</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Vendor Receiving Groups</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ControlledByParent</sharingModel>
+</CustomObject>

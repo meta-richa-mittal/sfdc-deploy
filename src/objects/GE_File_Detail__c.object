@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Generic File Details contains the information related to each column to be created in the export file</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>false</enableReports>
+    <enableSearch>false</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>Active__c</fullName>
+        <defaultValue>true</defaultValue>
+        <description>Flag to indicate if the column should be included in the export file</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Flag to indicate if the column should be included in the export file</inlineHelpText>
+        <label>Active</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Data_Type__c</fullName>
+        <description>Field data type. Ex Text, Date</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Field data type. Ex Text, Date</inlineHelpText>
+        <label>Data Type</label>
+        <picklist>
+            <picklistValues>
+                <fullName>Text</fullName>
+                <default>true</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Date</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Date/Time</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Integer</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Default_Value__c</fullName>
+        <description>Hardcoded value for all records. If this field is having value then field API name will be ignored.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Hardcoded value for all records. If this field is having value then field API name will be ignored.</inlineHelpText>
+        <label>Default Value</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Field_API_Name__c</fullName>
+        <description>Related field API name. If in case we can not create formula field for some data (like long text area field) then use this to provided &quot;/&quot; separated Field API Names in the order of Field_API1/Field_API2 if Field_API1 is blank and so on.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Related field API name. If in case we can not create formula field for some data (like long text area field) then use this to provided &quot;/&quot; separated Field API Names in the order of Field_API1/Field_API2 if Field_API1 is blank and so on.</inlineHelpText>
+        <label>Field API Name</label>
+        <length>500</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>File_Column_Label__c</fullName>
+        <description>Column header value to be shown in exported file</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Column header value to be shown in exported file</inlineHelpText>
+        <label>File Column Label</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>File_Column_Name__c</fullName>
+        <description>BP column name from the dropdown provided while creating/updating Custom Export Format.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>BP column name from the dropdown provided while creating/updating Custom Export Format.</inlineHelpText>
+        <label>File Column Name</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>GE_File_Config__c</fullName>
+        <description>Parent File Config</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Parent File Config</inlineHelpText>
+        <label>GE File Config</label>
+        <referenceTo>GE_File_Config__c</referenceTo>
+        <relationshipLabel>GE File Details</relationshipLabel>
+        <relationshipName>GE_File_Details</relationshipName>
+        <relationshipOrder>0</relationshipOrder>
+        <reparentableMasterDetail>false</reparentableMasterDetail>
+        <trackTrending>false</trackTrending>
+        <type>MasterDetail</type>
+        <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    </fields>
+    <fields>
+        <fullName>Image_Column__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>True if the the column is for image urls.</description>
+        <inlineHelpText>True if the the column is for image urls.</inlineHelpText>
+        <label>Image Column?</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Last Modified By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>GE_File_Details</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Modified Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Order_Number__c</fullName>
+        <description>Represents the column number value for the export file</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Represents the column number value for the export file</inlineHelpText>
+        <label>Order Number</label>
+        <precision>2</precision>
+        <required>true</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Other_Object_API_Name__c</fullName>
+        <description>Represents the Object API name if we need to include information from some other object in export file. For ex Business_Profile__c</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Represents the Object API name if we need to include information from some other object in export file. For ex Business_Profile__c</inlineHelpText>
+        <label>Other Object API Name</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>GE File Detail</label>
+    <nameField>
+        <displayFormat>FD-{00000000}</displayFormat>
+        <label>GE File Detail Name</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>GE File Details</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ControlledByParent</sharingModel>
+</CustomObject>

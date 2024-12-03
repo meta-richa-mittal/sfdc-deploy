@@ -1,0 +1,104 @@
+<apex:component controller="GlobalController">
+ <!-- Start: Deposit Section --> 
+                     <div class="bp-accordion-entry expanded"  ng-class = "{'bp-collapse' : M_CO.expandedSectionName != 'Deposit', 'disable-accordion' : !GroupOnlyPermissions['Customer invoicing']['view']}" >
+                        <div class="bp-accordion-header bp-yellow bp-white-font d-flex new-header-container" >
+                           
+                            <div class="icon-container" ng-click = "F_CO.expandOrCollapseSection('DepositSectionId','Deposit','', GroupOnlyPermissions['Customer invoicing']['view'])" >
+			                    <i class="bp-icons stroke-5 bp-lh-20">invoice</i>
+			                </div>
+                           <div class = "main-section-header" ng-click = "F_CO.expandOrCollapseSection('DepositSectionId','Deposit','', GroupOnlyPermissions['Customer invoicing']['view'])">
+                            <section-header
+                        	section-name = "TranslationModel.DEPOSIT"
+                        	is-top-left-container-show = "true"
+                        	total = "M_CO.Deposit.TotalDepositAmout | currency"
+                        	is-total-container-show = 'true'
+                        	no-title-ellipsis = "true"
+                        	total-label = "Total:"
+                        	>
+                        	
+                        	</section-header>
+                            
+                           </div>
+                            <div class="bp-accordion-toggle bp-yellow-dark right-container"  ng-if = "M_CO.expandedSectionName != 'Deposit'" ng-click = "F_CO.expandOrCollapseSection('DepositSectionId','Deposit','', GroupOnlyPermissions['Customer invoicing']['view'])">
+                                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowDown</i>
+                            </div>
+                            <div class="bp-accordion-toggle bp-yellow-dark right-container" ng-if = "M_CO.expandedSectionName == 'Deposit'" ng-click = "F_CO.expandOrCollapseSection('DepositSectionId','Deposit','', GroupOnlyPermissions['Customer invoicing']['view'])">
+                                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowUp</i>
+                            </div>
+                        </div>
+                        <div class="bp-accordion-detail bp-collapse-div-transition  bp-light-gray4" id="DepositSectionId" 
+                         ng-class = "{'DepositSectionOpen': M_CO.expandedSectionName == 'Deposit'}">
+                            <div class="select-Invoicehistory-section depositSectionGrid" ng-class = "{'PB30' : GroupOnlyPermissions['Customer invoicing']['view']}">
+                                <div class="table-responsive">
+                                    <table class = "bp-editable-table SOJobItemsGrid">
+                                        <col width="5%"  />
+                                        <col width="16%"  />
+                                        <col width="12%"  />
+                                        <col width="12%"  />
+                                        <col width="13%"  />
+                                        <col width="16%"  />
+                                        <col width="3%"  />
+                                        <col width="11%"  />
+                                        <col width="4%"  />
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th class = "bp-text-uppercase">{{ TranslationModel.Reference_number }}</th>
+                                                <th class = "bp-text-uppercase text-center">{{ ::TranslationModel.Label_Date }}</th>
+                                                <th class = "bp-text-uppercase text-center">{{ ::TranslationModel.Payment_method }}</th>
+                                                <th></th>
+                                                <th class="bp-text-uppercase"></th>
+                                                <th></th>
+                                                <th class="bp-text-uppercase text-left">{{ ::TranslationModel.Label_Amount }}</th>
+                                                <th class="bp-text-uppercase"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat = "depositRec in M_CO.DepositList">
+                                                <td></td>
+                                                <td class="boldText">
+                                                    <span>
+                                                    {{::depositRec.DepositName}}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">
+                                                   <span>{{::depositRec.PaymentDate_Formatted}}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span>{{depositRec.PaymentMethod == 'Invoice' &amp;&amp; depositRec.COInvoiceNumber != null ? depositRec.COInvoiceNumber : depositRec.PaymentMethod}}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span>{{::depositRec.ReferenceNumber}}</span>
+                                                 </td>
+                                                <td class="text-center bp-font-14 bp-orange-dark-font">
+                                                    <span>{{ depositRec.Deal ? (TranslationModel.Deposit_on_a_deal) : '' }}</span>
+                                                </td>
+                                                <td></td>
+                                                <td class="text-left boldText">
+                                                    <span ng-class = "{'bp-red-font' : depositRec.Amount < 0}">{{::depositRec.Amount | currency}}</span>
+                                                </td>
+                                                <td>
+                                                   <div class = "pull-right"  ng-if="F_CO.Deposit.isReverseDepositAvailable(depositRec) && M_CO.coHeaderRec.OrderStatus !== 'Closed'" >
+                                                        <i class="bp-icons bp-blue-font bp-font-18 bp-cursor-pointer stroke-5" ng-click = "F_CO.Deposit.ReversePaymentPopup(depositRec)" data-toggle="tooltip" title="Reverse payment">reverse</i>
+                                                    </div> 
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        <div class="formBtn dealCommitUnitToDealBtn depositSectionGridBtn" ng-if = "GroupOnlyPermissions['Customer invoicing']['create/modify']">
+                               <button ng-if = "M_CO.Deposit.TotalDepositAmout > 0" id="replace-unit-btn" class="bp-btn bp-btn-secondaryCTA bp-btn-medium button-fix-width button-fix-margin refundBtn"
+                                   ng-click = "F_CO.refundDepositAmount()" >
+                                    {{ ::TranslationModel.refund }}
+                                </button>
+                                <button ng-if="M_CO.coHeaderRec.OrderStatus !== 'Closed'" id="remove-dealunit-btn" class=" bp-btn bp-btn-secondaryCTA bp-btn-medium button-fix-width  addAnotherBtn"
+                                  ng-click="F_CO.Deposit.openAddDepositPopup()">
+                                    {{ ::TranslationModel.Add_Another }}
+                                </button>
+                        </div>
+                        
+                        </div>
+                    </div>                    
+                    <!-- End: Deposit Section --> 
+</apex:component>

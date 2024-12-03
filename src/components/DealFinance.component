@@ -1,0 +1,637 @@
+<apex:component controller="GlobalController">
+<!-- Start: Deal Financing section -->
+                    <div class="bp-accordion-entry df-card expanded bp-df-entry"  ng-class = "{'bp-collapse' : M_CO.expandedSectionName != 'DFSection'}">
+                        <div class="bp-accordion-header bp-bg-green bp-white-font d-flex new-header-container"  >
+                            <div class="icon-container" ng-click = "F_CO.expandOrCollapseSection('DFSectionId','DFSection','','',$event)">
+                                    <i class="bp-icons stroke-5 bp-lh-20">dealFinancing</i>
+                                </div>
+                            <div class = "main-section-header" ng-click = "F_CO.expandOrCollapseSection('DFSectionId','DFSection','','',$event)">
+                            <section-header
+                        	section-name = "M_CO.sectionName['DEAL FINANCING']"
+                        	is-top-left-container-show = "true"
+                        	first-status = "M_CO.Deal.DealFinanceObj.Status"
+                        	first-status-action = "M_CO.DealFinance.Status = M_CO.Deal.DealFinanceObj.Status;F_CO.openDealFinanceStatusPopup($event);"
+                        	is-badge-container-show = 'true'
+                            total-fetching-state = "M_CO.isAsyncActionInProgress"
+                            section-description = "M_CO.Deal.DealFinanceObj.FinanceCompanyName"
+                        	>
+                        	
+                        	</section-header>
+                        	</div>
+                        	
+                        	<div class="bp-accordion-toggle right-container bp-bg-darkgreen"  ng-if = "M_CO.expandedSectionName != 'DFSection'" ng-click = "F_CO.expandOrCollapseSection('DFSectionId','DFSection')">
+                                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowDown</i>
+                            </div>
+                            <div class="bp-accordion-toggle right-container bp-bg-darkgreen" ng-if = "M_CO.expandedSectionName == 'DFSection'" ng-click = "F_CO.expandOrCollapseSection('DFSectionId','DFSection')">
+                                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowUp</i>
+                            </div>
+                        </div>
+                        <div class="bp-accordion-detail bp-collapse-div-transition bp-light-gray4 MerchandiseSectionGrid" id = "DFSectionId">
+                            <div>
+                                <!-- Job Details accordian start here -->
+                                <div class="bp-inner-accordian open dfSummary" ng-class="{'bp-inner-accordian-opened': M_CO.expandedInnerSectionName == 'DF_SummarySection'}">
+                                    <div class="inner-accordian-header col-md-12" ng-click = "F_CO.expandOrCollapseInnerSection('DF_SummarySectionId', 'DF_SummarySection')">
+                                        <div class="inner-accordian-header-left">
+                                            <h2 class="accordian-left-details text-upperCase">{{ 'Summary' | translate }}</h2>
+                                        </div>
+                                        <div class="accordian-right-details">
+                                            <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName != 'DF_SummarySection'">
+                                                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowDown</i>
+                                            </a> 
+                                            <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName == 'DF_SummarySection'">
+                                                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowUp</i>
+                                            </a>    
+                                            <div class="accordian-right-details-text"  ng-if="(M_CO.expandedInnerSectionName == 'DF_SummarySection') && (!(M_CO.coHeaderRec.OrderStatus == 'Closed' || M_CO.Deal.DealInfo.DealStatus =='Invoiced' || F_CO.isArchivedQuote() || 
+                                                M_CO.Deal.DealFinanceObj.Status != 'Quotation'))">
+                                                <p class="right-text required handCursor" 
+                                                    ng-click="F_CO.openConfirmationDialog('DealFinanceSectionConfirmationDialog',false,'','',$event);">
+                                                   <span class="bp-font-14 removedf bp-blue-font">{{ 'Remove_deal_financing' | translate }}</span> 
+                                                    <span class="icon-container">
+                                                        <i class="bp-icons bp-blue-font bp-font-19">delete</i>
+                                                    </span>
+                                                  </p>
+                                            </div>
+                                            <div class="accordian-right-details-text"  ng-if="M_CO.expandedInnerSectionName != 'DF_SummarySection'">
+                                                <p class="right-text required DFCompanyName">
+                                                    <span class="bp-font-14 bp-dark-grey2-font">{{M_CO.Deal.DealFinanceObj.FinanceCompanyName}}</span> 
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bp-accordion-detail bp-collapse-div-transition" id="DF_SummarySectionId" 
+                                        ng-class="{'bp-expand-div-transition': M_CO.expandedSectionName == 'DF_SummarySection'}">
+                                        <div ng-if="M_CO.Deal.DealFinanceObj.FinanceCompanyId != null" class="co-buyer-contener">
+                                        <div class="select-customer-section co-buyer-customer flexGrid showing-customer showing-dfCustomer">
+                                            <div class="left col-xs-12 col-sm-5 vendor-info-card-container">
+                                                <div class="name"> {{M_CO.Deal.DealFinanceObj.FinanceCompanyName}}</div>
+                                                <div class="email"><span class="bp-bold-font">{{ 'Label_Email' | translate }}:</span> {{M_CO.Deal.DealFinanceObj.FinanceCompanyEmail || '- - - - -'}}</div>
+                                                <div class="level"><span class="bp-bold-font">{{ 'Label_Phone' | translate }}:</span> {{M_CO.Deal.DealFinanceObj.FinanceCompanyPhone || '- - - - -'}}</div> <!-- Price_level -->
+                                                <div class="exemption"><span class="bp-bold-font">{{ 'Account' | translate }}:</span> {{M_CO.Deal.DealFinanceObj.FinanceCompanyAccountNumber || '- - - - -'}}</div> <!-- Exemptions -->
+                                            </div>
+                                            <div class="col-xs-12 col-sm-6"></div>
+                                        </div>
+                                        <div class="removeDfCustomer" ng-if="M_CO.Deal.DealFinanceObj.Status == 'Quotation'">
+                                            <a ng-click="F_CO.DealFinance.changeProviderAction()" ng-class="{'bp-disabled': F_CO.isArchivedQuote()}">{{ 'Change_Provider' | translate }}</a> <!-- Remove customer -->
+                                        </div>
+                                        <div class="inner-accordian-body dfSummaryDataBlock bp-light-gray4 col-xs-12 bp-collapse-div-transition" id="DF_SummarySectionId"
+                                        ng-class="{'bp-expand-div-transition': M_CO.expandedInnerSectionName == 'DF_SummarySection'}" ng-if="M_CO.expandedInnerSectionName == 'DF_SummarySection'">
+                                        <div class="expandableContainer bp-font-16 dfsummaryContainer">
+                                            <div class="col-xs-12 col-lg-8 MT20 MB20" ng-if="M_CO.Deal.DealInfo.DealStatus !== 'Approved' && (M_CO.Deal.DealFinanceObj.Status === 'Approved' || M_CO.Deal.DealFinanceObj.Status === 'Funded') && M_CO.Deal.DealFinanceObj.ApprovedAmountFinanced !== F_CO.DealFinance.getAmountFinanced()">
+                                                <span class="text-right H400 bp-red-font">WARNING: <span class="H300">Current amount financed is different that what was approved by the finance company which was ${{ M_CO.Deal.DealFinanceObj.ApprovedAmountFinanced | number:2}}</span></span>
+                                            </div>
+                                            <div class = "col-xs-12 col-lg-5 form-container">
+                                                <div class="col-xs-12 P0 text-left" >
+                                                    <label class="bp-dark-grey2-font bp-bold-font">{{ 'Label_Status' | translate }}</label>
+                                                </div>
+                                                <div class="col-xs-12 P0 PT10">
+                                                   <div class="col-xs-6 P0 deal-f-status-container">
+                                                        <div class = "dealStaus dealFinanStatus">
+                                                             <label class="badge-style col-xs-3 {{M_CO.changeDFStatusCssConfig[M_CO.Deal.DealFinanceObj.Status]}} text-upperCase">{{M_CO.Deal.DealFinanceObj.Status}}</label>
+                                                         </div>
+                                                    </div>
+                                                    <div class="col-xs-6 P0 dfSummaryDetail changeStatusMt0" ng-if="(M_CO.Deal.DealInfo.DealStatus != 'Quotation'  || M_CO.Deal.DealInfo.DealStatus != 'Invoiced' && !F_CO.isArchivedQuote()) && 
+                                                        (M_CO.Deal.DealFinanceObj.Status == 'Quotation' || M_CO.Deal.DealFinanceObj.Status == 'Submitted')">
+                                                        <span class="col-xs-10 P0 dfSummaryDetailLines text-right dsSummaryStatusLink ">
+                                                            <a data-toggle="modal" class="pull-right" data-target="#dealFinancingStatusChange" ng-click="M_CO.DealFinance.Status = M_CO.Deal.DealFinanceObj.Status" ng-class="{'bp-disabled': F_CO.isArchivedQuote()}">{{ 'Change_status' | translate }}</a></span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 MTB3 h40">
+                                                    <label class = "col-xs-5 col-sm-6 P0 bp-dark-grey2-font bp-bold-font">{{ 'Deal_total' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-4 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{ 'Currency_Symbol' | translate }}{{ M_CO.Deal.DealInfo.Total | number:2}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 MTB3 h40">
+                                                    <label class = "col-xs-5 col-sm-6 P0 bp-dark-grey2-font bp-bold-font">{{ 'FI_products' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-4 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{ 'Currency_Symbol' | translate }}{{F_CO.DealFinance.getFIProductTotal() | number:2}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 MTB3">
+                                                    <label class="col-xs-5 col-sm-6 P0 bp-dark-grey2-font bp-bold-font">{{ 'Less_down_payment' | translate }}</label>
+                                                    <div class="col-xs-6  col-sm-4 P0">
+                                                        <div class="input-group df-input-group">
+                                                                        <div class="input-group-prepend">
+                                                                            <span class="input-group-text">{{ 'Currency_Symbol' | translate }}</span>
+                                                                        </div>
+                                                                        <span class="P0 dfSummaryDetailLines text-right bp-dark-grey2-font dealFinancingTopAjustmentForInput adjustLeft16">
+                                                                            <numbers-only id-value = "dfSummaryPayment"
+                                                                            class-value = "dfSummaryLessDP"
+                                                                            min-value = "0"
+                                                                            input-model-value = "M_CO.Deal.DealFinanceObj.DownPayment" 
+                                                                            blur-value = "F_CO.saveFinancingInfo('',true,'Down_Payment')"
+                                                                            include-negative = "true"
+                                                                            include-zero = "false"
+                                                                            place-holder-value ="0.00"
+                                                                            max-value="F_CO.getDealTotal()"
+                                                                            precision-length = "2"
+                                                                            force-precision-length = "true"
+                                                                            disabled-value = "(M_CO.Deal.DealFinanceObj.ApprovedAmountFinanced == F_CO.DealFinance.getAmountFinanced()) && (M_CO.Deal.DealFinanceObj.Status == 'Approved' || M_CO.Deal.DealFinanceObj.Status == 'Funded' || M_CO.Deal.DealFinanceObj.Status == 'Paid'  || M_CO.Deal.DealInfo.DealStatus == 'Invoiced') || F_CO.isArchivedQuote()"/>
+                                                                        </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 MT32 MB20">
+                                                    <label class="col-xs-5  col-sm-6 M0 P0 bp-dark-grey2-font bp-bold-font text-upperCase">{{ 'AMOUNT_FINANCED' | translate }}</label>
+                                                    <div class="col-xs-6 M0 P0 col-sm-4 dfSummaryDetail P0 bp-bold-font">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">
+                                                            {{ (F_CO.DealFinance.getAmountFinanced() ? F_CO.DealFinance.getAmountFinanced() : 0 ) | currency}}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 MTB3">
+                                                    <label class="col-xs-5 col-sm-6 P0 bp-dark-grey2-font bp-bold-font">{{ 'Financing_commission' | translate }}</label>
+                                                    <div class="col-xs-6  col-sm-4 P0">
+                                                        <div class="input-group df-input-group">
+                                                                    <div class="input-group-prepend">
+                                                                        <span class="input-group-text">{{ 'Currency_Symbol' | translate }}</span>
+                                                                    </div>
+                                                                    <span class="P0 dfSummaryDetailLines text-right bp-dark-grey2-font dealFinancingTopAjustmentForInput adjustLeft16">
+                                                                        <numbers-only id-value = "dfSummaryPayment"
+                                                                            class-value = "dfSummaryLessDP"
+                                                                            min-value = "0"
+                                                                            input-model-value = "M_CO.Deal.DealFinanceObj.FinanceCommission" 
+                                                                            blur-value = "F_CO.saveFinancingInfo('',true,'Finance_Commission')"
+                                                                            include-negative = "true"
+                                                                            include-zero = "false"
+                                                                            place-holder-value ="0.00"
+                                                                            max-value="F_CO.getDealTotal()"
+                                                                            precision-length = "2"
+                                                                            force-precision-length = "true"
+                                                                            disabled-value = "(M_CO.Deal.DealFinanceObj.Status == 'Approved' || M_CO.Deal.DealFinanceObj.Status == 'Funded' || M_CO.Deal.DealFinanceObj.Status == 'Paid'  || M_CO.Deal.DealInfo.DealStatus == 'Invoiced' || F_CO.isArchivedQuote())"/>
+                                                                    </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 MTB3">
+                                                    <label class="col-xs-5 col-sm-6 P0 bp-dark-grey2-font bp-bold-font">{{ 'Buy_rate_commission' | translate }}</label>
+                                                    <div class="col-xs-6  col-sm-4 P0">
+                                                        <div class="input-group df-input-group">
+                                                                    <div class="input-group-prepend">
+                                                                        <span class="input-group-text">{{ 'Currency_Symbol' | translate }}</span>
+                                             </div>
+                                                                    <span class="P0 dfSummaryDetailLines text-right bp-dark-grey2-font dealFinancingTopAjustmentForInput adjustLeft16">
+                                                                        <numbers-only id-value = "BuyRateCommission"
+                                                                            class-value = "dfSummaryLessDP"
+                                                                            input-model-value = "M_CO.Deal.DealFinanceObj.BuyRateCommission" 
+                                                                            blur-value = "F_CO.saveFinancingInfo('',true,'BuyRateCommission')"
+                                                                            include-negative = "true"
+                                                                            include-zero = "true"
+                                                                            place-holder-value ="0.00"
+                                                                            max-value="F_CO.getDealTotal()"
+                                                                            precision-length = "2"
+                                                                            force-precision-length = "true"
+                                                                            disabled-value = "(M_CO.Deal.DealFinanceObj.Status == 'Approved' || M_CO.Deal.DealFinanceObj.Status == 'Funded' || M_CO.Deal.DealFinanceObj.Status == 'Paid'  || M_CO.Deal.DealInfo.DealStatus == 'Invoiced' || F_CO.isArchivedQuote())"/>
+                                                                    </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                             </div>
+                                            <div class = "col-xs-12 col-lg-offset-1 col-lg-6 form-container">
+                                                <div class="col-xs-12 P0 h55"  >
+                                                </div>
+                                                 <div class = "col-xs-12 P0 MTB3 df-int-rate">
+                                                    <label class = "col-xs-4 MR10 P0 bp-dark-grey2-font bp-bold-font">{{ 'Interest_rate' | translate }}</label>
+                                                    <span class="col-xs-1 P0 text-center">{{ 'Percentage_Symbol' | translate }}</span>
+                                                    <div class="col-xs-6 P0">
+                                                        <div class="col-xs-5 P0 MR13 bp-dark-grey2-font dealFinancingTopAjustmentForInput">
+                                                            <label>{{ 'Sell' | translate }}</label>
+                                                            <numbers-only id-value = "dfInterestRate"
+                                                            class-value = "dfSummaryIRData"
+                                                            min-value = "0"
+                                                            input-model-value = "M_CO.Deal.DealFinanceObj.InterestRate"
+                                                            blur-value = "F_CO.saveFinancingInfo('',true,'Interest_Rate')" 
+                                                            include-negative = "true"
+                                                            include-zero = "true"
+                                                            place-holder-value ="0.00"
+                                                            precision-length = "2"
+                                                            force-precision-length = "true"
+                                                            disabled-value = "(M_CO.Deal.DealFinanceObj.Status == 'Approved' || M_CO.Deal.DealFinanceObj.Status == 'Funded' || M_CO.Deal.DealFinanceObj.Status == 'Paid' || M_CO.Deal.DealInfo.DealStatus == 'Invoiced' || F_CO.isArchivedQuote())"/>
+                                                    </div>
+                                                        <div class="col-xs-6 P0 PR12 bp-dark-grey2-font dealFinancingTopAjustmentForInput">
+                                                            <label>{{ 'Buy' | translate }}</label>    
+                                                            <numbers-only id-value = "dfBuyRate"
+                                                                    class-value = "dfSummaryIRData"
+                                                                    min-value = "0"
+                                                                    input-model-value = "M_CO.Deal.DealFinanceObj.BuyRate"
+                                                                    blur-value = "F_CO.saveFinancingInfo('',true,'BuyRate')" 
+                                                                    include-negative = "true"
+                                                                    include-zero = "true"
+                                                                    place-holder-value ="0.00"
+                                                                    precision-length = "2"
+                                                                    force-precision-length = "true"
+                                                                    disabled-value = "(M_CO.Deal.DealFinanceObj.Status == 'Approved' || M_CO.Deal.DealFinanceObj.Status == 'Funded' || M_CO.Deal.DealFinanceObj.Status == 'Paid' || M_CO.Deal.DealInfo.DealStatus == 'Invoiced' || F_CO.isArchivedQuote())"
+                                                                />
+                                                        </div>
+                                                    </div>
+                                                 </div>
+                                                <div class = "col-xs-12 P0 MTB3">
+                                                    <label class = "col-xs-5 MR10 P0 bp-dark-grey2-font bp-bold-font">{{ 'Loan_term' | translate }}</label>
+                                                    <div class="col-xs-6 P0">
+                                                     <span class="col-xs-5 P0 MR13 bp-dark-grey2-font dealFinancingTopAjustmentForInput">
+                                                        <numbers-only id-value = "dfSummaryPayment"
+                                                            class-value = "dfSummaryIRData"
+                                                            min-value = "0"
+                                                            input-model-value = "M_CO.Deal.DealFinanceObj.LoanTerm"
+                                                           blur-value = "F_CO.saveFinancingInfo('',true)" 
+                                                            include-negative = "false"
+                                                            include-zero = "false"
+                                                            place-holder-value ="0"
+                                                            precision-length = "0"
+                                                            force-precision-length = "false"
+                                                            disabled-value = "(M_CO.Deal.DealFinanceObj.Status == 'Approved' || M_CO.Deal.DealFinanceObj.Status == 'Funded' || M_CO.Deal.DealFinanceObj.Status == 'Paid' || M_CO.Deal.DealInfo.DealStatus == 'Invoiced' || F_CO.isArchivedQuote())"/>
+                                                     </span>
+                                                     <span class="col-xs-6 P0 PR12 bp-dark-grey2-font">
+                                                         <div class="bp-cell bp-unitSearch-area  searchInputArea selectableDropdown dfSummaryLoanTermDrop dealFinancingTopAjustmentForInput" ng-class = "{'showingOverlay' : M_CO.DealFinance.showTermTypeArray}">
+                                                                <input  type="text" id="TermType" class="searchInput" 
+                                                                autocomplete="off" ng-focus = "F_CO.DealFinance.getTermType()" ng-blur = "M_CO.DealFinance.showTermTypeArray  = false;"
+                                                                ng-model="M_CO.Deal.DealFinanceObj.TermType" readonly="readonly"
+                                                                ng-disabled="(M_CO.Deal.DealFinanceObj.Status == 'Approved' || M_CO.Deal.DealFinanceObj.Status == 'Funded' || M_CO.Deal.DealFinanceObj.Status == 'Paid' || M_CO.Deal.DealInfo.DealStatus == 'Invoiced' || F_CO.isArchivedQuote())"
+                                                                ng-keyup="F_CO.DealFinance.keyBoardavigation($event,  M_CO.DealFinance.TermTypeArray, 'TermType')"
+                                                                />
+                                                            <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer stroke-5 downArrow dfDownArrow" ng-click = "F_CO.setFocusOnInput('TermType')">arrowDown</i>
+                                                            <div class="searchResultOverlay" id="TermTypeDropDownDiv">
+                                                                <ul>
+                                                                    <li ng-repeat="termType in M_CO.DealFinance.TermTypeArray "
+                                                                        ng-mousedown="F_CO.DealFinance.setTermType($index)"
+                                                                        ng-class="{'selected-row': $index == M_CO.DealFinance.TermTypeCurrentIndex}"
+                                                                        id="TermType{{$index}}">
+                                                                        <div class="fullName text-capitalize">{{termType}}  </div>
+                                                                    </li>  
+                                                                </ul> 
+                                                            </div>  
+                                                        </div>
+                                                         </span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 MTB3">
+                                                    <label class = "col-xs-5 MR10 P0 bp-dark-grey2-font bp-bold-font">{{ 'Payment_frequency' | translate }}</label>
+                                                    <div class="col-xs-6 P0">
+                                                        <span class="col-xs-11 P0 bp-dark-grey2-font">
+                                                           <div class="bp-cell bp-unitSearch-area  searchInputArea selectableDropdown dfSummaryPayFreqDrop dealFinancingTopAjustmentForInput" ng-class = "{'showingOverlay' : M_CO.DealFinance.showPaymentFrequencyArray}">
+                                                               <input  type="text" id="PaymentFrequency" class="searchInput" placeholder="Please select"
+                                                                    autocomplete="off" ng-focus = "F_CO.DealFinance.getPaymentFrequency()" ng-blur = "M_CO.DealFinance.showPaymentFrequencyArray  = false;"
+                                                                    ng-model="M_CO.Deal.DealFinanceObj.PaymentFrequency" readonly="readonly"
+                                                                    ng-disabled="(M_CO.Deal.DealFinanceObj.Status == 'Approved' || M_CO.Deal.DealFinanceObj.Status == 'Funded' || M_CO.Deal.DealFinanceObj.Status == 'Paid' || M_CO.Deal.DealInfo.DealStatus == 'Invoiced' || F_CO.isArchivedQuote())"
+                                                                    ng-keyup="F_CO.DealFinance.keyBoardavigation($event, M_CO.DealFinance.PaymentFrequencyArray, 'PaymentFrequency')"
+                                                                    />
+                                                                <i class="bp-icons bp-blue-font bp-font-14 bp-cursor-pointer stroke-5 downArrow dfDownArrow" ng-click = "F_CO.setFocusOnInput('PaymentFrequency')">arrowDown</i>
+                                                                <div class="searchResultOverlay dfPayFreqHeight" id="PaymentFrequencyDropDownDiv">
+                                                                    <ul>
+                                                                        <li ng-repeat="paymntFrq in M_CO.DealFinance.PaymentFrequencyArray "
+                                                                            ng-mousedown="F_CO.DealFinance.setPaymentFrequency($index)"
+                                                                            ng-class="{'selected-row': $index == M_CO.DealFinance.PaymentFrequencyCurrentIndex}"
+                                                                            id="PaymentFrequency{{$index}}">
+                                                                            <div class="fullName text-capitalize">{{paymntFrq}}  </div>
+                                                                        </li>  
+                                                                    </ul> 
+                                                                </div>  
+                                                            </div>
+                                                         </span>
+                                                    </div>
+                                                </div>
+                                                   <div class = "col-xs-12 P0 M0 MT32 MB20">
+                                                    <label class = "col-xs-5 M0 MR10  P0 bp-dark-grey2-font bp-bold-font text-upperCase">{{ 'ESTIMATED_PAYMENT' | translate }}</label>
+                                                    <div class="col-xs-6 P0 dfSummaryDetail M0">
+                                                    <span class="col-xs-11 P0 text-right">
+                                                        <span class="bp-dark-grey2-font bp-bold-font">
+                                                            <span ng-if="F_CO.DealFinance.getEstimatedPayment() != null">{{ 'Currency_Symbol' | translate }}</span><span ng-if = "F_CO.DealFinance.getEstimatedPayment() >= 0">{{F_CO.DealFinance.getEstimatedPayment() | number: 2 }}</span><span ng-if = "F_CO.DealFinance.getEstimatedPayment() < 0">({{F_CO.DealFinance.getEstimatedPayment() * -1 | number: 2 }})</span>
+                                                        </span>
+                                                    </span>
+                                                    </div>
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <div class="select-customer-section unit select-deal-financing-product" ng-if="!F_CO.isArchivedQuote() && (M_CO.Deal.DealFinanceObj.FinanceCompanyId == null || M_CO.isShowDFSearchSection)">  
+                                         <div class="left TradeInput">
+                                             <label class="print-item-label bp-dark-grey2-font">{{ 'Select_a_financing_provider' | translate }}</label>
+                                             <div class="bp-cell  searchInputArea " ng-class = "{'showingOverlay' : M_CO.DealFinance.showProviderList }">
+                                                 <input  type="text" id="DealFinance" class="bp-input-text searchInput" placeholder="{{ 'start_typing' | translate }}"
+                                                     autocomplete="off" ng-focus = "F_CO.DealFinance.getProviderList()" ng-blur = "F_CO.DealFinance.hideProviderList()"
+                                                     ng-model="M_CO.DealFinance.selectedCmpnyName" 
+                                                     ng-keyup="F_CO.DealFinance.keyBoardavigation($event, M_CO.DealFinance.FinanceCompanyList, 'DealFinance')"
+                                                      />
+                                                 <i class="bp-icons bp-font-24 bp-grey-font bp-top9" ng-click = "F_CO.DealFinance.setFocusOnElement('DealFinance')">search</i>
+                                                 <div class="searchResultOverlay" id="DealFinanceDropDownDiv">
+                                                     <ul>
+                                                         <li ng-repeat="cmpnyModel in M_CO.DealFinance.FinanceCompanyList| filter:{'Name' : M_CO.DealFinance.selectedCmpnyName}"
+                                                             ng-mousedown="F_CO.DealFinance.selectedCmpny(cmpnyModel)"
+                                                             ng-class="{'selected-row': $index == M_CO.DealFinance.DealFinanceCurrentIndex}"
+                                                             id="DealFinance{{$index}}">
+                                                             <div class="fullName text-capitalize">{{cmpnyModel.Name}}</div>
+                                                         </li>
+                                                     </ul>
+                                                 </div> 
+                                             </div>
+                                         </div>
+                                         <div class="PL19" ng-if="M_CO.isShowCancelButtonInDFSearchSection">
+                                              <button class="bp-btn bp-btn-normal bp-btn-large" ng-click="M_CO.isShowDFSearchSection = false;M_CO.isShowCancelButtonInDFSearchSection = false;">{{ 'Cancel_Label' | translate }}</button>
+                                         </div>
+                                     </div>
+                                    </div>
+                                 </div>
+                                <!-- Job Details accordian two start here -->
+                                <div class="bp-inner-accordian dfFIproducts open"  ng-class="{'bp-inner-accordian-opened': M_CO.expandedInnerSectionName == 'DF_FandISection'}">
+                                     <div class="inner-accordian-header col-md-12" ng-click = "F_CO.expandOrCollapseInnerSection('DF_FandISectionId', 'DF_FandISection')">
+                                        <div class="inner-accordian-header-left">
+                                            <h2 class="accordian-left-details">{{ 'FI_products' | translate }}</h2>
+                                        </div>
+                                        <div class="accordian-right-details">
+                                            <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName != 'DF_FandISection'">
+                                                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowDown</i>
+                                            </a>
+                                            <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName == 'DF_FandISection'">
+                                                <i class="bp-icons bp-font-16 stroke-1 size-unset">arrowUp</i>
+                                            </a>    
+                                            <div class="accordian-right-details-text">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="inner-accordian-body  dfWrapper bp-light-gray4 col-md-12 bp-collapse-div-transition" id="DF_FandISectionId"
+                                        ng-class="{'bp-expand-div-transition': M_CO.expandedInnerSectionName == 'DF_FandISection'}">
+                                        <div class="expandableContainer PB0">
+                                            <div ng-if="M_CO.IsAutomaticTaxRates && M_CO.coHeaderRec.CustomerId != undefined && M_CO.coHeaderRec.COType != 'Cash Sale'" class="col-xs-12 override-tax P0">
+                                                <bp-ng-slider value="{{M_CO.Deal.DealInfo.IsTaxBasedOnCustomerAddress}}" disable-toggle-click="M_CO.coHeaderRec.OrderStatus === 'Closed'" ng-class-name= "{'c-checkd-slider':M_CO.Deal.DealInfo.IsTaxBasedOnCustomerAddress}" on-click-fun="F_CO.toggleTaxBasedOnCustomerAddress('dealFinanceSection');" field-value="Tax based on the customer address"></bp-ng-slider>
+                                            </div>
+                                            <div class="deal-finance-alert-info">
+                                                <div class="bp-alert-info">
+                                                    <bp-alert id="dealFinanceSection" duration="5000" color="info" closable="true">
+                                                        <bp-icon slot="icon" color="inherit">info</bp-icon>
+                                                        The selected customer tax control will apply to the entire deal.
+                                                    </bp-alert>
+                                                </div>
+                                            </div>
+                                            <!-- Job Items accordian start here -->
+                                            <div class="table-responsive f-iTable" ng-if="M_CO.Deal.DealFinanceObj.FIProductList.length > 0"  ng-class = "{'PB67' : M_CO.coHeaderRec.OrderStatus === 'Closed'}">
+                                                <table class = "bp-editable-table dfFIProducttable SOJobItemsGrid">
+                                                    <col width="5%"  />
+                                                    <col width="{{GroupOnlyPermissions['Unit costs']['enabled'] ? '25%' : '30%'}}"  />
+                                                    <col width="15% {{GroupOnlyPermissions['Unit costs']['enabled'] ? '15%' : '19%'}}"  />
+                                                    <col width="15% {{GroupOnlyPermissions['Unit costs']['enabled'] ? '15%' : '18%'}}"  />
+                                                    <col width="15% {{GroupOnlyPermissions['Unit costs']['enabled'] ? '15%' : '18%'}}"  />
+                                                    <col width="15%" ng-if="GroupOnlyPermissions['Unit costs']['enabled']"/>
+                                                    <col width="10%"  />
+                                                    <thead>
+                                                    <tr>
+                                                       <th></th>
+                                                       <th class = "bp-text-uppercase">{{ 'ITEM_DESCRIPTION_Label' | translate }}</th>
+                                                       <th class = "bp-text-uppercase text-center">{{ 'Label_Price' | translate }}</th>
+                                                       <th class = "bp-text-uppercase text-center">{{ 'Sales_Tax_Object_Display_Label' | translate }}</th>
+                                                       <th class = "bp-text-uppercase text-center">{{ 'Label_Total' | translate }}</th>
+                                                       <th class = "bp-text-uppercase text-center" ng-if="GroupOnlyPermissions['Unit costs']['enabled']">{{ 'Label_Cost' | translate }}</th>
+                                                       <th class = "bp-text-uppercase"></th>
+                                                   </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                       <tr class="bp-expanded-deletable-div-transition" ng-repeat="FIProduct in M_CO.Deal.DealFinanceObj.FIProductList" id="FandIRow_{{FIIndex}}" ng-init="FIIndex = $index" ng-class = "{'dummy-animation':FIProduct.isAsyncActionInProgress}">
+                                                                            <td ng-class = "{'setBgColor' : M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}">
+                                                                                <i class="bp-icons bp-font-18 bp-cursor-pointer pull-left bp-grey-font bp-lh-20 itemSvg stroke-3">financeProduct</i>   
+                                                                            </td>
+                                                                            <td class="boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}">
+                                                                                <div class="liItemDesc_setTextEllipsis">
+                                                                                    <span>{{FIProduct.ItemDescription}}</span>
+                                                                                </div>
+                                                                                <div class="liItemDesc_setTextEllipsis" ng-if="(FIProduct.CostMethod == 'Price withheld') || (FIProduct.CostMethod == 'Cost withheld') || (M_CO.Deal.DealFinanceObj.FinanceCompanyId && M_CO.Deal.DealFinanceObj.FinanceCompanyId != FIProduct.ProductFinanceCompanyId)">
+                                                                                    <span class="withheld-lbl" ng-if="FIProduct.CostMethod == 'Price withheld' || FIProduct.CostMethod == 'Cost withheld'">{{FIProduct.CostMethod == 'Price withheld' ? 'Price_withheld_by_finance_company' : 'Cost_withheld_by_finance_company' | translate}}</span>
+                                                                                    <span class="withheld-lbl" ng-if="M_CO.Deal.DealFinanceObj.FinanceCompanyId && M_CO.Deal.DealFinanceObj.FinanceCompanyId != FIProduct.ProductFinanceCompanyId">{{FIProduct.ProductFinanceCompanyName}}</span>
+                                                                                </div>
+                                                                             </td>
+                                                                            <td class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}" ng-if="FIProduct.isAsyncActionInProgress"><div class="dummy-tag-name"></div></td>
+                                                                            <td class="text-center" ng-class= "{'setBgColor' : M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}" ng-if="!FIProduct.isAsyncActionInProgress">
+                                                                                <span ng-if="M_CO.editLineItem != 'f_i_product_' + FIIndex ">{{FIProduct.Price | number:2}}</span>
+                                                                                <span ng-if="M_CO.editLineItem == 'f_i_product_' + FIIndex ">
+                                                                                    <numbers-only id-value = "f_i_product_{{FIIndex}}_Price"
+                                                                                        class-value = "bp-input-text inTimeEdit timeField text-center"
+                                                                                        input-model-value = "FIProduct.Price" 
+                                                                                        include-negative = "false"
+                                                                                        include-zero = "true"
+                                                                                        precision-length = "2"
+                                                                                        input-keyup-value="F_CO.updateFIProductCost(FIProduct, FIIndex)"
+                                                                                        blur-value = "F_CO.updateLineItem(FIProduct, 'f_i_product', FIIndex, '' , '', '', $event);"/>
+                                                                                </span>
+                                                                            </td>
+                                                                            <td class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}" ng-if="FIProduct.isAsyncActionInProgress"><div class="dummy-tag-name"></div></td>
+                                                                            <td class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}" ng-if="FIProduct.isAsyncActionInProgress"><div class="dummy-tag-name"></div></td>
+                                                                            <td ng-if="!FIProduct.isAsyncActionInProgress" class="text-center" ng-class = "{'setBgColor' : M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}">
+                                                                                <span>{{FIProduct.SalesTax | number:2}}</span>
+                                                                                
+                                                                            </td>
+                                                                            <td ng-if="!FIProduct.isAsyncActionInProgress" class="text-center boldText" ng-class = "{'setBgColor' : M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}">
+                                                                                <span ng-if="!M_CO.Deal.DealSummaryObj.IsTaxIncludingPricing">{{ 'Currency_Symbol' | translate }}{{FIProduct.Total | number:2}}</span>
+                                                                                <span ng-if="M_CO.Deal.DealSummaryObj.IsTaxIncludingPricing">{{ 'Currency_Symbol' | translate }}{{(FIProduct.Price != null ? FIProduct.Price : 0) | number:2}}</span>
+                                                                            </td>
+                                                                            <td class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}" ng-if="GroupOnlyPermissions['Unit costs']['enabled'] && FIProduct.isAsyncActionInProgress"><div class="dummy-tag-name"></div></td>
+                                                                            <td class="text-center" ng-class= "{'setBgColor' : M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}" ng-if="GroupOnlyPermissions['Unit costs']['enabled'] && !FIProduct.isAsyncActionInProgress">
+                                                                                <span ng-if="M_CO.editLineItem != 'f_i_product_' + FIIndex || FIProduct.CostMethod == 'Price withheld'">{{FIProduct.Cost | number:2}}</span>
+                                                                                <span ng-if="M_CO.editLineItem == 'f_i_product_' + FIIndex && FIProduct.CostMethod != 'Price withheld'">
+                                                                                    <numbers-only id-value = "f_i_product_{{FIIndex}}_Cost"
+                                                                                        class-value = "bp-input-text inTimeEdit timeField text-center"
+                                                                                        input-model-value = "FIProduct.Cost" 
+                                                                                        include-negative = "false"
+                                                                                        include-zero = "true"
+                                                                                        precision-length = "2"
+                                                                                        blur-value = "F_CO.updateLineItem(FIProduct, 'f_i_product', FIIndex, '' , '', '', $event);"/>
+                                                                                </span>
+                                                                            </td>
+                                                                            <td ng-if="FIProduct.IsDummyLineItem" class="text-center" ng-class="{'setBgColor' :  M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}"><div class="dummy-tag-name"></div></td>
+                                                                            <td ng-if="!FIProduct.IsDummyLineItem" class="partInvIconAdjustment" ng-class = "{'setBgColor' : M_CO.editLineItem == 'f_i_product_{{FIIndex}}'}" >
+                                                                                   <div class = "pull-right" ng-if="!(M_CO.Deal.DealFinanceObj.Status == 'Approved' || M_CO.Deal.DealFinanceObj.Status == 'Funded' || M_CO.Deal.DealFinanceObj.Status == 'Paid' || F_CO.isArchivedQuote())">
+                                                                                        <a ng-if="M_CO.editLineItem != 'f_i_product_' + FIIndex" class="save-btn"
+                                                                                           ng-click="F_CO.editLineItem(FIProduct, 'f_i_product', FIIndex);">{{ 'Edit_Label' | translate }}</a>
+                                                                                        <a ng-if = "M_CO.editLineItem == 'f_i_product_' + FIIndex" class="save-btn"
+                                                                                           ng-click="F_CO.updateLineItem(FIProduct, 'f_i_product', FIIndex, '' , '', '', $event);">{{ 'Save_Label' | translate }}</a>
+                                                                                        <span data-toggle="tooltip" title="Delete" ng-if="!false">
+                                                                                            <i class="bp-icons bp-font-18 bp-blue-font bp-cursor-pointer LIDeleteBtn" ng-click="F_CO.openDeleteConfirmationPopupForDFFandILineItem(FIIndex, M_CO.Deal.DealFinanceObj.DealId, FIProduct.Id, 'DFFandIProduct');">delete</i>
+                                                                                        </span>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                             <div class="search-entity-wrapper PB55" ng-if="F_CO.showAutoComplete() && ((M_CO.Deal.DealFinanceObj.Status == 'Quotation' || 
+                                                                                        M_CO.Deal.DealFinanceObj.Status == 'Submitted') && (M_CO.Deal.DealInfo.DealStatus != 'Invoiced' && !F_CO.isArchivedQuote()))">
+                                               <p class="search-entity-text">{{ 'Search_for_a_financial_insurance_product' | translate }}</p>
+                                               <autocompletev2 ng-if="!M_CO.IsWebComponentSTAEnabled" id="autocompletev2DealFinanceId"
+                                                    template-name="Entity"
+                                                    section-name="DealFinance"
+                                                    unit-index="{{UnitIndex}}"
+                                                    section-id="DealFinance"
+                                                    is-disabled="false" 
+                                                    finance-vendor-id = "{{M_CO.Deal.DealFinanceObj.FinanceCompanyId}}"
+                                                    set-dir-refresh-fn-for-param-change="setDirRefreshFnForParamChange(theDirFn)"/>
+                                                <div class="searchToAdd" ng-if="M_CO.IsWebComponentSTAEnabled">
+                                                    <bpda-search-to-add
+                                                        id="autocompleteDealFinance"
+                                                        template-name="Entity"
+                                                        section-name="DealFinance"
+                                                        unit-index="{{UnitIndex}}"
+                                                        section-id="DealFinance"
+                                                        finance-vendor-id = "{{M_CO.Deal.DealFinanceObj.FinanceCompanyId}}"
+                                                        hide-filter-button="true"
+                                                        placeholder="Search to add"
+                                                        >
+                                                    </bpda-search-to-add>
+                                                </div>
+                                                <div class="bp-alert-info">
+                                                    <bp-alert id="deal-finance-bp-alert" duration="3000" color="info" closable="true">
+                                                        <bp-icon slot="icon" color="inherit">info</bp-icon>
+                                                        You don't have to wait while we add your line item. You can immediately add a new one now!
+                                                    </bp-alert>
+                                                </div>
+                                            </div>
+                                        <!-- Job Items accordian end here -->
+                                         </div>
+                                    </div>
+                                </div>
+                                <!-- Job Details accordian two end here -->
+                                <div  class="bp-inner-accordian dfFIproducts open"  ng-class="{'bp-inner-accordian-opened': M_CO.expandedInnerSectionName == 'Fundingdetails'}">
+                                    <div class="inner-accordian-header col-md-12" ng-click = "F_CO.expandOrCollapseInnerSection('FundingdetailsId', 'Fundingdetails')">
+                                       <div class="inner-accordian-header-left">
+                                           <h2 class="accordian-left-details">{{ 'Funding_details' | translate }}</h2>
+                                       </div>
+                                       <div class="accordian-right-details">
+                                           <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName != 'Fundingdetails'">
+                                               <i ng-include="'{!Application_Images}/Icons/arrowDown.svg'" class="blue_008DC1"></i>
+                                           </a>
+                                           <a class="down-arrow-icon" ng-if = "M_CO.expandedInnerSectionName == 'Fundingdetails'">
+                                               <i ng-include="'{!Application_Images}/Icons/arrowUp.svg'" class="blue_008DC1"></i>
+                                           </a>    
+                                           <div class="accordian-right-details-text">
+                                           </div>
+                                       </div>
+                                   </div>
+                                   <div class="inner-accordian-body  dfSummaryDataBlock bp-light-gray4 col-md-12 bp-collapse-div-transition" id="FundingdetailsId"
+                                       ng-class="{'bp-expand-div-transition': M_CO.expandedInnerSectionName == 'Fundingdetails'}">
+                                        <div class="expandableContainer bp-font-16 dfsummaryContainer">
+                                            <div class = "col-xs-12 col-lg-5 form-container">
+                                                <div class="col-xs-12 P0 text-left" >
+                                                    <label class="bp-dark-grey2-font bp-bold-font H500 MB20">{{ 'Customer_summary' | translate }}</label>
+                                                </div>
+                                              
+                                                <div class = "col-xs-12 P0 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label">{{ 'Agreed_down_payment' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{ M_CO.Deal.DealFinanceObj.DownPayment ? M_CO.Deal.DealFinanceObj.DownPayment: 0 | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label">{{ 'Deal_payments_received' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{(F_CO.DealFinance.getDealDepositReceived() ? F_CO.DealFinance.getDealDepositReceived() : 0) | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label balance-due">{{ 'Customer_balance_due' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font bp-bold-font">{{F_CO.Deposit.balanceOwingFromCustomer() ? F_CO.Deposit.balanceOwingFromCustomer() : 0 | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 MT32 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label">{{ 'Other_deposits_available' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{(F_CO.DealFinance.getNonDealAvailableDeposits() ? F_CO.DealFinance.getNonDealAvailableDeposits() : 0) | currency}}</span>
+                                                    </div>
+                                                </div>
+                                             </div>
+                                            <div class = "col-xs-12 col-lg-offset-1 col-lg-6 form-container">
+                                                <div class="col-xs-12 P0 text-left" >
+                                                    <label class="bp-dark-grey2-font bp-bold-font H500 MB20">{{ 'Funding_summary' | translate }}</label>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label">{{ 'Amount_financed_on_deal' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{F_CO.DealFinance.getAmountFinanced() | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30" ng-if="M_CO.IsDFCommissionIncludedInFIPayments && !M_CO.Deal.DealFinanceObj.CommissionsNotInFINPayments">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label">{{ 'Financing_commissions_included' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{(M_CO.Deal.DealFinanceObj.FinanceCommission ? M_CO.Deal.DealFinanceObj.FinanceCommission : 0) | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30" ng-if="M_CO.IsDFCommissionIncludedInFIPayments && !M_CO.Deal.DealFinanceObj.CommissionsNotInFINPayments">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label">{{ 'Rate_commissions_included' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{(M_CO.Deal.DealFinanceObj.BuyRateCommission ? M_CO.Deal.DealFinanceObj.BuyRateCommission : 0) | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label">{{ 'Withheld_product_prices' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{F_CO.DealFinance.getWithheldFIProductTotalByType('Price withheld') | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label">{{ 'Withheld_product_costs' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{F_CO.DealFinance.getWithheldFIProductTotalByType('Cost withheld') | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font bp-bold-font bp-text-uppercase">{{ 'Net_funding' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font bp-bold-font">{{F_CO.DealFinance.getActualAmountFinanced() | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label">{{ 'Finance_payments_received' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font">{{F_CO.DealFinance.financePaymentsReceived() | currency}}</span>
+                                                    </div>
+                                                </div>
+                                                <div class = "col-xs-12 P0 h30">
+                                                    <label class = "col-xs-5 col-sm-8 P0 bp-dark-grey2-font funding-detail-label balance-due">{{ 'Financing_balance_due' | translate }}</label>
+                                                    <div class="col-xs-6 col-sm-2 dfSummaryDetail P0">
+                                                        <span class="col-xs-12 P0 dfSummaryDetailLines text-right bp-dark-grey2-font bp-bold-font">{{F_CO.Deposit.balanceOwingFromTheFinanceCompany() | currency}}</span>
+                                                    </div>
+                                                </div>
+                                               
+                                            </div>
+                                        </div>
+                                   </div>
+                               </div>
+                                
+                                <!-- Start: Deal Finance Document Section -->
+                                <co-document-section inner-accordian-wrapper-class-value="bp-inner-accordian dfFIproducts open" 
+                                            expand-collapse-inner-accordian="F_CO.expandOrCollapseInnerSection('DF_DocumentSectionId', 'DF_DocumentSection')"
+                                            is-inner-section-expanded="M_CO.expandedInnerSectionName === 'DF_DocumentSection'"
+                                            inner-accordian-body-wrapper-id-value="DF_DocumentSectionId"
+                                            is-co-closed="M_CO.coHeaderRec.OrderStatus === 'Closed' || F_CO.isArchivedQuote()"
+                                            form-list="M_CO.documents.forms.dealFinance[M_CO.Deal.DealFinanceObj.Id]"
+                                            attachment-list="M_CO.documents.attachments.dealFinance[M_CO.Deal.DealFinanceObj.Id]"
+                                            add-form-action="F_CO.addFormsToSection(M_CO.Deal.DealFinanceObj.Id, 'dealFinance');"
+                                            delete-form-action="F_CO.deleteFormsFromSection(formId, M_CO.Deal.DealFinanceObj.Id, 'dealFinance');"
+                                            delete-attachment-action="F_CO.deleteAttachmentFromSection(attachmentId, M_CO.Deal.DealFinanceObj.Id, 'dealFinance');"
+                                            print-document-action="F_CO.printDocument(docUrl, coFormId, isEditable, formEditConfig, editModalName, formName, isLandscapeMode, isAttachment, userDefinedFieldsList, coFormId, userDefinedFieldsFormEditConfig)"
+                                            attachment-file-upload-interface-modal="FileUpload.interface"
+                                            set-add-attachment-data="F_CO.setAttachmentData(M_CO.Deal.DealFinanceObj.Id, 'dealFinance');"
+                                            active-form-count="M_CO.documents.sectionNameToActiveFormCountMap['Financing']"
+                                            active-forms="M_CO.documents.activeForms.dealFinance[M_CO.Deal.DealFinanceObj.Id]"
+                                            section-status="M_CO.Deal.DealFinanceObj.Status" />
+                                <!-- End: Deal Finance Document Section -->
+                                <div class="bp-inner-accordian open always-open deal-action bp-inner-accordian-last-child financing-action">
+                                    <div class="inner-accordian-header col-md-12">
+                                        <div class="inner-accordian-header-left">
+                                            <h2 class="accordian-left-details">{{ 'Financing_actions' | translate }}</h2>
+                                        </div>
+                                    </div>
+                                    <div class="inner-accordian-body col-md-12">
+                                        <ul class="job-actions-buttons">
+                                            <li ng-repeat = "financeDealAction in M_CO.financeDealAction" id="finance-deal{{$index}}" ng-if="F_CO.displayFinanceDealAction(financeDealAction)" ng-click="F_CO.financeDealActionToBePerformed(financeDealAction)">
+                                                <a>
+                                                    <i ng-include="'{!Application_Images}/Icons/Add.svg'" class="violet_dark purple_dark bp-pointer-cursor"></i> 
+                                                    {{financeDealAction | translate}}
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>                           
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End : deal financing section -->
+</apex:component>

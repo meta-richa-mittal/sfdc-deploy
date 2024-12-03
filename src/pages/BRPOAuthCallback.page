@@ -1,0 +1,114 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" controller="BRPAuthorizationCtrl">
+    <html ng-app="BRPCallbackApp">
+        <head>
+            <title>BRP Callback</title> 
+            <apex:stylesheet value="{!Application}/css/global.css"/>
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/angular.min.js" />
+            <apex:includeScript value="{!JSENCODE(Application)}/Js/Other/util.js" />
+            <style type='text/css'>
+                .loadingContainer {
+                	margin: 0 auto;
+                    text-align: center;
+                    margin-top: 50px;
+                }
+                .loadingContainer .errorBlock {
+                    color: red;
+                }
+                .loadingContainer .successBlock {
+                    color: green;
+                }
+            </style>
+            <script>
+            
+                function getUrlVars() {
+                    var vars = {};
+                    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                    vars[key] = value;
+                    });
+                    return vars;
+                }
+                
+                var BRPCallbackModule = angular.module('BRPCallbackApp', []);
+                
+                BRPCallbackModule.controller('BRPCallbackController', function ($scope, BRPCallbackFactory) {
+                    $scope.BRPCallbackModel = {};
+                    $scope.BRPCallbackModel.isLoading = true;
+                    
+                    $scope.BRPCallbackModel.loadData = function() {
+                        $scope.BRPCallbackModel.urlParameters = {};
+                        var urlVars = getUrlVars();
+                        console.log(urlVars);
+                        var urlParameters = {};
+                        for(var urlVar in urlVars) {
+                            urlParameters[urlVar] = decodeURI(urlVars[urlVar]);
+                        }
+                        
+                        if(urlParameters['code']) {
+                        	BRPCallbackFactory.saveAccessToken(angular.toJson(urlParameters)).then(function(successfulResult) {
+	                            if(successfulResult == 'success') {
+	                                $scope.BRPCallbackModel.successMessage = 'Authorization successful';
+                                    //window.opener.location.reload(false);
+                                    window.close();
+	                            } else{
+	                                $scope.BRPCallbackModel.errorMessage = successfulResult;
+	                            }
+	                            $scope.BRPCallbackModel.isLoading  = false;
+	                        }, function(errorSearchResult) { 
+	                            $scope.BRPCallbackModel.errorMessage = successfulResult;
+	                            $scope.BRPCallbackModel.isLoading  = false;
+	                        });
+                        } else if(urlParameters['error']) {
+                        	$scope.BRPCallbackModel.errorMessage = urlParameters['error_description'] ? urlParameters['error_description'] : urlParameters['error'];
+                            $scope.BRPCallbackModel.isLoading  = false;
+                        }
+                    }
+                    
+               });
+                
+               BRPCallbackModule.factory('BRPCallbackFactory', function($q) {
+                   return {
+                       saveAccessToken: function(urlParametersJson) {
+                           urlParametersJson = encodeString(urlParametersJson);
+                           var deferred = $q.defer();
+                          // make AJAX request to the remote service
+                          Visualforce.remoting.Manager.invokeAction(
+                              '{!$RemoteAction.BRPAuthorizationCtrl.saveAccessToken}',
+                               urlParametersJson,
+                              function(result, event) {
+	                              if (event.type == 'exception') {
+	                                  deferred.reject(event.message);
+	                              } else {
+	                                  var apiresponse = decodeString(result);
+	                                  deferred.resolve(apiresponse);
+	                              }
+	                          }, {
+	                              escape : true
+	                          });
+                          return deferred.promise;
+                       }
+                   }
+               });
+            </script>
+        </head>
+        <body ng-cloak="ng-cloak" ng-controller="BRPCallbackController" ng-init="BRPCallbackModel.loadData()">
+              <div class="LoadingDiv" ng-show="BRPCallbackModel.isLoading">
+	            <div class="loadingIconContainer">
+	                <c:BPLoading />
+	            </div>
+	        </div>   
+            <div class="loadingContainer" ng-if="!BRPCallbackModel.isLoading">
+            	<div class="errorBlock" ng-if="BRPCallbackModel.errorMessage">
+	                <h3> Some error occurred... </h3>
+	                <p>Error Message - {{BRPCallbackModel.errorMessage}}</p>
+	                <!-- <apex:form >
+				        <apex:commandButton action="{!authorizeBRP}" value="Try Autorize BRP again" id="BRPButton"/>
+				    </apex:form> -->
+	            </div>
+	            <div class="successBlock" ng-if="BRPCallbackModel.successMessage">
+	                <h3> {{BRPCallbackModel.successMessage}}... </h3>
+	            </div>
+            </div>
+            
+        </body>
+    </html>
+</apex:page>

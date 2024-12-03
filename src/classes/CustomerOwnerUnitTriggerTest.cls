@@ -2,6 +2,10 @@
 **/ 
 @isTest
 private class CustomerOwnerUnitTriggerTest {
+     @testSetup
+    private static void setupTestData() {
+		TestDataFactory.disableFLSChecks();
+   }
 
     static testMethod void customerOwnerUnitTest() {
     	 Account customer = TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'Agra', '1111111112', null, null, false, true,'Individual','firstname1', 'lastname', '9999999999', 'BillingStreet');

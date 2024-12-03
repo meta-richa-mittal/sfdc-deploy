@@ -1,0 +1,1404 @@
+<apex:page renderAs="pdf" showHeader="false" sidebar="false" standardstylesheets="false"  applyHtmlTag="false" docType="html-5.0" applyBodyTag="false" controller="DealDocumentPrintCtrl">
+    <head>
+        <style>
+            @page {
+                margin-left: 0cm;
+                margin-right: 0cm;
+            }
+            body {
+                float: left;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0px;
+                font-family: sans-serif;
+            }
+            .invoice-main-container {
+                position: relative;
+                left: 48px;
+            }
+            .page-size {
+                float: left;
+                width: 100%;
+                height: 955px;
+            }
+            .header-section{
+                margin-bottom: 9px;
+                clear: both;
+            }
+            .c-pull-left {
+                float: left;
+            }
+            .c-pull-right {
+                float: right;
+            }
+            .store-info {
+                text-align: right;
+                width: 350px;
+                
+            }
+            .store-info label {
+                font-weight: bold;
+                font-size: 11px;
+                line-height: 11px;
+                color: #000;
+                text-transform: uppercase;
+                margin-bottom: 5px;
+                width: 100%;
+            }
+            .store-info p {
+                text-align: right;
+                width: 350px;
+                color: #000;
+                margin: 0px;
+                padding: 0px;
+                
+            }
+            .store-info p.tax-heading {
+                font-size: 18px;
+                line-height: 21px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            .store-info .tax-heading {
+                font-size: 18px;
+                line-height: 21px;
+                font-weight: bold;
+                margin-bottom: 7px;
+            }
+            .store-info p.company-name {
+                font-size: 11px;
+                line-height: 13px;
+                font-weight: bold;
+                margin-bottom: 4px;
+            }
+            .store-info p.company-address {
+                font-size: 10px;
+                line-height: 10px;
+                margin-bottom: 3px;
+            }
+            .store-info p.tax-id-info {
+                font-size: 10px;
+                line-height: 10px;
+            }
+            .customer-info-container {
+                margin-top: 5px;
+            }
+            .customer-info-container.fs11 {
+                font-size: 11px;
+            }
+            .customer-info-container .second-row {
+                margin-top: 10px;
+            }
+            .customer-info-container .customer-info-section {
+                width: 710px;
+            }
+            .customer-info-container .customer-info-section .first-container {
+                width: 250px;
+            }
+            .customer-info-container .customer-info-section  label{
+                font-weight: bold;
+                line-height: 11px;
+                color: #000;
+                text-transform: uppercase;
+                margin-bottom: 5px;
+                width: 100%;
+            }
+            .customer-info-container .customer-info-section .first-container .customer-name {
+                font-weight: bold;
+                line-height: 11px;
+                color: #000;
+                width:100%;
+                margin-bottom: 3px;
+            }
+            .customer-info-container .customer-info-section .first-container .customer-address {
+                font-weight: normal;
+                line-height: 10px;
+                color: #000; 
+                width: 250px;
+            }
+            .customer-info-container .customer-info-section .first-container .customer-address1 {
+                font-weight: normal;
+                line-height: 10px;
+                color: #000; 
+                margin-bottom: 3px;
+            }
+            .customer-info-container .customer-info-section .second-container {
+                width: 250px;
+            }
+            .customer-info-container .customer-info-section .second-container label {
+                height: 11px;
+            }
+            .customer-info-container .customer-info-section .second-container p {
+                font-weight: normal;
+                line-height: 11px;
+                color: #000;
+                width: 100%;
+            }
+            .customer-info-container .customer-info-section .second-container p .width100 {
+                width: 100%;
+            }
+            .customer-other-info {
+                margin-bottom: 3px;
+                line-height: 10px;
+                font-weight: normal;
+            }
+            .customer-info-container .customer-info-section .second-container p  .customer-other-info .email-container {
+                width: 90px;
+            }
+            .M0 {
+                margin: 0px !important;
+            }
+            .bold {
+                font-weight: bold;
+            }
+            .customer-info-container{
+                width: 710px;
+                margin-bottom: 20px;
+            }
+            .PL2 {
+                padding-right: 2px;
+            }
+            .invoice-info p {
+                line-height: 10px;
+                width: 200px !important;
+            }
+            .invoice-info {
+                width: 200px;
+            }
+            .second-container.ship-to {
+                position: absolute;
+                left: 300px;
+            }
+            .co-buyer {
+                width:710px;
+                float:left;
+                margin-bottom: 10px;
+                font-size: 11px;
+                display: flex
+            }
+            .co-buyer-name {
+                width: 50%;
+            }
+            .sold-by-name {
+                width: 50%;
+                text-align: right;
+                float: right;
+                text-transform: none;
+            }
+            .unit-purchased-section, .financing-section {
+                float: left;
+                margin-bottom: 15px;
+            }
+            table.unit-purchased-table, table.trade-in-table, table.financing-table {
+                width:710px;
+                float:left;
+                font-size: 12px;
+                border-collapse: collapse;
+            }
+            table.unit-purchased-table th, table.trade-in-table th, table.financing-table th {
+                border-bottom: 1px solid black; 
+            }
+            table.unit-purchased-table th div.unit-purchased-header, table.trade-in-table th div.trade-in-header, table.financing-table th div.financing-header {
+                width:300px;
+                font-weight: bold;
+                display: inline-block;
+                text-transform: uppercase;
+            }
+            table.unit-purchased-table th div.vin, table.trade-in-table th div.vin, table.financing-table th div.finance-company-name {
+                width:220px;
+                text-align:right;
+                display: inline-block;
+                text-transform: uppercase;
+            }
+            table.unit-purchased-table tbody table, table.trade-in-table tbody table {
+                width:710px;
+                border-collapse: collapse;
+            }
+            table.unit-purchased-table tbody table tr td, table.trade-in-table tbody table tr td {
+                font-size: 11px;
+                font-weight: bold;
+                padding: 0px;
+                margin: 0px;
+            }
+            table.unit-purchased-table tbody table tr td.first-column {
+                width:440px;
+                text-transform: capitalize;
+            }
+            table.unit-purchased-table tbody table tr td.second-column {
+                width:160px;
+                text-align: left;
+            }
+            table.unit-purchased-table tbody table tr td.third-column {
+                width:100px;
+                text-align: left;
+                padding-left: 15px;
+            }
+            table.unit-purchased-table tbody table tr td.opt-column, table.trade-in-table tbody table tr td.opt-column {
+                font-weight: normal;
+            }
+            table.unit-purchased-table tbody table tr td.opt-column div, table.trade-in-table tbody table tr td.opt-column div {
+                margin-left: 15px;
+            }
+            .unit-purchased-notes, .trade-in-notes, .engine-info, .plate-info, .insurance-info {
+                margin-left: 30px;
+                width: 650px;
+                float: left;
+                font-size: 11px;
+            }
+            .engine-info span, .plate-info span, .insurance-info span {
+                padding-right: 4px;
+            }
+            .plate-info span.exp-date, .insurance-info span.policy {
+                padding-left: 6px;
+            }
+            .unit-pricing-section, .installed-options-section, .merchandise-section, .product-fee-section, .trade-in-value-section, .finance-product-section, .finance-company-section {
+                margin-left:50px;
+                margin-top:5px;
+                float:left;
+                font-size: 11px;
+            }
+            .merchandise-section {
+                margin-top: 2px;
+            }
+            .unit-pricing-section table, .installed-options-section table, .merchandise-section table, .product-fee-section table, .trade-in-value-section table, .finance-product-section table, .finance-company-section table {
+                border-collapse: collapse;
+            }
+            .unit-pricing-section table tbody td, .installed-options-section table tbody td, .merchandise-section table tbody td, .product-fee-section table tbody td, .trade-in-value-section table tbody td, .finance-product-section table tbody td, .finance-company-section table tbody td {
+                margin: 0px;
+                padding: 0px;
+            }
+            .unit-pricing-section div.header, .installed-options-section div.header, .merchandise-section div.header, .product-fee-section div.header, .trade-in-value-section div.header, .finance-product-section div.header, .finance-company-section div.header {
+                font-weight: bold;
+                width: 120px;
+            }
+            .unit-pricing-section td.first-column, .installed-options-section tr.install-option-fee .first-column, .merchandise-section tr.merchandise-option-fee .first-column, .product-fee-section td.first-column, .trade-in-value-section td.first-column, .finance-product-section td.first-column {
+                width: 230px;
+                max-width:230px;
+                margin-left: 50px;
+            }
+            .unit-pricing-section td.second-column, .installed-options-section tr.install-option-fee .second-column, .merchandise-section tr.merchandise-option-fee .second-column, .product-fee-section td.second-column, .trade-in-value-section td.second-column, .finance-product-section td.second-column {
+                width:50px;
+                text-align: right;
+            }
+            .unit-pricing-section td.third-column, .installed-options-section tr.install-option-fee .third-column, .merchandise-section tr.merchandise-option-fee .third-column, .product-fee-section td.third-column, .trade-in-value-section td.third-column, .finance-product-section td.third-column {
+                width:22px;
+                text-align: right;
+            }
+            .unit-pricing-section td.fourth-column, .installed-options-section tr.install-option-fee .fourth-column, .merchandise-section tr.merchandise-option-fee .fourth-column, .product-fee-section td.fourth-column, .trade-in-value-section td.fourth-column, .finance-product-section td.fourth-column {
+                width:55px;
+                text-align: right;
+            }
+            .unit-pricing-section td.fifth-column, .installed-options-section tr.install-option-fee .fifth-column, .merchandise-section tr.merchandise-option-fee .fifth-column, .product-fee-section td.fifth-column, .trade-in-value-section td.fifth-column, .finance-product-section td.fifth-column {
+                width:80px;
+                text-align: right;
+            }
+            .unit-pricing-section td.sixth-column, .installed-options-section tr.install-option-fee .sixth-column, .merchandise-section tr.merchandise-option-fee .sixth-column, .product-fee-section td.sixth-column, .trade-in-value-section td.sixth-column, .finance-product-section td.sixth-column {
+                width:95px;
+                text-align: right;
+                font-weight: bold;
+            }
+            table.trade-in-table tbody table tr td.first-column {
+                width:350px;
+                text-transform: capitalize;
+            }
+            table.trade-in-table tbody table tr td.second-column {
+                width:250px;
+                text-align: left;
+            }
+            table.trade-in-table tbody table tr td.second-column .plate-no {
+                padding-right: 4px;
+            }
+            table.trade-in-table tbody table tr td.second-column .exp-date {
+                padding-left: 8px;
+            }
+            table.trade-in-table tbody table tr td.third-column {
+                width:100px;
+                text-align: left;
+                padding-left: 15px;
+            }
+            .trade-in-value {
+                margin-left: 45px;
+                width: 650px;
+                float: left;
+                font-size: 11px;
+            }
+            .trade-in-value-section {
+                margin-bottom: 15px;
+            }
+            .trade-in-value-section td.first-column {
+                width:1px;
+                margin-left: 50px;
+            }
+            .trade-in-value-section td.second-column {
+                width:1px;
+            }
+            .trade-in-value-section td.third-column {
+                width:1px;
+            }
+            .trade-in-value-section td.fourth-column {
+                width:355px;
+                text-align: right;
+            }
+            .trade-in-value-section td.fifth-column {
+                width:80px;
+                text-align: right;
+            }
+            .trade-in-value-section td.sixth-column {
+                width:95px;
+                text-align: right;
+                font-weight: bold;
+            }
+            .financing-table td.finance-payment-info {
+                font-size: 11px;
+                font-weight: bold;
+            }
+            .finance-company-section td.first-column {
+                width:257px;
+                margin-left: 50px;
+            }
+            .finance-company-section td.second-column {
+                width:100px;
+                text-align: right;
+            }
+            .deal-notes {
+                width:710px;
+                float:left;
+                font-size: 11px;
+                margin-left: 1px;
+            }
+            .deal-notes .header {
+                font-weight:bold;
+            }
+            .deal-notes .notes-item {
+                padding-right:10px;
+                text-align: justify;
+            }
+            .deal-payment-totals {
+                width:712px;
+                margin-right:200px;
+                font-size: 11px;
+            }
+            .deal-payment-totals .deal-payment-section {
+                width:310px;
+                padding-top:6px; 
+                float:left;
+                margin-top: 10px;
+            }
+            .deal-payment-totals .deal-payment-section .header {
+                border-bottom: 1px solid black;
+                text-transform: uppercase;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            .deal-payment-totals .deal-payment-section table {
+                width:310px;
+                margin-left: -3px;
+            }
+            .deal-payment-totals .deal-payment-section table td.first-column {
+                width:180px;
+            }
+            .deal-payment-totals .deal-payment-section table td.second-column {
+                width:60px;
+            }
+            .deal-payment-totals .deal-payment-section table td.third-column {
+                width:70px;
+                text-align: right;
+            }
+            .totals-section {
+                width:310px;
+                padding-top:6px;
+                float: right;
+                font-size: 11px;
+            }
+            .totals-section .header {
+                width:310px; 
+                margin-top:10px;
+                font-size:12px;
+                float:right;
+                font-weight:bold;
+                text-transform: uppercase;
+                border-bottom: 1px solid black;
+                margin-bottom:3px;
+            }
+            .totals-section .item-div {
+                width: 310px !important;
+                margin-left: 5px;
+            }
+            .totals-section .item-div label {
+                width: 172px !important; 
+                float: left;
+            }
+            .totals-section .item-div.total, .totals-section .item-div.sub-total, .totals-section .item-div.due-from-customer, .totals-section .item-div.due-from-financing {
+                font-weight: bold;
+            }
+            .totals-section .item-div span {
+                text-align:right;
+                width:126px;
+                float: left;
+            }
+            .disclaimer-section {
+                width:730px;
+                margin-top:20px;
+                float:left;
+                page-break-inside: avoid;
+                font-size:11px;
+            }
+            .disclaimer-section p {
+                width:710px;
+                word-break:break-word;
+                float:left;
+                white-space: pre-wrap;
+                text-align: left;
+            }
+            .disclaimer-section div {
+                border-bottom: 1px solid black;
+                float:left;
+                width: 260px;
+                padding-top:30px;
+            }
+            .disclaimer-section .buyer, .disclaimer-section .seller {
+                margin-top:15px;
+                float:left; 
+                font-size:12px;
+                width: 50px;
+            }
+            .disclaimer-section .seller.header {
+                padding-left: 94px;
+            }
+            .ML50 {
+                margin-left: 50px !important;
+            }
+            .customer-info-section.second-row .ship-to-section label {
+                width: 51px;
+            }
+            .customer-info-section.second-row .ship-to-section div {
+                width: 185px;
+                float: left;
+            }
+            .contact-label {
+                font-weight: bold;
+            }
+            .contact-name {
+                padding-left: 10px;
+            }
+            .barcode-po {
+                margin-top: 1px;
+            }
+            .MB3 {
+                margin-bottom: 3px !important;
+            }
+            table.unit-purchased-table th div.vin, table.trade-in-table th div.vin, table.financing-table th div.finance-company-name {
+                margin-left: 3px;
+            }
+            table.financing-table {
+                width: 712px;
+            }
+            .total-content {
+                margin-left: -3px;
+            }
+            .company-logo-right {
+                position: absolute;
+                right: 96px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="invoice-main-container">
+    <!-- Start: company info Section -->
+        <c:StandardDocumentHeader headerText="DealDocumentPdf"
+            shipToLabel="SHIP TO"
+            documentType="{!documentType}"
+            isDisplayTaxInvoice="{!isDisplayTaxInvoice}"
+            dealStatus="{!dealDocumentDetailRecord.DealInfo.Status}"
+            isLogoLeft="{!if(documentType == 'Bill of sale' || ((documentType == '' || documentType == null) && dealDocumentDetailRecord.DealInfo.Status == 'Invoiced'), true, false)}"
+            orderLabel="{!if(documentType == 'Bill of sale' || ((documentType == '' || documentType == null) && dealDocumentDetailRecord.DealInfo.Status == 'Invoiced'), 'INVOICE#', 'ORDER#')}"/>
+        <!-- End : sold to section -->
+        <apex:variable value="{!0}" var="unitIndex"/>
+        <apex:variable value="{!0}" var="index2"/>
+        <apex:variable value="{!0}" var="index4"/>
+        <apex:variable value="{!0}" var="index6"/>
+        <apex:variable value="{!0}" var="index7"/>
+        <apex:variable value="{!0}" var="index8"/>
+
+        <apex:outputPanel rendered="{!(dealDocumentDetailRecord.DealInfo.CoBuyerName != null || dealDocumentDetailRecord.DealInfo.SoldBy != null)}" layout="none">
+            <div class="co-buyer">
+                <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealInfo.CoBuyerName != null}" layout="none">
+                    <span class="c-pull-left M0 co-buyer-name"><strong>CO-BUYER&nbsp;&nbsp;</strong>{!dealDocumentDetailRecord.DealInfo.CoBuyerName}</span>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealInfo.SoldBy != null}" layout="none">
+                    <apex:outputText styleClass="M0 sold-by-name" value="Sold by: {!dealDocumentDetailRecord.DealInfo.SoldBy}"/>
+                </apex:outputPanel>
+            </div>
+        </apex:outputPanel>
+        
+        <!-- Start : Unit section -->
+        <div class="unit-purchased-section">
+            <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealDetailWrapperObj.UnitList.size > 0}" layout="none">
+                <apex:repeat value="{!dealDocumentDetailRecord.DealDetailWrapperObj.UnitList}" var="unitDeal">
+                    <apex:variable var="unitIndex" value="{!unitIndex + 1}"/>
+                    <table class="unit-purchased-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="unit-purchased-header">Unit Purchased</div>
+                                    <apex:outputPanel rendered="{!unitDeal.ItemDesc.VIN !=''}" layout="none">
+                                        <div class="vin">VIN/SN: {!unitDeal.ItemDesc.VIN}</div>
+                                    </apex:outputPanel>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                <table>
+                                        <tbody>
+                                            <tr>
+                                                <td class="first-column">
+                                                    <apex:outputPanel rendered="{!(!unitDeal.ItemDesc.IsConsignment && unitDeal.ItemDesc.IsNewUnit)}" layout="none">
+                                                        NEW -
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!(!unitDeal.ItemDesc.IsConsignment && !unitDeal.ItemDesc.IsNewUnit)}" layout="none">
+                                                        USED -
+                                                    </apex:outputPanel>
+                                                    <apex:outputText value=" {!unitDeal.ItemDesc.Year}"></apex:outputText>
+                                                    <apex:outputText value=" {!unitDeal.ItemDesc.UnitName}"></apex:outputText>
+                                                </td>
+                                                <td class="second-column">
+                                                    <apex:outputPanel rendered="{!unitDeal.ItemDesc.COUId != null}" layout="none"><span>{!unitDeal.ItemDesc.UnitNumber}</span> </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!unitDeal.ItemDesc.COUId == null}" layout="none"><span>Temporary unit {!unitIndex}</span></apex:outputPanel>
+                                                </td>
+                                                <td class="third-column" rendered="{!unitDeal.ItemDesc.Mileage != null}">{!unitDeal.ItemDesc.Mileage}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3" class="opt-column"> 
+                                                    <div>
+                                                        <apex:repeat value="{!unitDeal.ItemDesc.UnitOptionalFieldObjList}" var="unitFieldObj">
+                                                            <apex:outputText rendered="{!unitFieldObj.Value != null}">
+                                                                [{!unitFieldObj.Label}: {!unitFieldObj.Value}]&nbsp;
+                                                            </apex:outputText>
+                                                        </apex:repeat>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody> 
+                    </table>
+                    <apex:outputPanel rendered="{!unitDeal.ItemDesc.InsuranceProvider != null}" layout="none">
+                        <div class="insurance-info">
+                            <span>Insurance provider:</span>{!unitDeal.ItemDesc.InsuranceProvider}
+                            <span class="policy" rendered="{!unitDeal.ItemDesc.InsuranceProvider != null && unitDeal.ItemDesc.InsurancePolicy != null}">Policy#:</span>{!unitDeal.ItemDesc.InsurancePolicy} 
+                        </div>
+                    </apex:outputPanel>
+                    <div class="unit-purchased-notes">
+                        <apex:repeat value="{!unitDeal.ItemDesc.NotesList}" var="dealNotes">
+                            <div>{!dealNotes}</div>
+                        </apex:repeat>
+                    </div>
+                    <!-- START: UnitDetails -->
+                    <div class="unit-pricing-section">
+                        <apex:outputPanel rendered="{!unitDeal.DealUnitPriceCost.size > 0}" layout="none">
+                            <div>
+                                <div class="c-pull-left header">Unit Pricing</div>
+                                <table class="c-pull-right">
+                                    <apex:variable value="{!0}" var="index1"/>
+                                    <apex:repeat value="{!unitDeal.DealUnitPriceCost}" var="dealUnitPrice">
+                                        <apex:variable var="index1" value="{!index1 + 1}"/>
+                                        <tbody>
+                                            <tr>
+                                                <td class="first-column" >
+                                                    {!dealUnitPrice.ItemDescription}
+                                                </td>
+                                                <td class="second-column"></td>
+                                                <td class="third-column"></td>
+                                                <td class="fourth-column"></td>
+                                                <td class="fifth-column">
+                                                    <apex:outputText value="{0, number, currency}">
+                                                        <apex:param value="{!dealUnitPrice.TotalPrice}"/>
+                                                    </apex:outputText>
+                                                </td>
+                                                <td class="sixth-column">
+                                                    <apex:outputPanel rendered="{!unitDeal.DealUnitPriceCost.size == index1}" layout="none">
+                                                        <apex:outputText value="{0, number, currency}">
+                                                        <apex:param value="{!unitDeal.UnitAndPriceCost}"/>
+                                                        </apex:outputText>
+                                                    </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </apex:repeat>
+                                </table>
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                    <!-- End: UnitDetails -->
+                    <!-- START: Installed Options -->
+                    <div class="installed-options-section">
+                        <apex:outputPanel rendered="{!unitDeal.InstalloptionAndFeeList.size > 0}" layout="none">
+                            <div class="c-pull-left header">Installed Options</div>
+                            <table class="c-pull-right">
+                                <apex:variable value="{!0}" var="index2"/>
+                                <apex:repeat value="{!unitDeal.InstalloptionAndFeeList}" var="installoptionAndFee">
+                                    <apex:variable var="index2" value="{!index2 + 1}"/>
+                                    <apex:variable var="index3" value="{!0}"/>
+                                    <tbody>
+                                        <apex:outputPanel rendered="{!installoptionAndFee.hasChildren}" layout="none">
+                                            <tr class="install-option-fee">
+                                                <td class="first-column">{!installoptionAndFee.ItemDescription}</td>
+                                                <td class="second-column"></td>
+                                                <td class="third-column"></td>
+                                                <td class="fourth-column"></td>
+                                                <td class="fifth-column">
+                                                    <apex:outputText value="{0, number, currency}">
+                                                        <apex:param value="{!installoptionAndFee.Price}"/>
+                                                    </apex:outputText>
+                                                </td>
+                                                <td class="sixth-column">
+                                                    <apex:outputPanel rendered="{!index2 == unitDeal.InstalloptionAndFeeList.size && !!installoptionAndFee.hasChildren}" layout="none">
+                                                        <apex:outputText value="{0, number, currency}">
+                                                            <apex:param value="{!unitDeal.InstalledOptionCost}"/>
+                                                        </apex:outputText>
+                                                    </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                        </apex:outputPanel> 
+                                        <apex:repeat value="{!installoptionAndFee.OptionAndFeeList}" var="installoptionFee" rendered="{!((installoptionAndFee.Id == null) || (installoptionAndFee.Id != null && !isHideKitDetailsOnDocuments))}">
+                                            <apex:variable var="index3" value="{!index3 + 1}"/>
+                                            <tr class="install-option-fee">
+                                                <td class="first-column" style="{!if(installoptionAndFee.hasChildren, 'padding-left:20px;width:180px;max-width: 180px;', 'padding-left:0px')};">
+                                                    <apex:outputText rendered="{!installoptionFee.PartId != null && isHidePartNumbersOnDocuments}" value="{!installoptionFee.ItemDescription}"></apex:outputText>
+                                                    <apex:outputText rendered="{!!(installoptionFee.PartId != null && isHidePartNumbersOnDocuments)}" value="{!installoptionFee.Item}"></apex:outputText>
+                                                </td>
+                                                <td class="second-column">
+                                                    <apex:outputText value="{0}">
+                                                            <apex:param value="{!installoptionFee.Qty}" />
+                                                    </apex:outputText>
+                                                </td>
+                                                <td class="third-column">@</td>
+                                                <td class="fourth-column">
+                                                    <apex:outputText value="{0, number, currency}">
+                                                        <apex:param value="{!installoptionFee.Price}"/>
+                                                    </apex:outputText>
+                                                </td>
+                                                <td class="fifth-column">
+                                                    <apex:outputPanel rendered="{!!installoptionAndFee.hasChildren}" layout="none">
+                                                        <apex:outputText value="{0, number, currency}">
+                                                            <apex:param value="{!installoptionFee.Total}"/>
+                                                        </apex:outputText>
+                                                    </apex:outputPanel>
+                                                </td>
+                                                <td class="sixth-column">
+                                                    <apex:outputPanel rendered="{!index2 == unitDeal.InstalloptionAndFeeList.size && index3 == installoptionAndFee.OptionAndFeeList.size && !installoptionAndFee.hasChildren}" layout="none">
+                                                        <apex:outputText value="{0, number, currency}">
+                                                            <apex:param value="{!unitDeal.InstalledOptionCost}"/>
+                                                        </apex:outputText>
+                                                    </apex:outputPanel>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </tbody>
+                                </apex:repeat>
+                            </table>
+                        </apex:outputPanel>
+                    </div>
+                    <!-- END: Installed Options -->
+                    <!-- START: Merchandise -->
+                    <div class="merchandise-section">
+                        <apex:outputPanel rendered="{!unitDeal.MerchandiseOptionAndFeeList.size > 0}" layout="none">
+                                <div>
+                                    <div class="c-pull-left header">Merchandise</div>
+                                    <table class="c-pull-right">
+                                        <apex:variable value="{!0}" var="index4"/>
+                                        <apex:repeat value="{!unitDeal.MerchandiseOptionAndFeeList}" var="merchandiseOptionAndFee">
+                                            <apex:variable var="index4" value="{!index4 + 1}" />
+                                            <apex:variable var="index5" value="{!0}" />
+                                            <tbody>
+                                                <apex:outputPanel rendered="{!merchandiseOptionAndFee.hasChildren}" layout="none">
+                                                    <tr class="merchandise-option-fee">
+                                                        <td class="first-column">{!merchandiseOptionAndFee.ItemDescription}</td>
+                                                        <td class="second-column"></td>
+                                                        <td class="third-column"></td>
+                                                        <td class="fourth-column"></td>
+                                                        <td class="fifth-column">
+                                                            <apex:outputText value="{0, number, currency}">
+                                                                <apex:param value="{!merchandiseOptionAndFee.Price}"/>
+                                                            </apex:outputText>
+                                                        </td>
+                                                        <td class="sixth-column">
+                                                            <apex:outputPanel rendered="{!unitDeal.MerchandiseOptionAndFeeList.size == index4 && !!merchandiseOptionAndFee.hasChildren}" layout="none">
+                                                                <apex:outputText value="{0, number, currency}">
+                                                                    <apex:param value="{!unitDeal.MerchandiseOptionCost}"/>
+                                                                </apex:outputText>
+                                                            </apex:outputPanel>
+                                                        </td>
+                                                    </tr>
+                                                </apex:outputPanel>
+                                                <apex:repeat value="{!merchandiseOptionAndFee.OptionAndFeeList}" var="merchandiseOptionFee" rendered="{!((merchandiseOptionAndFee.Id == null) || (merchandiseOptionAndFee.Id != null && !isHideKitDetailsOnDocuments))}">
+                                                    <apex:variable var="index5" value="{!index5 + 1}" />
+                                                    <tr class="merchandise-option-fee">
+                                                        <td class="first-column" style="{!if(merchandiseOptionAndFee.hasChildren, 'padding-left:20px;width:180px;max-width: 180px;', 'padding-left:0px')};">
+                                                            <apex:outputText rendered="{!merchandiseOptionFee.PartId != null && isHidePartNumbersOnDocuments}" value="{!merchandiseOptionFee.ItemDescription}"></apex:outputText>
+                                                            <apex:outputText rendered="{!!(merchandiseOptionFee.PartId != null && isHidePartNumbersOnDocuments)}" value="{!merchandiseOptionFee.Item}"></apex:outputText>
+                                                        </td>
+                                                        <td class="second-column">
+                                                            <apex:outputText value="{0}">
+                                                                <apex:param value="{!merchandiseOptionFee.Qty}" />
+                                                            </apex:outputText>
+                                                        </td>
+                                                        <td class="third-column">@</td>
+                                                        <td class="fourth-column">
+                                                            <apex:outputText value="{0, number, currency}">
+                                                                <apex:param value="{!merchandiseOptionFee.Price}"/>
+                                                            </apex:outputText>
+                                                        </td>
+                                                        <td class="fifth-column">
+                                                            <apex:outputPanel rendered="{!!merchandiseOptionAndFee.hasChildren}" layout="none">
+                                                                <apex:outputText value="{0, number, currency}">
+                                                                    <apex:param value="{!merchandiseOptionFee.Total}"/>
+                                                                </apex:outputText>
+                                                            </apex:outputPanel>
+                                                        </td>
+                                                        <td class="sixth-column">
+                                                            <apex:outputPanel rendered="{!unitDeal.MerchandiseOptionAndFeeList.size == index4 && index5 == merchandiseOptionAndFee.OptionAndFeeList.size && !merchandiseOptionAndFee.hasChildren}" layout="none">
+                                                                <apex:outputText value="{0, number, currency}">
+                                                                    <apex:param value="{!unitDeal.MerchandiseOptionCost}"/>
+                                                                </apex:outputText>
+                                                            </apex:outputPanel>
+                                                        </td>
+                                                    </tr>
+                                                </apex:repeat>
+                                            </tbody>
+                                        </apex:repeat>
+                                    </table>
+                                </div>
+                        </apex:outputPanel>
+                    </div>
+                    <!-- END: Merchandise -->
+                    <!-- START: Other Products & Fees -->
+                    <div class="product-fee-section">
+                        <apex:outputPanel rendered="{!unitDeal.OtherProductsAndFeeList.size > 0}" layout="none">
+                            <div>
+                                <div class="c-pull-left header">Products &amp; Fees</div>
+                                <table class="c-pull-right">
+                                    <apex:variable value="{!0}" var="index6"/>
+                                    <apex:repeat value="{!unitDeal.OtherProductsAndFeeList}" var="otherProductsFee">
+                                        <apex:variable var="index6" value="{!index6 + 1}" />
+                                        <tbody>
+                                            <apex:repeat value="{!otherProductsFee.OptionAndFeeList}" var="otherProductFeeList">
+                                                <tr>
+                                                    <td class="first-column">{!otherProductFeeList.Item}</td>
+                                                    <td class="second-column"></td>
+                                                    <td class="third-column"></td>
+                                                    <td class="fourth-column"></td>
+                                                    <td class="fifth-column">
+                                                        <apex:outputText value="{0, number, currency}">
+                                                            <apex:param value="{!otherProductFeeList.Total}"/>
+                                                        </apex:outputText>
+                                                    </td>
+                                                    <td class="sixth-column">
+                                                        <apex:outputPanel rendered="{!index6 == unitDeal.OtherProductsAndFeeList.size}" layout="none">
+                                                            <apex:outputText value="{0, number, currency}">
+                                                                <apex:param value="{!unitDeal.OtherProductsAndFeeCost}"/>
+                                                            </apex:outputText>
+                                                        </apex:outputPanel>
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>    
+                                    </apex:repeat>
+                                </table>
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                    <!-- END: Other Products & Fees -->
+                </apex:repeat>
+            </apex:outputPanel>
+        </div>
+        <!-- End : Unit section -->
+
+
+        <!--STATRT: TradeIn section -->
+        <div class="trade-in-section">
+            <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealDetailWrapperObj.TradeInList.size > 0}" layout="none">
+                <apex:repeat value="{!dealDocumentDetailRecord.DealDetailWrapperObj.TradeInList}" var="tradeInDeal">
+                    <table class="trade-in-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <div class="trade-in-header">Trade-In</div>
+                                    <apex:outputPanel rendered="{!tradeInDeal.ItemDesc.VIN !=''}" layout="none">
+                                        <div class="vin">VIN/SN: {!tradeInDeal.ItemDesc.VIN}</div>
+                                    </apex:outputPanel>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <table>
+                                        <tbody>
+                                            <tr>
+                                                <td class="first-column">
+                                                    <apex:outputPanel rendered="{!tradeInDeal.ItemDesc.IsNewUnit}" layout="none">
+                                                        NEW -
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!!tradeInDeal.ItemDesc.IsNewUnit}" layout="none">
+                                                        USED -
+                                                    </apex:outputPanel>
+                                                    <apex:outputText value=" {!tradeInDeal.ItemDesc.Year}"></apex:outputText>
+                                                    <apex:outputText value=" {!tradeInDeal.ItemDesc.UnitName}"></apex:outputText>
+                                                </td>
+                                                <td class="second-column"></td>
+                                                <td class="third-column" rendered="{!tradeInDeal.ItemDesc.Mileage != null}">{!tradeInDeal.ItemDesc.Mileage}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3" class="opt-column"> 
+                                                    <div>
+                                                        <apex:repeat value="{!tradeInDeal.ItemDesc.UnitOptionalFieldObjList}" var="unitFieldObj">
+                                                            <apex:outputText rendered="{!unitFieldObj.Value != null}">
+                                                                [{!unitFieldObj.Label}: {!unitFieldObj.Value}]&nbsp;
+                                                            </apex:outputText>
+                                                        </apex:repeat>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody> 
+                    </table>
+                    <apex:outputPanel rendered="{!tradeInDeal.ItemDesc.InsuranceProvider != null}" layout="none">
+                        <div class="insurance-info">
+                            <span>Insurance provider:</span>{!tradeInDeal.ItemDesc.InsuranceProvider}
+                            <span class="policy" rendered="{!tradeInDeal.ItemDesc.InsuranceProvider != null && tradeInDeal.ItemDesc.InsurancePolicy != null}">Policy#:</span>{!tradeInDeal.ItemDesc.InsurancePolicy} 
+                        </div>
+                    </apex:outputPanel>
+                    <div class="trade-in-notes">
+                        <apex:repeat value="{!tradeInDeal.ItemDesc.NotesList}" var="tradeInNotes">
+                            <div>{!tradeInNotes}</div>
+                        </apex:repeat>
+                    </div>
+                    <div class="trade-in-value-section">
+                        <div>
+                            <div class="c-pull-left header"></div>
+                            <table class="c-pull-right">
+                                <tbody>
+                                    <tr>
+                                        <td class="first-column" ></td>
+                                        <td class="second-column"></td>
+                                        <td class="third-column"></td>
+                                        <td class="fourth-column">Agreed Trade-In value</td>
+                                        <td class="fifth-column"></td>
+                                        <td class="sixth-column">
+                                            <apex:outputText value="{0, number, currency}">
+                                                <apex:param value="{!tradeInDeal.AgreedValue}"/>
+                                            </apex:outputText>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </apex:repeat>
+            </apex:outputPanel>
+        </div>
+        <!--END: TradeIn section -->
+
+
+        <!--STATRT: Financing section -->
+        <div class="financing-section">
+            <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealInfo.DealType == 'Financed'}" layout="none">
+                <table class="financing-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <div class="financing-header">Financing</div>
+                                <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyName != null}" layout="none">
+                                    <div class="finance-company-name">{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyName}
+                                        <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyAccountNumber != null}" layout="none"> ({!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyAccountNumber})</apex:outputPanel>
+                                    </div>
+                                </apex:outputPanel>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="finance-payment-info">
+                                <apex:outputPanel rendered="{!OR((dealDocumentDetailRecord.DealFinanceObj.EstimatedPayment != null && dealDocumentDetailRecord.DealFinanceObj.EstimatedPayment > 0 ),(dealDocumentDetailRecord.DealFinanceObj.InterestRate != null && dealDocumentDetailRecord.DealFinanceObj.InterestRate > 0) )}">
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!dealDocumentDetailRecord.AmountFinanced}"/>
+                                    </apex:outputText>
+                                    at
+                                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.InterestRate != null}"> {!dealDocumentDetailRecord.DealFinanceObj.InterestRate}%</apex:outputPanel>
+                                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.InterestRate == null}"> 0%</apex:outputPanel>
+                                    with 
+                                    <span>{!dealDocumentDetailRecord.DealFinanceObj.PaymentFrequency}</span>
+                                    payments of 
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!dealDocumentDetailRecord.DealFinanceObj.EstimatedPayment}"/>
+                                    </apex:outputText>
+                                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.LoanTerm != null}" layout="none">
+                                        for {!dealDocumentDetailRecord.DealFinanceObj.LoanTerm}
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.LoanTerm != null}" layout="none">
+                                        <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.LoanTerm == 1 && dealDocumentDetailRecord.DealFinanceObj.TermType == 'Months'}" layout="none">
+                                            Month
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.LoanTerm != null}" layout="none">
+                                        <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.LoanTerm == 1 && dealDocumentDetailRecord.DealFinanceObj.TermType == 'Years'}" layout="none">
+                                            Year
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.LoanTerm != null}" layout="none">
+                                        <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.LoanTerm > 1}" layout="none">
+                                            {!dealDocumentDetailRecord.DealFinanceObj.TermType}
+                                        </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </apex:outputPanel>
+                            </td>
+                        </tr>
+                    </tbody> 
+                </table>
+                <div class="finance-company-section">
+                    <div>
+                        <div class="c-pull-left header">Finance Company</div>
+                        <table class="c-pull-right">
+                            <tbody>
+                                <tr>
+                                    <td class="first-column" >
+                                        <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyName != null}" layout="none">
+                                            <div>{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyName}
+                                                <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyAccountNumber != null}" layout="none"> ({!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyAccountNumber})</apex:outputPanel>
+                                            </div>
+                                        </apex:outputPanel>
+                                    </td>
+                                    <td class="second-column">
+                                        {!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyFormattedPhone}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="first-column" >
+                                        <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyAddress1 != null}">
+                                            {!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyAddress1}
+                                        </apex:outputPanel>
+                                        <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyAddress2 != null}">
+                                            {!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyAddress2}
+                                        </apex:outputPanel>
+                                    </td>
+                                    <td class="second-column"></td>
+                                </tr>
+                                <tr>
+                                    <td class="first-column" >
+                                        <apex:outputText rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyCity != null}" 
+                                            value="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyCity}">
+                                        </apex:outputText>
+                                        <apex:outputText rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyState != null}" 
+                                            value=", {!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyState}">
+                                        </apex:outputText>
+                                        <apex:outputText rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanycountry != null}" 
+                                            value=", {!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanycountry}">
+                                        </apex:outputText>
+                                        <apex:outputText rendered="{!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyPostal != null}" 
+                                            value=", {!dealDocumentDetailRecord.DealFinanceObj.FinanceCompanyPostal}">
+                                        </apex:outputText>
+                                    </td>
+                                    <td class="second-column"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="finance-product-section">
+                    <apex:outputPanel rendered="{! dealDocumentDetailRecord.DealFinanceObj.FIProductList != null && dealDocumentDetailRecord.DealFinanceObj.FIProductList.size > 0}" layout="none">
+                        <div>
+                            <div class="c-pull-left header">Financing Products</div>
+                            <table class="c-pull-right">
+                                <apex:variable value="{!0}" var="FIProductRecIndex"/>
+                                <apex:repeat value="{!dealDocumentDetailRecord.DealFinanceObj.FIProductList}" var="FIProductRec">
+                                    <tbody>
+                                        <tr>
+                                            <td class="first-column" >
+                                                {!FIProductRec.ItemDescription}
+                                            </td>
+                                            <td class="second-column"></td>
+                                            <td class="third-column"></td>
+                                            <td class="fourth-column"></td>
+                                            <td class="fifth-column">
+                                                <apex:outputText value="{0, number, currency}">
+                                                    <apex:param value="{!FIProductRec.Price}"/>
+                                                </apex:outputText>
+                                            </td>
+                                            <td class="sixth-column">
+                                                <apex:outputText value="{0, number, currency}" rendered="{!dealDocumentDetailRecord.DealFinanceObj.FIProductList.size - 1 == FIProductRecIndex && dealDocumentDetailRecord.IsTaxIncludingPricing}">
+                                                    <apex:param value="{!dealDocumentDetailRecord.DealFinanceObj.FIProductTotal + dealDocumentDetailRecord.DealFinanceObj.FIProductTax}"/>
+                                                </apex:outputText>
+                                                <apex:outputText value="{0, number, currency}" rendered="{!dealDocumentDetailRecord.DealFinanceObj.FIProductList.size - 1 == FIProductRecIndex && !dealDocumentDetailRecord.IsTaxIncludingPricing}">
+                                                    <apex:param value="{!dealDocumentDetailRecord.DealFinanceObj.FIProductTotal}"/>
+                                                </apex:outputText>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <apex:variable value="{!FIProductRecIndex + 1}" var="FIProductRecIndex"/>
+                                </apex:repeat>
+                            </table>
+                        </div>
+                    </apex:outputPanel>
+                </div>
+            </apex:outputPanel>
+        </div>
+        <!--END: financing  section -->
+
+
+        <!-- START: Deal Notes -->
+        <apex:outputPanel rendered="{!dealDocumentDetailRecord.DealInfo.NotesForCustomer.size > 0}" layout="none">
+            <div class="deal-notes">
+                <span class="header">Notes</span> 
+                <apex:repeat value="{!dealDocumentDetailRecord.DealInfo.NotesForCustomer}" var="CustomerNote">
+                   <div class="notes-item">{!CustomerNote}</div>
+                </apex:repeat>
+            </div>
+        </apex:outputPanel>
+        <!-- END: Deal Notes -->
+        
+        <!--START: Deal PAyment and Totals section -->
+        <div class="deal-payment-totals">
+
+            <!--START: Deal PAyment section -->
+            <apex:outputPanel rendered="{!dealDocumentDetailRecord.Transactions.size > 0}" layout="none">
+                <div class="deal-payment-section">
+                    <div class="header">Deal Payments</div>
+                    <table>
+                        <apex:variable value="{!0}" var="transactionIndex"/>
+                        <apex:repeat value="{!dealDocumentDetailRecord.Transactions}" var="paymentInfo">
+                            <tbody style="{!if(transactionIndex > 0, 'position: relative; top: -4px;', '')};">
+                                <tr>
+                                    <td class="first-column">
+                                        <apex:outputText value="{!paymentInfo.Method}"/>
+                                        <apex:outputText value=" [{!paymentInfo.ReferenceNo}]" rendered="{!(paymentInfo.ReferenceNo != null && paymentInfo.ReferenceNo != '')}"/>
+                                    </td>
+                                    <td class="second-column">{!paymentInfo.TransactionDate}</td>
+                                    <td class="third-column">
+                                        <apex:outputText value="{0, number, currency}">
+                                            <apex:param value="{!paymentInfo.Amount}"/>
+                                        </apex:outputText>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <apex:variable value="{!transactionIndex + 1}" var="transactionIndex"/>
+                        </apex:repeat>
+                    </table>
+                </div>
+            </apex:outputPanel>
+            <!--END: Deal PAyment  section -->
+
+
+            <!--START: Totals  section -->
+            <div class="totals-section">
+                <div class="header">
+                    <span>TOTALS</span>
+                </div><br/>
+                <div class="total-content">
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalUnits != 0}" layout="none">
+                        <div class="item-div">
+                            <label>Units</label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" >
+                                    <apex:param value="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalUnits}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalInstalledOption != 0}" layout="none">
+                        <div class="item-div">
+                            <label>Installed Options</label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" >
+                                    <apex:param value="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalInstalledOption}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+                    
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalMerchandiseOption != 0}" layout="none">
+                        <div class="item-div">
+                            <label>Merchandise</label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" >
+                                    <apex:param value="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalMerchandiseOption}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+                    
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalOtherProductsAndFee != 0 }" layout="none">
+                        <div class="item-div">
+                            <label>Products &amp; Fees</label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" >
+                                    <apex:param value="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalOtherProductsAndFee }"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalTradeIn != 0}" layout="none">
+                        <div class="item-div">
+                            <label>Trade-ins</label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" >
+                                    <apex:param value="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalTradeIn}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+                    
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalLienPayout != 0}" layout="none">
+                        <div class="item-div">
+                            <label>Lien Payouts</label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" >
+                                    <apex:param value="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalLienPayout}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+
+                    <apex:outputpanel rendered="{! dealDocumentDetailRecord.DealFinanceObj.FIProductList != null && dealDocumentDetailRecord.DealFinanceObj.FIProductList.size > 0 && dealDocumentDetailRecord.DealInfo.DealType == 'Financed' && !dealDocumentDetailRecord.IsTaxIncludingPricing && dealDocumentDetailRecord.DealFinanceObj.FIProductTotal != 0}" layout="none">
+                        <div class="item-div">
+                            <label>
+                                Financing Product
+                            </label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" rendered="{!!dealDocumentDetailRecord.IsTaxIncludingPricing}">
+                                    <apex:param value="{!dealDocumentDetailRecord.DealFinanceObj.FIProductTotal}"/>
+                                </apex:outputText>                                                                                       
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.DealInfo.DealType == 'Financed' && dealDocumentDetailRecord.IsTaxIncludingPricing && 
+                    (dealDocumentDetailRecord.DealFinanceObj.FIProductTotal + dealDocumentDetailRecord.DealFinanceObj.FIProductTax) != 0}" layout="none">
+                        <div class="item-div">
+                            <label>
+                                Financing Product
+                            </label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" rendered="{!dealDocumentDetailRecord.IsTaxIncludingPricing}">
+                                    <apex:param value="{!dealDocumentDetailRecord.DealFinanceObj.FIProductTotal + dealDocumentDetailRecord.DealFinanceObj.FIProductTax}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+                    
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalStampDuty != 0}" layout="none">
+                        <div class="item-div">
+                            <label>
+                                Stamp Duty
+                            </label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" >
+                                    <apex:param value="{!dealDocumentDetailRecord.DealDetailWrapperObj.TotalStampDuty}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.SubTotal != 0}" layout="none">
+                        <div class="item-div sub-total">
+                            <label>
+                                Sub-Total
+                            </label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}" >
+                                    <apex:param value="{!dealDocumentDetailRecord.SubTotal}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+
+                    <apex:outputpanel rendered="{!!dealDocumentDetailRecord.IsTaxIncludingPricing}" layout="none">
+                        <apex:repeat value="{!dealDocumentDetailRecord.SalesTaxList}" var="tax"> 
+                            <div class="item-div">
+                                <label>
+                                    {!tax.TaxName}
+                                </label> 
+                                <span>
+                                    <apex:outputText value="{0, number, currency}" >
+                                        <apex:param value="{!tax.TaxAmount}"/>
+                                    </apex:outputText>
+                                </span>
+                            </div>
+                        </apex:repeat>
+                    </apex:outputpanel>                     
+                            
+                    <div class="item-div total">
+                        <label>
+                            Total
+                        </label> 
+                        <span>
+                            <apex:outputText value="{0, number, currency}" >
+                                <apex:param value="{!dealDocumentDetailRecord.Total}"/>
+                            </apex:outputText>
+                        </span>
+                    </div>
+
+                    <apex:outputpanel rendered="{!documentType == 'Bill of sale' && dealDocumentDetailRecord.IsTaxIncludingPricing && 
+                            dealDocumentDetailRecord.GSTOnPurchases != null && 
+                            dealDocumentDetailRecord.GSTOnPurchases != 0}" layout="none">
+                        <apex:repeat value="{!dealDocumentDetailRecord.SalesTaxList}" var="tax"> 
+                            <div class="item-div">
+                                <label>
+                                    {!tax.TaxName} on purchases
+                                </label>
+                                <span class="T7">
+                                    <apex:outputText value="{0, number, currency}" >
+                                        <apex:param value="{!dealDocumentDetailRecord.GSTOnPurchases}"/>
+                                    </apex:outputText>
+                                </span>
+                            </div>
+                        </apex:repeat>
+                    </apex:outputpanel>
+
+                    <apex:outputpanel rendered="{!documentType == 'Bill of sale' && dealDocumentDetailRecord.IsTaxIncludingPricing && 
+                            dealDocumentDetailRecord.GSTOnPurchases != null && 
+                            dealDocumentDetailRecord.GSTOnPurchases != 0}" layout="none">
+                        <apex:repeat value="{!dealDocumentDetailRecord.SalesTaxList}" var="tax"> 
+                            <div class="item-div">
+                                <label>
+                                    net {!tax.TaxName} on invoice
+                                </label>
+                                <span class="T7">
+                                    <apex:outputText value="{0, number, currency}" >
+                                        <apex:param value="{!tax.TaxAmount}"/>
+                                    </apex:outputText>
+                                </span>
+                            </div>
+                        </apex:repeat>
+                    </apex:outputpanel>
+
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.IsTaxIncludingPricing && (documentType != 'Bill of sale' ||
+                            dealDocumentDetailRecord.GSTOnPurchases == null || 
+                            dealDocumentDetailRecord.GSTOnPurchases == 0)}" layout="none">
+                        <apex:repeat value="{!dealDocumentDetailRecord.SalesTaxList}" var="tax"> 
+                            <div class="item-div">
+                                <label>
+                                    {!tax.TaxName} included
+                                </label>
+                                <span class="T7">
+                                    <apex:outputText value="{0, number, currency}" >
+                                        <apex:param value="{!tax.TaxAmount}"/>
+                                    </apex:outputText>
+                                </span>
+                            </div>
+                        </apex:repeat>
+                    </apex:outputpanel>
+
+                    <apex:outputpanel rendered="{! dealDocumentDetailRecord.DealFinanceObj != null && dealDocumentDetailRecord.DealFinanceObj.DownPayment >= 0 && dealDocumentDetailRecord.DealInfo.DealType == 'Financed'}" layout="none">
+                        <div class="item-div">
+                            <label>
+                                Agreed Downpayment
+                                </label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}">
+                                    <apex:param value="{!dealDocumentDetailRecord.DealFinanceObj.DownPayment * -1}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+                    
+                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.AmountFinanced != null && dealDocumentDetailRecord.DealInfo.DealType == 'Financed' }" layout="none">       
+                        <div class="item-div">
+                            <label>
+                                Amount Financed
+                            </label> 
+                            <span class="T7">
+                                <apex:outputText value="{0, number, currency}">
+                                    <apex:param value="{!dealDocumentDetailRecord.AmountFinanced}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputPanel>
+
+                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.AmountPaid != 0}" layout="none">       
+                        <div class="item-div">
+                            <label>
+                                Amount Paid
+                            </label> 
+                            <span class="T7">
+                                <apex:outputText value="{0, number, currency}">
+                                    <apex:param value="{!dealDocumentDetailRecord.AmountPaid * -1}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputPanel>
+
+                    <apex:outputpanel rendered="{!dealDocumentDetailRecord.BalanceDue != 0 && dealDocumentDetailRecord.DealInfo.DealType != 'Financed'}" layout="none">
+                        <div class="item-div">
+                            <label>
+                                Balance Due
+                            </label> 
+                            <span>
+                                <apex:outputText value="{0, number, currency}">
+                                    <apex:param value="{!dealDocumentDetailRecord.BalanceDue}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputpanel>
+
+                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.DueFromCustomer != null && dealDocumentDetailRecord.DealInfo.DealType == 'Financed'}" layout="none">       
+                        <div class="item-div due-from-customer">
+                            <label>
+                                Due from customer
+                            </label> 
+                            <span class="T7">
+                                <apex:outputText value="{0, number, currency}">
+                                    <apex:param value="{!dealDocumentDetailRecord.DueFromCustomer}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel rendered="{!dealDocumentDetailRecord.DueFromFinance != null && dealDocumentDetailRecord.DealInfo.DealType == 'Financed'}" layout="none">       
+                        <div class="item-div due-from-financing">
+                            <label>
+                                Due from financing
+                            </label> 
+                            <span class="T7">
+                                <apex:outputText value="{0, number, currency}">
+                                    <apex:param value="{!dealDocumentDetailRecord.DueFromFinance}"/>
+                                </apex:outputText>
+                            </span>
+                        </div>
+                    </apex:outputPanel> 
+                </div>
+            </div>
+        </div>
+        <!--End: Deal PAyment and Totals section -->
+
+
+
+        <!-- Start: Disclaimers Section --> 
+        <div class="disclaimer-section">
+            <p>{!dealDocumentDetailRecord.DealDocumentWarrantyText}</p>
+            <apex:OutputPanel rendered="{!dealDocumentDetailRecord.IsSignatureLineforDealDocument}" layout="none">
+                <apex:outputText styleClass="buyer" value="Buyer :"  />
+                <div></div>
+            </apex:OutputPanel>
+            <apex:OutputPanel rendered="{!dealDocumentDetailRecord.IsSignatureLineforDealDocument}" layout="none">
+                <apex:outputText styleClass="seller header" value="Seller :"  />
+                <div></div>
+            </apex:OutputPanel>
+        </div>
+        <!-- End: Disclaimers Section --> 
+    </div>
+        <apex:outputPanel rendered="{!DealFormId != null}">
+            <c:AdditionalFormToInclude />
+        </apex:outputPanel>
+    </body>
+</apex:page>

@@ -1,0 +1,245 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0"
+        controller="GlobalController">
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+           
+       <div class="content EditGroupPermission">
+      <div class="bp-subHeader bp-techScheduler-subHeader">
+        <div class="row container bp-top-header bp-tech-navigation-bar PB0">
+            <section class="bp-breadcrumb-container">
+                <nav class="bp-breadcrumb-nav">
+                    <ul>
+                        <li><a ui-sref="homePage">Home</a></li>
+                        <li> <a ui-sref="UserSetting">{{'System_Settings' | translate}}</a></li>
+                        <li> <a class="bp-breadcrumb-active">{{'User_permissions' | translate}}</a></li>
+                    </ul>
+                </nav>
+            </section>
+            <h1  class="col-xs-6  bp-hasEyebrow M0 P0">{{'User_permissions' | translate}}</h1>
+            <div class = "col-xs-11  bp-blue-navBar P0 bp-tech-nav">
+	               <ul class="nav nav-tabs subHeaderMenuItem">
+                    <li>
+                        <a class="activeAdmin" ng-click = "EditGroupPermissionsModel.MoveToState('GroupSummary')">{{ 'Groups' | translate }}</a>
+                    </li>
+	               </ul>
+	            </div>
+	         </div>
+	      </div>
+    <!-- END : Header Div --> 
+            <div class="pageContent UserSettingContainer">
+                <div class="container">
+                    <div class="backLink" ng-click="EditGroupPermissionsModel.MoveToState('GroupSummary')">
+						<a>
+							<i class="bp-icons bp-font-10 bp-cursor-pointer bp-lh-18 stroke-3">arrowLeft</i>
+							{{ 'Back_to_group_list' | translate}}
+						</a>
+					</div>
+                    <h1 class="sectionHeading textCenter">{{ 'Group' | translate}}: {{EditGroupPermissionsModel.userGroupRecord.userPermissionGroupDetails.UserGroupName}}</h1> 
+                    <div class="centeredTabs">
+                      <!-- Nav tabs -->
+                       <ul class="nav nav-tabs subHeaderMenuItem">
+                        <li  ><a  class="text-uppercase" style="--activeAdmin: {{EditGroupPermissionsModel.userGroupRecord.userPermissionGroupDetails.ColorCode}}" ng-class="{'activeAdmin' : EditGroupPermissionsModel.currentView == 'Permissions'}" 
+                            ng-click="EditGroupPermissionsModel.changeView('Permissions')">{{ 'Permissions' | translate}}</a></li>
+                        <li ><a  class="text-uppercase" style="--activeAdmin: {{EditGroupPermissionsModel.userGroupRecord.userPermissionGroupDetails.ColorCode}}" ng-class="{'activeAdmin' : EditGroupPermissionsModel.currentView == 'Members'}"
+                            ng-click="EditGroupPermissionsModel.changeView('Members');">{{ 'Members' | translate}} ({{EditGroupPermissionsModel.userGroupMembersList.length}})</a></li>
+                        <li ><a class="text-uppercase" style="--activeAdmin: {{EditGroupPermissionsModel.userGroupRecord.userPermissionGroupDetails.ColorCode}}" ng-class="{'activeAdmin' : EditGroupPermissionsModel.currentView == 'TEAM_PROFILE'}"
+                            ng-click="EditGroupPermissionsModel.changeView('TEAM_PROFILE')">{{ 'Group_profile' | translate }}</a></li>
+                      </ul>
+    
+                      <!-- Tab panes -->
+                      <div class="tab-content">
+                       <div classs = "accountSettingsDashboard">
+                        <div class = "dashboardOptions">
+                        <div role="tabpanel"  id="permissions" ng-show="EditGroupPermissionsModel.currentView == 'Permissions'">
+                            <div class="permissionsList">
+                               
+                                <div class="row">
+                                    <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2 boxContant boxContantGroupPermission" 
+                                        ng-repeat="permissionRec in EditGroupPermissionsModel.userGroupRecord.userGroupPermissions">
+                                        
+                                         <div ng-repeat="(permissionName, permissionCategories) in permissionRec">
+                                         	<h2 class="listHeading">{{permissionName}}</h2>
+	                                        <ul ng-if="permissionName != 'Transaction Permissions' && permissionName != 'Create/modify Records'">
+	                                            <li ng-repeat="permissionCategoryRec in permissionCategories" ng-if = " EditGroupPermissionsModel.showGeneralPermission(permissionCategoryRec)">
+	                                            	<div ng-repeat="(permissionCategoryName, permissionCategoryFields) in permissionCategoryRec"  >
+	                                            		<span class="heading">{{permissionCategoryName}}</span>
+		                                                <div class="actionButton">
+		                                                    <div class="action" ng-if="permissionCategoryFields.PrimaryLabel">
+		                                                        <span>{{permissionCategoryFields.Primary ? permissionCategoryFields.PrimaryLabel : (permissionCategoryName == 'Costs' ? ('hidden' | translate) : ('disabled' | translate ))}}</span> 
+		                                                        <label class="switch " ng-click = "EditGroupPermissionsModel.ChangeGeneralPermission(permissionCategories,permissionCategoryRec)">
+		                                                            <input type="checkbox" ng-model="permissionCategoryFields.Primary" 
+			                                                            ng-disabled="EditGroupPermissionsModel.disableEditGroupPermissions(permissionCategoryName)"
+			                                                            ng-change="permissionCategoryFields.Secondary =(permissionCategoryFields.Primary==false ? false : permissionCategoryFields.Secondary);
+		                                                            				EditGroupPermissionsModel.isUnSavedChanges = true;"/>
+		                                                            <div class="slider round"></div>
+		                                                        </label>
+		                                                    </div>
+		                                                    <div class="action" ng-if="permissionCategoryFields.SecondaryLabel && permissionCategoryFields.Primary">
+		                                                        <span>{{permissionCategoryFields.SecondaryLabel}}</span> 
+		                                                        <label class="switch ">
+		                                                            <input type="checkbox" ng-model="permissionCategoryFields.Secondary" 
+		                                                            	ng-disabled="EditGroupPermissionsModel.disableEditGroupPermissions(permissionCategoryName)"
+		                                                            	ng-change="EditGroupPermissionsModel.isUnSavedChanges = true;" />
+		                                                            <div class="slider round"></div>
+		                                                        </label>
+		                                                    </div>
+		                                                </div>
+	                                            	</div>
+	                                             </li>
+	                                        </ul>
+	                                        
+											<ul ng-if="permissionName == 'Transaction Permissions' || permissionName == 'Create/modify Records'" 
+												ng-repeat="perCatRec in permissionCategories | orderBy: 'Order'">
+												<li ng-if="perCatRec.IsDisplayLabel && !perCatRec.IsSubCategory" class="listHeading inner-list-heading">{{perCatRec.Name}}</li>
+												<li ng-if="perCatRec.IsDisplayLabel && perCatRec.IsSubCategory" class="permissionsubGroupName">{{perCatRec.Name}}</li>
+												<li ng-repeat="permissionCategoryRec in perCatRec.PermissionList">
+													<div ng-repeat="(permissionCategoryName, permissionCategoryFields) in permissionCategoryRec">
+														<span class="heading">{{permissionCategoryName}}</span>
+														<div class="actionButton">
+															<div class="action" ng-if="permissionCategoryFields.PrimaryLabel">
+																<span>{{permissionCategoryFields.Primary ? permissionCategoryFields.PrimaryLabel : (permissionCategoryName == 'Costs' ? ('hidden' | translate) : ('disabled' | translate))}}</span> 
+																<label class="switch" ng-click="EditGroupPermissionsModel.changePermissions(perCatRec.Name, permissionCategoryName, perCatRec.PermissionList)">
+																	<input type="checkbox" ng-model="permissionCategoryFields.Primary" 
+																		ng-disabled="EditGroupPermissionsModel.disableEditGroupPermissions(permissionCategoryName)"
+																		ng-change="permissionCategoryFields.Secondary =(permissionCategoryFields.Primary==false ? false : permissionCategoryFields.Secondary);
+																					EditGroupPermissionsModel.isUnSavedChanges = true;"/>
+																	<div class="slider round"></div>
+																</label>
+															</div>
+															<div class="action" ng-if="permissionCategoryFields.SecondaryLabel && permissionCategoryFields.Primary">
+																<span>{{permissionCategoryFields.SecondaryLabel}}</span> 
+																<label class="switch ">
+																	<input type="checkbox" ng-model="permissionCategoryFields.Secondary" 
+																		ng-disabled="EditGroupPermissionsModel.disableEditGroupPermissions(permissionCategoryName)"
+																		ng-change="EditGroupPermissionsModel.isUnSavedChanges = true;" />
+																	<div class="slider round"></div>
+																</label>
+															</div>
+														</div>
+													</div>
+												</li>
+	                                        </ul>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                       
+                        <div role="tabpanel" id="members" ng-if="EditGroupPermissionsModel.currentView == 'Members'">
+                            <div class="membersBoxes permissionsList">
+                                <div class="row flexGrid">
+                                        <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2 boxContant" ng-repeat="groupMember in EditGroupPermissionsModel.userGroupMembersList">
+                                            <div class="box">
+                                                <div class="userRole" style="--userRoleColor: {{EditGroupPermissionsModel.userGroupRecord.userPermissionGroupDetails.ColorCode}}">{{groupMember.UserGroupName}}</div>
+                                                <div class="shortName text-uppercase">{{groupMember.UserFirstName | limitTo : 1}}{{groupMember.UserLastName | limitTo : 1}}</div>
+                                                <div class="fullName text-capitalize">{{groupMember.UserFirstName}} {{groupMember.UserLastName}}<span>{{groupMember.UserRole}}</span></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-12 col-sm-4 col-md-3 col-lg-2 boxContant" ng-if = "EditGroupPermissionsModel.userGroupMembersList.length > 0">
+	                                        <div class="box addNewBox" ng-click="EditGroupPermissionsModel.openAssignUserPopup();" data-toggle="modal" data-target="#assignUsersModal">
+												<div> 
+													<i class="bp-icons bp-font-63 bp-grey-font bp-fw-100">addCircle</i>
+												</div>
+	                                            <button class="btn btn-transparent" >
+	                                            	{{ 'Assign_users_to_this_group' | translate}}
+	                                            </button>
+	                                        </div>
+                                    	</div> 
+                                    	
+                                    	<div class = "col-xs-12 col-sm-4 col-md-3 col-lg-3 nomember" data-toggle="modal" data-target="#assignUsersModal" ng-if = "EditGroupPermissionsModel.userGroupMembersList.length == 0">
+                                    		<p>{{ 'This_group_has_no_member' | translate}}</p>
+                                    		<button class="btn btn-primary text-uppercase" 
+							         			ng-click="EditGroupPermissionsModel.openAssignUserPopup();">{{ 'Assign_members' | translate}}</button>
+                                    	</div>                           
+                                </div>
+                            </div>          
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="teamProfile" ng-if="EditGroupPermissionsModel.currentView == 'TEAM_PROFILE'">
+                        	<div class="userGroupInfoArea text-center">
+								<h5 class="heading text-left">{{ 'Group_name' | translate}}</h5>
+								<form>
+									<input type="text" class="form-control" placeholder="Group name" id="GroupNameInput"
+										ng-keydown="EditGroupPermissionsModel.GroupProfileNameKeyPressed($event)" ng-trim="false"
+										ng-model="EditGroupPermissionsModel.userGroupRecord.userPermissionGroupDetails.UserGroupName"/>
+									<p class="InputInfo">{{EditGroupPermissionsModel.GroupNameInputCharacterLimit - EditGroupPermissionsModel.userGroupRecord.userPermissionGroupDetails.UserGroupName.length}} characters left</p>
+								</form>
+								<p class="title">{{ 'Group_color' | translate}}</p>
+								<div  class="Color-Picker">
+									<a class="circle-Button" style="background:{{color.IsCircleHover || color.IsSelected ? color.HoverState : color.ColorCode}}"
+										ng-mouseover="color.IsCircleHover = true"
+										ng-mouseout="color.IsCircleHover = false"
+										ng-click="EditGroupPermissionsModel.SelectUserGroupColor($index)"
+										ng-repeat="color in EditGroupPermissionsModel.UserGroupColorsList">
+										<i class="bp-icons bp-font-23 bp-dark-grey1-font stroke-3" ng-if="color.IsSelected">check</i>
+									</a>
+								</div>
+							</div>
+                        </div>
+                      </div>
+                    </div>              
+                </div>
+            </div>
+        </div>
+            </div>
+         	<div class="fotter" ng-class = "{'bp-fotter-btnshow': EditGroupPermissionsModel.isUnSavedChanges}">
+         		<button class="btn btn-primary text-uppercase" 
+         			ng-click="EditGroupPermissionsModel.updateUserGroupRecord()"
+         			ng-disabled="EditGroupPermissionsModel.isSaveChangesButtonDisabled  || EditGroupPermissionsModel.isGroupNameHasValue()">{{ 'Save_changes' | translate}}</button>
+         	</div>   
+        </div>
+        
+        
+        <!-- Modal -->
+	<div class="modal fade assignUsersModal" id="assignUsersModal" aria-hidden="true" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-easein="expandIn">
+		  <div class="modal-dialog" role="document">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<i class="bp-icons bp-font-13">close</i> 	
+				</button>
+			  </div>		
+			  <div class="modal-body">
+				<div class="searchArea">
+					<div class="heading">{{ 'Assign_users_to' | translate}} {{EditGroupPermissionsModel.userGroupRecord.userPermissionGroupDetails.UserGroupName}} </div>
+					<div class="searchInputArea"
+						ng-class="{'showingOverlay' : EditGroupPermissionsModel.isFocused}">
+						<i class="bp-icons bp-grey-font bp-lh-20">search</i>
+						<input type="text" class="searchInput" placeholder="Search users"
+							ng-focus="EditGroupPermissionsModel.setFocusOnInput()"
+							ng-blur="EditGroupPermissionsModel.setBlurOnInput()" 
+							ng-model="EditGroupPermissionsModel.usersearchObj.Name"/>
+						<div class="searchResultOverlay">
+							<ul>
+								<li ng-repeat="user in EditGroupPermissionsModel.totalUsersList | orderBy:'UserFirstName' | filter:{'Name' : EditGroupPermissionsModel.usersearchObj.Name } as filtered"
+									ng-mousedown="EditGroupPermissionsModel.selectUser(user)">
+									<div class="shortName  text-uppercase">{{user.UserFirstName | limitTo : 1}}{{user.UserLastName | limitTo : 1}}</div>
+									<div class="fullName  text-capitalize">{{user.UserFirstName}} {{user.UserLastName}}<span ng-if="user.UserGroupName">{{user.UserGroupName}}</span></div>
+								</li>
+								<li ng-if = "filtered.length == 0" class = "noResult"><div>{{ 'No_result_found' | translate}}</div></li>
+							</ul>
+						</div>
+					</div>
+					<!-- <a href="#" class="listLink">OR go to user's list</a> -->
+				</div>
+				<div class="resultArea">
+					<p class="noUsersSelected"
+						ng-if="EditGroupPermissionsModel.usersForCurrentGroup.length == 0">{{ 'No_users_selected' | translate}}</p>
+					<ul class="usersList"
+						ng-if="EditGroupPermissionsModel.usersForCurrentGroup.length != 0">
+						<li ng-repeat="selectedUser in EditGroupPermissionsModel.usersForCurrentGroup track by selectedUser.UserId">
+							<div class="shortName  text-uppercase">{{selectedUser.UserFirstName | limitTo : 1}}{{selectedUser.UserLastName | limitTo : 1}}</div> 
+							<div class="fullName text-capitalize">{{selectedUser.UserFirstName}} {{selectedUser.UserLastName}}<span ng-if="selectedUser.UserGroupName">{{selectedUser.UserGroupName}}</span></div>
+							<button class="btn btn-transparent deleteUser">
+								<i class="bp-icons bp-font-15 bp-grey-font stroke-3" ng-click="EditGroupPermissionsModel.removeUserFromSelectedUserList(selectedUser, $index)">close</i>
+							</button>
+						</li>
+					</ul>
+					<button class="btn btn-primary assignButton"  ng-disabled="EditGroupPermissionsModel.usersForCurrentGroup.length == 0"
+						ng-click="EditGroupPermissionsModel.assignMembersToUserGroup()">{{ 'Assign_to_this_group' | translate}}</button>
+				</div>
+				</div>			
+			</div>
+		  </div>
+		</div>	
+    </apex:page>

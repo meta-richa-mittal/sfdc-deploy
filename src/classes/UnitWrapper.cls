@@ -71,6 +71,9 @@ public without sharing class UnitWrapper {
         public Decimal TotalInvoice;
         public String Manufactured;
         public String ReferencedUnitId;
+        public Boolean IsForeignVendor;
+        public String CurrencyCode;
+        public Decimal ConversionRateWithMarkup = 1; 
         
         public VendorInfoWrapper(Customer_Owned_Unit__c unitRec) {
             if(unitRec.Vendor__c != null) {
@@ -96,14 +99,36 @@ public without sharing class UnitWrapper {
                     this.VendorPhone = unitRec.Vendor__r.Formatted_Work_Number__c;
                 }
                 
-                if(unitRec.Referenced_Unit__r.CreatedDate != null) {
-                    this.DateOrdered = (datetime.newInstance(unitRec.Referenced_Unit__r.CreatedDate.year(), unitRec.Referenced_Unit__r.CreatedDate.month(),unitRec.Referenced_Unit__r.CreatedDate.day())).format('MMMM dd, yyyy');
+                this.IsForeignVendor = unitRec.Vendor__r.Is_Foreign_Vendor__c;
+                if(this.IsForeignVendor) {
+	                if(unitRec.Vendor__r.Country__r != null) {
+                        this.ConversionRateWithMarkup = XeroUtility.isXeroEnabled() ? unitRec.Vendor__r.Country__r.Backward_Conversion_Rate__c : unitRec.Vendor__r.Country__r.Conversion_Rate_With_Markup__c;
+                        this.CurrencyCode = unitRec.Vendor__r.Country__r.Currency_Code__c;
+	                } else {
+	                    ForeignExchangeUtil.CurrencyWrapper currencyObj = ForeignExchangeUtil.getHomeCurrencyDetails();
+                        this.CurrencyCode = currencyObj.CurrencyCode;
+	                }
+	                if(unitRec.Status__c.equalsIgnoreCase('Received')) {
+                        this.ConversionRateWithMarkup = XeroUtility.isXeroEnabled() ? unitRec.Backward_Conversion_Rate__c : unitRec.FX_Conversion_Rate__c;
+	                }
+                }
+                
+                if(unitRec.Referenced_Unit__r.Date_Ordered__c != null) {
+                    this.DateOrdered = (datetime.newInstance(unitRec.Referenced_Unit__r.Date_Ordered__c.year(), unitRec.Referenced_Unit__r.Date_Ordered__c.month(),unitRec.Referenced_Unit__r.Date_Ordered__c.day())).format('MMMM dd, yyyy');
                 }
                 this.VendorAccount = unitRec.Vendor__r.AccountNumber;
                 this.FactoryOrderNo = unitRec.Factory_Order_No__c;
-                unitRec.Total_Cost__c = (unitRec.Total_Cost__c != null) ? unitRec.Total_Cost__c : 0;
-                unitRec.Tax_Amount__c = (unitRec.Tax_Amount__c != null) ? unitRec.Tax_Amount__c : 0;
-                this.TotalInvoice = unitRec.Total_Cost__c + unitRec.Tax_Amount__c;
+                if(unitRec.Unit_Type__c.equalsIgnoreCase('STOCK') && unitRec.Referenced_Unit__r != null) {
+                    unitRec.Referenced_Unit__r.Total_Cost__c = (unitRec.Referenced_Unit__r.Total_Cost__c != null) ? unitRec.Referenced_Unit__r.Total_Cost__c : 0;
+                    unitRec.Referenced_Unit__r.Tax_Amount__c = (unitRec.Referenced_Unit__r.Tax_Amount__c != null) ? unitRec.Referenced_Unit__r.Tax_Amount__c : 0;
+                    
+                    this.TotalInvoice = unitRec.Referenced_Unit__r.Total_Cost__c + unitRec.Referenced_Unit__r.Tax_Amount__c;
+                } else {
+                    unitRec.Total_Cost__c = (unitRec.Total_Cost__c != null) ? unitRec.Total_Cost__c : 0;
+                    unitRec.Tax_Amount__c = (unitRec.Tax_Amount__c != null) ? unitRec.Tax_Amount__c : 0;
+                    this.TotalInvoice = unitRec.Total_Cost__c + unitRec.Tax_Amount__c;
+                }
+                
                 this.UnitOrderNo = (unitRec.Referenced_Unit__r.Unit_Id__c != null) ? unitRec.Referenced_Unit__r.Unit_Id__c : '';
                 this.ReferencedUnitId = unitRec.Referenced_Unit__c;
                 this.VendorInvoiceNo = (unitRec.Invoice_Number__c != null) ? unitRec.Invoice_Number__c : '';
@@ -120,6 +145,7 @@ public without sharing class UnitWrapper {
     public class UnitInfoWrapper {  
         
         public String Id;
+        public Boolean IsGenericUnit;
         public Boolean Consignment;
         public Decimal SuggestedPrice;
         public Decimal AgreedPayout;
@@ -159,7 +185,9 @@ public without sharing class UnitWrapper {
         public Boolean IsPublishInFeeds;
         public String ApplicableTax; 
         public String ApplicableTaxName;
-	    public Decimal ApplicableTaxRate; 
+	    public Decimal ApplicableTaxRate;
+        public String ApplicableStampDutyCalName;
+        public String ApplicableStampDutyCalId;
         public Decimal Cylinders;
         public Decimal Displacement;
         public Boolean IsAutomatic;
@@ -168,6 +196,7 @@ public without sharing class UnitWrapper {
         public Decimal NITCAmount;
         public String NITCStatus;
         public Boolean NITCClaimedManually;
+        public String VendorPurchasetaxId;
         
         public String Customer;
         public String CustomerFirstName;
@@ -176,6 +205,7 @@ public without sharing class UnitWrapper {
         public String BusinessName;
         public Boolean IsCustomerActive;
         public String CustomerType; 
+        public String Type;
         public String HomeEmail;
         public String WorkEmail;
         public String OtherEmail;
@@ -207,6 +237,7 @@ public without sharing class UnitWrapper {
         public String TransmissionType;
         public Decimal TotalPrice;
         public Decimal TotalCost;
+        public Decimal TaxableCost;
         public Decimal SalesTax;
         public String RegExpiryDate;
         public List<String> AssignedTags;
@@ -237,7 +268,15 @@ public without sharing class UnitWrapper {
         public String ExpectedDate;
  		public String OrderedDate;
         public Boolean IsSyncToDP360;
-		
+        public Date ConfirmedSaleDate;
+        public Boolean IsBRPUnit;
+        public String FormattedUnitDetails;
+        public String DealId;
+        public Decimal FXConversionRateWithMarkUp;
+        public String ProductTypeId;
+        public String ProductType;
+        public UnitProductTypeWrapper UnitOptionalFields;
+
         public UnitInfoWrapper(Customer_Owned_Unit__c unitRec) {
             this.Id = unitRec.Id;
             this.VendorId = unitRec.Vendor__c;
@@ -251,52 +290,41 @@ public without sharing class UnitWrapper {
             }
             if(unitRec.Status__c == 'Received') {
                 this.StockNumber = unitRec.ORDU_Stock_Id__c;
+                this.FXConversionRateWithMarkUp = XeroUtility.isXeroEnabled() ? (unitRec.Backward_Conversion_Rate__c != null ? unitRec.Backward_Conversion_Rate__c : 0) : (unitRec.FX_Conversion_Rate__c != null ? unitRec.FX_Conversion_Rate__c : 0);	
             } else {
                 this.StockNumber = unitRec.Stock_Id__c;
             }
-    		this.ComplianceDate = unitRec.Compliance_Date__c;
-    		this.RegistrationSerial = unitRec.Registration_Serial__c;
-    		this.YearOf1stRego = unitRec.Year_Of_1st_Rego__c;
             this.Year = unitRec.Year__c;
             this.Make = unitRec.Unit_Make__c;
             this.MakeName = (unitRec.Unit_Make__c != null) ? unitRec.Unit_Make__r.Name : '';
-            
-            if(unitRec.Manufactured_Date__c != null){
-                this.ManufacturedDate = BPUtility.getFormatedDateTime(datetime.newInstance(unitRec.Manufactured_Date__c.year(), unitRec.Manufactured_Date__c.month(),unitRec.Manufactured_Date__c.day()));
-            }
+            this.IsBRPUnit = BRPUtility.getAllBRPUnitMakeIdSet().contains(this.Make);
+            this.FormattedUnitDetails = ((unitRec.Year__c != null) ? unitRec.Year__c + ', ' : '') + this.MakeName + ', ' +
+                                            ((unitRec.Unit_Model__c != null) ? unitRec.Unit_Model__r.Name__c + ', ' : '') + 
+                                            ((unitRec.Sub_Model__c != null) ? unitRec.Sub_Model__r.Sub_Model_Name__c + ', ' : '') + this.VIN;        
             this.Model = unitRec.Unit_Model__c;
             this.ModelName = (unitRec.Unit_Model__c != null) ? unitRec.Unit_Model__r.Name__c : '';
             
             this.SubModel = unitRec.Sub_Model__c;
             this.SubModelName = (unitRec.Sub_Model__c != null) ? unitRec.Sub_Model__r.Sub_Model_Name__c : '';
             this.MakeModelDescription = (unitRec.Sub_Model__c != null) ? unitRec.Sub_Model__r.Description__c : '';
-            
-            this.ExteriorColour = unitRec.Colour__c;
-            this.Plate = unitRec.Plate__c;
-            this.Mileage = unitRec.Mileage_Value__c;
-            this.MileageType = unitRec.Mileage_Type__c;
-            
-            this.KeyNo = unitRec.Key_No__c;
-            this.EngineSerialNo = unitRec.Engine_Serial_No__c;
-            this.OtherSerialNo = unitRec.Other_Serial_No__c;
+                        
             this.FactoryOrderNo = (unitRec.Factory_Order_No__c != null) ? unitRec.Factory_Order_No__c : '';
-            this.InteriorColour = unitRec.Interior_Colour__c;
             this.IsTaxable = unitRec.Taxable__c;
             this.IsPublishInFeeds = unitRec.Publish_in_feeds__c;
             this.ApplicableTax = unitRec.Applicable_Tax__c;
             this.ApplicableTaxName = (unitRec.Applicable_Tax__c != null) ? unitRec.Applicable_Tax__r.Name__c : '';
             this.ApplicableTaxRate = (unitRec.Applicable_Tax__c != null && unitRec.Applicable_Tax__r.Rate__c != null) ? unitRec.Applicable_Tax__r.Rate__c : 0;
-	    	this.Cylinders = unitRec.Cylinders__c;
-            this.Displacement = unitRec.Displacement__c;
             this.IsAutomatic = unitRec.Automatic__c;
-            this.Gears = unitRec.Gears__c;
             this.Notes = unitRec.Notes__c;
+            this.ApplicableStampDutyCalId = unitRec.Stamp_Duty_Calculators__c;
+            this.ApplicableStampDutyCalName = (unitRec.Stamp_Duty_Calculators__c != null) ? unitRec.Stamp_Duty_Calculators__r.Name__c : '';
             
             this.Status = unitRec.Status__c;
             this.IsNewUnit = unitRec.New_Unit__c;
             /* added by kajal 26th april, 2017 #1937 */
             this.TotalPrice = (unitRec.Total_Price__c != null) ? unitRec.Total_Price__c : 0;
             this.TotalCost = (unitRec.Total_Cost__c != null) ? unitRec.Total_Cost__c : 0;
+            this.TaxableCost = (unitRec.Taxable_Cost__c != null) ? unitRec.Taxable_Cost__c : 0;
             this.SalesTax = unitRec.Vendor__r.Purchase_Tax__r.Rate__c;
             /* added by kajal 26th april, 2017 #1937 */
             // Added by kajal 8th may , 2017
@@ -335,6 +363,7 @@ public without sharing class UnitWrapper {
                     this.StatusColor = 'Black';
                 }
             	this.Consignment = unitRec.Consignment__c;
+                this.IsGenericUnit = unitRec.Is_Generic_Unit__c;
 	            this.SuggestedPrice = unitRec.Suggested_Price__c != null ? unitRec.Suggested_Price__c.setScale(2, RoundingMode.HALF_UP) : 0;
 	            this.AgreedPayout = unitRec.Agreed_Payout__c != null ? unitRec.Agreed_Payout__c.setScale(2, RoundingMode.HALF_UP) : 0;
 	            
@@ -344,10 +373,11 @@ public without sharing class UnitWrapper {
                 } else if(unitRec.Status__c == 'Cancelled' || unitRec.Status__c == 'Traded'){
                     this.StatusColor = 'Black';
                 }
+                this.VendorPurchasetaxId = unitRec.Unit_Purchase_Tax__c != null ? unitRec.Unit_Purchase_Tax__r.Id : unitRec.Vendor__r.Purchase_Tax__r.Id;
             }
             
             if(unitRec.Account__c != null){
-                this.CustomerType = unitRec.Account__r.Type__c;
+                this.Type = this.CustomerType = unitRec.Account__r.Type__c;
                 this.IsCustomerActive = unitRec.Account__r.Active__c;
                 this.CustomerFirstName = (unitRec.Account__r.FirstName__c == null) ? '' : unitRec.Account__r.FirstName__c;
                 this.CustomerLastName = (unitRec.Account__r.LastName__c == null) ? '' : unitRec.Account__r.LastName__c;
@@ -425,7 +455,7 @@ public without sharing class UnitWrapper {
             
             if(this.IsAutomatic) {
                 this.TransmissionType = 'Automatic';
-            } else if(this.Gears > 0) {
+            } else {
                 this.TransmissionType = 'Manual';
             }
             this.DealItemId = unitRec.Deals_Units_Junction__r.size() > 0 ? unitRec.Deals_Units_Junction__r[0].Id: null;
@@ -434,22 +464,6 @@ public without sharing class UnitWrapper {
             this.CustomerName = unitRec.Deals_Units_Junction__r.size() > 0 ? (unitRec.Deals_Units_Junction__r != null ? unitRec.Deals_Units_Junction__r[0].Deal__r.CO_Header__r.Customer__r.Name : null) : null;
             this.CustomerId = unitRec.Deals_Units_Junction__r.size() > 0 ? (unitRec.Deals_Units_Junction__r != null ? unitRec.Deals_Units_Junction__r[0].Deal__r.CO_Header__r.Customer__c : null) : null;
         	this.IsAccruePurchaseTaxUntilThisUnitIsSold = unitRec.Is_Accrue_Purchase_Tax_Until_Unit_Sold__c;
-        	
-        	this.UnitData01 = unitRec.Unit_Data_01__c;
-        	this.UnitData02 = unitRec.Unit_Data_02__c;
-        	this.UnitData03 = unitRec.Unit_Data_03__c;
-        	this.UnitData04 = unitRec.Unit_Data_04__c;
-        	this.UnitData05 = unitRec.Unit_Data_05__c;
-        	this.UnitData06 = unitRec.Unit_Data_06__c;
-        	this.UnitData07 = unitRec.Unit_Data_07__c;
-        	this.UnitData08 = unitRec.Unit_Data_08__c;
-        	this.UnitData09 = unitRec.Unit_Data_09__c;
-        	this.UnitData10 = unitRec.Unit_Data_10__c;
-        	this.UnitData11 = unitRec.Unit_Data_11__c;
-        	this.UnitData12 = unitRec.Unit_Data_12__c;
-        	this.UnitData13 = unitRec.Unit_Data_13__c;
-        	this.UnitData14 = unitRec.Unit_Data_14__c;
-        	this.UnitData15 = unitRec.Unit_Data_15__c;
         	this.ExpectedDate = (unitRec.Date_Expected__c != null) ? 
 								BPUtility.getFormatedDateTime(datetime.newInstance(unitRec.Date_Expected__c.year(), unitRec.Date_Expected__c.month(), unitRec.Date_Expected__c.day())) : '' ;
  			this.OrderedDate = (unitRec.Date_Ordered__c != null) ? 
@@ -469,6 +483,9 @@ public without sharing class UnitWrapper {
 					this.NITCStatus = 'Withheld ' + this.DateIn;
 				}
 			}
+            this.ConfirmedSaleDate = unitRec.Deals_Units_Junction__r.size() > 0 ? (unitRec.Deals_Units_Junction__r != null ? unitRec.Deals_Units_Junction__r[0].Deal__r.Confirmed_Sale_Date__c : null) : null;
+            this.ProductTypeId = unitRec.Product_type__c;
+            this.ProductType = unitRec.Product_type__c != null ? unitRec.Product_type__r.Name__c : '';
         }
     } 
     
@@ -485,6 +502,7 @@ public without sharing class UnitWrapper {
         public Decimal Price;
         public Decimal TotalPrice;
         public Decimal TotalCost; 
+        public Boolean Taxable;
         public String UnitId; 
         
         public String AdjustmentDate;
@@ -493,6 +511,7 @@ public without sharing class UnitWrapper {
 	    public String VendorId;
 	    public String VendorName;
 	    public String VendorReferenceNumber;
+        public Boolean IsForeignVendor;
         public String FactoryOptionId;
 
         public String CustomerId;
@@ -540,6 +559,7 @@ public without sharing class UnitWrapper {
 
             this.TotalPrice = unitPriceAndCostRec.Total_Price__c != null ? unitPriceAndCostRec.Total_Price__c : 0; 
             this.TotalCost = unitPriceAndCostRec.Total_Cost__c != null ? unitPriceAndCostRec.Total_Cost__c : 0;
+            this.Taxable = unitPriceAndCostRec.Taxable__c;
             this.ProfiltPercentage = unitPriceAndCostRec.Profit_Percentage__c != null ? unitPriceAndCostRec.Profit_Percentage__c : 0;
             this.ProfitAmount = unitPriceAndCostRec.Profit_Amount__c != null ? unitPriceAndCostRec.Profit_Amount__c : 0;
             this.UnitId = unitPriceAndCostRec.Customer_Owned_Unit__c;// Added by kajal - 11/17/2016 - #1293
@@ -596,42 +616,73 @@ public without sharing class UnitWrapper {
         public Decimal Total;
         public Decimal MileageOut;
         public String LastModified;
+        public String WorkStatus;
         
         public ServiceOrderWrapper(Service_Order_Header__c soRec) {
             this.COHeaderId = (soRec.CO_Header__r.Id != null) ? soRec.CO_Header__r.Id : '';
             this.COHeaderNumber = (soRec.CO_Header__r.Name != null) ? soRec.CO_Header__r.Name : '';
             this.SOType = (soRec.SO_Type__c != null) ? soRec.SO_Type__c : '';
             
-            if(soRec.SO_Type__c == 'Deal') { // if Added by richa 26/01/2017 for retrieving SO's for a unit  
+            if(soRec.SO_Type__c == 'Deal') { 
                 this.SOType = 'Deal Service';
             }
             
             this.Concern = (soRec.SO_Concern__c != null) ? soRec.SO_Concern__c.replace('\n', ', ') : '';
             Decimal TaxAmount = (soRec.Tax_Amount__c != null) ? soRec.Tax_Amount__c : 0.00;
-            if(soRec.SO_Type__c == 'Deal') { // this.SOType Changed by richa 26/01/2017 for retrieving SO's for a unit 
+            if(soRec.SO_Type__c == 'Deal') {
                 TaxAmount = 0.00;
             }
             Decimal TotalWithoutTax = (soRec.Total__c != null) ? soRec.Total__c : 0.00;
             this.Total = TotalWithoutTax + TaxAmount;
             this.MileageOut = (soRec.Odometer_on_Departure__c != null) ? (soRec.Odometer_on_Departure__c).setScale(2, RoundingMode.HALF_UP) : 0.00;
-            this.LastModified = (soRec.LastModifiedDate != null) ? String.valueOf((soRec.LastModifiedDate).date().format()) : '';
+            if(soRec.Invoice_Number__c != null && soRec.Invoice_Number__r.Closed_Invoice_Date__c != null) {
+                this.LastModified = String.valueOf((soRec.Invoice_Number__r.Closed_Invoice_Date__c).date().format());
+            } else {
+                String lastModifiedDateTime = BPUtility.getLastModifiedDateStr(soRec);
+                this.LastModified = (String.isBlank(lastModifiedDateTime)) ? '' : lastModifiedDateTime;
+            }
+            this.WorkStatus = soRec.SO_Status__c;
         }
     }
     // End: for retrieving SO's for a unit
 
-    public class Documents {
+    public class Documents implements Comparable {
         public Boolean IsPrimary;
         public String DocId;
         public String AttachmentId;
         public String AttchmentURL;
-        
-        public Documents(Document__c docRec) {
-            this.IsPrimary = docRec.Is_Primary__c;
-            this.DocId = docRec.Id;
-            if(docRec.Attachments.size() > 0) {
-                this.AttachmentId = docRec.Attachments[0].Id;
-                this.AttchmentURL = '/servlet/servlet.FileDownload?file='+AttachmentId;
+        public Decimal ImageUploadedAt;
+        public Datetime CreatedDate;
+        public String PublicUrl;
+
+        public Documents(String contentDocId, ContentVersion contentVersionRec, ContentDistribution contentDistributionRec) {
+            this.IsPrimary = contentVersionRec.Is_Primary__c;
+            this.DocId = contentDocId;
+            this.AttachmentId = contentVersionRec.Id;
+            this.AttchmentURL = '/sfc/servlet.shepherd/version/download/' + AttachmentId;
+            this.ImageUploadedAt = contentVersionRec.Image_Uploaded_At__c;
+            this.CreatedDate = contentVersionRec.CreatedDate;
+            if(String.isNotBlank(this.AttachmentId) && String.isNotBlank(contentDistributionRec.DistributionPublicUrl)) {
+				this.PublicUrl = GenericExportUtil.getImagePublicURL(contentDistributionRec.DistributionPublicUrl, this.AttachmentId);
+			}
+        }
+
+        public Integer compareTo(Object compareToObj) {
+            Documents compareToWrapper = (Documents)compareToObj;
+            if(this.ImageUploadedAt != null) {
+                if(this.ImageUploadedAt < compareToWrapper.ImageUploadedAt) {
+                    return -1;
+                } else if(this.ImageUploadedAt == compareToWrapper.ImageUploadedAt) {
+                    return 0;
+                }
+            } else {
+                if(this.CreatedDate < compareToWrapper.CreatedDate) {
+                    return -1;
+                } else if(this.CreatedDate == compareToWrapper.CreatedDate) {
+                    return 0;
+                }
             }
+            return 1;
         }
     }
     
@@ -654,6 +705,11 @@ public without sharing class UnitWrapper {
         }
     }
     // End: for retrieving Active Deal Status
+
+    public class FileUploadWrapper {
+        public String FileName;
+        public Decimal ImageUploadedAt;
+    }
     
     /**
      * Name: parse
@@ -673,8 +729,11 @@ public without sharing class UnitWrapper {
     **/
     public static List<String> fieldsListForUnitInfo(){
         List<String> COUFields = new List<String>{ 'Id',
-                                                    'Name', 
+                                                    'Name',
+                                                    'Total_Base_Units_Cost__c',
+                                                    'Total_Base_Unit_Price__c',
                                                     'Consignment__c',
+                                                    'Is_Generic_Unit__c',
                                                     'Suggested_Price__c',
                                                     'Agreed_Payout__c', 
                                                     'VIN_Number__c', 
@@ -710,15 +769,14 @@ public without sharing class UnitWrapper {
                                                     'Account__r.Formatted_Work_Number__c',
                                                     'Account__r.Formatted_Preferred_Phone__c',
                                                     'Vendor__r.Purchase_Tax__r.Rate__c',
-                                                    'Unit_Type__c',
-                                                    'Colour__c',
-                                                    'Mileage_Value__c',
-                                                    'Plate__c',
+                                                    'Unit_Type__c',                                   
                                                     'Submodel__c',
                                                     'Sub_Model__r.Description__c',
                                                     'Sub_Model__c',
                                                     'Sub_Model__r.Sub_Model_Name__c',
                                                     'Unit_Make__c',
+                                                    'FX_Conversion_Rate__c',
+                                                    'Backward_Conversion_Rate__c',
                                                     'Unit_Make__r.Name',
                                                     'Unit_Model__c',
                                                     'Unit_Model__r.Name__c',
@@ -727,19 +785,12 @@ public without sharing class UnitWrapper {
                                                     'Unit_Model__r.Description__c',
                                                     'Year__c',
                                                     'Notes__c',
-                                                    'Manufactured_Date__c',
-                                                    'Mileage_Type__c',
-                                                    'Key_No__c',
-                                                    'Interior_Colour__c',
                                                     'Taxable__c',
                                                     'Publish_in_feeds__c',
                                                     'Applicable_Tax__c',
                                                     'Applicable_Tax__r.Name__c',
 													'Applicable_Tax__r.Rate__c',
-                                                    'Cylinders__c',
-                                                    'Displacement__c',
                                                     'Automatic__c',
-                                                    'Gears__c',
                                                     'Status__c',
                                                     'New_Unit__c',
                                                     'Unit_Id__c',
@@ -750,11 +801,10 @@ public without sharing class UnitWrapper {
                                                     'Date_Stocked_Out__c',
                                                     'Age__c',
                                                     'Location__c',
-                                                    'Engine_Serial_No__c',
-                                                    'Other_Serial_No__c',
                                                     'Factory_Order_No__c',
                                                     'CreatedDate',
                                                     'Total_Cost__c',
+                                                    'Taxable_Cost__c',
                                                     'Tax_Amount__c',
                                                     'Total_Price__c',
                                                     'Invoice_Number__c ',
@@ -776,29 +826,18 @@ public without sharing class UnitWrapper {
                                                     'Vendor__r.Work_Number__c',
                                                     'Vendor__r.Formatted_Work_Number__c',
                                                     'Vendor__r.AccountNumber',
+                                                    'Vendor__r.Is_Foreign_Vendor__c',
+                                                    'Vendor__r.Country__r.Conversion_Rate_With_Markup__c',
+                                                    'Vendor__r.Country__r.Backward_Conversion_Rate__c',
+                                                    'Vendor__r.Country__r.Currency_Code__c',
                                                     'Referenced_Unit__r.Unit_Id__c',
                                                     'Referenced_Unit__r.CreatedDate',
+                                                    'Referenced_Unit__r.Date_Ordered__c',
+                                                    'Referenced_Unit__r.Total_Cost__c',
+                                                    'Referenced_Unit__r.Tax_Amount__c',
                                                     'Referenced_Unit__c',
                                                     'ORDU_Stock_Id__c',
                                                     'DP360_Inventory_Id__c',
-                                                    'Compliance_Date__c',
-                                                    'Registration_Serial__c',
-                                                    'Unit_Data_01__c',
-                                                    'Unit_Data_02__c',
-                                                    'Unit_Data_03__c',
-                                                    'Unit_Data_04__c',
-                                                    'Unit_Data_05__c',
-                                                    'Unit_Data_06__c',
-                                                    'Unit_Data_07__c',
-                                                    'Unit_Data_08__c',
-                                                    'Unit_Data_09__c',
-                                                    'Unit_Data_10__c',
-                                                    'Unit_Data_11__c',
-                                                    'Unit_Data_12__c',
-                                                    'Unit_Data_13__c',
-                                                    'Unit_Data_14__c',
-                                                    'Unit_Data_15__c',
-                                                    'Year_Of_1st_Rego__c',
                                                     'CreatedBy.Name',
                                                     'Is_Accrue_Purchase_Tax_Until_Unit_Sold__c',
                                                     'Date_Ordered__c',
@@ -807,8 +846,16 @@ public without sharing class UnitWrapper {
                                                     'Purchase_Tax_Credit__c',
                                                     'NITC_Claimed_Manually__c',
                                                     'NITC_Date_Claimed__c',
+                                                    'Product_type__c',
+                                                    'Product_type__r.Id',
+                                                    'Product_type__r.Name__c',
                                                     'NITC_Amount__c',
-                                                    '(SELECT Name, Deal__r.CO_Header__r.Name, Deal__r.CO_Header__r.Customer__r.Name,Deal__r.Status__c,Type__c FROM Deals_Units_Junction__r)'
+                                                    'Manufactured_Date__c',
+                                                    'Unit_Purchase_Tax__r.Id',
+                                                    'Vendor__r.Purchase_Tax__r.Id',
+                                                    'Stamp_Duty_Calculators__c',
+                                                    'Stamp_Duty_Calculators__r.Name__c',
+                                                    '(SELECT Name, Deal__r.CO_Header__r.Name, Deal__r.CO_Header__r.Customer__r.Name,Deal__r.Status__c,Type__c, Deal__r.Confirmed_Sale_Date__c FROM Deals_Units_Junction__r)'
 											    	};
         return COUFields; 
     }
@@ -832,6 +879,7 @@ public without sharing class UnitWrapper {
                                                     'Price__c',
                                                     'Total_Price__c',
                                                     'Total_Cost__c',
+                                                    'Taxable__c',
                                                     'Profit_Amount__c',
                                                     'Profit_Percentage__c',
                                                     'Customer_Owned_Unit__c',
@@ -865,8 +913,11 @@ public without sharing class UnitWrapper {
                                                     'Tax_Amount__c',
                                                     'Odometer_on_Departure__c',
                                                     'LastModifiedDate',
+                                                    'Last_Modified_Date__c',
+                                                    'Invoice_Number__r.Closed_Invoice_Date__c',
                                                     'CO_Header__r.Id',
-                                                    'CO_Header__r.Name'
+                                                    'CO_Header__r.Name',
+                                                    'SO_Status__c'
                                                 };
         return COUFields;
     }

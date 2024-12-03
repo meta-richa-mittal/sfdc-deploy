@@ -10,8 +10,17 @@ private class CustomerOrderCtrlTest {
     
     @testSetup
     private static void setupTestData() {
+        TestDataFactory.disableFLSChecks();
     	TestUtil.bypassValidation();
         TestUtil.createNameSpaceInGeneralConfig();
+
+        User testUser = TestDataFactory.createUser('a@b.c', 'Sharma', 'en_US', 'Shantanu.Sharma@metacube.com', 'sshar', 'America/Los_Angeles');
+        User_Group__c userGroup = TestDataFactory.createUserGroup('Test User Group', testUser.Id);
+  		List<User_Group__c> userGroupList = [SELECT Id from User_Group__c];
+  		String userId = UserInfo.getUserId();
+  		List<String> usersList = new List<String>();
+  		usersList.add(userId);
+  		UserSettingCtrl.assignUserToGroup(BPUtility.getEncodedString(System.JSON.serialize(usersList)), BPUtility.getEncodedString(userGroupList[0].Id));
     }
     
     /**
@@ -25,36 +34,14 @@ private class CustomerOrderCtrlTest {
         User testUser = TestUtil.createUser(true, 'a@b.c', 'Sharma', 'en_US', 'Shantanu.Sharma@metacube.com', 'sshar');
         
         Test.startTest();
-        String customerJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getRecordById(BPUtility.getEncodedString(testCustomer.Id)));
-        String userJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getRecordById(BPUtility.getEncodedString(testUser.Id)));
+        String customerJSON = BPUtility.getDecodedString(ViewUnitCtrl.getRecordById(BPUtility.getEncodedString(testCustomer.Id)));
+        String userJSON = BPUtility.getDecodedString(ViewUnitCtrl.getRecordById(BPUtility.getEncodedString(testUser.Id)));
         Test.stopTest();
         
         system.assertEquals(customerJSON.length() > 0, true);
         system.assertEquals(userJSON.length() > 0, true);
     }
-    
-    /**
-     * Name: getPartDetailsTest
-     * Desc: Test to get part details on customer order page
-     * @param: 
-     * @return: 
-    **/
-    static testMethod void getPartDetailsTest() {
-        Account vendor = TestUtil.createVendor(true, 'Test Vendor');
-        Category__c testCategory = TestUtil.createCategory(true, 'Test Category');
-        Part__c testPart = TestUtil.createPart(true, '123', vendor.Id, 'Test Part', testCategory.Id);
-        
-        Test.startTest();
-        String testingJSON1 = BPUtility.getDecodedString(CustomerOrderCtrl.getPartDetails(BPUtility.getEncodedString(testCategory.Id)));
-        String testingJSON2 = BPUtility.getDecodedString(CustomerOrderCtrl.getPartDetails(BPUtility.getEncodedString(testPart.Id)));
-        Test.stopTest();
-        
-        Part testPartJSON = (Part) System.JSON.deserialize(testingJSON2, Part.class);
-        
-        system.assertEquals(testingJSON1.length() > 0, false);
-        system.assertEquals(testPartJSON.Description, '123TES');
-    }
-    
+
     /**
      * Name: getCOHeaderDetailsTest
      * Desc: Test to fetch CustomerOrder Header details.
@@ -75,21 +62,19 @@ private class CustomerOrderCtrlTest {
         CO_Deposit__c coDeposit = TestUtil.createCODeposit(true, coHeader1.Id, 'Debit', 500);
         
         Test.startTest();
-        String coDetailsJSON1 = BPUtility.getDecodedString(CustomerOrderCtrl.getCOHeaderDetails(BPUtility.getEncodedString(coHeader1.Id)));
-        String coDetailsJSON2 = BPUtility.getDecodedString(CustomerOrderCtrl.getCOHeaderDetails(BPUtility.getEncodedString(coHeader2.Id)));
+        String coDetailsJSON1 = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeader1.Id), null));
+        String coDetailsJSON2 = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeader2.Id), null));
         Test.stopTest();
         
-        
-        COHeaderWrapper coDetails1 = (COHeaderWrapper) System.JSON.deserialize(coDetailsJSON1, COHeaderWrapper.class);
-        COHeaderWrapper coDetails2 = (COHeaderWrapper) System.JSON.deserialize(coDetailsJSON2, COHeaderWrapper.class);
-        //system.assert(false, coDetails1);
+        CustomerOrderWrapper.COHeaderWrapper coDetails1 = (CustomerOrderWrapper.COHeaderWrapper) System.JSON.deserialize(coDetailsJSON1, CustomerOrderWrapper.COHeaderWrapper.class);
+        CustomerOrderWrapper.COHeaderWrapper coDetails2 = (CustomerOrderWrapper.COHeaderWrapper) System.JSON.deserialize(coDetailsJSON2, CustomerOrderWrapper.COHeaderWrapper.class);
         
         system.assertEquals(coDetails1.coHeaderRec.COHeaderId, coHeader1.Id);
-        system.assertEquals(coDetails1.allCOLineItemRecs.size(), 1);
-        system.assertEquals(coDetails1.allCOLineItemRecs[0].Item, '123 - Test Part');
+        system.assertEquals(coDetails1.COKHList.size(), 1);
+        system.assertEquals(coDetails1.COKHList[0].COLIList[0].Item, '123 - Test Part');
         
         system.assertEquals(coDetails2.coHeaderRec.COHeaderId, coHeader2.Id);
-        system.assertEquals(coDetails2.allCOLineItemRecs.size(), 0);
+        system.assertEquals(coDetails2.COKHList.size(), 0);
     }
     /**
      * Name: addCustomerTest
@@ -105,7 +90,7 @@ private class CustomerOrderCtrlTest {
         Account testCustomer = TestUtil.createCustomer(true, 'Test Customer', 'a.b@gmail.com', 'Jaipur', '987456123');
         
         Test.startTest();
-        String coLineItems = BPUtility.getDecodedString(CustomerOrderCtrl.addCustomer(BPUtility.getEncodedString(coHeader1.Id), BPUtility.getEncodedString(testCustomer.Id)));
+        String coLineItems = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addCustomer(BPUtility.getEncodedString(coHeader1.Id), BPUtility.getEncodedString(testCustomer.Id)));
         Test.stopTest();
         
         coHeader1 = [select Customer__c from CO_Header__c where Id = :coHeader1.id];
@@ -130,12 +115,10 @@ private class CustomerOrderCtrlTest {
         CO_Line_Item__c coLineItemRec = TestUtil.createCOLineItem(true, coHeader1.Id, part.Id, 50);
         
         Test.startTest();
-        String coLineItemJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOLineItemByCOHeaderId(BPUtility.getEncodedString(coHeader1.Id)));
+        List<CO_Line_Item__c> coLineItems = SOQLUtil.getCOLineItemByCOHeaderId(coHeader1.Id);
         Test.stopTest();
-        //system.assert(false, coLineItemJSON);
         
-        List<COLineItem> coLineItems = (List<COLineItem>) System.JSON.deserialize(coLineItemJSON, List<COLineItem>.class);
-        system.assertEquals(coLineItems[0].partId, part.Id);
+        system.assertEquals(coLineItems[0].Part__r.Id, part.Id);
     }
     
     
@@ -156,17 +139,16 @@ private class CustomerOrderCtrlTest {
         Part__c part = TestUtil.createPart(true, '123', vendor.Id, 'Test Part', testCategory.Id, 10, 20, 50, 100, 100);
         CO_Line_Item__c coLineItemRec = TestUtil.createCOLineItem(true, coHeader1.Id, part.Id, 50);
         
-        String jsonString = BPUtility.getDecodedString(CustomerOrderCtrl.getCOLineItemByCOHeaderId(BPUtility.getEncodedString(coHeader1.Id)));
-        
+        List<CO_Line_Item__c> coLineItems = SOQLUtil.getCOLineItemByCOHeaderId(coHeader1.Id);
+        COLIWrapper coliObj = new COLIWrapper(coLineItems[0]);
         Test.startTest();
-        CustomerOrderCtrl.saveCOLineItem(BPUtility.getEncodedString(coHeader1.Id), BPUtility.getEncodedString(jsonString));
+        CustomerOrderCtrl_V2.saveCOLineItem(BPUtility.getEncodedString(coHeader1.Id), BPUtility.getEncodedString(System.JSON.serialize(new List<COLIWrapper>{coliObj}, true)), null);
         Test.stopTest();
         //system.assert(false, coLineItemJSON);
-        String coHeaderJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeader1.Id), BPUtility.getEncodedString(null)));
+        String coHeaderJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeader1.Id), BPUtility.getEncodedString(null)));
         
-        COHeaderWrapper coHeaderWrapperObj = (COHeaderWrapper) System.JSON.deserialize(coHeaderJSON, COHeaderWrapper.class);
-        //System.assert(false, coHeaderWrapperObj);
-        system.assertEquals(coHeaderWrapperObj.allCOLineItemRecs[0].Item, '123 - Test Part');
+        CustomerOrderWrapper.COHeaderWrapper coHeaderWrapperObj = (CustomerOrderWrapper.COHeaderWrapper) System.JSON.deserialize(coHeaderJSON, CustomerOrderWrapper.COHeaderWrapper.class);
+        System.assertEquals(coHeaderWrapperObj.COKHList[0].COLIList[0].Item, '123 - Test Part');
     }
     
     /**
@@ -188,7 +170,7 @@ private class CustomerOrderCtrlTest {
         CO_Line_Item__c coLineItemRec = TestUtil.createCOLineItem(true, coHeader1.Id, part.Id, 50);
         
         Test.startTest();
-        String coLineItemJSON = BPUtility.getDecodedString(CustomerOrderCtrl.deleteCOLineItem(BPUtility.getEncodedString(coLineItemRec.Id), BPUtility.getEncodedString(coHeader1.Id)));
+        String coLineItemJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.deleteCOLineItem(BPUtility.getEncodedString(coLineItemRec.Id), BPUtility.getEncodedString(coHeader1.Id)));
         Test.stopTest();
         //system.assert(false, coLineItemJSON);
         List<CO_Line_Item__c> coLineItemRecsList = new List<CO_Line_Item__c>();
@@ -218,7 +200,7 @@ private class CustomerOrderCtrlTest {
         CO_Deposit__c coDeposit = TestUtil.createCODeposit(true, coHeader1.Id, 'Debit', 500);
         
         Test.startTest();
-        String coDepositJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCODepositByCOHeaderId(BPUtility.getEncodedString(coHeader1.Id)));
+        String coDepositJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCODepositByCOHeaderId(BPUtility.getEncodedString(coHeader1.Id)));
         Test.stopTest();
         
         List<CODeposit> coDeposits = (List<CODeposit>) System.JSON.deserialize(coDepositJSON, List<CODeposit>.class);
@@ -243,10 +225,10 @@ private class CustomerOrderCtrlTest {
         CO_Line_Item__c coLineItemRec = TestUtil.createCOLineItem(true, coHeader1.Id, part.Id, 50);
         CO_Deposit__c coDeposit = TestUtil.createCODeposit(true, coHeader1.Id, 'Debit', 500);
         
-        String coDepositJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCODepositByCOHeaderId(BPUtility.getEncodedString(coHeader1.Id)));
+        String coDepositJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCODepositByCOHeaderId(BPUtility.getEncodedString(coHeader1.Id)));
         
         Test.startTest();
-        coDepositJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveCODeposit(BPUtility.getEncodedString(coDepositJSON)));
+        coDepositJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveCODeposit(BPUtility.getEncodedString(coDepositJSON)));
         Test.stopTest();
         
         List<CODeposit> coDeposits = (List<CODeposit>) System.JSON.deserialize(coDepositJSON, List<CODeposit>.class);
@@ -266,7 +248,7 @@ private class CustomerOrderCtrlTest {
         CO_Invoice_Payment__c coinvoicepayment1  = TestUtil.createCOInvoicePayment(true, coinvoiceHeader1.Id );
        
         Test.startTest();
-        String  COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coInvoiceHeader1.Id)));
+        String  COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coInvoiceHeader1.Id)));
         Test.stopTest();
         
         List<COInvoicePayment> COInvoicePayment2 = (List<COInvoicePayment>) System.JSON.deserialize(COInvoicePaymentJSON, List<COInvoicePayment>.class);
@@ -299,14 +281,16 @@ private class CustomerOrderCtrlTest {
         CO_Invoice_Header__c coinvoiceHeader1 = [select Id, CO_Header__c from CO_Invoice_Header__c where CO_Header__c = :coHeader1.Id
                                                             AND Status__c = 'Active'];
         CO_Invoice_Payment__c coinvoicepayment1  = TestUtil.createCOInvoicePayment(true, coinvoiceHeader1.Id );
+        coinvoicepayment1.Payment_Method__c = 'Debit';
+        update coinvoicepayment1;
         
-        String  COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coinvoiceHeader1.Id)));
+        String  COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coinvoiceHeader1.Id)));
         Test.startTest();
-        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveCOInvoicePayment(BPUtility.getEncodedString(COInvoicePaymentJSON)));
+        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addPayment(BPUtility.getEncodedString(COInvoicePaymentJSON), BPUtility.getEncodedString(coHeader1.Id)));
         Test.stopTest();
         
-        COHeaderWrapper COInvoicePayment2 = (COHeaderWrapper) System.JSON.deserialize(COInvoicePaymentJSON, COHeaderWrapper.class);
-        system.assertEquals(coinvoicepayment2.coInvoicePaymentRecs.size(), 1);
+        CustomerOrderWrapper.CheckoutWrapper COInvoicePayment2 = (CustomerOrderWrapper.CheckoutWrapper) System.JSON.deserialize(COInvoicePaymentJSON, CustomerOrderWrapper.CheckoutWrapper.class);
+        system.assertEquals(coinvoicepayment2.InvoicePaymentList.size(), 1);
          List<CO_Invoice_Payment__c> coInvoicepaymentRecsList = new List<CO_Invoice_Payment__c>();
         coInvoicepaymentRecsList = [select Id from CO_Invoice_Payment__c];
         
@@ -343,15 +327,15 @@ private class CustomerOrderCtrlTest {
         
         CO_Invoice_Payment__c coinvoicepayment2  = TestUtil.createCOInvoicePayment(true, coinvoiceHeader1.Id );
         
-        String COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coinvoiceHeader1.Id)));
+        String COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coinvoiceHeader1.Id)));
         Test.startTest();
         
-        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveCOInvoicePayment(
+        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addPayment(
         BPUtility.getEncodedString('[{"ReverseLink":null,"IsReverse":false,"PaymentMethod":"Cash","Amount":"26","COInvoicePaymentId":"'+coinvoicepayment1.Id+'","COInvoiceHeaderId":"'+coinvoiceHeader1.Id+'"},'+
-        '{"ReverseLink":null,"IsReverse":false,"PaymentMethod":"Cash Rounding","Amount":"-0.02","COInvoicePaymentId":"'+coinvoicepayment2.Id+'","COInvoiceHeaderId":"'+coinvoiceHeader1.Id+'"}]')));
+        '{"ReverseLink":null,"IsReverse":false,"PaymentMethod":"Cash Rounding","Amount":"-0.02","COInvoicePaymentId":"'+coinvoicepayment2.Id+'","COInvoiceHeaderId":"'+coinvoiceHeader1.Id+'"}]'), BPUtility.getEncodedString(coHeader1.Id)));
         
         Test.stopTest();
-        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coinvoiceHeader1.Id)));
+        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coinvoiceHeader1.Id)));
         List<COInvoicePayment> COInvoicePayment3 = (List<COInvoicePayment>) System.JSON.deserialize(COInvoicePaymentJSON, List<COInvoicePayment>.class);
         
         system.assertEquals(COInvoicePayment3.size(), 2);
@@ -363,10 +347,10 @@ private class CustomerOrderCtrlTest {
         system.assertEquals(roundingPaymentList[0].Payment_Method__c, 'Cash Rounding');
         
         /******************** for reverse payment ************************/
-        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveCOInvoicePayment(
-        BPUtility.getEncodedString('[{"ReverseLink":"'+COInvoicePayment3[0].COInvoicePaymentId+'","IsReverse":true,"PaymentMethod":"Cash","Amount":"-26","COInvoiceHeaderId":"'+coinvoiceHeader1.Id+'"}]')));
+        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addPayment(
+        BPUtility.getEncodedString('[{"ReverseLink":"'+COInvoicePayment3[0].COInvoicePaymentId+'","IsReverse":true,"PaymentMethod":"Cash","Amount":"-26","COInvoiceHeaderId":"'+coinvoiceHeader1.Id+'"}]'), BPUtility.getEncodedString(coHeader1.Id)));
         
-        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coinvoiceHeader1.Id)));
+        COInvoicePaymentJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCOInvoicePaymentsByCOInvoiceHedaerId(BPUtility.getEncodedString(coinvoiceHeader1.Id)));
         List<COInvoicePayment> COInvoicePayment5 = (List<COInvoicePayment>) System.JSON.deserialize(COInvoicePaymentJSON, List<COInvoicePayment>.class);
         system.assertEquals(COInvoicePayment5.size(), 4);
         
@@ -439,32 +423,13 @@ private class CustomerOrderCtrlTest {
         String COInvoiceItemJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoiceItemsByCOInvoiceHeaderId(BPUtility.getEncodedString(coInvoiceHeader1.Id)));
         List<COInvoiceItem> coInvoiceItemsList = (List<COInvoiceItem>) System.JSON.deserialize(COInvoiceItemJSON, List<COInvoiceItem>.class);
         String coInvoiceItemRecJSONString = System.JSON.serialize(coInvoiceItemsList);
-        CustomerOrderCtrl.updateCOInvoiceItem(BPUtility.getEncodedString(coInvoiceItemRecJSONString), BPUtility.getEncodedString(coHeader1.Id));
+        CustomerOrderCtrl_V2.updateCOInvoiceItem(BPUtility.getEncodedString(coInvoiceItemRecJSONString), BPUtility.getEncodedString(coHeader1.Id));
         Test.stopTest();
         
         List<CO_Invoice_Item__c> COInvoiceitem2 = [select IsActive__c from CO_Invoice_Item__c where Id =: coinvoiceitem1.Id];
         system.assertEquals(COInvoiceitem2.size(), 1);
         system.assertEquals(COInvoiceitem2[0].IsActive__c, true);
     }
-    /**
-     * Name: getInvoiceHistoryWrapperList
-     * Desc: Test to get InvoiceHistory
-     * @param: 
-     * @return: 
-    **/
-    static testMethod void getInvoiceHistoryWrapperListTest() {
-        CO_Header__c coHeader1 = TestUtil.createCOHeader(true, null);
-        CO_Invoice_Header__c coinvoiceHeader1 = TestUtil.createCOInvoiceHeader(true, coHeader1.Id, 'Active');
-        CO_Invoice_Payment__c coinvoicepayment1  = TestUtil.createCOInvoicePayment(true, coinvoiceHeader1.Id );
-       
-        Test.startTest();
-        String coInvoiceHistoryWrapperList = BPUtility.getDecodedString(CustomerOrderCtrl.getInvoiceHistoryWrapperList(BPUtility.getEncodedString(coInvoiceHeader1.Id)));
-        Test.stopTest();
-        
-        List<COInvoiceHistoryWrapper> COInvoiceHistoryWrapper2 = (List<COInvoiceHistoryWrapper>) System.JSON.deserialize(coInvoiceHistoryWrapperList, List<COInvoiceHistoryWrapper>.class);
-         
-        system.assertEquals(COInvoiceHistoryWrapper2.size(), 1);
-    }  
     
     /**
      * Name: closedInvoiceActionTest
@@ -482,46 +447,22 @@ private class CustomerOrderCtrlTest {
         CO_Header__c coHeader1 = TestUtil.createCOHeader(true, null);
         Part__c part = TestUtil.createPart(true, '123', vendor.Id, 'Test Part', testCategory.Id, 10, 20, 50, 100, 100);
         CO_Line_Item__c coLineItemRec = TestUtil.createCOLineItem(true, coHeader1.Id, part.Id, 120);
-        CO_Invoice_Header__c coinvoiceHeader1 = TestUtil.createCOInvoiceHeader(true, coHeader1.Id, 'Active');
-        CO_Invoice_Item__c coinvoiceitem1  = TestUtil.createCOInvoiceItem(true, testCategory.Id, coinvoiceHeader1.Id, coLineItemRec.Id, true );
-       
+        
+        List<CO_Invoice_Header__c> COInvoiceHeaders = [select Invoice_Status__c from CO_Invoice_Header__c];
         Test.startTest();
-        String COInvoiceItemJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoiceItemsByCOInvoiceHeaderId(BPUtility.getEncodedString(coInvoiceHeader1.Id)));
-        CustomerOrderCtrl.closedInvoiceAction(BPUtility.getEncodedString(COInvoiceItemJSON), BPUtility.getEncodedString(coHeader1.Id), BPUtility.getEncodedString('Customer'));
+        String COInvoiceItemJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoiceItemsByCOInvoiceHeaderId(BPUtility.getEncodedString(COInvoiceHeaders[0].Id)));
+        CustomerOrderCtrl_V2.closedInvoiceAction(BPUtility.getEncodedString(COInvoiceItemJSON), BPUtility.getEncodedString(coHeader1.Id), BPUtility.getEncodedString('Customer'));
         Test.stopTest();
         
-        //List<CO_Invoice_Item__c> COInvoiceItems = [select Category__c, CO_Line_Item__c, isActive__c, Item_Category_Code__c, Item_ID__c, Item_Type__c, Price__c, Qty__c from CO_Invoice_Item__c];
-        //system.assertEquals(COInvoiceItems.size(), 2);
-        List<CO_Invoice_Header__c> COInvoiceHeaders = [select Invoice_Status__c from CO_Invoice_Header__c];
-        //system.assert(false,COInvoiceHeaders);
-        system.assertEquals(COInvoiceHeaders[0].Invoice_Status__c, 'Active');
-        system.assertEquals(COInvoiceHeaders[1].Invoice_Status__c, 'Closed');
-        system.assertEquals(COInvoiceHeaders[2].Invoice_Status__c, 'Active');
-        
+        COInvoiceHeaders = [select Invoice_Status__c from CO_Invoice_Header__c];
+        system.assertEquals(COInvoiceHeaders[0].Invoice_Status__c, 'Closed');
+        system.assertEquals(COInvoiceHeaders[1].Invoice_Status__c, 'Active');
         
         List<Part__c> parts = [select AvailableParts__c from Part__c where Id = :part.id ];
         system.assertEquals(parts[0].AvailableParts__c, 0);
-        
-        }
-       
-        /**
-     * Name: getCustomerTest
-     * Desc: Test to get customer
-     * @param: 
-     * @return: 
-    **/
-    
-     static testMethod void getCustomerTest() {
-        Account customer = TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'jaipur', '1111111111', null, null, false, true,'Individual');
- 
-        Test.startTest();
-        String customer1 = BPUtility.getDecodedString(CustomerOrderCtrl.getCustomer(BPUtility.getEncodedString(customer.Id)));
-        Test.stopTest();
-        
-        List<Customer> Customerlist = (List<Customer>) System.JSON.deserialize(Customer1, List<Customer>.class);
-        system.assertEquals(Customerlist.size(), 1);
-        system.assertEquals(Customerlist[0].BillingCity, 'jaipur');
     }
+       
+     
     /*
     * Name: getOtherSimilarCustomerTest
      * Desc: Test to get similar customer
@@ -540,20 +481,19 @@ private class CustomerOrderCtrlTest {
         Account customer23 = TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'Agra', '1111111112', null, null, false, true,'Business');
        
         Test.startTest();
-        String customerJSONString = BPUtility.getDecodedString(CustomerOrderCtrl.getCustomer(BPUtility.getEncodedString(customer.Id)));
-        List<Customer> customerList = (List<Customer>) System.JSON.deserialize(customerJSONString, List<Customer>.class);
-        String customerList1JSONString = System.JSON.serialize(customerList[0]);
-        String similarcustomers = BPUtility.getDecodedString(CustomerOrderCtrl.getOtherSimilarCustomer(BPUtility.getEncodedString(customerList1JSONString)));
+        List<Account> customers = SOQLUtil.getCustomer(customer.Id, 'Customer');
+        String customerList1JSONString = System.JSON.serialize(new Customer(customers[0]));
+        String similarcustomers = BPUtility.getDecodedString(AddCustomerCtrl_V2.getOtherSimilarCustomer(BPUtility.getEncodedString(customerList1JSONString)));
         Test.stopTest();
         
         List<CustomerSuggestion> similarCustomerlist = (List<CustomerSuggestion>) System.JSON.deserialize(similarcustomers, List<CustomerSuggestion>.class);
         system.assertEquals(similarCustomerlist.size(), 3);
         system.assertEquals(similarCustomerlist[1].HomeEmail, 'abc@abc.com');
-        
-        String customerJSONString1 = BPUtility.getDecodedString(CustomerOrderCtrl.getCustomer(BPUtility.getEncodedString(customer2.Id)));
-        List<Customer> customerList1 = (List<Customer>) System.JSON.deserialize(customerJSONString1, List<Customer>.class);
-        String customerList1JSONString1 = System.JSON.serialize(customerList1[0]);
-        String similarcustomers1 = BPUtility.getDecodedString(CustomerOrderCtrl.getOtherSimilarCustomer(BPUtility.getEncodedString(customerList1JSONString1)));
+
+        customers = SOQLUtil.getCustomer(customer2.Id, 'Customer');
+        String customerList1JSONString1 = System.JSON.serialize(new Customer(customers[0]));
+
+        String similarcustomers1 = BPUtility.getDecodedString(AddCustomerCtrl_V2.getOtherSimilarCustomer(BPUtility.getEncodedString(customerList1JSONString1)));
         
         List<CustomerSuggestion> similarCustomerlist1 = (List<CustomerSuggestion>) System.JSON.deserialize(similarcustomers1, List<CustomerSuggestion>.class);
         system.assertEquals(similarCustomerlist.size(), 3);
@@ -578,20 +518,19 @@ private class CustomerOrderCtrlTest {
         Account customer21 = TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'Agra', '1111111112', null, null, false, true,'Business','firstname2', 'lastname1', '9999999999', 'BillingStreet');
         Account customer22 = TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'Agra', '1111111112', null, null, false, true,'Business','firstname2', 'lastname2', '9999999999', 'BillingStreet1');
         Test.startTest();
-        String customerJSONString = BPUtility.getDecodedString(CustomerOrderCtrl.getCustomer(BPUtility.getEncodedString(customer1.Id)));
-        List<Customer> customerList = (List<Customer>) System.JSON.deserialize(customerJSONString, List<Customer>.class);
-        String customerList1JSONString = System.JSON.serialize(customerList[0]);
-        String similarcustomers = BPUtility.getDecodedString(CustomerOrderCtrl.getOtherSimilarCustomer(BPUtility.getEncodedString(customerList1JSONString)));
+        
+        List<Account> customers = SOQLUtil.getCustomer(customer1.Id, 'Customer');
+        String customerList1JSONString = System.JSON.serialize(new Customer(customers[0]));
+        String similarcustomers = BPUtility.getDecodedString(AddCustomerCtrl_V2.getOtherSimilarCustomer(BPUtility.getEncodedString(customerList1JSONString)));
         Test.stopTest();
         
         List<CustomerSuggestion> similarCustomerlist = (List<CustomerSuggestion>) System.JSON.deserialize(similarcustomers, List<CustomerSuggestion>.class);
         system.assertEquals(similarCustomerlist.size(), 3);
         system.assertEquals(similarCustomerlist[1].HomeEmail, 'abc@abc.com');
         
-        String customerJSONString1 = BPUtility.getDecodedString(CustomerOrderCtrl.getCustomer(BPUtility.getEncodedString(customer2.Id)));
-        List<Customer> customerList1 = (List<Customer>) System.JSON.deserialize(customerJSONString1, List<Customer>.class);
-        String customerList1JSONString1 = System.JSON.serialize(customerList1[0]);
-        String similarcustomers1 = BPUtility.getDecodedString(CustomerOrderCtrl.getOtherSimilarCustomer(BPUtility.getEncodedString(customerList1JSONString1)));
+        customers = SOQLUtil.getCustomer(customer2.Id, 'Customer');
+        String customerList1JSONString1 = System.JSON.serialize(new Customer(customers[0]));
+        String similarcustomers1 = BPUtility.getDecodedString(AddCustomerCtrl_V2.getOtherSimilarCustomer(BPUtility.getEncodedString(customerList1JSONString1)));
         
         List<CustomerSuggestion> similarCustomerlist1 = (List<CustomerSuggestion>) System.JSON.deserialize(similarcustomers1, List<CustomerSuggestion>.class);
         system.assertEquals(similarCustomerlist.size(), 3);
@@ -613,7 +552,7 @@ private class CustomerOrderCtrlTest {
         Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
         
         Test.startTest();
-        String customerOwnedUnitJSONString = BPUtility.getDecodedString(CustomerOrderCtrl.getSimilarCOUs(BPUtility.getEncodedString('12A')));
+        String customerOwnedUnitJSONString = BPUtility.getDecodedString(NewViewCustomerCtrl.getSimilarCOUs(BPUtility.getEncodedString('12A')));
         Test.stopTest();
         
         List<CustomerOwnedUnit> customerOwnedUnitlist = (List<CustomerOwnedUnit>) System.JSON.deserialize(customerOwnedUnitJSONString, List<CustomerOwnedUnit>.class);
@@ -627,7 +566,7 @@ private class CustomerOrderCtrlTest {
         //Country__c country1 = TestUtil.createCountry(true, 'IndiaA', false, false);
         
         Test.startTest();
-        String countrylistJSONString = CustomerOrderCtrl.getAllLookupFieldsJSON();
+        String countrylistJSONString = CustomerOrderCtrl_V2.getAllLookupFieldsJSON();
         Test.stopTest();
         
         List<Country> countrylist = (List<Country>) System.JSON.deserialize(countrylistJSONString, List<Country>.class);
@@ -657,7 +596,7 @@ private class CustomerOrderCtrlTest {
         Test.setFixedSearchResults(fixedSearchResults);
         
         Test.startTest();
-        String searchresults = BPUtility.getDecodedString(CustomerOrderCtrl.getSearchResults(BPUtility.getEncodedString('{"ObjectLabel":"Customer","SearchText":"customer","PreferredObject":"Customer"}')));
+        String searchresults = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getSearchResults(BPUtility.getEncodedString('{"ObjectLabel":"Customer","SearchText":"customer","SearchableObjects":"Customer","FilterValues":[]}')));
         Test.stopTest();
         //system.assert(false, searchresults );
         system.assertEquals(searchresults.contains('customerName'), true );
@@ -698,7 +637,7 @@ private class CustomerOrderCtrlTest {
         Test.setFixedSearchResults(fixedSearchResults);
         
         Test.startTest();
-        String searchresults = BPUtility.getDecodedString(CustomerOrderCtrl.getSearchResults(BPUtility.getEncodedString('{"ObjectLabel":"","SearchText":"p-00","PreferredObject":"Customer","SearchableObjects":"Part__c","FilterValues":[]}')));
+        String searchresults = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getSearchResults(BPUtility.getEncodedString('{"ObjectLabel":"","SearchText":"test","PreferredObject":"Customer","SearchableObjects":"Part__c","FilterValues":[]}')));
         Test.stopTest();
         system.assertEquals(searchresults.contains('TestPart'), true);
     }
@@ -728,7 +667,7 @@ private class CustomerOrderCtrlTest {
         Test.setFixedSearchResults(fixedSearchResults);
         
         Test.startTest();
-        String searchresults = BPUtility.getDecodedString(CustomerOrderCtrl.getSearchResults(BPUtility.getEncodedString('{"ObjectLabel":"Vendor","SearchText":"test","PreferredObject":"Customer"}')));
+        String searchresults = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getSearchResults(BPUtility.getEncodedString('{"ObjectLabel":"Vendor","SearchText":"test","SearchableObjects":"Vendor","FilterValues":[]}')));
         Test.stopTest();
         //system.assert(false, searchresults );
         system.assertEquals(searchresults.contains('Test Vendor'), true );
@@ -742,9 +681,10 @@ private class CustomerOrderCtrlTest {
     
     static testMethod void saveCustomerTest() {
         Test.startTest();
-        String customerResults = BPUtility.getDecodedString(CustomerOrderCtrl.saveCustomer(BPUtility.getEncodedString('{"IsBothAddressSame":true,"IsCustomer":true,"Active":true,"WorkNumberSMS":false,"MobileNumberSMS":false,"HomeNumberSMS":false,"IsVendor":false,"Type":"Individual","FirstName":"first","LastName":"last1","BirthDay":null,"BirthMonth":null,"BirthYear":null,"WorkNumber":"","WorkEmail":"","BillingCountry":"Canada","BillingState":"Newfoundland and Labrador","ShippingCountry":"Canada","ShippingState":"Newfoundland and Labrador","PriceLevelId":null,"SalesTaxId":null,"PurchaseTaxId":null}'),BPUtility.getEncodedString( '[{"Year":null,"Make":null,"Model":null,"SubModel":null,"VIN":"","Plate":"","Mileage":null,"Color":""}]')));
+        String customerId = AddCustomerCtrl_V2.saveCustomer(BPUtility.getEncodedString('{"IsBothAddressSame":true,"IsCustomer":true,"Active":true,"WorkNumberSMS":false,"MobileNumberSMS":false,"HomeNumberSMS":false,"IsVendor":false,"Type":"Individual","FirstName":"first","LastName":"last1","BirthDay":null,"BirthMonth":null,"BirthYear":null,"WorkNumber":"","WorkEmail":"","BillingCountry":"Canada","BillingState":"Newfoundland and Labrador","ShippingCountry":"Canada","ShippingState":"Newfoundland and Labrador","PriceLevelId":null,"SalesTaxId":null,"PurchaseTaxId":null,"AllowChargeOnAccount":false}'));
+        List<Account> customerList = [SELECT Name FROM Account WHERE Id = :customerId];
         Test.stopTest();
-        system.assertEquals(customerResults.contains('first'), true );
+        system.assertEquals(customerList[0].Name.contains('first'), true );
     }
     
                    /*
@@ -767,8 +707,8 @@ private class CustomerOrderCtrlTest {
         Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
         
        
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = BPUtility.getDecodedString(ServiceJobService.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         //system.assert(false, soHeaderDetailsList);
         System.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
@@ -793,7 +733,7 @@ private class CustomerOrderCtrlTest {
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
         Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
         
-        String COU = BPUtility.getDecodedString(CustomerOrderCtrl.saveCOU(BPUtility.getEncodedString('[{"VIN":"5NPEC4AC8DH640088","Year":2015,"Make":"'+unitmake.Id+'","Model":"'+unitmodel.Id+'","SubModelName":"2039","Plate":"lc","Mileage":"100","Color":"co"}]'), BPUtility.getEncodedString(customer.Id)));
+        String COU = BPUtility.getDecodedString(NewViewCustomerCtrl.saveCOU(BPUtility.getEncodedString(customer.Id), BPUtility.getEncodedString('[{"VIN":"5NPEC4AC8DH640088","Year":2015,"Make":"'+unitmake.Id+'","Model":"'+unitmodel.Id+'","SubModelName":"2039","Plate":"lc","Mileage":"100","Color":"co"}]'), BPUtility.getEncodedString('{}')));
         List<Customer_Owned_Unit__c> COUDetails = SOQLUtil.getCOUListByCustomerId(customer.Id);
         system.assertEquals(COUDetails.size(), 2);
     }
@@ -816,15 +756,15 @@ private class CustomerOrderCtrlTest {
         Kit_Header__c kitHeader = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, true, true, unitMake.Id, unitModel.Id);
         Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, LabourCode.Id, Part.Id, 1, 5.0);  
         
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = BPUtility.getDecodedString(ServiceJobService.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         System.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
         Test.startTest();
         String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(customer.Id)));
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);        
-        String lineItemsplit = BPUtility.getDecodedString(CustomerOrderCtrl.splitSOKHItem(BPUtility.getEncodedString(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0].SOKitHeaderId), BPUtility.getEncodedString(coHeader.Id)));
+        String lineItemsplit = BPUtility.getDecodedString(CustomerOrderCtrl_V2.splitSOKHItem(BPUtility.getEncodedString(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0].SOKitHeaderId), BPUtility.getEncodedString(coHeader.Id)));
         
         List<Service_Order_Kit_Header__c> sokhList = [select Id from Service_Order_Kit_Header__c];
         Test.stopTest();
@@ -851,14 +791,14 @@ private class CustomerOrderCtrlTest {
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
         Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
         
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = BPUtility.getDecodedString(ServiceJobService.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         //system.assert(false, soHeaderDetailsList);
         System.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
         
         String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(fee.Id), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(customer.Id)));
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
         //system.assert(false, soHeaderDetailsObj1);
         system.assertEquals(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0].ItemDesc, 'FeeCode - Description');
@@ -884,46 +824,16 @@ private class CustomerOrderCtrlTest {
         Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
         Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
         
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
+        String soHeader = BPUtility.getDecodedString(ServiceJobService.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
         
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
-        String soName = BPUtility.getDecodedString(CustomerOrderCtrl.saveSOName(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('Oil Change'), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id)));
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String jsonString = '{"Id":"'+soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id+'", "Name":"Oil Change"}';
+        String soName = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveSOHeaderInfo(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(jsonString)));
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
         
         System.assertEquals(soHeaderDetailsObj1.SOList[0].SOHeaderInfo.Name, 'Oil Change');
-    }
-    
-            /*
-    * Name: saveSOSignIn
-     * Desc: Test to save SOSignIn 
-     * @param: 
-     * @return: 
-    **/
-    
-        static testMethod void saveSOSignInTest() {
-        Account vendor = TestUtil.createVendor(true, 'Test Vendor');
-        Category__c testCategory = TestUtil.createCategory(true, 'Test Category');
-        Price_Level__c defaultPriceLevel = TestUtil.createPriceLevel(true, 'Default Price Level', 'MSRP', 10 , true, true);
-        Sales_Tax__c defaultSalesTax = TestUtil.createSalesTax(true, 'Test Sales Tax', true, true, true);
-        Part__c part = TestUtil.createPart(true, 'TestPart', vendor.Id, 'TestPart', testCategory.Id, 10, 20, 50, 100, 100);
-        Account customer = TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'Agra', '1111111112', null, null, false, true,'Individual','firstname1', 'lastname', '9999999999', 'BillingStreet');
-        CO_Header__c coHeader = TestUtil.createCOHeader(true, customer.Id);
-        Fee__c fee = TestUtil.createFee(True, True, testCategory.Id, 'FeeCode', CoHeader.Id, 'Description', 100, True);
-        Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
-        Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
-        
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
-        SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
-        String soSignIn = BPUtility.getDecodedString(CustomerOrderCtrl.saveSOSignIn(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('{"Odometer":123,"Id":"'+soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id+'"}')));
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
-        SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
-        //system.assert(false, soHeaderDetailsObj1);
-        System.assertEquals(soHeaderDetailsObj1.SOList[0].SOSignInRec.Odometer, 123.00);
     }
     
                 /*
@@ -947,13 +857,13 @@ private class CustomerOrderCtrlTest {
         Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
         Transaction_Type__c transactionType = TestUtil.createTransactionType(true, 'code', 'customer');
         
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = BPUtility.getDecodedString(ServiceJobService.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         //System.JSON.serialize(soHeaderDetailsObj);
-        String soHeaderInfo = BPUtility.getDecodedString(CustomerOrderCtrl.saveSOHeaderInfo(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('{"TransactionTypeId":"'+transactionType.Id+'","TransactionType":"Internal","Total":0,"Stock":"No outstanding items","PromisedBy":"01/07/2016 9:00 PM","Name":"Service Job 1","ManualCorrection":["correction"],"ManualConcern":["Concern", "concern1"],"ManualCause":["cause"],"KitHeaderCorrection":[],"KitHeaderConcern":[],"KitHeaderCause":[],"IsPromisedByAmPm":null,"Id":"'+soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id+'","EstimatedHours":0,"COUId":"'+customerOwnedUnit.Id+'","CategoryName":"Chain Parts","CategoryId":"'+testCategory.Id+'","selectedCOU":{"Year":1915,"VIN":"1G1AW35K1CB156516","SubModelName":"2039","SubModel":"'+unitmodel.Id+'","Plate":"lic","Name":"COU-00001249","ModelName":"Testing Model 49","ModelMakeName":"Audi","Model":"'+unitModel.Id+'","Mileage":18,"MakeName":"Audi","Make":"'+unitMake.Id+'","Id":"'+customerOwnedUnit.Id+'","Color":"woodland brown","$$hashKey":"object:342"},"selectedTime":"9:00 PM","selectedDate":"01/07/2016","CategoryNameStr":{},"NewConcern":"","NewCause":"","NewCorrection":""}')));
-        //String soHeaderInfo = CustomerOrderCtrl.saveSOHeaderInfo(coHeader.Id, System.JSON.serialize(soHeaderDetailsObj) );
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeaderInfo = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveSOHeaderInfo(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('{"TransactionTypeId":"'+transactionType.Id+'","TransactionType":"Internal","Total":0,"Stock":"No outstanding items","PromisedBy":"01/07/2016 9:00 PM","Name":"Service Job 1","ManualCorrection":[{"Value":"correction","IsDecline":false}],"ManualConcern":[{"Value":"Concern","IsDecline":false},{"Value":"concern1","IsDecline":false}],"ManualCause":[{"Value":"cause","IsDecline":false}],"KitHeaderCorrection":[],"KitHeaderConcern":[],"KitHeaderCause":[],"IsPromisedByAmPm":null,"Id":"'+soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id+'","EstimatedHours":0,"COUId":"'+customerOwnedUnit.Id+'","CategoryName":"Chain Parts","CategoryId":"'+testCategory.Id+'","selectedCOU":{"Year":1915,"VIN":"1G1AW35K1CB156516","SubModelName":"2039","SubModel":"'+unitmodel.Id+'","Plate":"lic","Name":"COU-00001249","ModelName":"Testing Model 49","ModelMakeName":"Audi","Model":"'+unitModel.Id+'","Mileage":18,"MakeName":"Audi","Make":"'+unitMake.Id+'","Id":"'+customerOwnedUnit.Id+'","Color":"woodland brown","$$hashKey":"object:342"},"selectedTime":"9:00 PM","selectedDate":"01/07/2016","CategoryNameStr":{},"NewConcern":"","NewCause":"","NewCorrection":""}')));
+        //String soHeaderInfo = CustomerOrderCtrl_V2.saveSOHeaderInfo(coHeader.Id, System.JSON.serialize(soHeaderDetailsObj) );
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
        
         //system.assert(false, soHeaderDetailsObj1);
@@ -981,46 +891,13 @@ private class CustomerOrderCtrlTest {
         Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
         Transaction_Type__c transactionType = TestUtil.createTransactionType(true, 'code', 'customer');
         
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
+        String soHeader = BPUtility.getDecodedString(ServiceJobService.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
         
-        //String soHeaderInfo = CustomerOrderCtrl.saveSOHeaderInfo(coHeader.Id, '{"TransactionTypeId":"'+transactionType.Id+'","TransactionType":"Internal","Total":0,"Stock":"No outstanding items","PromisedBy":"01/07/2016 9:00 PM","Name":"Service Job 1","ManualCorrection":["correction"],"ManualConcern":["Concern"],"ManualCause":["cause"],"KitHeaderCorrection":[],"KitHeaderConcern":[],"KitHeaderCause":[],"IsPromisedByAmPm":null,"Id":"a0so0000001xCUyAAM","EstimatedHours":0,"COUId":"'+customerOwnedUnit.Id+'","CategoryName":"Chain Parts","CategoryId":"'+testCategory.Id+'","selectedCOU":{"Year":1915,"VIN":"1G1AW35K1CB156516","SubModelName":"2039","SubModel":"'+unitmodel.Id+'","Plate":"lic","Name":"COU-00001249","ModelName":"Testing Model 49","ModelMakeName":"Audi","Model":"'+unitModel.Id+'","Mileage":18,"MakeName":"Audi","Make":"'+unitMake.Id+'","Id":"'+customerOwnedUnit.Id+'","Color":"woodland brown","$$hashKey":"object:342"},"selectedTime":"9:00 PM","selectedDate":"01/07/2016","CategoryNameStr":{},"NewConcern":"","NewCause":"","NewCorrection":""}');
-        
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
-        String SOMasterData = BPUtility.getDecodedString(CustomerOrderCtrl.getSOMasterData(BPUtility.getEncodedString(coHeader.Id)));
+        String SOMasterData = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getSOMasterData(BPUtility.getEncodedString(coHeader.Id)));
         //system.assert(false, SOMasterData);
         system.assertEquals(SOMasterData.contains('Model'), true);
-        
-    }
-    
-                        /*
-    * Name: savePinItems
-     * Desc: Test to savePinitems
-     * @param: 
-     * @return: 
-    **/
-    
-        static testMethod void savePinItemsTest() {
-        Account vendor = TestUtil.createVendor(true, 'Test Vendor');
-        Category__c testCategory = TestUtil.createCategory(true, 'Test Category');
-        Price_Level__c defaultPriceLevel = TestUtil.createPriceLevel(true, 'Default Price Level', 'MSRP', 10 , true, true);
-        Sales_Tax__c defaultSalesTax = TestUtil.createSalesTax(true, 'Test Sales Tax', true, true, true);
-        Part__c part = TestUtil.createPart(true, 'TestPart', vendor.Id, 'TestPart', testCategory.Id, 10, 20, 50, 100, 100);
-        Account customer = TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'Agra', '1111111112', null, null, false, true,'Individual','firstname1', 'lastname', '9999999999', 'BillingStreet');
-        CO_Header__c coHeader = TestUtil.createCOHeader(true, customer.Id);
-        Fee__c fee = TestUtil.createFee(True, True, testCategory.Id, 'FeeCode', CoHeader.Id, 'Description', 100, True);
-        Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
-        Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
-        Transaction_Type__c transactionType = TestUtil.createTransactionType(true, 'code', 'customer');
-        
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        
-        //String soHeaderInfo = CustomerOrderCtrl.saveSOHeaderInfo(coHeader.Id, '{"TransactionTypeId":"'+transactionType.Id+'","TransactionType":"Internal","Total":0,"Stock":"No outstanding items","PromisedBy":"01/07/2016 9:00 PM","Name":"Service Job 1","ManualCorrection":["correction"],"ManualConcern":["Concern"],"ManualCause":["cause"],"KitHeaderCorrection":[],"KitHeaderConcern":[],"KitHeaderCause":[],"IsPromisedByAmPm":null,"Id":"a0so0000001xCUyAAM","EstimatedHours":0,"COUId":"'+customerOwnedUnit.Id+'","CategoryName":"Chain Parts","CategoryId":"'+testCategory.Id+'","selectedCOU":{"Year":1915,"VIN":"1G1AW35K1CB156516","SubModelName":"2039","SubModel":"'+unitmodel.Id+'","Plate":"lic","Name":"COU-00001249","ModelName":"Testing Model 49","ModelMakeName":"Audi","Model":"'+unitModel.Id+'","Mileage":18,"MakeName":"Audi","Make":"'+unitMake.Id+'","Id":"'+customerOwnedUnit.Id+'","Color":"woodland brown","$$hashKey":"object:342"},"selectedTime":"9:00 PM","selectedDate":"01/07/2016","CategoryNameStr":{},"NewConcern":"","NewCause":"","NewCorrection":""}');
-        
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
-        String savePinItem = BPUtility.getDecodedString(CustomerOrderCtrl.savePinItems(BPUtility.getEncodedString('{"PinnedItemList":["Transaction Type","Unit"]}')));
-        system.assertEquals('Saved', savePinItem);
         
     }
     
@@ -1046,65 +923,29 @@ private class CustomerOrderCtrlTest {
         Kit_Header__c kitHeader = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, false, true, unitMake.Id, unitModel.Id);
         Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, false, false, KitHeader.Id, 5.0, null, Part.Id, 1, 5.0); 
         
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = BPUtility.getDecodedString(ServiceJobService.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         System.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
         
         Test.startTest();
         String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(customer.Id)));
                
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
         
-        soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.FixedPrice = 20.00 ;
-        System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0]);
+        soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.FixedPrice = 20.00;
 
-        String updatedSOKH = BPUtility.getDecodedString(CustomerOrderCtrl.updateSOKHLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0])), BPUtility.getEncodedString(coHeader.Id)));
+        String updatedSOKH = BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateSOKHLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH)), BPUtility.getEncodedString(coHeader.Id)));
         updateSOKHLineItemTestValidation(coHeader.Id);
         Test.stopTest();
     }
     
     @future
     private static void updateSOKHLineItemTestValidation(String coHeaderId) {
-    	String SOHeaderDetails2 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
+    	String SOHeaderDetails2 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj2 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails2, SOHeaderWrapper.class);
         system.assertEquals(soHeaderDetailsObj2.SOList[0].SOGridItems[0].SOKH.FixedPrice, 20.00);
-    }
-	
-	
-        /*
-    * Name: addVOHeaderToCOLITest
-     * Desc: Test to add VOHeader for COLI
-     * @param: 
-     * @return: 
-    **/
-     static testMethod void addVOHeaderToCOLITest() {
-        VendorPaginationSorting pageSort = new VendorPaginationSorting();
-        pageSort.ChangesCount = 0;
-        pageSort.CurrentPage = 1;  
-        pageSort.PageSize =  10;
-        //System.JSON.serialize(pageSort)
-        
-       
-        Account vendor = TestUtil.createVendor(true, 'Test Vendor');
-        Category__c testCategory = TestUtil.createCategory(true, 'Test Category');
-        Price_Level__c defaultPriceLevel = TestUtil.createPriceLevel(true, 'Default Price Level', 'MSRP', 10 , true, true);
-        Sales_Tax__c defaultSalesTax = TestUtil.createSalesTax(true, 'Test Sales Tax', true, true, true);
-        Account customer =  TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'jaipur', '1111111111', null, null, false, true,'Individual');
-        CO_Header__c coHeader = TestUtil.createCOHeader(true, customer.Id);
-        Part__c part = TestUtil.createPart(true, 'partNumberP01', vendor.Id, 'Test Part', testCategory.Id, 10, 20, 50, 100, 100);
-        CO_Line_Item__c coLineItem = TestUtil.createCOLineItem(true, coHeader.Id, part.Id, 150);
-        Vendor_Order_Header__c voHeader = TestUtil.createVendorOrderHeader(true, Vendor.Id);
-        
-        String VoHeaderToCOLI = BPUtility.getDecodedString(CustomerOrderCtrl.addVOHeaderToCOLI(BPUtility.getEncodedString(part.Id), BPUtility.getEncodedString(coLineItem.Id), 
-                                                        BPUtility.getEncodedString(voHeader.Id), BPUtility.getEncodedString(coHeader.Id), 
-                                                        BPUtility.getEncodedString(System.JSON.serialize(pageSort)), BPUtility.getEncodedString(System.JSON.serialize(pageSort)), 
-                                                        BPUtility.getEncodedString(System.JSON.serialize(pageSort))));
-        String coHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('coLineItem,user')));
-        coHeaderWrapper coHeaderDetailsObj = (coHeaderWrapper) System.JSON.deserialize(coHeaderDetails, coHeaderWrapper.class);
-        //system.assert(false, coHeaderDetailsObj );
-        System.assertEquals(coHeaderDetailsObj.allCOLineItemRecs[0].Item, 'partNumberP01 - Test Part');
     }
     
         /*
@@ -1129,7 +970,7 @@ private class CustomerOrderCtrlTest {
         //Kit_Header__c kitHeader = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, true, true, unitMake.Id, unitModel.Id);
         //Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, LabourCode.Id, Part.Id, 1, 5.0);  
         
-        //String allMasterData = BPUtility.getDecodedString(CustomerOrderCtrl.getAllLookupFieldsJSON());
+        //String allMasterData = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getAllLookupFieldsJSON());
         //cOUFieldWrapper masterDataDetails = (cOUFieldWrapper) System.JSON.deserialize(allMasterData, cOUFieldWrapper.class);
         //system.assert(false, masterDataDetails);
         //system.assertEquals(masterDataDetails.UnitMakeList[0].UnitMakeName, 'unitMakeName');
@@ -1166,21 +1007,21 @@ private class CustomerOrderCtrlTest {
     
     @future
 	private static void updateSOLineItemsAsyncHandling(String coHeaderId, String customerId, String partId) {
-		String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeaderId)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('soHeader')));
+		String soHeader = BPUtility.getDecodedString(ServiceJobService.createSOHeader(BPUtility.getEncodedString(coHeaderId)));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         System.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
         
         String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(partId), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id), BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(customerId)));
         
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
         
         soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0].QtyNeeded = 500.00 ;
         System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0]);
 
-        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeaderId)));
-        String SOHeaderDetails2 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
+        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeaderId)));
+        String SOHeaderDetails2 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj2 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails2, SOHeaderWrapper.class);
         system.assertEquals(soHeaderDetailsObj2.SOList[0].SOGridItems[0].SOKH.SOLIList[0].QtyNeeded, 500.00);
 	}
@@ -1201,23 +1042,23 @@ private class CustomerOrderCtrlTest {
         Kit_Header__c kitHeader = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, false, true, unitMake.Id, unitModel.Id);
         Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 2.0, LabourCode.Id, Part.Id, 1,5.0);   
         
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = BPUtility.getDecodedString(ServiceJobService.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         System.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
     
         Test.startTest();
         String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(customer.Id)));
         
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
        // system.assert(false,soHeaderDetailsObj1);
         
         soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0].QtyNeeded = 2.00;
         Test.stopTest();
-        String updateSOLineItem = BPUtility.getDecodedString(CustomerOrderCtrl.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeader.Id)));
+        String updateSOLineItem = BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeader.Id)));
         
-        String SOHeaderDetails2 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
+        String SOHeaderDetails2 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj2 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails2, SOHeaderWrapper.class);
         //system.assert(false, soHeaderDetailsObj2);
         //Test.stopTest();

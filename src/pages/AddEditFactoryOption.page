@@ -1,0 +1,158 @@
+<apex:page sidebar="false" showheader="false" standardstylesheets="false" controller="GlobalController" >
+<full-page-modal id-value="full-page-modal-window" class-value="bp-full-page-modal automated-pricefile-mapping-modal" close-action="F_AddEditFactoryOption.closeAction()">
+    <div class="factory-option-main-container" ng-if = "!M_UnitPricing.isEditLineItem">
+        <h1 class="factory-make-heading">{{::M_UnitPricing.UnAssignedModelList.MakeName}} default factory options</h1>
+        <div class="factory-filter-container">
+            <div class="multi-select-dropdown-wrapper" ng-if = "M_UnitPricing.isLoadFromSubModel">
+                <label class="filter-label">Apply these options to</label>
+                <multi-select result-list = "M_UnitPricing.UnAssignedSubModelList.ActiveSubModelList" type = "sub model" />  
+            </div>
+            <div class="filter-contaienr" ng-class = "{'adjust-filter-container' : M_UnitPricing.isLoadFromSubModel}">
+                <label>Filter</label>
+                <input type="text" placeholder="Type to filter" ng-model = "M_AddEditFactoryOption.filterFactoryOption"/>
+                <span class="cross-icon" ng-if = "M_AddEditFactoryOption.filterFactoryOption" ng-click = "M_AddEditFactoryOption.filterFactoryOption = '' ">x</span>
+            </div>
+            <div ng-if = "!M_UnitPricing.isLoadFromSubModel" class = "default-factory-option-btn">
+                <button class="bp-btn bp-btn-normal" ng-click = "F_AddEditFactoryOption.scrollAddFactoryOptionLineItem()">Add a default factory option</button>
+            </div>
+        </div>
+        <div class="table-responsive">
+        <table>
+            <col width = "4%" ng-if = "M_UnitPricing.isLoadFromSubModel"/>
+            <col width="25%" />
+            <col width="35%" ng-if = "M_UnitPricing.isLoadFromSubModel"/>
+            <col width="40%" ng-if = "!M_UnitPricing.isLoadFromSubModel"/>
+            <col width="15%" />
+            <col width="15%" />
+            <col width="5%" />
+            <thead>
+                <tr>
+                    <th ng-if = "M_UnitPricing.isLoadFromSubModel"></th>
+                    <th class="first-child">Code</th>
+                    <th class="second-child">Description</th>
+                    <th class="text-right third-child">Price</th>
+                    <th class="text-right fourth-child">Cost</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat = "factoryRec in M_UnitPricing.FactoryOptionList | filter:M_AddEditFactoryOption.filterFactoryOption  | orderBy:'Code' track by $index">
+                    <td ng-if = "M_UnitPricing.isLoadFromSubModel" class="check-box-td" ng-class = "{'focus-factoryoption' : ($index == M_AddEditFactoryOption.lineItemIndex) || factoryRec.isSelected}">
+                        <input ng-disabled = "factoryRec.allreadyAdded" class="dummy-checkbox-input" type="checkbox"  id="checkbox-{{$index}}" ng-model="factoryRec.isSelected"/> 
+                        <label class="label-as-checkbox" for="checkbox-{{$index}}"></label>
+                    </td>
+                    <td class="first-child" ng-class = "{'focus-factoryoption' : ($index == M_AddEditFactoryOption.lineItemIndex) || factoryRec.isSelected}">{{factoryRec.Code}}</td>
+                    <td class="second-child" ng-class = "{'focus-factoryoption' : ($index == M_AddEditFactoryOption.lineItemIndex) || factoryRec.isSelected}">
+                        <input ng-if = "!M_UnitPricing.isLoadFromSubModel" class="large-input"
+                        ng-keydown="F_AddEditFactoryOption.editRowBlur($event, $index, 'Price_'+$index)"
+                        ng-blur ="F_AddEditFactoryOption.editRowBlur($event, $index, 'Price_'+$index)"
+                        maxlength = "230" type="text"  ng-model = "factoryRec.Description"
+                        ng-focus = "F_AddEditFactoryOption.focusOnElement($index)"/>
+                        <span ng-class = "{'adjust-td-width': factoryRec.allreadyAdded && M_UnitPricing.isLoadFromSubModel}" ng-if = "M_UnitPricing.isLoadFromSubModel">{{factoryRec.Description}}</span>
+                    </td>
+                    <td class="text-right third-child" ng-class = "{'focus-factoryoption' : ($index == M_AddEditFactoryOption.lineItemIndex) || factoryRec.isSelected}">
+                        <span ng-if = "factoryRec.allreadyAdded" class="already-added-text">Already added</span>
+                        <span class="currency_display bp-grey">$</span>
+                        <numbers-only 
+                                input-model-value = "factoryRec.Price" 
+                                include-negative = "true"
+                                include-zero = "true"
+                                id-value = "Price_{{$index}}"
+                                place-holder-value = "Price"
+                                class-value = "text-right"
+                                precision-length = "2"
+                                focus-value = "F_AddEditFactoryOption.focusOnElement($index)"
+                                blur-value="F_AddEditFactoryOption.editRowBlur($event, $index, 'Cost_'+$index)"
+                                ng-keydown="F_AddEditFactoryOption.editRowBlur($event, $index, 'Cost_'+$index)"
+                            />
+                    </td>
+                    <td class="text-right fourth-child" ng-class = "{'focus-factoryoption' : ($index == M_AddEditFactoryOption.lineItemIndex) || factoryRec.isSelected}">
+                        <span class="currency_display bp-grey">$</span>
+                        <numbers-only 
+                                input-model-value = "factoryRec.Cost" 
+                                include-negative = "true"
+                                id-value = "Cost_{{$index}}"
+                                include-zero = "true"
+                                place-holder-value = "Cost"
+                                class-value = "text-right"
+                                precision-length = "2"
+                                focus-value = "F_AddEditFactoryOption.focusOnElement($index)"
+                                blur-value="F_AddEditFactoryOption.saveFactoryOption(factoryRec)"
+                            />
+                    </td>
+                    <td ng-class = "{'focus-factoryoption' : ($index == M_AddEditFactoryOption.lineItemIndex) || factoryRec.isSelected}">
+                        <div class="flex-container items-right">
+                            <a data-toggle="tooltip" title="Delete" tooltip-loader = "tooltip-loader" ng-click = "F_AddEditFactoryOption.deleteFactoryOption(factoryRec.Id)" class="button icon delete bp-curser-pointer"><span class="button-text" aira-hidden="true">Delete</span></a>
+                       </div>
+                    </td>
+                </tr>
+                <tr class="add-factory-option-row" id = "add-factory-option-row" ng-if = "!M_UnitPricing.isLoadFromSubModel">
+                    <td class="first-child"><input maxlength = "20" placeholder="Code" type="text" class="large-input" ng-model = "M_AddEditFactoryOption.AddNewFactoryOption.Code"/></td>
+                    <td class="second-child"><input maxlength = "230" placeholder="Description" class="large-input" type="text" ng-model = "M_AddEditFactoryOption.AddNewFactoryOption.Description"/></td>
+                    <td class="third-child">
+                        <numbers-only 
+                                input-model-value = "M_AddEditFactoryOption.AddNewFactoryOption.Price" 
+                                include-negative = "true"
+                                include-zero = "true"
+                                place-holder-value = "Price"
+                                precision-length = "2"
+                            />
+                    </td>
+                    <td class="fourth-child">
+                        <numbers-only 
+                        input-model-value = "M_AddEditFactoryOption.AddNewFactoryOption.Cost" 
+                        include-negative = "true"
+                        include-zero = "true"
+                        place-holder-value = "Cost"
+                        precision-length = "2"
+                    />
+                    </td>
+                    <td><button class="bp-btn bp-btn-normal" ng-disabled = "F_UnitPricing.validateFactoryOption(M_AddEditFactoryOption.AddNewFactoryOption.Code,M_AddEditFactoryOption.AddNewFactoryOption.Description,M_AddEditFactoryOption.AddNewFactoryOption.Cost,M_AddEditFactoryOption.AddNewFactoryOption.Price)" ng-click = "F_AddEditFactoryOption.createFactoryOption()">Add</button></td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+        <div class="formBtn transaction-btn-container">
+
+            <div class="g-search-box-ctas" ng-if = "!M_UnitPricing.isLoadFromSubModel"  ng-click="F_AddEditFactoryOption.closeAction()">
+                <button class="button subtle"  tabindex="2">Cancel</button>
+            </div>
+            <button class=" button primary" ng-if = "!M_UnitPricing.isLoadFromSubModel"   ng-click="F_AddEditFactoryOption.closeAction()">Okay</button>
+            <button class=" button primary" ng-disabled = "F_AddEditFactoryOption.disableAddSelectedBtn()" ng-if = "M_UnitPricing.isLoadFromSubModel"   ng-click="F_AddEditFactoryOption.addSubModelFactoryOption()">Add selected</button>
+        </div>
+    </div>
+    <div class="factory-option-main-container mobile-device-main-container" ng-if = "M_UnitPricing.isEditLineItem">
+        <h1 class="factory-make-heading">Edit {{M_UnitPricing.isEditLineItemJSon.Code}} <span ng-if = "M_UnitPricing.isLoadFromSubModel"> - {{M_UnitPricing.isEditLineItemJSon.Description}}</span></h1>
+        <div ng-if = "!M_UnitPricing.isLoadFromSubModel">
+            <label>Description</label>
+            <input maxlength = "40" placeholder="Description" id = "mobile-edit-desc-input" class="large-input" type="text" ng-model = "M_UnitPricing.isEditLineItemJSon.Description"/>
+        </div>
+        <div>
+            <label>Price</label>
+            <numbers-only 
+            input-model-value = "M_UnitPricing.isEditLineItemJSon.Price" 
+            include-negative = "true"
+            include-zero = "true"
+            place-holder-value = "Price"
+            precision-length = "2"
+            id-value = "mobile-price-edit"
+        />
+        </div>
+        <div>
+            <label>Cost</label>
+            <numbers-only 
+                        input-model-value = "M_UnitPricing.isEditLineItemJSon.Cost" 
+                        include-negative = "true"
+                        include-zero = "true"
+                        place-holder-value = "Cost"
+                        precision-length = "2"
+                    />
+        </div>
+        <div class="formBtn transaction-btn-container">
+
+            <button class=" button primary"  ng-click="F_AddEditFactoryOption.saveFactoryOption(M_UnitPricing.isEditLineItemJSon)">Save</button>
+        </div>
+    </div>
+</full-page-modal>
+    
+</apex:page>

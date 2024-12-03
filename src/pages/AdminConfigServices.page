@@ -1,0 +1,110 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="AdminConfigCtrl" sidebar="false" applyHtmlTag="false" applyBodyTag="false" 
+    contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('AdminConfigService', ['$q', function ($q) {
+            return {
+                setCompanyGeneralInfo : function(companyGeneralInfoJsonStr) { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.setCompanyGeneralInfo}',companyGeneralInfoJsonStr);
+                },
+                getGeneralInfoConfig : function() { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getGeneralInfoConfig}');
+                },
+                getPreferredPaymentConfig : function() {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getPreferredPaymentConfig}');
+                },
+                configurePreferredPaymentIntegration : function(preferredPaymentConfigJsonStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.configurePreferredPaymentIntegration}',preferredPaymentConfigJsonStr);
+                },
+                enableConfiguration : function(preferredPaymentConfigJsonStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.enableConfiguration}',preferredPaymentConfigJsonStr);
+                },
+                getAllPPTerminalList : function() { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getAllPPTerminalList}');
+                },
+                syncTerminalDetailsFromPP : function(terminalObjJsonStr) { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.syncTerminalDetailsFromPP}',terminalObjJsonStr);
+                },
+                savePPConfigChange : function(preferredPaymentConfigJsonStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.savePPConfigChange}',preferredPaymentConfigJsonStr);
+                },
+                getBRPConfig : function() { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getBRPConfig}');
+                },
+                saveBRPConfig : function(BRPConfigJsonStr) { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.saveBRPConfig}',BRPConfigJsonStr);
+                },
+                configureBRPIntegration : function(BRPConfigJsonStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.configureBRPIntegration}',BRPConfigJsonStr);
+                },
+                getAllUnitMakes : function() { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getAllUnitMakes}');
+                },
+                disableBRPPartsOrder : function() { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.disableBRPPartsOrder}');
+                },
+                authorizeBRP : function() {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.authorizeBRP}');
+                },
+                resetAllUsersTimeZone : function(timeZoneStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.resetAllUsersTimeZone}',timeZoneStr);
+                },
+                savePPConfigChange : function(preferredPaymentConfigJsonStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.savePPConfigChange}',preferredPaymentConfigJsonStr);
+                },
+                getAccountingReconciliationByDate : function(selectedDate) { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getAccountingReconciliationByDate}',selectedDate);
+                },
+                getAccountingReconciliationTabURL : function() { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getAccountingReconciliationTabURL}');
+                },
+                getUnitDataFieldConfig : function() { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getUnitDataFieldConfig}');
+                },
+                saveUnitDataFieldConfig : function(unitDataFieldConfigJsonStr) { 
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.saveUnitDataFieldConfig}', unitDataFieldConfigJsonStr);
+                },
+                getFeatureToggleConfig : function() {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getFeatureToggleConfig}');
+                },
+                saveFeatureToggleConfig : function(featureToggleConfigJsonStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.saveFeatureToggleConfig}', featureToggleConfigJsonStr);
+                },
+                generateJWTToken : function() {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.generateJWTToken}');
+                },
+                getKenectConfig : function() {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getKenectConfig}');
+                },
+                saveKenectIntegration : function(kenectJsonStr) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.saveKenectIntegration}', kenectJsonStr);
+                },
+                getAccountingSyncFailureDetails: function(fetchData) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getAccountingSyncFailureDetails}', fetchData);
+                },
+                getAccountingLogsDetails: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getAccountingLogsDetails}');
+                },
+                executeAccountingScript: function(entityName) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.executeAccountingScript}', entityName);
+                },
+                getActiveFormsList: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getActiveFormsList}');
+                },
+                getUserDefinedFields: function(formId) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getUserDefinedFields}', formId);
+                },
+                saveUserDefinedFields: function(formId, fieldsJson, formEditConfigJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.saveUserDefinedFields}', formId, fieldsJson, formEditConfigJson);
+                },
+                getUnitDataCategoryToFieldsDetails: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.getUnitDataCategoryToFieldsDetails}');
+                },
+                convertMiscUnitDataField: function(miscFieldConvertJson) {
+                    return RemoteActionService($q, '{!$RemoteAction.AdminConfigCtrl.convertMiscUnitDataField}', miscFieldConvertJson);
+                }
+            };
+        }]);
+        return Routing_AppJs_PK;
+    });
+</apex:page>

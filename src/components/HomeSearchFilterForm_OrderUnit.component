@@ -1,0 +1,359 @@
+<apex:component >
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Make');">
+         <div class="col-md-11">
+             <div class="col-md-9 P0 " >
+                 <label class="T3 labelWidth pull-left">{{'Make_Object_Display_Label'| translate }}</label>
+                 <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_Make"
+                     ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Make" rel="homePageOrderUnitUnitMake"/>
+             </div>
+             <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitUnitMake">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Make_Object_Display_Label'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Make');"></i>
+          </div>
+         </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Model');">
+         <div class="col-md-11">
+             <div class="col-md-9 P0 " >
+                 <label class="T3 labelWidth pull-left">{{'Model_Object_Display_Label'| translate }}</label>
+                 <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_Model"
+                     ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Model" rel="homePageOrderUnitUnitModel"/>
+             </div>
+             <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitUnitModel">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Model_Object_Display_Label'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Model');"></i>
+          </div>
+         </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_SubModel');">
+         <div class="col-md-11">
+             <div class="col-md-9 P0 " >
+                 <label class="T3 labelWidth pull-left">{{'Label_SubModel'| translate }}</label>
+                 <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_SubModel"
+                     ng-model="HomeSearchGrid.filterFormJson.Order_Unit_SubModel" rel="homePageOrderUnitUnitSubModel"/>
+             </div>
+             <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitUnitSubModel">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Label_SubModel'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_SubModel');"></i>
+          </div>
+         </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Year');">
+         <div class="col-md-11">
+             <div class="col-md-9 P0 " >
+                 <label class="T3 labelWidth pull-left">{{'Unit_year'| translate }}</label>
+                 <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_Year"
+                     ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Year" rel="homePageOrderUnitUnitYear"/>
+             </div>
+             <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitUnitYear">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Unit_year'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Year');"></i>
+          </div>
+         </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Unit_ID');">
+         <div class="col-md-11">
+             <div class="col-md-9 P0 " >
+                 <label class="T3 labelWidth pull-left">{{'Unit_ID'| translate }}</label>
+                 <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_Unit_ID"
+                     ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Unit_ID" rel="homePageOrderUnitUnitID"/>
+             </div>
+             <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitUnitID">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Unit_ID'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Unit_ID');"></i>
+          </div>
+         </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Category');">
+         <div class="col-md-11">
+             <div class="col-md-9 P0 " >
+                 <label class="T3 labelWidth pull-left">{{'SalesTaxGridItem_Category'| translate }}</label>
+                 <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_Category"
+                     ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Category" rel="homePageOrderUnitCategory"/>
+             </div>
+             <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitCategory">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'SalesTaxGridItem_Category'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Category');"></i>
+          </div>
+         </div>
+     </div>
+     
+     <div ng-show="HomeSearchGrid.showField('Order_Unit_Ordered');">
+         <div class="row P10">
+            <div class="col-md-5">
+                <label class="T3 labelWidth pull-left">{{'Label_Ordered'| translate }}</label>
+                <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageOrderUnitDateOrdered" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Ordered.SelectedOption"
+                    id="Order_Unit_Ordered">
+                    <option ng-repeat="item in HomeSearchGrid.formMaterData.dateFilterOptions" value="{{item.optionValue}}">{{item.label}}</option> 
+                </select>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitDateOrdered">
+                 <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Label_Ordered'| translate }}"></i> 
+                 <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Ordered');"></i>
+             </div>
+        </div>
+    
+    
+        <!-- Between Div Start  -->
+        <div class="row P10" ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Ordered.SelectedOption == '5'">
+                <div class="col-md-7 modifiedField">
+                <label class="T3 col-md-12">{{'Between'| translate }}</label>
+                <div class="col-md-6 datepickerContatiner" style="padding-left: 0;">
+                 <input type="text" class="date-picker" id="OrderUnitOrderedStartDate" data-range-start="OrderUnitOrderedStartDate" data-range-end="OrderUnitOrderedEndDate"  placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Ordered.Value1" date-format="HomeSearchGrid.dateFormat"  end-date = "dateOptions.maxDate" datepicker = "datepicker" autocomplete="off" readonly = "readonly" />
+                </div>
+                <div class="col-md-6 datepickerContatiner">
+                 <input type="text" class="date-picker" id="OrderUnitOrderedEndDate" data-range-start="OrderUnitOrderedStartDate" data-range-end="OrderUnitOrderedEndDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Ordered.Value2" date-format="HomeSearchGrid.dateFormat"  end-date = "dateOptions.maxDate" datepicker = "datepicker" autocomplete="off" readonly = "readonly" />
+                </div>
+                
+            </div>
+        </div>
+        <!-- Between Div End  -->
+    </div>
+    
+    <div ng-show="HomeSearchGrid.showField('Order_Unit_Expected');">
+         <div class="row P10">
+            <div class="col-md-5">
+                <label class="T3 labelWidth pull-left">{{'Expected'| translate }}</label>
+                <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageOrderUnitDateExpected" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Expected.SelectedOption"
+                    id="Order_Unit_Expected">
+                    <option ng-repeat="item in HomeSearchGrid.formMaterData.dateFilterOptions" value="{{item.optionValue}}">{{item.label}}</option> 
+                </select>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitDateExpected">
+                 <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Expected'| translate }}"></i> 
+                 <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Expected');"></i>
+             </div>
+        </div>
+    
+    
+        <!-- Between Div Start  -->
+        <div class="row P10" ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Expected.SelectedOption == '5'">
+                <div class="col-md-7 modifiedField">
+                <label class="T3 col-md-12">{{'Between'| translate }}</label>
+                <div class="col-md-6 datepickerContatiner" style="padding-left: 0;">
+                 <input type="text" class="date-picker" id="OrderUnitExpectedStartDate" data-range-start="OrderUnitExpectedStartDate" data-range-end="OrderUnitExpectedEndDate"  placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Expected.Value1" date-format="HomeSearchGrid.dateFormat"  end-date = "dateOptions.maxDate" datepicker = "datepicker" autocomplete="off" readonly = "readonly" />
+                </div>
+                <div class="col-md-6 datepickerContatiner">
+                 <input type="text" class="date-picker" id="OrderUnitExpectedEndDate" data-range-start="OrderUnitExpectedStartDate" data-range-end="OrderUnitExpectedEndDate" placeholder="{{HomeSearchGrid.dateFormat}}" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Expected.Value2" date-format="HomeSearchGrid.dateFormat"  end-date = "dateOptions.maxDate" datepicker = "datepicker" autocomplete="off" readonly = "readonly" />
+                </div>
+                
+            </div>
+        </div>
+        <!-- Between Div End  -->
+    </div>
+        
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Days_Out');">
+        <div class="col-md-5">
+            <label class="T3 labelWidth pull-left">{{'Days_Out'| translate }}</label>
+            <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageOrderUnitDaysOut" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Days_Out.SelectedOption"
+                     id="Order_Unit_Age">
+                <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+            </select>
+        </div>
+        <div class="col-md-5">
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                    ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Days_Out.Value1"
+                    ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Days_Out.SelectedOption != '0'" rel="homePageOrderUnitDaysOut"/>
+            <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                    ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Days_Out.Value2"
+                    ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Days_Out.SelectedOption == '5' " rel="homePageOrderUnitDaysOut"/>
+        </div>
+        <div class="col-md-2 controlBtn homePagecontrols " id="homePageOrderUnitDaysOut">
+            <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Days_Out'| translate }}"></i> 
+            <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Days_Out');"></i>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_FO_Number');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0 " >
+                <label class="T3 labelWidth pull-left">{{'FO_Number'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_FO_Number"
+                    ng-model="HomeSearchGrid.filterFormJson.Order_Unit_FO_Number" rel="homePageOrderUnitFONumber"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitFONumber">
+                 <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'FO_Number'| translate }}"></i> 
+                 <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_FO_Number');"></i>
+         </div>
+        </div>
+    </div>
+     
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Committed');">
+	    <div class="col-md-5">
+	        <label class="T3 labelWidth pull-left">{{'Part_Object_Status_Committed'| translate }}</label>
+	        <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageOrderUnitCommitted" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Committed"
+	            id="Order_Unit_Committed">
+	            <option value="0">{{'Generic_Object_Label'| translate }}</option>
+	            <option >{{'Label_Yes'| translate }}</option>
+	            <option >{{'Label_No'| translate }}</option>
+	        </select>
+	    </div>
+	    <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitCommitted">
+	             <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Part_Object_Status_Committed'| translate }}"></i> 
+	             <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Committed');"></i>
+	     </div>
+	</div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Unit_Cost');">
+         <div class="col-md-5">
+             <label class="T3 labelWidth pull-left">{{'Unit_Cost'| translate }}</label>
+             <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageOrderUnitUnitCost" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Unit_Cost.SelectedOption"
+                 id="Order_Unit_Unit_Cost">
+                 <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+             </select>
+         </div>
+         <div class="col-md-5">
+             <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                 ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Unit_Cost.Value1"
+                 ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Unit_Cost.SelectedOption != '0'" rel="homePageOrderUnitUnitCost"/>
+             <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                 ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Unit_Cost.Value2"
+                 ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Unit_Cost.SelectedOption == '5'" rel="homePageOrderUnitUnitCost"/>
+         </div>
+         <div class="col-md-2 controlBtn homePagecontrols " id="homePageOrderUnitUnitCost">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Unit_Cost'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Unit_Cost');"></i>
+           </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Tax');">
+         <div class="col-md-5">
+             <label class="T3 labelWidth pull-left">{{'Label_Tax'| translate }}</label>
+             <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageOrderUnitTax" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Tax.SelectedOption"
+                 id="Order_Unit_Tax">
+                 <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+             </select>
+         </div>
+         <div class="col-md-5">
+             <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                 ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Tax.Value1"
+                 ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Tax.SelectedOption != '0'" rel="homePageOrderUnitTax"/>
+             <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                 ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Tax.Value2"
+                 ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Tax.SelectedOption == '5'" rel="homePageOrderUnitTax"/>
+         </div>
+         <div class="col-md-2 controlBtn homePagecontrols " id="homePageOrderUnitTax">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Label_Tax'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Tax');"></i>
+           </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Total_Cost');">
+         <div class="col-md-5">
+             <label class="T3 labelWidth pull-left">{{'Total_Cost'| translate }}</label>
+             <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageOrderUnitTotalCost" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Total_Cost.SelectedOption"
+                 id="Order_Unit_Total_Cost">
+                 <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+             </select>
+         </div>
+         <div class="col-md-5">
+             <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                 ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Total_Cost.Value1"
+                 ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Total_Cost.SelectedOption != '0'" rel="homePageOrderUnitTotalCost"/>
+             <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                 ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Total_Cost.Value2"
+                 ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Total_Cost.SelectedOption == '5'" rel="homePageOrderUnitTotalCost"/>
+         </div>
+         <div class="col-md-2 controlBtn homePagecontrols " id="homePageOrderUnitTotalCost">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Total_Cost'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Total_Cost');"></i>
+           </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Retail_Price');">
+         <div class="col-md-5">
+             <label class="T3 labelWidth pull-left">{{'Retail_Price'| translate }}</label>
+             <select class="col-md-8 homeSearchFilterDropdown homeform-control" rel="homePageOrderUnitRetailPrice" ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Retail_Price.SelectedOption"
+                 id="Order_Unit_Retail_Price">
+                 <option ng-repeat="item in HomeSearchGrid.formMaterData.rangeFilterOptions" value="{{item.optionValue}}">{{item.label}}</option>
+             </select>
+         </div>
+         <div class="col-md-5">
+             <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox homeform-control" 
+                 ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Retail_Price.Value1"
+                 ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Retail_Price.SelectedOption != '0'" rel="homePageOrderUnitRetailPrice"/>
+             <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-5 homeSearchFilterTextbox col-md-offset-1 homeform-control" 
+                 ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Retail_Price.Value2"
+                 ng-show="HomeSearchGrid.filterFormJson.Order_Unit_Retail_Price.SelectedOption == '5'" rel="homePageOrderUnitRetailPrice"/>
+         </div>
+         <div class="col-md-2 controlBtn homePagecontrols " id="homePageOrderUnitRetailPrice">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Retail_Price'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Retail_Price');"></i>
+           </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Vendor');">
+         <div class="col-md-11">
+             <div class="col-md-9 P0 " >
+                 <label class="T3 labelWidth pull-left">{{'Vendor_Object_Display_Label'| translate }}</label>
+                 <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_Vendor"
+                     ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Vendor" rel="homePageOrderUnitCustomer"/>
+             </div>
+             <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitCustomer">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Vendor_Object_Display_Label'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Vendor');"></i>
+          </div>
+         </div>
+     </div>
+     
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_VIN');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0 " >
+                <label class="T3 labelWidth pull-left">{{'Label_VIN'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_VIN"
+                    ng-model="HomeSearchGrid.filterFormJson.Order_Unit_VIN" rel="homePageOrderUnitVIN"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitVIN">
+                 <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Label_VIN'| translate }}"></i> 
+                 <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_VIN');"></i>
+         </div>
+        </div>
+    </div>
+    
+    <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Stock_Number');">
+        <div class="col-md-11">
+            <div class="col-md-9 P0 " >
+                <label class="T3 labelWidth pull-left">{{'Stock_number'| translate }}</label>
+                <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_Stock_Number"
+                    ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Stock_Number" rel="homePageOrderUnitStockNumber"/>
+            </div>
+            <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitStockNumber">
+                 <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Stock_number'| translate }}"></i> 
+                 <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Stock_Number');"></i>
+         </div>
+        </div>
+     </div>
+    
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Ext_Color');">
+         <div class="col-md-11">
+             <div class="col-md-9 P0 " >
+                 <label class="T3 labelWidth pull-left">{{'Ext_Color'| translate }}</label>
+                 <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_Ext_Color"
+                     ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Ext_Color" rel="homePageOrderUnitExtColor"/>
+             </div>
+             <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitExtColor">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Ext_Color'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Ext_Color');"></i>
+          </div>
+         </div>
+     </div>
+
+     <div class="row P10" ng-show="HomeSearchGrid.showField('Order_Unit_Int_Color');">
+         <div class="col-md-11">
+             <div class="col-md-9 P0 " >
+                 <label class="T3 labelWidth pull-left">{{'Int_Color'| translate }}</label>
+                 <input type="text" placeholder="{{'Placeholder_Anything'| translate }}" class="col-md-8  homeSearchFilterTextbox homeform-control" id="Order_Unit_Int_Color"
+                     ng-model="HomeSearchGrid.filterFormJson.Order_Unit_Int_Color" rel="homePageOrderUnitIntColor"/>
+             </div>
+             <div class="col-md-2 controlBtn homePagecontrols" id="homePageOrderUnitIntColor">
+                  <i class="fa fa-question-circle" data-toggle="tooltip" title="{{'Int_Color'| translate }}"></i> 
+                  <i class="fa fa-times" ng-click="HomeSearchGrid.removeAdditionalField('Order_Unit_Int_Color');"></i>
+          </div>
+         </div>
+     </div>
+</apex:component>

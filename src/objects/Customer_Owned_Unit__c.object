@@ -1,0 +1,2751 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>false</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>Account__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Unit Customer</label>
+        <lookupFilter>
+            <active>true</active>
+            <booleanFilter>1</booleanFilter>
+            <filterItems>
+                <field>Account.Is_Customer__c</field>
+                <operation>equals</operation>
+                <value>True</value>
+            </filterItems>
+            <isOptional>false</isOptional>
+        </lookupFilter>
+        <referenceTo>Account</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>AccountingId__c</fullName>
+        <externalId>false</externalId>
+        <label>AccountingId</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+    	<fullName>Category_Name__c</fullName>
+	    <externalId>false</externalId>
+	    <formula>Category__r.Name</formula>
+	    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+	    <label>Category Name</label>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Stamp_Duty_Calculators__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Stamp Duty Calculators</label>
+        <referenceTo>Stamp_Duty_Calculators__c</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>AccountingResponse__c</fullName>
+        <externalId>false</externalId>
+        <label>AccountingResponse</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+	<fields>
+        <fullName>Purchase_Tax_Credit__c</fullName>
+        <description>amount the purchase tax on ordered unit</description>
+        <externalId>false</externalId>
+        <label>Purchase Tax Credit</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Accounting_Id_Category__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Id - Category</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Accounting_Last_Sync_Time_Category__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Last Sync Time - Category</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Accounting_Last_Sync_Time_Consignment__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Last Sync Time Consignment</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Accounting_Last_Sync_Time_NITC_JE__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Last Sync Time NITC JE</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>How_Acquired__c</fullName>
+        <externalId>false</externalId>
+        <label>How Acquired</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Reference_Number__c</fullName>
+        <externalId>false</externalId>
+        <label>Reference Number</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Acquired_From__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Acquired From</label>
+        <referenceTo>Account</referenceTo>
+        <relationshipLabel>Customer Owned Units (Acquired From)</relationshipLabel>
+        <relationshipName>Customer_Owned_Units2</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Sale_Number__c</fullName>
+        <externalId>false</externalId>
+        <label>Sale Number</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Sold_To__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Sold To</label>
+        <referenceTo>Account</referenceTo>
+        <relationshipLabel>Customer Owned Units (Sold To)</relationshipLabel>
+        <relationshipName>Customer_Owned_Units3</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Acquisition_Cost__c</fullName>
+        <externalId>false</externalId>
+        <label>Acquisition Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Sold_Price__c</fullName>
+        <externalId>false</externalId>
+        <label>Sold Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Additional_Costs__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF( Consignment__c , 0,  IF( ISPICKVAL( Unit_Type__c , &apos;STOCK&apos;) ,  (Total_Cost__c -  Acquisition_Cost__c) , 0) )</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Additional Costs</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Profit__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF( ISPICKVAL( Status__c , &apos;Sold&apos;)  ||  (ISPICKVAL( Status__c , &apos;Transferred&apos;) &amp;&amp;  Consignment__c ),  (Sold_Price__c -  ( Acquisition_Cost__c +  Additional_Costs__c )) , 0)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Profit</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Accounting_Last_Sync_Time_Unit_JE__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Last Sync Time Unit JE</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Is_Generic_Unit__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Generic Unit</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+	<fields>
+        <fullName>Is_Accrue_Purchase_Tax_Until_Unit_Sold__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Is Accrue Purchase Tax Until Unit Sold</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Accounting_Response_Category__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Response - Category</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Accounting_Response_Consignment__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Response Consignment</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Accounting_Response_NITC_JE__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Response NITC JE</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Accounting_Response_Unit_Invoice_JE__c</fullName>
+        <externalId>false</externalId>
+        <label>Accounting Response Unit Invoice JE</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Active__c</fullName>
+        <externalId>false</externalId>
+        <formula>NOT(ISPICKVAL(Status__c , &apos;Inactive&apos;))</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Active</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Age__c</fullName>
+        <description>Number of days between “Date Stocked In” and either the Current System Date or the “Date Stocked Out” whichever is older</description>
+        <externalId>false</externalId>
+        <formula>IF(ISPICKVAL(Unit_Type__c, &apos;ORDU&apos;) ,  IF( ISPICKVAL( Status__c, &apos;Received&apos;) , 0, Date_Expected__c - TODAY()) , IF( Date_Stocked_Out__c &lt; TODAY(), Date_Stocked_Out__c - Date_Stocked_In__c, TODAY() -Date_Stocked_In__c ))</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Age</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Compliance_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Compliance Date</label>
+        <length>20</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Year_Of_1st_Rego__c</fullName>
+        <externalId>false</externalId>
+        <label>Year Of 1st Rego</label>
+        <length>4</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Registration_Serial__c</fullName>
+        <externalId>false</externalId>
+        <label>Registration Serial</label>
+        <length>20</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Roof_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Roof Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Agreed_Payout__c</fullName>
+        <externalId>false</externalId>
+        <label>Agreed Payout</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Applicable_Tax__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Sales tax to apply on unit</description>
+        <externalId>false</externalId>
+        <label>Applicable Tax</label>
+        <referenceTo>Sales_Tax__c</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+	<fields>
+        <fullName>Unit_Purchase_Tax__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Unit Purchase Tax</label>
+        <lookupFilter>
+            <active>true</active>
+            <errorMessage>Tax type should be Purchase</errorMessage>
+            <filterItems>
+                <field>Sales_Tax__c.Tax_Type__c</field>
+                <operation>equals</operation>
+                <value>Purchase</value>
+            </filterItems>
+            <isOptional>false</isOptional>
+        </lookupFilter>
+        <referenceTo>Sales_Tax__c</referenceTo>
+        <relationshipLabel>Customer Owned Units (Unit Purchase Tax)</relationshipLabel>
+        <relationshipName>Ordered_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Assigned_Tag_1__c</fullName>
+        <externalId>false</externalId>
+        <label>Assigned Tag 1</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Assigned_Tag_2__c</fullName>
+        <externalId>false</externalId>
+        <label>Assigned Tag 2</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Automatic__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Is unit automatic or not</description>
+        <externalId>false</externalId>
+        <label>Automatic</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Avail_For_QB_Sync_Category__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Avail For QB Sync - Category</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_QB_Unit_Invoice_JE_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For QB Unit Invoice JE Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_Xero_Consignment_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For Xero Consignment Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_DP360_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For DP360 Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_QB_Consignment_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For QB Consignment Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_QB_NITC_JE_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For QB NITC JE Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_Xero_JE_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For Xero JE Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_Xero_NITC_JE_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For Xero NITC JE Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_Xero_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For Xero Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Available_For_Xero_Unit_Invoice_JE_Sync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Available For Xero Unit Invoice JE Sync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Axle_Quantity__c</fullName>
+        <externalId>false</externalId>
+        <label>Axle Quantity</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Axle_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Axle Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Battery__c</fullName>
+        <externalId>false</externalId>
+        <label>Battery</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Beavertail__c</fullName>
+        <externalId>false</externalId>
+        <label>Beavertail</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Body_Style__c</fullName>
+        <externalId>false</externalId>
+        <label>Body Style</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Brakes__c</fullName>
+        <externalId>false</externalId>
+        <label>Brakes</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Chassis__c</fullName>
+        <externalId>false</externalId>
+        <label>Chassis#</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Coupler_Height__c</fullName>
+        <externalId>false</externalId>
+        <label>Coupler Height</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Coupler_Size__c</fullName>
+        <externalId>false</externalId>
+        <label>Coupler Size</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Curb_Weight__c</fullName>
+        <externalId>false</externalId>
+        <label>Curb Weight</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Category__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Category assigned to the unit</description>
+        <externalId>false</externalId>
+        <label>Category</label>
+        <referenceTo>Category__c</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Colour__c</fullName>
+        <description>Exterior Colour of unit</description>
+        <externalId>false</externalId>
+        <label>Exterior Colour</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Consignment__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>Consignment</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>CreatedDate__c</fullName>
+        <externalId>false</externalId>
+        <formula>DATEVALUE( CreatedDate )</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>CreatedDate</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+	<fields>
+		<fullName>Credit_Note_Number__c</fullName>
+		<externalId>false</externalId>
+		<inlineHelpText>Used to store consignment credit note number</inlineHelpText>
+		<label>Credit Note Number</label>
+		<length>255</length>
+		<required>false</required>
+		<trackTrending>false</trackTrending>
+		<type>Text</type>
+		<unique>false</unique>
+	</fields>
+	<fields>
+        <fullName>Customer_Name__c</fullName>
+        <externalId>false</externalId>
+        <formula>Account__r.Name</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Customer Name</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Cylinders__c</fullName>
+        <description>Number of cylinders in unit</description>
+        <externalId>false</externalId>
+        <label>Cylinders</label>
+        <precision>2</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>DP360_Inventory_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>DP360 Inventory Id</label>
+        <length>50</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Date_Expected__c</fullName>
+        <description>Date the unit was expected to be delivered</description>
+        <externalId>false</externalId>
+        <label>Date Expected</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Date_Ordered__c</fullName>
+        <description>Date the unit was ordered</description>
+        <externalId>false</externalId>
+        <label>Date Ordered</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Date_Stocked_In__c</fullName>
+        <description>Date the unit was stocked into inventory</description>
+        <externalId>false</externalId>
+        <label>Date Stocked In</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Date_Stocked_Out__c</fullName>
+        <description>Date the unit was removed from inventory</description>
+        <externalId>false</externalId>
+        <label>Date Stocked Out</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Deal_Item__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Reference to the Deal Item where an ORDU is committed.</description>
+        <inlineHelpText>Reference to the Deal Item where an ORDU is committed.</inlineHelpText>
+        <label>Deal Item</label>
+        <referenceTo>Deal_Item__c</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Deal_Options_WIP__c</fullName>
+        <externalId>false</externalId>
+        <label>Deal Options WIP</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Description_Long__c</fullName>
+        <externalId>false</externalId>
+        <label>Description Long</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Description_Short__c</fullName>
+        <externalId>false</externalId>
+        <label>Description Short</label>
+        <length>1000</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Drivetrain__c</fullName>
+        <externalId>false</externalId>
+        <label>Drivetrain</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Engine_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Engine Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Feed_Category__c</fullName>
+        <externalId>false</externalId>
+        <label>Feed Category</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Feed_SubCategory__c</fullName>
+        <externalId>false</externalId>
+        <label>Feed SubCategory</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Fenders__c</fullName>
+        <externalId>false</externalId>
+        <label>Fenders</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Floor_Decking__c</fullName>
+        <externalId>false</externalId>
+        <label>Floor Decking</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Frame__c</fullName>
+        <externalId>false</externalId>
+        <label>Frame</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Front_Door_Size__c</fullName>
+        <externalId>false</externalId>
+        <label>Front Door Size</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Front_Door_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Front Door Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Fuel_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Fuel Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>GAWR__c</fullName>
+        <externalId>false</externalId>
+        <label>GAWR</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>GVWR__c</fullName>
+        <externalId>false</externalId>
+        <label>GVWR</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Gate__c</fullName>
+        <externalId>false</externalId>
+        <label>Gate</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Height_Deck__c</fullName>
+        <externalId>false</externalId>
+        <label>Height Deck</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Height_Interior__c</fullName>
+        <externalId>false</externalId>
+        <label>Height Interior</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Height__c</fullName>
+        <externalId>false</externalId>
+        <label>Height</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Hours__c</fullName>
+        <externalId>false</externalId>
+        <label>Hours</label>
+        <precision>6</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Hydraulics__c</fullName>
+        <externalId>false</externalId>
+        <label>Hydraulics</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Displacement__c</fullName>
+        <description>Displacement of unit</description>
+        <externalId>false</externalId>
+        <label>Displacement</label>
+        <precision>6</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Engine_Serial_No__c</fullName>
+        <description>Engine Serial Number of unit</description>
+        <externalId>false</externalId>
+        <label>Engine Serial No</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Factory_Order_No__c</fullName>
+        <description>Factory order number of unit</description>
+        <externalId>false</externalId>
+        <label>Factory Order No</label>
+        <length>20</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Formatted_Name__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF( Is_Generic_Unit__c , &apos;Service job without a unit&apos;, IF( NOT(ISBLANK(Unit_Make__c)), Unit_Make__r.Name, &apos;&apos;) &amp; 
+IF( NOT(ISBLANK(Unit_Model__c)), &apos; &apos; &amp; Unit_Model__r.Name__c, &apos;&apos;) &amp; 
+IF( NOT(ISBLANK(Sub_Model__r.Sub_Model_Name__c)), &apos; &apos; &amp; Sub_Model__r.Sub_Model_Name__c, &apos;&apos;) &amp; 
+IF( NOT(ISNULL(Year__c)), &apos; &apos; &amp; TEXT(Year__c), &apos;&apos;) &amp; 
+IF( NOT(ISBLANK(Colour__c)), &apos;, &apos; &amp; Colour__c, &apos;&apos;))</formula>
+        <label>Formatted Name</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Gears__c</fullName>
+        <description>Number of Gears in unit</description>
+        <externalId>false</externalId>
+        <label>Gears</label>
+        <precision>2</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Interior_Colour__c</fullName>
+        <description>Interior Colour of unit</description>
+        <externalId>false</externalId>
+        <label>Interior Colour</label>
+        <length>20</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Invoice_Number__c</fullName>
+        <externalId>false</externalId>
+        <label>Invoice Number</label>
+        <length>80</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Is_Ordered_Unit_Added_To_Deal__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Not in use.</description>
+        <inlineHelpText>Not in use.</inlineHelpText>
+        <externalId>false</externalId>
+        <label>Is Ordered Unit Added To Deal</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Jack__c</fullName>
+        <externalId>false</externalId>
+        <label>Jack</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Key_No__c</fullName>
+        <description>Key number of unit</description>
+        <externalId>false</externalId>
+        <label>Key No</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>LastModifiedDate__c</fullName>
+        <externalId>false</externalId>
+        <formula>DATEVALUE(LastModifiedDate)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>LastModifiedDate</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Last Modified By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Modified Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Length_Interior__c</fullName>
+        <externalId>false</externalId>
+        <label>Length Interior</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Length_Overall__c</fullName>
+        <externalId>false</externalId>
+        <label>Length Overall</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Length__c</fullName>
+        <externalId>false</externalId>
+        <label>Length</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Lights__c</fullName>
+        <externalId>false</externalId>
+        <label>Lights</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Location__c</fullName>
+        <description>Location of the unit</description>
+        <externalId>false</externalId>
+        <label>Location</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Make_Name__c</fullName>
+        <externalId>false</externalId>
+        <formula>Unit_Make__r.Name</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Make Name</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Manufactured_Date__c</fullName>
+        <description>Manufactured date of this unit</description>
+        <externalId>false</externalId>
+        <label>Manufactured Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Max_COU_Count__c</fullName>
+        <externalId>false</externalId>
+        <label>Max COU Count</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Max_Stock_Count__c</fullName>
+        <description>This will store the maximum count for Unit Present</description>
+        <externalId>false</externalId>
+        <label>Max Stock Count</label>
+        <precision>5</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Migration_Id__c</fullName>
+        <externalId>true</externalId>
+        <label>Migration Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Mileage_Type__c</fullName>
+        <description>Mileage types for unit</description>
+        <externalId>false</externalId>
+        <label>Mileage Type</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Km</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Mi</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Hrs</fullName>
+                    <default>false</default>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>Mileage_Value__c</fullName>
+        <description>Mileage of unit</description>
+        <externalId>false</externalId>
+        <label>Mileage Value</label>
+        <precision>16</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Mileage__c</fullName>
+        <description>This mileage is not in use as we have created new field(Mileage Value).</description>
+        <externalId>false</externalId>
+        <label>Mileage</label>
+        <precision>6</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Model_Detail__c</fullName>
+        <externalId>false</externalId>
+        <formula>Model_Name__c &amp; &apos; &apos; &amp; Sub_Model__r.Sub_Model_Name__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Model Detail</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Model_Name__c</fullName>
+        <externalId>false</externalId>
+        <formula>Unit_Model__r.Name__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Model Name</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>NITC_Amount__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(ISPICKVAL(Unit_Type__c , &quot;STOCK&quot;), 
+IF(ISNULL(Sales_Tax_Credit__c) , 
+Purchase_Tax_Credit__c , 
+Sales_Tax_Credit__c * -1), 
+null)</formula>
+        <label>NITC Amount</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>NITC_Claimed_Manually__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>NITC Claimed Manually</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>NITC_Date_Claimed__c</fullName>
+        <externalId>false</externalId>
+        <label>NITC Date Claimed</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>NITC_Withheld__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF( 
+OR(
+NOT(ISPICKVAL(Unit_Type__c , &quot;STOCK&quot;)),
+AND(
+NOT(ISPICKVAL(Status__c , &quot;Available&quot;)),
+NOT(ISPICKVAL(Status__c , &quot;Reserved&quot;))
+) ,
+ISNULL(NITC_Amount__c),
+NITC_Claimed_Manually__c
+) , 
+0, 
+NITC_Amount__c
+)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>NITC Withheld</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>New_Unit__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Check if unit is new</description>
+        <externalId>false</externalId>
+        <label>New Unit</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Nose_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Nose Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Notes__c</fullName>
+        <description>General unit notes</description>
+        <externalId>false</externalId>
+        <label>Notes</label>
+        <length>1000</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>ORDU_Stock_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>ORDU Stock Id</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Old_Category__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Old Category</label>
+        <referenceTo>Category__c</referenceTo>
+        <relationshipLabel>Customer Owned Units (Old Category)</relationshipLabel>
+        <relationshipName>Customer_Owned_Units1</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Other_Serial_No__c</fullName>
+        <description>Other serial number of unit</description>
+        <externalId>false</externalId>
+        <label>Other Serial No</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Overridden_Total_Cost_With_Tax__c</fullName>
+        <description>It holds value of total cost overridden by the user while receving unit order for tax include pricing on org.</description>
+        <externalId>false</externalId>
+        <label>Overridden Total Cost With Tax</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Payload_Capacity__c</fullName>
+        <externalId>false</externalId>
+        <label>Payload Capacity</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Power_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Power Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Product_type__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Product type</label>
+        <referenceTo>Unit_Product_Type__c</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Pull_Out__c</fullName>
+        <externalId>false</externalId>
+        <label>Pull Out</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Pull_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Pull Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Publish_in_feeds__c</fullName>
+        <defaultValue>true</defaultValue>
+        <externalId>false</externalId>
+        <label>Publish in feeds</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Plate__c</fullName>
+        <description>Plate/Reg number of unit</description>
+        <externalId>false</externalId>
+        <label>Plate/Reg No</label>
+        <length>80</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>QB_Accounting_Id_Unit_Invoice_JE__c</fullName>
+        <externalId>false</externalId>
+        <label>QB Accounting Id Unit Invoice JE</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>QB_Consignment_Accounting_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>QB Consignment Accounting Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+   <fields>
+        <fullName>QB_NITC_JE_Accounting_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>QB NITC JE Accounting Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Ramps__c</fullName>
+        <externalId>false</externalId>
+        <label>Ramps</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Rear_Door_Size__c</fullName>
+        <externalId>false</externalId>
+        <label>Rear Door Size</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Rear_Door_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Rear Door Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Referenced_Unit__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Referenced Unit</label>
+        <referenceTo>Customer_Owned_Unit__c</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Reg_Expiry_Date__c</fullName>
+        <description>Records the registration expiry date of a customer owned unit</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Records the registration expiry date of a customer owned unit</inlineHelpText>
+        <label>Reg Expiry Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>Sales_Tax_Credit__c</fullName>
+        <description>amount the sales tax was reduced on the deal because of the trade</description>
+        <externalId>false</externalId>
+        <label>Sales Tax Credit</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Search_Priority__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(ISPICKVAL(Status__c, &apos;Available&apos;), 1, 
+    IF(ISPICKVAL(Status__c, &apos;Reserved&apos;), 2, 
+    IF(ISPICKVAL(Status__c, &apos;Sold&apos;), 3, 
+    IF(ISPICKVAL(Status__c, &apos;Active&apos;), 4, 
+    IF(ISPICKVAL(Status__c, &apos;Transferred&apos;), 5, 
+    IF(ISPICKVAL(Status__c, &apos;On Order&apos;), 6, 
+    IF(ISPICKVAL(Status__c, &apos;Temporary&apos;), 7, 
+    IF(ISPICKVAL(Status__c, &apos;Received&apos;), 8, 
+    IF(ISPICKVAL(Status__c, &apos;Cancelled&apos;), 9, 
+    10)))))))))</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Search Priority</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Search_Tag__c</fullName>
+        <description>Search Tag</description>
+        <externalId>false</externalId>
+        <label>Search Tag</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Seat_Color__c</fullName>
+        <externalId>false</externalId>
+        <label>Seat Color</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Seating_Capacity__c</fullName>
+        <externalId>false</externalId>
+        <label>Seating/capacity</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Side_Door_Size__c</fullName>
+        <externalId>false</externalId>
+        <label>Side Door Size</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Side_Door_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Side Door Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Sidewall_Liner__c</fullName>
+        <externalId>false</externalId>
+        <label>Sidewall Liner</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Steering__c</fullName>
+        <externalId>false</externalId>
+        <label>Steering</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Status__c</fullName>
+        <description>Status of unit based on unit type</description>
+        <externalId>false</externalId>
+        <label>Status</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <controllingField>Unit_Type__c</controllingField>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Active</fullName>
+                    <default>false</default>
+                <label>Active</label>
+                </value>
+                <value>
+                    <fullName>Inactive</fullName>
+                    <default>false</default>
+                <label>Inactive</label>
+                </value>
+                <value>
+                    <fullName>Transferred</fullName>
+                    <default>false</default>
+                <label>Transferred</label>
+                </value>
+                <value>
+                    <fullName>Available</fullName>
+                    <default>false</default>
+                <label>Available</label>
+                </value>
+                <value>
+                    <fullName>Reserved</fullName>
+                    <default>false</default>
+                <label>Reserved</label>
+                </value>
+                <value>
+                    <fullName>Sold</fullName>
+                    <default>false</default>
+                <label>Sold</label>
+                </value>
+                <value>
+                    <fullName>Traded</fullName>
+                    <default>false</default>
+                <label>Traded</label>
+                </value>
+                <value>
+                    <fullName>Delivered</fullName>
+                    <default>false</default>
+                <label>Delivered</label>
+                </value>
+                <value>
+                    <fullName>On Order</fullName>
+                    <default>false</default>
+                <label>On Order</label>
+                </value>
+                <value>
+                    <fullName>Cancelled</fullName>
+                    <default>false</default>
+                <label>Cancelled</label>
+                </value>
+                <value>
+                    <fullName>Received</fullName>
+                    <default>false</default>
+                <label>Received</label>
+                </value>
+                <value>
+                    <fullName>Temporary</fullName>
+                    <default>false</default>
+                <label>Temporary</label>
+                </value>
+                <value>
+                    <fullName>Required</fullName>
+                    <default>false</default>
+                <label>Required</label>
+                </value>
+            </valueSetDefinition>
+            <valueSettings>
+                <controllingFieldValue>COU</controllingFieldValue>
+                <valueName>Active</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>COU</controllingFieldValue>
+                <controllingFieldValue>STOCK</controllingFieldValue>
+                <valueName>Inactive</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>COU</controllingFieldValue>
+                <valueName>Transferred</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>STOCK</controllingFieldValue>
+                <valueName>Available</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>COU</controllingFieldValue>
+                <controllingFieldValue>STOCK</controllingFieldValue>
+                <valueName>Reserved</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>STOCK</controllingFieldValue>
+                <valueName>Sold</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>STOCK</controllingFieldValue>
+                <controllingFieldValue>ORDU</controllingFieldValue>
+                <valueName>Traded</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>STOCK</controllingFieldValue>
+                <valueName>Delivered</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>ORDU</controllingFieldValue>
+                <valueName>On Order</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>ORDU</controllingFieldValue>
+                <valueName>Cancelled</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>ORDU</controllingFieldValue>
+                <valueName>Received</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>ORDU</controllingFieldValue>
+                <valueName>Temporary</valueName>
+            </valueSettings>
+            <valueSettings>
+                <controllingFieldValue>ORDU</controllingFieldValue>
+                <valueName>Required</valueName>
+            </valueSettings>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>StockId__c</fullName>
+        <caseSensitive>false</caseSensitive>
+        <description>This will contain the stock id</description>
+        <externalId>false</externalId>
+        <label>StockId</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>true</unique>
+    </fields>
+    <fields>
+        <fullName>Stock_Id__c</fullName>
+        <caseSensitive>false</caseSensitive>
+        <description>This will contain the stock id</description>
+        <externalId>false</externalId>
+        <label>Stock Id</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>true</unique>
+    </fields>
+    <fields>
+        <fullName>Stocked_In_DateTime__c</fullName>
+        <externalId>false</externalId>
+        <label>Stocked In DateTime</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Sub_Model__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Sub Model</label>
+        <referenceTo>Unit_Sub_Model__c</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Submodel__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Sub model of unit</description>
+        <externalId>false</externalId>
+        <label>Unit SubModel</label>
+        <referenceTo>Unit_Model__c</referenceTo>
+        <relationshipLabel>Customer Owned Units (Submodel)</relationshipLabel>
+        <relationshipName>Customer_Owned_Units1</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Suggested_Price__c</fullName>
+        <externalId>false</externalId>
+        <label>Suggested Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Suspension__c</fullName>
+        <externalId>false</externalId>
+        <label>Suspension</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>SyncToken__c</fullName>
+        <externalId>false</externalId>
+        <label>SyncToken</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Sync_Token_Category__c</fullName>
+        <externalId>false</externalId>
+        <label>Sync Token - Category</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Sync_Token_For_Consignment__c</fullName>
+        <externalId>false</externalId>
+        <label>Sync Token For Consignment</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Sync_Token_For_NITC_JE__c</fullName>
+        <externalId>false</externalId>
+        <label>Sync Token For NITC JE</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Sync_Token_For_Unit_Invoice_JE__c</fullName>
+        <description>Sync Token For Unit Invoice JE</description>
+        <externalId>false</externalId>
+        <label>Sync Token For Unit Invoice JE</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Tax_Amount__c</fullName>
+        <externalId>false</externalId>
+        <label>Tax Amount</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Taxable__c</fullName>
+        <defaultValue>false</defaultValue>
+        <description>Is unit taxable or not</description>
+        <externalId>false</externalId>
+        <label>Taxable</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>Taxable_Cost__c</fullName>
+        <externalId>false</externalId>
+        <label>Taxable Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Tilt__c</fullName>
+        <externalId>false</externalId>
+        <label>Tilt</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Tire_Load_Range__c</fullName>
+        <externalId>false</externalId>
+        <label>Tire Load Range</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Tire_Size__c</fullName>
+        <externalId>false</externalId>
+        <label>Tire Size</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Tire_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Tire Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Tongue__c</fullName>
+        <externalId>false</externalId>
+        <label>Tongue</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Total_Base_Unit_Price__c</fullName>
+        <description>Price total of all Base Units related to this unit.</description>
+        <externalId>false</externalId>
+        <label>Total Base Unit Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Base_Units_Cost__c</fullName>
+        <description>Total Base unit cost</description>
+        <externalId>false</externalId>
+        <label>Total Base Units Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Cost_With_Tax__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF(ISNULL(Overridden_Total_Cost_With_Tax__c), ( IF(ISNULL(Total_Cost__c ), 0, Total_Cost__c ) +  IF(ISNULL(Tax_Amount__c), 0, Tax_Amount__c) ), Overridden_Total_Cost_With_Tax__c)</formula>
+        <label>Total Cost With Tax</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Cost__c</fullName>
+        <description>Total Cost</description>
+        <externalId>false</externalId>
+        <label>Total Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Dealer_Options_Cost__c</fullName>
+        <description>Total Dealer Options Cost</description>
+        <externalId>false</externalId>
+        <label>Total Dealer Options Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Dealer_Options_Price__c</fullName>
+        <description>Price Total of all Dealer Options related to this unit.</description>
+        <externalId>false</externalId>
+        <label>Total Dealer Options Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Factory_Options_Cost__c</fullName>
+        <description>Total Factory Options Cost</description>
+        <externalId>false</externalId>
+        <label>Total Factory Options Cost</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Factory_Options_Price__c</fullName>
+        <description>Total Factory Options Price</description>
+        <externalId>false</externalId>
+        <label>Total Factory Options Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Total_Price__c</fullName>
+        <description>Total Price</description>
+        <externalId>false</externalId>
+        <label>Total Price</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Towing_Capacity__c</fullName>
+        <externalId>false</externalId>
+        <label>Towing Capacity</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Track_Size__c</fullName>
+        <externalId>false</externalId>
+        <label>Track Size</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Trade_In_Value__c</fullName>
+        <description>net of sales tax</description>
+        <externalId>false</externalId>
+        <label>Trade In Value</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>UnitId__c</fullName>
+        <caseSensitive>false</caseSensitive>
+        <description>This field will have Unit Id fully generated</description>
+        <externalId>false</externalId>
+        <label>UnitId</label>
+        <length>155</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>true</unique>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_01__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 01</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_02__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 02</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_03__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 03</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_04__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 04</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_05__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 05</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_06__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 06</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_07__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 07</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_08__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 08</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_09__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 09</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_10__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 10</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_11__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 11</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_12__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 12</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_13__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 13</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_14__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 14</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Data_15__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit Data 15</label>
+        <length>32768</length>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Unit_Id__c</fullName>
+        <caseSensitive>false</caseSensitive>
+        <description>This will be used for Generating unit Id</description>
+        <externalId>false</externalId>
+        <label>Unit Id</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>true</unique>
+    </fields>
+    <fields>
+        <fullName>Unit_Make__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Make of unit</description>
+        <externalId>false</externalId>
+        <label>Unit Make</label>
+        <referenceTo>Unit_Make__c</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Unit_Model__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <description>Model of unit</description>
+        <externalId>false</externalId>
+        <label>Unit Model</label>
+        <referenceTo>Unit_Model__c</referenceTo>
+        <relationshipLabel>Customer Owned Units</relationshipLabel>
+        <relationshipName>Customer_Owned_Units</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Unit_Number__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF( Stock_Id__c != null, Stock_Id__c , Unit_Id__c )</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Unit Number</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Unit_Type__c</fullName>
+        <description>Types of units</description>
+        <externalId>false</externalId>
+        <label>Unit Type</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+        <valueSet>
+            <restricted>true</restricted>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>COU</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>STOCK</fullName>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>ORDU</fullName>
+                    <default>false</default>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>Unit__c</fullName>
+        <externalId>false</externalId>
+        <label>Unit#</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>VIN_Number_Formula__c</fullName>
+        <externalId>false</externalId>
+        <formula>IF( ISBLANK(VIN_Number__c), &apos;VIN Unknown&apos;, VIN_Number__c)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>VIN Number Formula</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>VIN_Number__c</fullName>
+        <description>This VIN number is used. Please ignore previous VIN__c.</description>
+        <externalId>false</externalId>
+        <label>VIN Number</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>VIN__c</fullName>
+        <caseSensitive>false</caseSensitive>
+        <description>Vehicle Identification Number</description>
+        <externalId>false</externalId>
+        <label>VIN</label>
+        <length>20</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>true</unique>
+    </fields>
+    <fields>
+        <fullName>Vendor__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Vendor</label>
+        <lookupFilter>
+            <active>true</active>
+            <filterItems>
+                <field>Account.Is_Vendor__c</field>
+                <operation>equals</operation>
+                <value>True</value>
+            </filterItems>
+            <isOptional>false</isOptional>
+        </lookupFilter>
+        <referenceTo>Account</referenceTo>
+        <relationshipLabel>Customer Owned Units (Vendor)</relationshipLabel>
+        <relationshipName>Customer_Owned_Units1</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Wheel_Base__c</fullName>
+        <externalId>false</externalId>
+        <label>Wheel Base</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Wheel_Box_Height__c</fullName>
+        <externalId>false</externalId>
+        <label>Wheel Box Height</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Wheel_Box_Width__c</fullName>
+        <externalId>false</externalId>
+        <label>Wheel Box Width</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Wheel_Type__c</fullName>
+        <externalId>false</externalId>
+        <label>Wheel Type</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Width_Interior__c</fullName>
+        <externalId>false</externalId>
+        <label>Width Interior</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Width_Overall__c</fullName>
+        <externalId>false</externalId>
+        <label>Width Overall</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Width__c</fullName>
+        <externalId>false</externalId>
+        <label>Width</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Windshield__c</fullName>
+        <externalId>false</externalId>
+        <label>Windshield</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>X_12v_Connection__c</fullName>
+        <externalId>false</externalId>
+        <label>12v Connection</label>
+        <length>40</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Xero_Accounting_Id_Unit_Invoice_JE__c</fullName>
+        <externalId>false</externalId>
+        <label>Xero Accounting Id Unit Invoice JE</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Xero_Accounting_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>Xero Accounting Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Xero_Consignment_Accounting_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>Xero Consignment Accounting Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Xero_JE_Accounting_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>Xero JE Accounting Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Xero_NITC_JE_Accounting_Id__c</fullName>
+        <externalId>false</externalId>
+        <label>Xero NITC JE Accounting Id</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Year_As_String__c</fullName>
+        <externalId>false</externalId>
+        <formula>TEXT(Year__c)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Year As String</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Year__c</fullName>
+        <description>Model year of the unit</description>
+        <externalId>false</externalId>
+        <label>Unit Year</label>
+        <precision>4</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>accountingLastSyncTime__c</fullName>
+        <externalId>false</externalId>
+        <label>accountingLastSyncTime</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>availForQBSync__c</fullName>
+        <defaultValue>false</defaultValue>
+        <externalId>false</externalId>
+        <label>availForQBSync</label>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>FX_Conversion_Rate__c</fullName>
+        <defaultValue>0.0000</defaultValue>
+        <description>Once the unit has been received we need to be able to store the conversion rate used to generate the stock unit.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Once the unit has been received we need to be able to store the conversion rate used to generate the stock unit.</inlineHelpText>
+        <label>FX Conversion Rate</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>6</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Backward_Conversion_Rate__c</fullName>
+        <description>Backward Conversion Rate With Markup</description>
+        <externalId>false</externalId>
+        <formula>if((ISNULL(FX_Conversion_Rate__c) || FX_Conversion_Rate__c = 0),1,1/FX_Conversion_Rate__c)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <inlineHelpText>Backward Conversion Rate With Markup</inlineHelpText>
+        <label>Backward Conversion Rate</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>6</scale>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <label>Customer Owned Unit</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>VIN_Number__c</columns>
+        <columns>Unit_Id__c</columns>
+        <columns>Unit_Type__c</columns>
+        <columns>Stock_Id__c</columns>
+        <columns>Unit_Make__c</columns>
+        <columns>Unit_Model__c</columns>
+        <columns>Submodel__c</columns>
+        <columns>Sub_Model__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <listViews>
+        <fullName>All1</fullName>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <listViews>
+        <fullName>Async_QB_Units</fullName>
+        <columns>NAME</columns>
+        <columns>Unit_Id__c</columns>
+        <columns>Make_Name__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>availForQBSync__c</field>
+            <operation>equals</operation>
+            <value>1</value>
+        </filters>
+        <label>Async QB Units</label>
+    </listViews>
+    <listViews>
+        <fullName>Stock_Unit</fullName>
+        <columns>NAME</columns>
+        <columns>Unit_Number__c</columns>
+        <columns>Max_Stock_Count__c</columns>
+        <columns>Max_COU_Count__c</columns>
+        <columns>Status__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Unit_Type__c</field>
+            <operation>equals</operation>
+            <value>STOCK</value>
+        </filters>
+        <label>Stock Unit</label>
+    </listViews>
+    <listViews>
+        <fullName>Async_Xero_Stock_Unit_Category</fullName>
+        <columns>NAME</columns>
+        <columns>Category__c</columns>
+        <columns>Total_Cost__c</columns>
+        <columns>LAST_UPDATE</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Available_For_Xero_JE_Sync__c</field>
+            <operation>equals</operation>
+            <value>1</value>
+        </filters>
+        <label>Async Xero Stock Unit Category</label>    
+    </listViews>
+    <listViews>
+        <fullName>Async_Xero_Unit_Invoice_JE</fullName>
+        <columns>NAME</columns>
+        <columns>LAST_UPDATE</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Available_For_Xero_Unit_Invoice_JE_Sync__c</field>
+            <operation>equals</operation>
+            <value>1</value>
+        </filters>
+        <label>Async Xero Unit Invoice JE</label>
+    </listViews>
+    <listViews>
+        <fullName>Async_Xero_Unit_Invoice</fullName>
+        <columns>NAME</columns>
+        <columns>Total_Cost__c</columns>
+        <columns>LAST_UPDATE</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Available_For_Xero_Sync__c</field>
+            <operation>equals</operation>
+            <value>1</value>
+        </filters>
+        <label>Async Xero Unit Invoice</label>
+    </listViews>
+    <nameField>
+        <displayFormat>COU-{00000000}</displayFormat>
+        <label>Name</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Customer Owned Units</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

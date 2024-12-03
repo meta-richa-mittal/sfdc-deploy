@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <allowInChatterGroups>false</allowInChatterGroups>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableReports>false</enableReports>
+    <enableSearch>t</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+	    <fullName>Make__c</fullName>
+	    <externalId>false</externalId>
+	    <label>Make</label>
+	    <length>100</length>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+	</fields>
+	<fields>
+	    <fullName>Model__c</fullName>
+	    <externalId>false</externalId>
+	    <label>Model</label>
+	    <length>100</length>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+	</fields>
+	<fields>
+	    <fullName>Nickname__c</fullName>
+	    <description>Nickname of the terminal</description>
+	    <externalId>false</externalId>
+	    <inlineHelpText>Nickname of the terminal, required to sync terminal with gateway</inlineHelpText>
+	    <label>Nickname</label>
+	    <length>255</length>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+	</fields>
+	<fields>
+	    <fullName>Preferred_Payment_Id__c</fullName>
+	    <externalId>false</externalId>
+	    <label>Preferred Payment Id</label>
+	    <length>255</length>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+	</fields>
+	<fields>
+	    <fullName>Registration_Code__c</fullName>
+	    <description>Registration code of the terminal</description>
+	    <externalId>false</externalId>
+	    <inlineHelpText>Registration code of the terminal, required to sync terminal with gateway</inlineHelpText>
+	    <label>Registration Code</label>
+	    <length>255</length>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+	</fields>
+	<fields>
+	    <fullName>Serial_Number__c</fullName>
+	    <description>Serial number of the terminal</description>
+	    <externalId>false</externalId>
+	    <label>Serial Number</label>
+	    <length>255</length>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Text</type>
+	    <unique>false</unique>
+	</fields>
+	<fields>
+	    <fullName>Status__c</fullName>
+	    <externalId>false</externalId>
+	    <label>Status</label>
+	    <required>false</required>
+	    <trackTrending>false</trackTrending>
+	    <type>Picklist</type>
+	    <valueSet>
+	        <valueSetDefinition>
+	            <sorted>false</sorted>
+	            <value>
+	                <fullName>Active</fullName>
+	                <default>false</default>
+	                <label>Active</label>
+	            </value>
+	            <value>
+	                <fullName>Deleted</fullName>
+	                <default>false</default>
+	                <label>Deleted</label>
+	            </value>
+	        </valueSetDefinition>
+	    </valueSet>
+	</fields>
+	<fields>
+		<fullName>Is_Signature_Required__c</fullName>
+		<defaultValue>false</defaultValue>
+		<externalId>false</externalId>
+		<inlineHelpText>If signature capture is enabled for a particular terminal then the terminal will always prompt the customer to sign on the signature pad.</inlineHelpText>
+		<label>Is Signature Required</label>
+		<trackTrending>false</trackTrending>
+		<type>Checkbox</type>
+	</fields>
+	<fields>
+        <fullName>Last_Modified_By__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <externalId>false</externalId>
+        <label>Last Modified By</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Payment_Terminals</relationshipName>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Last_Modified_Date__c</fullName>
+        <externalId>false</externalId>
+        <label>Last Modified Date</label>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+	<listViews>
+        <fullName>Additional_Details</fullName>
+	    <columns>NAME</columns>
+	    <columns>Nickname__c</columns>
+	    <columns>Registration_Code__c</columns>
+	    <columns>Preferred_Payment_Id__c</columns>
+	    <columns>Status__c</columns>
+	    <columns>CREATED_DATE</columns>
+	    <filterScope>Everything</filterScope>
+	    <label>Additional Details</label>
+        <language>en_US</language>
+    </listViews>
+    <label>Payment Terminal</label>
+    <nameField>
+        <displayFormat>PT-{00000000}</displayFormat>
+        <label>Payment Terminal Name</label>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Payment Terminals</pluralLabel>
+    <searchLayouts></searchLayouts>
+    <sharingModel>ReadWrite</sharingModel>
+	<webLinks>
+        <fullName>Sync_to_Preferred_Payments</fullName>
+    <availability>online</availability>
+    <description>To sync terminal with payment gateway</description>
+    <displayType>button</displayType>
+    <linkType>javascript</linkType>
+    <masterLabel>Sync to Preferred Payments</masterLabel>
+    <openType>onClickJavaScript</openType>
+    <protected>false</protected>
+    <url>{!REQUIRESCRIPT(&quot;/soap/ajax/56.0/connection.js&quot;)}
+{!REQUIRESCRIPT(&quot;/soap/ajax/56.0/apex.js&quot;)}
+
+var apexClassRec = sforce.connection.query(&quot;SELECT NamespacePrefix FROM ApexClass where Name Like &apos;%Constants&apos;&quot;);
+var nameSpace = apexClassRec.getArray(&quot;records&quot;)[0].NamespacePrefix ;
+
+if(nameSpace != &quot;&quot; &amp;&amp; nameSpace != null &amp;&amp; nameSpace != undefined) {
+nameSpace += &quot;/&quot;;
+} else {
+nameSpace = &quot;&quot;;
+}
+
+var regCode = &quot;{!Payment_Terminal__c.Registration_Code__c}&quot;;
+var nickname = &quot;{!Payment_Terminal__c.Nickname__c}&quot;;
+if(regCode &amp;&amp; regCode != null &amp;&amp; regCode != &quot;&quot; &amp;&amp; nickname &amp;&amp; nickname != null &amp;&amp; nickname != &quot;&quot;) {
+	var errorMsg = sforce.apex.execute(nameSpace + &quot;PreferredPaymentIntegrationService&quot;,&quot;syncTerminal&quot;,{terminalId:&quot;{!Payment_Terminal__c.Id}&quot;});
+
+	if(errorMsg != &apos;&apos;) {
+	    alert(errorMsg);
+	} else {
+		alert(&apos;Syncing terminal is completed. Click OK button to refresh the page.&apos;);
+		window.location.reload();
+	}
+} else {
+	alert(&quot;Registration Code and Nickname are required.&quot;);
+}</url>
+    </webLinks> 
+    <webLinks>
+    <fullName>Disconnect_Terminal</fullName>
+    <availability>online</availability>
+    <description>To disconnect terminal from payment gateway</description>
+    <displayType>button</displayType>
+    <linkType>javascript</linkType>
+    <masterLabel>Disconnect Terminal</masterLabel>
+    <openType>onClickJavaScript</openType>
+    <protected>false</protected>
+    <url>{!REQUIRESCRIPT(&quot;/soap/ajax/56.0/connection.js&quot;)}
+{!REQUIRESCRIPT(&quot;/soap/ajax/56.0/apex.js&quot;)}
+
+var apexClassRec = sforce.connection.query(&quot;SELECT NamespacePrefix FROM ApexClass where Name Like &apos;%Constants&apos;&quot;);
+var nameSpace = apexClassRec.getArray(&quot;records&quot;)[0].NamespacePrefix ;
+
+if(nameSpace != &quot;&quot; &amp;&amp; nameSpace != null &amp;&amp; nameSpace != undefined) {
+	nameSpace += &quot;/&quot;;
+} else {
+	nameSpace = &quot;&quot;;
+}
+
+var errorMsg = &apos;&apos;;
+var preferredPaymentId = &quot;{!Payment_Terminal__c.Preferred_Payment_Id__c}&quot;;
+if(!preferredPaymentId || preferredPaymentId == &apos;&apos;) {
+	errorMsg = &apos;Invalid Preferred Payment Id&apos;;
+} else {
+	errorMsg = sforce.apex.execute(nameSpace + &quot;PreferredPaymentIntegrationService&quot;, &quot;disconnectTerminal&quot;, {terminalId:&quot;{!Payment_Terminal__c.Id}&quot;});
+}
+
+if(errorMsg != &apos;&apos;) {
+	alert(errorMsg);
+} else {
+	alert(&apos;Terminal disconnected. Click OK button to refresh the page.&apos;);
+	window.location.reload();
+}</url>
+    </webLinks>
+</CustomObject>

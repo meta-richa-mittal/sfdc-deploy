@@ -23,6 +23,7 @@ global without sharing class UnitSuggestion implements Comparable{
     public String StatusColor;
     public Integer PriorityNumber;
     public String ActiveOnSection;
+	public Boolean Consignment;
     
     public UnitSuggestion(Customer_Owned_Unit__c unitRec, Integer priorityNumber) {
     	this.VIN = unitRec.VIN_Number__c;
@@ -42,6 +43,7 @@ global without sharing class UnitSuggestion implements Comparable{
     	this.Year = unitRec.Year__c;
     	this.InteriorColour = unitRec.Interior_Colour__c;
     	this.Status = unitRec.Status__c;
+		this.Consignment = unitRec.Consignment__c;
     	
     	if(this.UnitType == 'STOCK') {
     		if(unitRec.Status__c == 'Available') {

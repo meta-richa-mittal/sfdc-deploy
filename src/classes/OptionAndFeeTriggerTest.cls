@@ -6,6 +6,10 @@
 **/
 @isTest
 private class OptionAndFeeTriggerTest {
+	@testSetup
+    private static void setupTestData() {
+		TestDataFactory.disableFLSChecks();
+   }
 
     static testMethod void optionAndFeeTriggerWithMSRPTest() {
     	
@@ -26,7 +30,7 @@ private class OptionAndFeeTriggerTest {
     	insert coHeader;
     	Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
     	Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
     	List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
     	Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
     	dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -72,7 +76,7 @@ private class OptionAndFeeTriggerTest {
     	insert coHeader;
     	Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
     	Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
     	List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
     	Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
     	dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -107,7 +111,7 @@ private class OptionAndFeeTriggerTest {
     	insert coHeader;
     	Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
     	Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
     	List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
     	Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
     	dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -149,7 +153,7 @@ private class OptionAndFeeTriggerTest {
     	insert coHeader;
     	Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
     	Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
     	List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
     	Deal_Item__c dealItemRec = new Deal_Item__c(Colour__c='Red',Year__c=2016); 
     	dealItemRec.Unit_Model__c = unitmodel.Id;
@@ -190,7 +194,7 @@ private class OptionAndFeeTriggerTest {
     	CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
 		insert coHeader;
 		
-		DealWrapper dealWrapperObj = (DealWrapper)Json.deserialize(BPUtility.getDecodedString(CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id))),DealWrapper.class);
+		DealWrapper dealWrapperObj = (DealWrapper)Json.deserialize(BPUtility.getDecodedString(CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id))),DealWrapper.class);
     	Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
     	Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
     	Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(false, customer.Id, UnitMake.Id, UnitModel.Id, null);
@@ -206,66 +210,39 @@ private class OptionAndFeeTriggerTest {
 		List<Deal__c> dealList = [Select id, (Select Id from Deal_Items__r) from Deal__c where CO_Header__c = :coHeader.Id];
 		Test.startTest();
 		
-        dealWrapperObj = (DealWrapper)Json.deserialize(BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(
+        dealWrapperObj = (DealWrapper)Json.deserialize(BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(
         			dealList[0].Deal_Items__r[0].Id),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id))),
         		 DealWrapper.class);
         
 		system.assertEquals(1, dealWrapperObj.UnitList.size());
+		update new Deal_Item__c(Id = dealWrapperObj.UnitList[0].DealItemObj.Id, Unit_Tax_Applicable_On__c = 'Parts');
 		
-		Option_Fee__c optionAndFeeRecWithPart = new Option_Fee__c(); 
+		Option_Fee__c optionAndFeeRecWithPart = new Option_Fee__c();
+		optionAndFeeRecWithPart.Deal__c = dealList[0].Id;
 		optionAndFeeRecWithPart.Deal_Item__c = dealWrapperObj.UnitList[0].DealItemObj.Id;
 		optionAndFeeRecWithPart.Part__c = testPart.Id;
+		optionAndFeeRecWithPart.Qty__c = 1;
 		insert optionAndFeeRecWithPart;
 
-		List<Option_Fee__c> optionAndFeeList = [SELECT Id,Price__c,(SELECT Enhanced_Tax_Amount__c,Sales_Tax_Item__r.Name__c,Tax_Rate__c FROM Individual_Taxes__r) 
-			FROM Option_Fee__c WHERE Deal_Item__c =: dealWrapperObj.UnitList[0].DealItemObj.Id];
-		System.assertEquals(1, optionAndFeeList.size());
-		
-		for (Option_Fee__c optionFeeRec : optionAndFeeList) {
-			System.assertEquals(100, optionFeeRec.price__c);
-        	System.assertEquals(4, optionFeeRec.Individual_Taxes__r.size());
-            for (Individual_Tax__c individualTaxRec : optionFeeRec.Individual_Taxes__r) {
-				
-				if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'State Escalating') {
-					system.assertEquals(3, individualTaxRec.Enhanced_Tax_Amount__c  );
-					system.assertEquals(null, individualTaxRec.Tax_Rate__c);
-                } else if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'State Tiered') {
-					system.assertEquals(2.50, individualTaxRec.Enhanced_Tax_Amount__c  );
-					system.assertEquals(null, individualTaxRec.Tax_Rate__c);
-                } else if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'Fixed Rate 2') {
-                	system.assertEquals(8.00, individualTaxRec.Tax_Rate__c);
-                	system.assertEquals(null, individualTaxRec.Enhanced_Tax_Amount__c);
-                } else if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'Fixed Rate 1') {
-                	system.assertEquals(5.00, individualTaxRec.Tax_Rate__c);
-                	system.assertEquals(null, individualTaxRec.Enhanced_Tax_Amount__c);
-                } else {
-                	system.assert(false, 'Incorrect tax item');
-                }
-            }  
-        }
-		optionAndFeeRecWithPart.price__c = 10000;
-		List<Option_Fee__c> optionAndFeeList1 = [SELECT Id, (SELECT Enhanced_Tax_Amount__c,Sales_Tax_Item__r.Name__c
-			FROM Individual_Taxes__r) FROM Option_Fee__c Option_Fee__c WHERE Deal_Item__c =: dealWrapperObj.UnitList[0].DealItemObj.Id];
-		System.assertEquals (1, optionAndFeeList1.size());
-		for (Option_Fee__c optionFeeRec : optionAndFeeList) {
-			System.assertEquals(4, optionFeeRec.Individual_Taxes__r.size());
-            for (Individual_Tax__c individualTaxRec : optionFeeRec.Individual_Taxes__r) {
-                if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'State Escalating') {
-					system.assertEquals(3, individualTaxRec.Enhanced_Tax_Amount__c);
-					system.assertEquals(null, individualTaxRec.Tax_Rate__c);
-                } else if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'State Tiered') {
-					system.assertEquals(2.50, individualTaxRec.Enhanced_Tax_Amount__c);
-					system.assertEquals(null, individualTaxRec.Tax_Rate__c);
-                } else if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'Fixed Rate 2') {
-					system.assertEquals(8.00, individualTaxRec.Tax_Rate__c );
-					system.assertEquals(null, individualTaxRec.Enhanced_Tax_Amount__c);
-                } else if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'Fixed Rate 1') {
-                	system.assertEquals(5.00, individualTaxRec.Tax_Rate__c);
-                	system.assertEquals(null, individualTaxRec.Enhanced_Tax_Amount__c);
-                } else {
-                	system.assert(false, 'Incorrect tax item');
-                }
-            }   
+		List<Individual_Tax__c> indiList = [SELECT Taxable_Amount_for_Section_Header__c, Enhanced_Tax_Amount__c,Sales_Tax_Item__r.Name__c,Tax_Rate__c FROM Individual_Tax__c WHERE Deal__c = :dealList[0].Id];
+		System.assertEquals(4, indiList.size());
+		for (Individual_Tax__c individualTaxRec : indiList) {
+			
+			if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'State Escalating') {
+				system.assertEquals(84, individualTaxRec.Enhanced_Tax_Amount__c  );
+				system.assertEquals(null, individualTaxRec.Tax_Rate__c);
+			} else if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'State Tiered') {
+				system.assertEquals(53.50, individualTaxRec.Enhanced_Tax_Amount__c  );
+				system.assertEquals(null, individualTaxRec.Tax_Rate__c);
+			} else if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'Fixed Rate 2') {
+				system.assertEquals(8.00, individualTaxRec.Tax_Rate__c);
+				system.assertEquals(null, individualTaxRec.Enhanced_Tax_Amount__c);
+			} else if (individualTaxRec.Sales_Tax_Item__r.Name__c == 'Fixed Rate 1') {
+				system.assertEquals(5.00, individualTaxRec.Tax_Rate__c);
+				system.assertEquals(null, individualTaxRec.Enhanced_Tax_Amount__c);
+			} else {
+				system.assert(false, 'Incorrect tax item');
+			}
         }
         Test.stopTest();    
     }

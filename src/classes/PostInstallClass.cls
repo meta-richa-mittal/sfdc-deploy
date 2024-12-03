@@ -1,5 +1,5 @@
 global without sharing class PostInstallClass implements InstallHandler {
-    public static final String NAMESPACE = 'BlackPurlCore__';
+    public static final String NAMESPACE = 'BPTest__';
     
     global void onInstall(InstallContext context) {
         String emailTextBody;
@@ -11,7 +11,6 @@ global without sharing class PostInstallClass implements InstallHandler {
                 ConfigurationScript.deleteConfigurations();
                 ConfigurationScript.createConfigurations();
                 ConfigurationScript.createUserDependentFeature();
-                ConfigurationScript.createQBIFWIntegrationConfig();
                 ConfigurationScript.setDashboardRefreshMinutes();
 				ConfigurationScript.createCOARestrictionConfig();
             }

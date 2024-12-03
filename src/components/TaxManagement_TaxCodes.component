@@ -1,0 +1,352 @@
+<apex:component controller="GlobalController">
+    <div class="tax-code-content">
+        <div class="row P10 tax-rate-container">
+            <div class="table-responsive">
+                <h2>Sales transaction tax codes</h2>
+
+                <div class="c-product-filter-section">
+                    <div class="c-primary-input-container">
+                        <input class="c-input-search c-primary-input" ng-model="M_TAS.filterJson.SearchSalesTaxCodes" ng-keyup="F_TAS.getFilteredTaxCodes('SalesTaxCodes')" type="text" placeholder="Search"/>
+                        <i class="bp-icons bp-font-18 bp-blue-font stroke-3 search-icon" ng-if="!M_TAS.filterJson.SearchSalesTaxCodes">search</i>
+                        <a class="search-icon" ng-if="M_TAS.filterJson.SearchSalesTaxCodes" ng-click="M_TAS.filterJson.SearchSalesTaxCodes = '';F_TAS.getFilteredTaxCodes('SalesTaxCodes')">X</a>
+                    </div>
+                    <div class="include-inactive">
+                        <label class="checkbox">
+                            <span class="chk_tick" ng-class="{'chked' : M_TAS.filterJson.IncludeInactiveSalesTaxCodes}" 
+                                                    ng-click="M_TAS.filterJson.IncludeInactiveSalesTaxCodes = !M_TAS.filterJson.IncludeInactiveSalesTaxCodes;F_TAS.getFilteredTaxCodes('SalesTaxCodes')">
+                                <i class="fa fa-check-square chksqure" ></i>
+                            </span>
+                        </label>
+                        <label class="inactive-lbl">Include inactive</label>  
+                    </div>
+                </div>
+
+                <div class="bp-scrollable-table adjust-table-width tax-code-container" id="salesTaxCodeContainer" when-scrolled="F_TAS.loadMoreTaxCodesData('SalesTaxCodes')">
+                    <table class="bp-editable-table part-count-table bp-grey-back-table">
+                        <col width="18%" />
+                        <col width="11%" />
+                        <col width="40%" />
+                        <col width="9%" />
+                        <col width="9%" />
+                        <col width="10%" />
+                        <col width="3%" />
+                        <thead>
+                            <th>TAX CODE NAME</th>
+                            <th>TOTAL RATE</th>
+                            <th>RATES INCLUDED</th>
+                            <th class="bp-z-index1">DEFAULT</th>
+                            <th class="bp-z-index1">ACTIVE</th>
+                            <th></th>
+                            <th></th>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="taxCodeRec in M_TAS.SalesTaxCodes">
+                                <td class="first-column">{{taxCodeRec.Name}}</td>
+                                <td>{{taxCodeRec.TotalRateStr}}</td>
+                                <td>{{taxCodeRec.RatesIncluded}}</td>
+                                <td>
+                                    <label class="bp-switch">
+                                        <input type="checkbox" disabled="true" ng-model="taxCodeRec.IsDefault" ng-click = "" />
+                                        <div class="bp-slider round"></div>
+                                    </label>
+                                </td>
+                                <td>
+                                    <label class="bp-switch">
+                                        <input type="checkbox" disabled="true" ng-model="taxCodeRec.IsActive" ng-click = "" />
+                                        <div class="bp-slider round"></div>
+                                    </label>
+                                </td>
+                                <td>
+                                    <div class="flex-container items-right">
+                                        <a class="button icon edit" ng-click="F_TAS.openTaxCodeModalWindow('Sell', taxCodeRec)">
+                                            <i class="bp-icons bp-font-14 bp-fw-100">edit</i>
+                                        </a>
+                                        <a class="button icon delete" ng-click="F_TAS.showDeleteConfirmationWindow(taxCodeRec.Id, 'SellTaxCodes')"><span class="button-text" aira-hidden="true">Delete</span></a>
+                                    </div>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr ng-repeat="rec in M_TAS.dummyRecJSON" ng-if="M_TAS.isloadDummyState.SalesTaxCodes">
+                                <td class="dummy-rec dummy-animation"> <span></span></td>
+                                <td class="dummy-rec dummy-animation"> <span></span></td>
+                                <td class="dummy-rec dummy-animation"> <span></span></td>
+                                <td class="dummy-rec dummy-animation"> <span></span></td>
+                                <td class="dummy-rec dummy-animation"> <span></span></td>
+                                <td class="dummy-rec dummy-animation"> <span></span></td>
+                                <td></td>
+                            </tr>
+                            <tr ng-if="M_TAS.SalesTaxCodes.length == 0" class="no-record-found">
+                                <td colspan="12">{{'Label_No_Records_Found' | translate}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="action-section">
+                <span class="c-primary-btn-container">
+                <bp-ng-button name="Add new tax code" class-value="c-ternary-btn c-btn-modal" action="F_TAS.openTaxCodeModalWindow('Sell')" disabled-value="" ></bp-ng-button>
+                </span>
+            </div>
+
+        </div>
+
+        <div class="row P10 tax-rate-container">
+            <div class="table-responsive">
+                <h2>Purchase transaction tax codes</h2>
+
+                <div class="c-product-filter-section">
+                    <div class="c-primary-input-container">
+                        <input class="c-input-search c-primary-input" ng-model="M_TAS.filterJson.SearchPurchaseTaxCodes" ng-keyup="F_TAS.getFilteredTaxCodes('PurchaseTaxCodes')" type="text" placeholder="Search"/>
+                        <i class="bp-icons bp-font-18 bp-blue-font stroke-3 search-icon" ng-if="!M_TAS.filterJson.SearchPurchaseTaxCodes">search</i>
+                        <a class="search-icon" ng-if="M_TAS.filterJson.SearchPurchaseTaxCodes" ng-click="M_TAS.filterJson.SearchPurchaseTaxCodes = ''; F_TAS.getFilteredTaxCodes('PurchaseTaxCodes')">X</a>
+                    </div>
+                    <div class="include-inactive">
+                        <label class="checkbox">
+                            <span class="chk_tick" ng-class="{'chked' : M_TAS.filterJson.IncludeInactivePurchaseTaxCodes}" 
+                                                    ng-click="M_TAS.filterJson.IncludeInactivePurchaseTaxCodes = !M_TAS.filterJson.IncludeInactivePurchaseTaxCodes; F_TAS.getFilteredTaxCodes('PurchaseTaxCodes')">
+                                <i class="fa fa-check-square chksqure" ></i>
+                            </span>
+                        </label>
+                        <label class="inactive-lbl">Include inactive</label>  
+                    </div>
+                </div>
+
+                <div class="bp-scrollable-table adjust-table-width tax-code-container" id="purchaseTaxCodeContainer" when-scrolled="F_TAS.loadMoreTaxCodesData('PurchaseTaxCodes')">
+                    <table class="bp-editable-table part-count-table bp-grey-back-table">
+                        <col width="18%" />
+                        <col width="11%" />
+                        <col width="40%" />
+                        <col width="9%" />
+                        <col width="9%" />
+                        <col width="10%" />
+                        <col width="3%" />
+                        <thead>
+                            <th>TAX CODE NAME</th>
+                            <th>TOTAL RATE</th>
+                            <th>RATES INCLUDED</th>
+                            <th class="bp-z-index1">DEFAULT</th>
+                            <th class="bp-z-index1">ACTIVE</th>
+                            <th></th>
+                            <th></th>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="taxCodeRec in M_TAS.PurchaseTaxCodes">
+                                <td class="first-column">{{taxCodeRec.Name}}</td>
+                                <td>{{taxCodeRec.TotalRateStr}}</td>
+                                <td>{{taxCodeRec.RatesIncluded}}</td>
+                                <td>
+                                    <label class="bp-switch">
+                                        <input type="checkbox" ng-model="taxCodeRec.IsDefault" ng-click = "F_TaxManagement.checkSectionOpen($index,'Sell','isDefault',salesTaxRec.IsDefault,$event)" />
+                                        <div class="bp-slider round"></div>
+                                    </label>
+                                </td>
+                                <td>
+                                    <label class="bp-switch">
+                                        <input type="checkbox" ng-model="taxCodeRec.IsActive" ng-click = "F_TaxManagement.checkSectionOpen($index,'Sell','isDefault',salesTaxRec.IsDefault,$event)" />
+                                        <div class="bp-slider round"></div>
+                                    </label>
+                                </td>
+                                <td>
+                                    <div class="flex-container items-right">
+                                        <a class="button icon edit" ng-click="F_TAS.openTaxCodeModalWindow('Purchase', taxCodeRec)">
+                                            <i class="bp-icons bp-font-14 bp-fw-100">edit</i>
+                                        </a>
+                                        <a class="button icon delete" ng-click="F_TAS.showDeleteConfirmationWindow(taxCodeRec.Id, 'PurchaseTaxCodes')"><span class="button-text" aira-hidden="true">Delete</span></a>
+                                    </div>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr ng-repeat="rec in M_TAS.dummyRecJSON" ng-if="M_TAS.isloadDummyState.PurchaseTaxCodes">
+                                <td class="dummy-rec dummy-animation"><span></span></td>
+                                <td class="dummy-rec dummy-animation"><span></span></td>
+                                <td class="dummy-rec dummy-animation"><span></span></td>
+                                <td class="dummy-rec dummy-animation"><span></span></td>
+                                <td class="dummy-rec dummy-animation"><span></span></td>
+                                <td class="dummy-rec dummy-animation"><span></span></td>
+                                <td></td>
+                            </tr>
+                            <tr ng-if="M_TAS.PurchaseTaxCodes.length == 0" class="no-record-found">
+                                <td colspan="12">{{'Label_No_Records_Found' | translate}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="action-section">
+                <span class = "c-primary-btn-container">
+                <bp-ng-button name="Add new tax code" class-value="c-ternary-btn c-btn-modal"  action="F_TAS.openTaxCodeModalWindow('Purchase')" disabled-value="" ></bp-ng-button>
+                </span>
+            </div>
+        </div>
+
+        <!-- Start: Delete tax code -->
+        <div id="deleteTaxCodeModelWindow" class="modal fade-scale bp-model-dialog delete-tax-rate-model-window delete-tax-code" role="dialog">
+            <div class="modal-dialog modalWidthControl">
+                <!-- Modal content-->
+                <div class="modal-content col-xs-12 P0">
+                    <div class="modal-body">
+                        <div class="heading-text">Confirm delete tax code</div>
+                        <div class="message-info">
+                            <span class="bp-dark-grey2-font H300">
+                                <p>This will permanently delete this tax code and may affect associated records and cannot be undone. Do you want to delete this tax code?</p>
+                            </span>
+                        </div>
+                        <div class="action-section">
+                            <div class = "c-modal-window-footer">
+                                <span class = "c-cancelBtn-btn-container MR10"> 
+                                    <bp-ng-button name="Cancel" class-value="c-cancel-btn c-btn-modal" action="F_TAS.closeModalWindow('deleteTaxCodeModelWindow')" disabled-value="" ></bp-ng-button>
+                                </span>
+                                <span class = "c-primary-btn-container">
+                                    <bp-ng-button name="Delete" class-value="c-ternary-btn c-btn-modal delete-btn-colour" action="F_TAS.deleteTaxCode()" disabled-value="" ></bp-ng-button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End: Delete tax code -->
+
+        <!-- Start: Add/Edit tax code -->
+        <bp-ng-modal-window id-val="add-edit-tax-code" mobal-window-payload="M_TAS.ModalWindowPayload" cancel-btn-action="F_TAS.closeModalWindow('add-edit-tax-code')" primary-btn-action="F_TAS.saveTaxCode()" disable-primary-action="F_TAS.isSaveTaxCodeBtnDisabled()" class="add-edit-tax-code-modal-window">
+            <div>
+                <header>
+                    <label class="line-height-xlarge H600 M0 bp-first-letter-capitalize">{{ 'Tax_code_definition' | translate}}</label>
+                </header>
+                <section class="section-container tax-exmp-container">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="H300 bp-lh-36 MB0">{{'Tax_code_name' | translate}}</label>
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control" ng-model="M_TAS.ModalWindowPayload.TaxCodeRec.Name" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 pr0">
+                            <label class="H300 bp-lh-36 MB0">{{'Active' | translate}}</label>
+                            <label class="bp-switch center-aligh-switch">
+                                <input ng-model="M_TAS.ModalWindowPayload.TaxCodeRec.IsActive" type="checkbox" ng-click="F_TAS.actionToggle('isActive', $event)" />
+                                <div class="bp-slider round"></div>
+                            </label>
+                        </div>
+                        <div class="col-md-3 pr0">
+                            <label class="H300 bp-lh-36 MB0">{{'Default' | translate}}</label>
+                            <label class="bp-switch center-aligh-switch">
+                                <input ng-model="M_TAS.ModalWindowPayload.TaxCodeRec.IsDefault" type="checkbox" ng-click="F_TAS.actionToggle('isDefault', $event)" />
+                                <div class="bp-slider round"></div>
+                            </label>
+                        </div>
+                        <div class="col-md-6"></div>
+                    </div>
+                    <div class="row sub-header" ng-if="M_TAS.IsAutomaticTaxRates && M_TAS.ModalWindowPayload.TaxCodeRec.TaxType == 'Sell'">
+                        <div class="col-md-6">
+                            <label class="H300 MB0">{{'Applicable_automatic_rates' | translate}}</label>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="H300 MB0">{{'Maximum_taxable_amount' | translate}}</label>
+                        </div>
+                    </div>
+                    <div class="row asign-tax-rate-list" ng-if="M_TAS.IsAutomaticTaxRates && M_TAS.ModalWindowPayload.TaxCodeRec.TaxType == 'Sell' && assignRateRec.IsAutomated" ng-repeat="assignRateRec in M_TAS.AssignTaxRateList">
+                        <div class="col-md-3">
+                            <label class="H300 MB0">{{assignRateRec.TaxName}}</label>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="bp-switch">
+                                <input ng-model="assignRateRec.isSelected" type="checkbox" ng-click="F_TAS.actionToggle(assignRateRec.TaxName, $event, true)" />
+                                <div class="bp-slider round"></div>
+                            </label>
+                        </div>
+                        <div class="col-md-6">
+                            <div ng-class="{'doller-sign-container' : assignRateRec.MaximumTaxableAmount != '-unlimited-'}" >
+                                <span class="doller-sign" ng-if="assignRateRec.MaximumTaxableAmount != '-unlimited-'">$</span>
+                                <numbers-only class-value="bp-new-input" blur-value="F_TAS.parseMaximumTaxableAmount(assignRateRec.MaximumTaxableAmount, assignRateRec.Id, $index)" precision-length="2" input-model-value="assignRateRec.MaximumTaxableAmount" is-un-limited="M_TAS.isUnLimited" disabled-value="!assignRateRec.isSelected" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row sub-header">
+                        <div class="col-md-12">
+                            <label class="H300 MB0">{{'Applicable_manual_rates' | translate}}</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="bp-editable-table">
+                                <col width="22%" />
+                                <col width="19%" />
+                                <col width="25%" />
+                                <col width="12%" />
+                                <col width="16%" />
+                                <col width="6%" />
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase">Tax rate name</th>
+                                        <th class="text-uppercase">Calc method</th>
+                                        <th class="text-uppercase">Rate</th>
+                                        <th class="text-uppercase exempt-header">Min tax</th>
+                                        <th class="text-uppercase">Max tax</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="no-border">
+                                    <tr ng-repeat="taxRateRec in M_TAS.ModalWindowPayload.TaxCodeRec.TaxRateList" ng-if="!taxRateRec.IsAutomated">
+                                        <td class="H300">{{taxRateRec.TaxName}}</td>
+                                        <td>{{taxRateRec.RateType}}</td>
+                                        <td>{{taxRateRec.TaxRateStr}}</td>
+                                        <td>{{taxRateRec.MinimumTaxAmount | currency}}</td>
+                                        <td ng-if="taxRateRec.MaximumTaxAmount != null && taxRateRec.MaximumTaxAmount != undefined && taxRateRec.MaximumTaxAmount != '-unlimited-' ">{{taxRateRec.MaximumTaxAmount | currency}}</td>
+                                        <td ng-if="taxRateRec.MaximumTaxAmount == null || taxRateRec.MaximumTaxAmount == undefined || taxRateRec.MaximumTaxAmount == '-unlimited-'">-unlimited-</td>
+                                        <td class="bp-cursor-pointer">
+                                            <div class="flex-container items-right">
+                                                <a class="button icon delete" ng-click="F_TAS.deleteAssignedTaxRate($index, ((M_TAS.ModalWindowPayload.TaxType == 'Sell') ? 'SalesTaxRates' : 'PurchaseTaxRates'))"><span class="button-text" aira-hidden="true">Delete</span></a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="!F_TAS.isManualRatesAdded()">
+                                        <td class="" colspan="6">No rates assigned</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row sub-header">
+                        <div class="col-md-12">
+                            <label class="H300 MB0">{{'Assign_rates' | translate}}</label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="entity-custom-drop-down">
+                            <input type="text" ng-focus="M_TAS.ModalWindowPayload.ShowDropdown = true;" id="dropDownInputId" placeholder="Search"
+                                ng-keyup="F_TAS.getFilteredTaxRates(((M_TAS.ModalWindowPayload.TaxType == 'Sell') ? 'SalesTaxRates' : 'PurchaseTaxRates'), 'assignRatesDropdown', M_TAS.ModalWindowPayload.AssignRatePayload.SearchStr)"
+                                ng-blur="M_TAS.filterJson = {};"
+                                ng-model="M_TAS.ModalWindowPayload.AssignRatePayload.SearchStr" autocomplete="off" />
+                            <span class="input-icon">
+                                <i class="bp-icons bp-font-14 stroke-5 blue_3384FF" ng-click="M_TAS.ModalWindowPayload.ShowDropdown = true;">arrowDown</i>
+                            </span>
+                        
+                            <div id="assignRatesDropdown" class="custom-drop-down-container taxCodeModalDropdown" ng-show="M_TAS.ModalWindowPayload.ShowDropdown">
+                                <ul ng-show="M_TAS.ModalWindowPayload.AssignRatePayload.DropDownList.length > 0" when-scrolled="F_TAS.loadMoreTaxRatesData(((M_TAS.ModalWindowPayload.TaxType == 'Sell') ? 'SalesTaxRates' : 'PurchaseTaxRates'), 'assignRatesDropdown', M_TAS.ModalWindowPayload.AssignRatePayload.SearchStr)">
+                                    <li ng-repeat="dropdownRec in M_TAS.ModalWindowPayload.AssignRatePayload.DropDownList" 
+                                        ng-click="F_TAS.assignTaxRate(dropdownRec, ((M_TAS.ModalWindowPayload.TaxType == 'Sell') ? 'SalesTaxRates' : 'PurchaseTaxRates'))" 
+                                        ng-hide="dropdownRec.IsAutomated || dropdownRec.isSelected">
+                                        <label class="H300 bp-cursor-pointer MB0">{{dropdownRec.TaxName}} - {{dropdownRec.TaxRateStr}} </label>
+                                    </li>
+                                </ul>
+                                <ul  ng-if="M_TAS.ModalWindowPayload.AssignRatePayload.DropDownList.length == 0">
+                                    <li ng-if="!M_TAS.isLoadDummyState.assignRatesDropdown">
+                                        <label class="checkbox-label H300 MB0">No results found</label>
+                                    </li>
+                                    <li ng-if="M_TAS.isLoadDummyState.assignRatesDropdown" ng-repeat="rec in M_TAS.dummyRecJSON" class="dummy-rec-animation">
+                                        <label class="dummy-rec dummy-animation"> <span></span></label>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="dummy-backdrop change-z-index" ng-show="M_TAS.ModalWindowPayload.ShowDropdown" ng-click="M_TAS.ModalWindowPayload.ShowDropdown = false;"></div>
+                        </div>    
+                    </div>
+                </section>
+            </div>
+        </bp-ng-modal-window>
+        <!-- End: Add/Edit tax code -->
+    </div>
+</apex:component>

@@ -1,0 +1,117 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0"
+    controller="GlobalController">
+    <div class="content bp-wrapper-container tagContainer text-message-template-wrapper">
+		<div class="bp-subHeader bp-techScheduler-subHeader ">
+            <div class="row container bp-top-header bp-tech-navigation-bar PB0">
+                <section class="bp-breadcrumb-container">
+                    <nav class="bp-breadcrumb-nav">
+                        <ul>
+                            <li><a ui-sref="homePage">{{'Label_Home' | translate}}</a></li>
+                            <li> <a ui-sref="UserSetting">Account settings</a></li>
+                            <li> <a class="bp-breadcrumb-active">Product locations</a></li>
+	               	</ul>
+                    </nav>
+                </section>
+                <div class="section-name-container">
+                    <h1 class="col-xs-12  bp-hasEyebrow P0">Product locations</h1>
+	            </div>
+       		</div>
+      	</div>
+	  	<div class="pageContent"  id="scrollLocationContainer" when-scrolled='F_LM.loadProductMoreData()'>
+            <div class="container">
+            	<div class="accountSettingsDashboard search-div">
+  					<div class="row">
+						  <div class="col-xs-12 product-location-header">
+							  <p class="H500 top-heading">Setup &amp; maintain your product locations</p>
+							  <p>This will keep your inventory organised so you know what’s on your shelves.</p>
+						  </div>
+	                    <div class="col-sm-7 col-xs-8 col-md-8 searchAndSortWrapper product-location-searching-container">
+	                        <div class="searchAndSort">
+	                            <div class="searchFrom col-xs-12 col-sm-9 col-md-7 P0">
+	                            	<i class="bp-icons bp-font-20 bp-grey-font MT-3">search</i>
+	                                <input class="bp-input-text" type="text" placeholder="{{ 'Search_Location' | translate }}" ng-model="M_LM.SortJson.LocationSearchStr" id="newTag" ng-keyup="F_LM.getFilteredLocation()"/>
+	                            </div>
+	                            <div class="sortBy  col-xs-12 col-sm-12  col-md-4 P0">
+	                                <label class="text-uppercase">{{ 'Sort_by' | translate }}</label>
+									<i ng-click="F_LM.changeOrder()" class="bp-icons bp-font-20 bp-blue-font bp-lh-17 stroke-5" ng-class = "{'arrow-position-adjust': M_LM.SortJson.SortBy == 'CreatedDate'}">sort</i>
+									<select ng-model="M_LM.SortJson.SortBy" ng-change="F_LM.getFilteredLocation()">
+	                                    <option value="CreatedDate">{{ 'Date_created' | translate }}</option>
+	                                    <option value="Name__c">{{ 'Label_Name' | translate }}</option>
+	                                </select>
+	                            </div>
+	                        </div>
+	                    </div>
+	                </div>
+	  			</div>
+	  			
+	  			<div class="row createTagDiv">
+	  				<div class="border-div" ng-class="{'onFocusBorder' : M_LM.isFocusOnCreateNewLMInput}"> 
+	  					<input type="text" class="create-tag-input product-tag-input" ng-model="M_LM.newLocationStr" id="createNewTagId"
+		  						 maxlength="20" placeholder="Add new location" 
+		  						 ng-keydown="F_LM.saveLocation($event)"
+		  						ng-focus="createNewLMFocus()" ng-blur="F_LM.createNewLMFocusOut()" />
+						<i class="bp-icons bp-font-24 bp-blue-font plus-icon MT-5 stroke-3" ng-click="F_LM.saveLocation()">addCircle</i>
+	  				</div>		
+	  				<div class="info-text-div">
+	  					<span ng-class="{'hidden' : !(!M_LM.isFocusOnCreateNewLMInput || M_LM.newLocationStr.length == 0)}">&nbsp;</span>
+	  					<span class="text-lowercase" ng-class="{'hidden' : (!M_LM.isFocusOnCreateNewLMInput || M_LM.newLocationStr.length == 0)}">{{ 'Press_enter_to_create' | translate }}</span>
+	  				</div>
+	  			</div>
+	  				
+	  			<div class="row tagListDiv">
+  					<ul>
+	  					<li class="tagName" ng-class="{'deactive-color': locationRec.IsActive == false, 'active-color': locationRec.IsActive == true}"
+	  						ng-repeat="locationRec in M_LM.locationList">
+	  						<span ng-click="F_LM.editLMRecord($event, $index, locationRec)" ng-show="!M_LM.LocationList_editRow[$index].isEdit" class="tag-name-span">{{locationRec.Name}}</span>
+	  						<span ng-show="M_LM.LocationList_editRow[$index].isEdit" class="tag-name-edit-span"> 
+	  							<input type="text" class="bp-input-text edit-tag-input" id="tag{{$index}}" ng-model="locationRec.Name" maxlength="20" 
+  								ng-keydown="F_LM.saveLocationAfterEdit($index, locationRec, $event);" ng-blur="F_LM.saveLocationAfterEdit($index, locationRec);"/>
+	  							<span class="icon-wrapper-span" data-toggle="tooltip" title="{{locationRec.IsActive == true ? ('Make_inactive' | translate ) : ('Make_active' | translate)}}" ng-mousedown="F_LM.deactiveLocation($index);">
+	  								<i class="bp-icons bp-font-14 bp-blue-font inactive-icon stroke-5" ng-class="{'white_FFF': locationRec.IsActive == false}">power</i>
+	  							</span>
+	  						</span>
+	  						<span class="icon-wrapper-span pull-right" data-toggle="tooltip" title="{{ 'Label_Remove' |translate }}">
+	  							<i class="bp-icons bp-font-9 bp-blue-font bp-lh-20 stroke-3 cross-icon" ng-class="{'white_FFF': locationRec.IsActive == false}" ng-click="F_LM.openRemovePopup($index)">close</i>
+	  						</span>
+	  					</li>
+  					</ul>
+					<ul>
+						<li class="dummy-animation" ng-repeat="rec in M_LM.dummyRecJSON" ng-if="M_LM.isloadDummyState">
+							<span class="dummy-tag-name"></span>
+						</li>
+					</ul>
+	  			</div>
+	  		</div>
+	  	</div> 
+	  	<div class="modal fade CreateGroupModal bp-model-dialog CreateGroupModal confirmationModal" id="deleteConfirmPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+	  		<div class="modal-dialog" role="document">
+				<div class="modal-content">
+			  		<div class="modal-header">
+						<button type="button" class="close bp-close-but" data-dismiss="modal" aria-label="Close" ng-click= "F_LM.cancelButtonAction();">
+	                 		<span aria-hidden="true">
+	                 			<i class="bp-icons bp-font-13 bp-white-font bp-fw-100 closeiconWidth">close</i>
+	                 		</span>
+	            		</button>
+			  		</div>		 
+			  		<div class="modal-body">
+						<div class="userGroupInfoArea">
+							<div class="heading text-uppercase">{{ 'Are_you_sure' | translate }}</div>
+							<div class="form">
+								<div class="body-div"> <span translate="This_tag_used_in_n_tag_instances" translate-values="{{ {locationCount:M_LM.locationUsedCounter} }}"></span></div>
+								<div class="text-center formBtn">
+									<button class="bp-btn-normal bp-btn confirmButton text-uppercase" ng-click="F_LM.removeLocation();" data-dismiss="modal" aria-label="Close" >
+										{{ 'Delete_Confirmation_Label' | translate }}
+									</button>
+									<div class="cancel-link text-uppercase" data-dismiss="modal" aria-label="Close" ng-click="F_LM.cancelButtonAction();">
+										{{ 'Cancel_Label' | translate }}
+									</div>	
+								</div>
+							</div>
+                		</div>
+                	</div>
+                </div>
+            </div>
+        </div> 
+        
+    </div>
+</apex:page>

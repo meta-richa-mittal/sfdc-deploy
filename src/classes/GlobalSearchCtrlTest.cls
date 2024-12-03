@@ -9,6 +9,7 @@ public without sharing class GlobalSearchCtrlTest {
     
     @testSetup
 	private static void setupTestData() {
+		TestDataFactory.disableFLSChecks();
 		TestUtil.createNameSpaceInGeneralConfig();
 		
 		User testUser = TestUtil.createUser(true, 'a@b.c', 'Sharma', 'en_US', 'Shantanu.Sharma@metacube.com', 'sshar');

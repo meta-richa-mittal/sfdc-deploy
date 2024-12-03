@@ -1,0 +1,372 @@
+<apex:component controller="GlobalController">
+    <div class="LoadingDiv" ng-show="AdminConfig.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="BRP">
+        <div class="settings_Header row">
+            <div class="col-lg-3 col-md-3">
+                <div class="fixedHeaderText bp-pointer-cursor" ng-click="AdminConfig.toogleSectionView('showBRP');">
+                    <span class="headerlabel">
+                    <i class="fa fa-angle-down" ng-show="AdminConfig.toggleObj.showBRP" ></i>
+                    <i class="fa fa-angle-right" ng-show="!AdminConfig.toggleObj.showBRP" ></i>
+                    <span class="divider">|</span>
+                    <span class="T2">BRP</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div id="BRP_Setting" ng-show="AdminConfig.toggleObj.showBRP"> <!-- this id is used on BRPOAuthCallback.page for referencing parent scope -->
+            <div class="main_section row" >
+                <div class="form">
+                    <div class="row margin8" ng-if= "AdminConfig.BRP.IntegrationConfigured == 'Partially configured'">
+                        <div class="col-md-8 bp-warning-template ML22 brp-info-banner">
+                            <span class="bp-warning-icon">
+                                <i class="bp-icons bp-font-20 bp-yellow-font bp-lh-20 stroke-3">warning</i>
+                            </span>
+                            <div class="bp-warning-msg">    
+                                <span>There are some configuration missing for this integration. Click on the <b>Execute script</b> button to complete the configuration.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row margin8" ng-class="{'adjust-margin' : AdminConfig.BRP.IntegrationConfigured == 'Partially configured'}">
+                        <div class="col-md-2 margin8" ng-class="{'PT4' : AdminConfig.BRP.IntegrationConfigured == 'Partially configured'}">
+                            <label>{{ 'Integration_configured' | translate}}</label>
+                        </div>
+                        <div class="col-md-3 labelValueCenter margin8">
+                            {{AdminConfig.BRP.IntegrationConfigured}}
+                            <button class="btn btn-default greenBtn action-btn" ng-click="AdminConfig.configureBRPIntegration()" 
+                                ng-if="AdminConfig.BRP.IntegrationConfigured == 'Partially configured'">{{ 'Execute_script' | translate}}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Radius' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 labelValueCenter margin8">
+                            {{AdminConfig.BRP.Radius}}
+                        </div>
+
+                        <div class="col-md-2 col-md-offset-1 MT8">
+                            <label>{{ 'Radius_measure' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 labelValueCenter margin8">
+                            {{AdminConfig.BRP.RadiusMeasure}}
+                        </div>
+                    </div>
+
+                    <div class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label><span class="FC9">*</span>{{ 'Dealer_id' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <div class="searchInputArea feeSearchInputArea">
+                                <input type="text" ng-model="AdminConfig.BRP.DealerId" 
+                                class="searchInput form-control inputValueText"
+                                ng-blur="AdminConfig.validateBRPField(AdminConfig.BRP.DealerId);"
+                                ng-change="AdminConfig.isBRPConfigModified = true"
+                                ng-class="{'redborder' : AdminConfig.BRPFieldValidation[AdminConfig.BRP.DealerId] == true}" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-md-offset-1 MT8">
+                            <label><span class="FC9">*</span>{{'Currency_code' | translate}}</label>
+                            
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <select class="bp-input-text text-value-placement" ng-model="AdminConfig.BRP.CurrencyCode" ng-change="AdminConfig.isBRPConfigModified = true"
+                                ng-blur="AdminConfig.validateBRPField(AdminConfig.BRP.CurrencyCode);"
+                                ng-class="{'redborder' : AdminConfig.BRPFieldValidation[AdminConfig.BRP.CurrencyCode] == true}"
+                                ng-options="CurrencyCode.name as CurrencyCode.name for CurrencyCode in AdminConfig.CurrencyCodeList">
+                            </select>
+                            
+                        </div>
+                    </div>
+
+                    <div class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label><span class="FC9">*</span>{{ 'Dealership_username' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <div class="searchInputArea feeSearchInputArea">
+                                <input type="text" ng-model="AdminConfig.BRP.DealershipUserName" 
+                                class="searchInput form-control inputValueText"
+                                ng-change="AdminConfig.isBRPConfigModified = true"
+                                ng-blur="AdminConfig.validateBRPField(AdminConfig.BRP.DealershipUserName);"
+                                ng-class="{'redborder' : AdminConfig.BRPFieldValidation[AdminConfig.BRP.DealershipUserName] == true}" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 col-md-offset-1 MT8">
+                            <label><span class="FC9">*</span>{{ 'Dealership_password' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 ML8">
+                            <div class="searchInputArea feeSearchInputArea">
+                                <input id="password-field" type="password" ng-model="AdminConfig.BRP.DealershipPassword" 
+                                ng-change="AdminConfig.isBRPConfigModified = true"
+                                ng-blur="AdminConfig.validateBRPField(AdminConfig.BRP.DealershipPassword);"
+                                ng-class="{'redborder' : AdminConfig.BRPFieldValidation[AdminConfig.BRP.DealershipPassword] == true}"
+                                class="searchInput form-control inputValueText" name="password" value="secret" />
+                                <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'BRP_identifier_listing' | translate}}</label>
+                        </div>
+                        <div class="col-md-9 MR8">
+                            <div class="form table-responsive price-level-table-container">
+                                <div class="row margin8 MB0 ">
+                                    <table class="bp-editable-table price-level-table">
+                                        <col width="20%"  />
+                                        <col width="25%"  />
+                                        <col width="10%"  />
+                                        <col width="20%"  />
+                                        <col width="20%"  />
+                                        <thead>
+                                            <tr>
+                                                <th class="H300 bp-first-letter-capitalize line-height-medium">
+                                                    Type
+                                                </th>
+                                                <th class="H300 bp-first-letter-capitalize line-height-medium">
+                                                    Name
+                                                </th>
+                                                <th class="H300 bp-first-letter-capitalize line-height-medium">
+                                                    Active
+                                                </th>
+                                                <th class="H300 bp-first-letter-capitalize line-height-medium">
+                                                    Used for part master
+                                                </th>
+                                                <th class="H300 bp-first-letter-capitalize line-height-medium">
+                                                    Used for parts ordering
+                                                </th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat = "identifierRec in AdminConfig.BRP.BRPIdentifierList track by $index" ng-init="tableRowIndex = $index">
+                                            <td>
+                                                <span>
+                                                    <select class="bp-input-text text-value-placement" ng-model="identifierRec.Type" ng-change="AdminConfig.removeSelectedIdentifierName(AdminConfig.BRP.BRPIdentifierList[tableRowIndex],tableRowIndex);AdminConfig.isBRPConfigModified = true"
+                                                        ng-options="IdentifierType.type as IdentifierType.type for IdentifierType in AdminConfig.BRPIdentifierTypeList">
+                                                    </select>
+                                                </span>
+                                            </td>
+                                            <td ng-if="identifierRec.Type == 'Vendor'">
+                                                <span>
+                                                    <autocompletev2 id="autocompletev2Id" index="{{tableRowIndex}}" template-name="Customer" section-name="PriceFile" section-id="UnitPriceVendor" default-value="AdminConfig.BRPIdentifierListCopy[tableRowIndex].IdentifierName"/>
+                                                </span>
+                                            </td>
+                                            <td ng-if="identifierRec.Type == 'Unit Make'">
+                                                <span>
+                                                    <div class="bp-cell searchInputArea" ng-class = "{'showingOverlay' : AdminConfig.showUnitMakeList[$index] }">
+                                                        <span class="bp-autocomplete-image-icon">
+                                                            <i class="bp-icons bp-font-14 bp-blue-font bp-cursor-pointer stroke-3" ng-click = "AdminConfig.setFocusOnInput('unitMake',tableRowIndex)">search</i>
+                                                        </span>
+                                                        <input type="text" id="unitMake{{tableRowIndex}}" class="bp-input-text searchInput" placeholder="Start typing"
+                                                            autocomplete="off" ng-focus = "AdminConfig.addCurrentValueToUnitMake(AdminConfig.BRP.BRPIdentifierList[tableRowIndex],tableRowIndex);AdminConfig.showUnitMakeList[$index] = true" ng-blur = "AdminConfig.validateSelectedNameForUnitType(tableRowIndex);AdminConfig.showUnitMakeList[$index] = false" 
+                                                            ng-change="AdminConfig.isBRPConfigModified = true"
+                                                            ng-model="AdminConfig.BRPIdentifierListCopy[tableRowIndex].IdentifierName"
+                                                             />
+                                                        <div class="searchResultOverlay" id="unitMakeDropDownDiv{{tableRowIndex}}">
+                                                            <ul>
+                                                                <li ng-repeat="unit in AdminConfig.unitMake | filter:AdminConfig.BRPIdentifierListCopy[tableRowIndex].IdentifierName"
+                                                                    ng-mousedown="AdminConfig.setSelectedValue(unit,tableRowIndex)"
+                                                                    ng-class="{'selected-row': $index == AdminConfig.makeCurrentIndex}"
+                                                                    id="unit{{$index}}">
+                                                                    <div class="fullName">{{unit.UnitMakeName}}</div>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </span>
+                                            </td>
+                                            <td ng-if="!identifierRec.Type">
+                                                <span>
+                                                    <autocompletev2 id="autocompletev2Id" index="{{tableRowIndex}}" template-name="Customer" section-name="PriceFile" section-id="UnitPriceVendor" default-value="AdminConfig.BRPIdentifierListCopy[tableRowIndex].IdentifierName"/>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    <label ng-if="identifierRec.Type" class="bp-switch margin8">
+                                                        <input ng-model="identifierRec.Active" ng-change="AdminConfig.isBRPConfigModified = true" type="checkbox"/>
+                                                        <div class="bp-slider round"></div>
+                                                    </label>
+                                                    <label ng-if="!identifierRec.Type" class="bp-switch margin8">
+                                                        <input ng-model="identifierRec.Active" 
+                                                        ng-disabled= "!identifierRec.Type"
+                                                        ng-click="AdminConfig.preventDefaultAction($event)"
+                                                        ng-change="AdminConfig.isBRPConfigModified = true"
+                                                        type="checkbox"/>
+                                                        <div class="bp-slider round disableSlider"></div>
+                                                    </label>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    <label ng-if="identifierRec.Type == 'Vendor'" class="bp-switch margin8">
+                                                        <input ng-model="identifierRec.UsedForPartsMaster" ng-change="AdminConfig.isBRPConfigModified = true; AdminConfig.enableBRPPartsOrder()" type="checkbox"/>
+                                                        <div class="bp-slider round"></div>
+                                                    </label>
+                                                    <label ng-if="!identifierRec.Type || identifierRec.Type == 'Unit Make'" class="bp-switch margin8">
+                                                        <input ng-model="identifierRec.UsedForPartsMaster" 
+                                                        ng-disabled= "!identifierRec.Type || identifierRec.Type == 'Unit Make'"
+                                                        ng-click="AdminConfig.preventDefaultAction($event)"
+                                                        ng-change="AdminConfig.isBRPConfigModified = true"
+                                                        type="checkbox"/>
+                                                        <div class="bp-slider round disableSlider"></div>
+                                                    </label>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    <label ng-if="identifierRec.Type == 'Vendor'" class="bp-switch margin8">
+                                                        <input ng-model="identifierRec.UsedForPartsOrdering" ng-change="AdminConfig.checkForBRPPOAuthorization(tableRowIndex)" type="checkbox"/>
+                                                        <div class="bp-slider round"></div>
+                                                    </label>
+                                                    <label ng-if="!identifierRec.Type || identifierRec.Type == 'Unit Make'" class="bp-switch margin8">
+                                                        <input ng-model="identifierRec.UsedForPartsOrdering" 
+                                                        ng-disabled= "!identifierRec.Type || identifierRec.Type == 'Unit Make'"
+                                                        ng-click="AdminConfig.preventDefaultAction($event)"
+                                                        ng-change="AdminConfig.isBRPConfigModified = true"
+                                                        type="checkbox"/>
+                                                        <div class="bp-slider round disableSlider"></div>
+                                                    </label>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div ng-if="!identifierRec.Id" class="flex-container items-right">
+                                                    <a class="button icon delete" ng-click="AdminConfig.deleteBRPListingRow(identifierRec.Type, AdminConfig.BRPIdentifierListCopy[tableRowIndex], tableRowIndex)"><span class="button-text" aira-hidden="true">Delete</span></a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="otherTaskEntry bp-flex-grid-container MB20">
+                                    <div class="bp-grid-column createNewTask" ng-click="AdminConfig.addBRPIdentifier()">
+                                        <a class="H400"><i class="bp-icons bp-font-20 bp-cursor-pointer">addCircle</i>{{'Add_new_BRP_identifier' | translate}}</a>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>      
+                    </div>
+
+                    <div ng-if="AdminConfig.BRP.IntegrationConfigured == 'No'" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Configure_integration' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <button class="btn btn-default greenBtn" ng-click="AdminConfig.configureBRPIntegration()" 
+                            ng-class="{'applyDisable' : !AdminConfig.IsConfigureIntegrationBtnEnabled() }"
+                            ng-disabled= "!AdminConfig.IsConfigureIntegrationBtnEnabled()">{{ 'Execute_script' | translate}}
+                            </button>
+                        </div>
+
+                        <div class="labelValueCenter ML22">
+                            <p ng-if="!AdminConfig.IsConfigureIntegrationBtnEnabled()" class="redHover">{{ AdminConfig.CIBtnDisablementMessage }}</p>
+                        </div>
+                    </div>
+
+                    <div ng-if="AdminConfig.BRP.IntegrationConfigured == 'Yes'" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Enabled' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 labelSwitchControl margin8">
+                            <label class="bp-switch">
+                                <input ng-model="AdminConfig.BRP.Enabled" 
+                                ng-change="AdminConfig.enableBRPConfiguration()" type="checkbox"/>
+                                <div class="bp-slider round"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div ng-if="AdminConfig.BRP.IntegrationConfigured == 'Yes'" class="row margin8">
+                        <div class="col-md-11 margin8 blue-back">
+                            <label class="labelSize">{{ 'Parts_order_configuration' | translate}}</label>
+                        </div>
+                    </div>
+
+                    <div ng-if="AdminConfig.BRP.IntegrationConfigured == 'Yes' && !AdminConfig.BRP.BRPPOAuthorized" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Authorize_BRP' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <button class="btn btn-default greenBtn" ng-click="AdminConfig.authorizeBRP()">{{ 'Authorize_BRP' | translate}}</button>
+                        </div>
+                    </div>
+
+                    <div ng-if="AdminConfig.BRP.BRPPOAuthorized" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Enable_parts_order' | translate}}</label>
+                        </div>
+                        <div ng-if="!AdminConfig.IsEnablePartsOrder()" class="col-md-2 labelSwitchControl margin8">
+                            <label class="bp-switch">
+                                <input ng-model="AdminConfig.BRP.BRPPOEnabled"
+                                ng-disabled= "!AdminConfig.IsEnablePartsOrder()" 
+                                ng-click="AdminConfig.preventDefaultAction($event)"
+                                type="checkbox"/>
+                                <div class="bp-slider round disableSlider"></div>
+                            </label>
+                        </div>
+                        <div ng-if="AdminConfig.IsEnablePartsOrder()" class="col-md-2 labelSwitchControl margin8">
+                            <label class="bp-switch">
+                                <input ng-model="AdminConfig.BRP.BRPPOEnabled" 
+                                ng-change="AdminConfig.isBRPConfigModified = true; AdminConfig.showDisablePartsOrderConfirmationWindow()" type="checkbox"/>
+                                <div class="bp-slider round"></div>
+                            </label>
+                        </div>
+                        
+                        <div ng-if="!AdminConfig.IsEnablePartsOrder()" class="labelValueCenter ML22">
+                            <p class="redHover">{{ AdminConfig.POCBtnDisablementMessage }}</p>
+                        </div>                     
+                    </div>
+
+                </div>
+            </div>
+            <div ng-if="AdminConfig.BRP.IntegrationConfigured == 'Yes'" class="main_section row">
+                <span>
+                <button class="btn btn-default greenBtn pull-right margin8" 
+                    ng-class="{'applyDisable' : !AdminConfig.isBRPConfigChange() }"
+                    ng-disabled= "!AdminConfig.isBRPConfigChange()"
+                    ng-click="AdminConfig.saveBRP();">{{ 'Save_changes' | translate}}
+                </button>
+                <p ng-if="!AdminConfig.isBRPConfigChange()" class="pull-right saveMsgPlacement redHover">{{ AdminConfig.SaveBtnDisablementMessage }}</p>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div id="disablePartsOrdering" class="modal fade-scale bp-model-dialog delete-tax-rate-model-window" role="dialog">
+        <div class="modal-dialog modalWidthControl">
+            <!-- Modal content-->
+            <div class="modal-content col-xs-12 P0">
+                <div class="modal-body">
+                    <div class="heading-text">{{'Are_you_sure_you_want_to_disable_the_parts_order' | translate}}</div>
+                    <div class="message-info">
+                        <span class="bp-dark-grey2-font">
+							<p>{{'Confirming_it_will_disable_all_the_vendors_present_as_parts_ordering_vendor' | translate}}</p>
+						</span>
+                    </div>
+                    <div class="action-section">
+                        <div class = "c-modal-window-footer">
+                            <span class = "c-cancelBtn-btn-container"> 
+                                <bp-ng-button name="Cancel" class-value="c-cancel-btn c-btn-modal" action="AdminConfig.hideDisablePartsOrderModelWindow()" disabled-value="" ></bp-ng-button>
+                            </span>
+                            <span class = "c-primary-btn-container">
+                                <bp-ng-button name="Confirm" class-value="c-ternary-btn c-btn-modal" action="AdminConfig.enablePartsOrder()" disabled-value="" ></bp-ng-button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</apex:component>

@@ -7,21 +7,18 @@
 global class CustomerOrderCtrl_V2 {
     global CustomerOrderCtrl_V2(NewHomePageCtrl controller){} 
     public CustomerOrderCtrl_V2() {}
+
+    public Decimal Cash_Paymenmt_Rounding_Factor { get{return GeneralConfiguration.getCashPaymenmtRoundingFactor();} private set;}
     
     @RemoteAction
     global static String getSearchResults(String JSONString) {
-        return CustomerOrderCtrl.getSearchResults(JSONString); 
+        if(isDummyServerCall(BPUtility.getDecodedString(JSONString))) return null;
+        return BPUtility.getEncodedString(GenericSearchCtrl.getSearchResults(JSONString));
     }
      
     @RemoteAction 
     global static String getCOHeaderDetailsByGridName(String coHeaderId, String gridName){
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        gridName = BPUtility.getDecodedString(gridName);
-        try{
-            return COService.getCOHeaderDetailsByGridName(coHeaderId, gridName);
-        }catch(Exception e){
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
-        }
+        return COService.getCOHeaderDetailsByGridName(BPUtility.getDecodedString(coHeaderId), BPUtility.getDecodedString(gridName));
     }
     
     @RemoteAction
@@ -37,26 +34,12 @@ global class CustomerOrderCtrl_V2 {
     **/
     @RemoteAction
     global static String getSOMasterData(String coHeaderId) {
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        try {
-            ServiceOrderWrapper.SOMasterData masterDataObj = ServiceJobService.getServiceJobMasterdata(coHeaderId); 
-            return BPUtility.getEncodedString(System.JSON.serialize(masterDataObj, true));  
-        } catch(Exception e) {
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
-        }
+        return BPUtility.getEncodedString(System.JSON.serialize(ServiceJobService.getServiceJobMasterdata(BPUtility.getDecodedString(coHeaderId)), true));
     }
     
     @RemoteAction 
     global static String getSOHeaderDetails(String recordId, String gridName){
-        recordId = BPUtility.getDecodedString(recordId);
-        gridName = BPUtility.getDecodedString(gridName);
-        try{
-            List<ServiceOrderWrapper.SOWrapper> soWrapperList = ServiceJobService.getServiceJobDetails(recordId, gridName);
-            return BPUtility.getEncodedString(System.JSON.serialize(soWrapperList, true));
-        }catch(Exception e){
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
-        }
-        return BPUtility.getEncodedString('');
+        return BPUtility.getEncodedString(System.JSON.serialize(ServiceJobService.getServiceJobDetails(BPUtility.getDecodedString(recordId), BPUtility.getDecodedString(gridName)), true));
     }
     
     /**
@@ -67,62 +50,45 @@ global class CustomerOrderCtrl_V2 {
     **/
     @RemoteAction
     global static String createSOHeader(String coHeaderId) {
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        try{
-            ServiceJobService.createServiceJob(coHeaderId);
-            return getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('soHeader,Grid Items'));
-        }catch(Exception e){
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
-        }
-        return BPUtility.getEncodedString('');
+        ServiceJobService.createServiceJob(BPUtility.getDecodedString(coHeaderId));
+        return getSOHeaderDetails(coHeaderId, BPUtility.getEncodedString('soHeader,Grid Items'));
     }
     
     @RemoteAction
     global static String updateSOLineItems(String lineItemJSON, String soHeaderId) {
         lineItemJSON = BPUtility.getDecodedString(lineItemJSON);
         soHeaderId = BPUtility.getDecodedString(soHeaderId);
-        try{
+        if(isDummyServerCall(lineItemJSON)) return null;
+        COService.validateSectionStatus(soHeaderId);
+        
         String response = ServiceJobService.updateSOLIRec(lineItemJSON, soHeaderId);
-            if(response != null) {
-                return response;
-            }
-            return getSOHeaderDetails(BPUtility.getEncodedString(soHeaderId), null);
-        }catch(Exception e){
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
+        if(response != null) {
+            return response;
         }
-        return BPUtility.getEncodedString('');
+        return getSOHeaderDetails(BPUtility.getEncodedString(soHeaderId), null);
     }
     
     @RemoteAction
     global static String updateSOKHLineItems(String lineItemJSON, String soHeaderId) {
         lineItemJSON = BPUtility.getDecodedString(lineItemJSON);
-        soHeaderId = BPUtility.getDecodedString(soHeaderId);
-        Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
-        try{
-            if(AccessControl.ifObjectFieldIsUpdateable('Service_Order_Kit_Header__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_UPDATEABLE); }
-            if(AccessControl.ifObjectFieldIsAccessible('Service_Order_Kit_Header__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
-            
-            SOHeaderWrapper.SOKitHeader sokhObj = (SOHeaderWrapper.SOKitHeader) System.JSON.deserialize(lineItemJSON, SOHeaderWrapper.SOKitHeader.class);
-    
-            if(sokhObj.Id != null) {
-                Service_Order_Kit_Header__c soKH = [SELECT Id, Service_Order_Header__c, Fixed_Price__c FROM Service_Order_Kit_Header__c WHERE Id =: sokhObj.Id];
-                
-                if(soKH.Fixed_Price__c.SetScale(3) != sokhObj.FixedPrice) {
-                    SO_KLI_Recalculation.Errorhandler error = SO_KLI_Recalculation.updateSOKitHeader(sokhObj); //SO_KLI_Recalculation.updateSOKitHeader(sokhObj);
-                    ShopSuppliesService.shopSuppliesCalculation(soKH.Service_Order_Header__c);
-                }
+        if(isDummyServerCall(lineItemJSON)) return null;
+        if(AccessControl.ifObjectFieldIsUpdateable('Service_Order_Kit_Header__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_UPDATEABLE); }
+        if(AccessControl.ifObjectFieldIsAccessible('Service_Order_Kit_Header__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
+        
+        SOHeaderWrapper.SOKitHeader sokhObj = (SOHeaderWrapper.SOKitHeader) System.JSON.deserialize(lineItemJSON, SOHeaderWrapper.SOKitHeader.class);
+        if(sokhObj.Id != null) {
+            Service_Order_Kit_Header__c soKH = [SELECT Id, Service_Order_Header__c, Fixed_Price__c FROM Service_Order_Kit_Header__c WHERE Id =: sokhObj.Id];
+            if(soKH.Fixed_Price__c != sokhObj.FixedPrice) {
+                SO_KLI_Recalculation.Errorhandler error = SO_KLI_Recalculation.updateSOKitHeader(sokhObj);
+                ShopSuppliesService.shopSuppliesCalculation(soKH.Service_Order_Header__c);
             }
-            return getSOHeaderDetails(BPUtility.getEncodedString(soHeaderId), null);
-        }catch(Exception e){
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
+        return getSOHeaderDetails(soHeaderId, null);
     }
     
     @RemoteAction
     global static String addDeductibleAmount(String deductibleJson) {
-        deductibleJson = BPUtility.getDecodedString(deductibleJson);
-        SOHeaderWrapper.Deductible soPaymentWrapperObj = (SOHeaderWrapper.Deductible)System.JSON.deserialize(deductibleJson, SOHeaderWrapper.Deductible.class);
+        SOHeaderWrapper.Deductible soPaymentWrapperObj = (SOHeaderWrapper.Deductible)System.JSON.deserialize(BPUtility.getDecodedString(deductibleJson), SOHeaderWrapper.Deductible.class);
         
         String soPaymentRoleRecId = ServiceJobService.saveDeductibleAmount(soPaymentWrapperObj);
         List<SOPaymentWrapper> soPaymentRoleObjList;
@@ -134,18 +100,16 @@ global class CustomerOrderCtrl_V2 {
         }
         return BPUtility.getEncodedString(System.JSON.serialize(soPaymentRoleObjList[0], true));
     }
-    
+
     @RemoteAction
-    global static String addLineItems(String lineItemId, String soHeaderId) {
-        lineItemId = BPUtility.getDecodedString(lineItemId);
+    global static String addLineItems(String jsonStr, String soHeaderId) {
+        jsonStr = BPUtility.getDecodedString(jsonStr);
         soHeaderId = BPUtility.getDecodedString(soHeaderId);
-        try{
-            CustomerOrderCtrl.addServiceJobLineItems(lineItemId, soHeaderId, null, null);
-            return getSOHeaderDetails(BPUtility.getEncodedString(soHeaderId), BPUtility.getEncodedString('soHeader,Grid Items'));
-        }catch(Exception e){
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
-        }
-        return BPUtility.getEncodedString('');
+        if(isDummyServerCall(jsonStr)) return null;
+        COService.validateSectionStatus(soHeaderId);
+        
+        ServiceJobService.addServiceJobLineItems(jsonStr, soHeaderId, null, null);
+        return getSOHeaderDetails(BPUtility.getEncodedString(soHeaderId), BPUtility.getEncodedString('soHeader,Grid Items'));
     }
     
     /**
@@ -161,6 +125,8 @@ global class CustomerOrderCtrl_V2 {
     global static String removeLineItems(String lineItemId, String soHeaderId) {
         lineItemId = BPUtility.getDecodedString(lineItemId);
         soHeaderId = BPUtility.getDecodedString(soHeaderId);
+        COService.validateSectionStatus(soHeaderId);
+        
         try{
             if(AccessControl.ifObjectFieldIsAccessible('Service_Order_Header__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
             if(AccessControl.ifObjectFieldIsAccessible('Service_Order_Line_Item__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
@@ -169,9 +135,9 @@ global class CustomerOrderCtrl_V2 {
 
             String objectName = (Id.valueOf(lineItemId)).getSObjectType().getDescribe().getName();
             if(objectName == CONSTANTS.NAMESPACE + 'Service_Order_Line_Item__c') {
-                CustomerOrderCtrl.removeSOLineItem(lineItemId);
+                ServiceJobService.removeSOLineItem(lineItemId);
             } else if(objectName == CONSTANTS.NAMESPACE + 'Service_Order_Kit_Header__c') {
-                CustomerOrderCtrl.removeSOKHItems(lineItemId);
+                ServiceJobService.removeSOKHItems(lineItemId);
                 ShopSuppliesService.shopSuppliesCalculation(soHeaderId);
             }
             soHeaderId = BPUtility.escapeSingleQuotes(soHeaderId);
@@ -193,7 +159,6 @@ global class CustomerOrderCtrl_V2 {
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
        
     /**
@@ -209,39 +174,49 @@ global class CustomerOrderCtrl_V2 {
         jSONString = BPUtility.getDecodedString(jSONString);
         try {
             ServiceOrderWrapper.SOInfo soHeaderObj = (ServiceOrderWrapper.SOInfo) System.JSON.deserialize(jSONString, ServiceOrderWrapper.SOInfo.class);
+            
+            List<Service_Order_Header__c> soHeaderList = [Select Id, Provider__c, Is_Tax_Based_On_Customer_Address__c, Commit_Order_Controls__c, 
+            (Select Id FROM Tax_Exemptions__r WHERE Type__c =: TaxUtility.AUTOMATED_CUSTOMER),
+            (Select Id from CO_Invoice_Items__r where SO_Payment_Role__c != null),
+            (Select Id from SO_Payment_Roles__r) from Service_Order_Header__c where Id =: soHeaderObj.Id];
+            
             Service_Order_Header__c soHeaderRec = new Service_Order_Header__c();
+            if(!soHeaderList.isEmpty() && soHeaderList[0].Provider__c != soHeaderObj.ProviderId) {
+                if(String.isNotBlank(soHeaderObj.ProviderId) && soHeaderList[0].Is_Tax_Based_On_Customer_Address__c) {
+                    ResponseWrapper responseObj = Customer_Service.populateCustomerTaxesOnCO(soHeaderObj.Id, soHeaderObj.ProviderId, true);
+                    if(responseObj != null && responseObj.responseStatus.equalsIgnoreCase('error')) {
+                        soHeaderRec.Is_Tax_Based_On_Customer_Address__c = false;
+                    }
+                } else {
+                    soHeaderRec.Is_Tax_Based_On_Customer_Address__c = false;
+                }
+                DMLUtility.deleteSObjectList('Tax_Exemption__c', soHeaderList[0].Tax_Exemptions__r);
+            }
             soHeaderRec.Id = soHeaderObj.Id;
             soHeaderRec.Name__c = soHeaderObj.Name;
             soHeaderRec.Customer_Owned_Unit__c = soHeaderObj.UnitId;
             soHeaderRec.Transaction_Type__c = soHeaderObj.TransactionTypeId;
             
-            soHeaderRec.SO_Concern__c = convertListIntoStringForSOFields(soHeaderObj.ManualConcern);
-            soHeaderRec.SO_Correction__c = convertListIntoStringForSOFields(soHeaderObj.ManualCorrection);
-            soHeaderRec.SO_Cause__c = convertListIntoStringForSOFields(soHeaderObj.ManualCause);
+            if(soHeaderObj.ManualConcern != null) {
+            	soHeaderRec.SO_Concern__c = convertListIntoStringForSOFields(soHeaderObj.ManualConcern);
+            }
+            if(soHeaderObj.ManualCorrection != null) {
+            	soHeaderRec.SO_Correction__c = convertListIntoStringForSOFields(soHeaderObj.ManualCorrection);
+        	}
+            if(soHeaderObj.ManualCause != null) {
+            	soHeaderRec.SO_Cause__c = convertListIntoStringForSOFields(soHeaderObj.ManualCause);
+        	}
             soHeaderRec.Odometer_on_Arrival__c = soHeaderObj.OdometerIn;
             soHeaderRec.Odometer_on_Departure__c = soHeaderObj.OdometerOut;
-            soHeaderRec.Work_Status__c = soHeaderObj.WorkStatus;
             soHeaderRec.Provider__c = soHeaderObj.ProviderId;
             soHeaderRec.Claim_Status__c = soHeaderObj.ClaimStatus;
+            soheaderRec.Commit_Order_Controls__c = soHeaderObj.CommitOrderControls;
             soHeaderRec.Category__c = (soHeaderObj.TransactionType == 'Internal' || soHeaderObj.TransactionType == 'Stock Unit') ? soHeaderObj.CategoryId : null;
-            
-            /*if(soHeaderObj.NotesForCustomer.size() == 0) {
-                soHeaderRec.SO_Notes_For_Customer__c = null;
-            }
-            String notesCustomer = '';
-            for(String notesStr : soHeaderObj.NotesForCustomer) {
-                notesStr = (notesStr.contains('\n')) ? notesStr.replaceAll('\n', '') : notesStr;
-                soHeaderRec.SO_Notes_For_Customer__c = (soHeaderRec.SO_Notes_For_Customer__c == null ? '' : soHeaderRec.SO_Notes_For_Customer__c);
-                notesCustomer += notesStr + '\n';
-            }*/
             soHeaderRec.SO_Notes_For_Customer__c = convertListIntoStringForSOFields(soHeaderObj.NotesForCustomer);
-            //soHeaderRec.SO_Notes_For_Customer__c = String.isNotBlank(soHeaderObj.NotesForCustomer) ? soHeaderObj.NotesForCustomer : null;
             
             // Logic to delete Invoice Item and SO Payment role - If Job type is changed from "Third Party" to "any other"
-            if(soHeaderObj.TransactionType != 'Third-Party' && !soHeaderObj.TransactionTypeLabel.equalsIgnoreCase('Quote Third-Party')) {
-                List<Service_Order_Header__c> soHeaderList = [Select Id, (Select Id from CO_Invoice_Items__r where SO_Payment_Role__c != null), 
-                    (Select Id from SO_Payment_Roles__r) from Service_Order_Header__c where Id =: soHeaderObj.Id];
-                if(soHeaderList.size() > 0) {
+            if(soHeaderObj.TransactionType != 'Third-Party' && soHeaderObj.TransactionTypeLabel != null && !soHeaderObj.TransactionTypeLabel.equalsIgnoreCase('Quote Third-Party')) {
+                if(!soHeaderList.isEmpty()) {
                     List<SObject> sObjectListToDelete = new List<SObject>((List<SObject>)soHeaderList[0].CO_Invoice_Items__r);
                     sObjectListToDelete.addAll((List<SObject>)soHeaderList[0].SO_Payment_Roles__r);
                     
@@ -252,6 +227,18 @@ global class CustomerOrderCtrl_V2 {
             }
                        
             if(soHeaderRec.Id != null) {
+                if(!soHeaderList.isEmpty() && soHeaderList[0].Commit_Order_Controls__c != soHeaderObj.CommitOrderControls) {
+                    String soId = soHeaderRec.Id;
+                    List<Vendor_Order_Line_Item__c> voliList = [Select Id, Special_Order_Status__c, Special_Order_Belongs_To__c  From Vendor_Order_Line_Item__c where Special_Order_Belongs_To__c =: soId.substring(0,soId.length()-3) and Special_Order_Status__c In ('Order submitted','In Stock')];
+                    if(!voliList.isEmpty()) {
+                        throw new BlackPurlException('The requested item is updated by some other process, please refresh the page.');   
+                    }
+                    List<Service_Order_Line_Item__c> soliList = [SELECT Id, Commit_Order_Controls__c FROM Service_Order_Line_Item__c WHERE Service_Order_Header__c =: soHeaderRec.Id];
+                    for(Service_Order_Line_Item__c soliRec : soliList) {
+                        soliRec.Commit_Order_Controls__c = soHeaderRec.Commit_Order_Controls__c;
+                    }
+                    DMLUtility.updateSobjectList('Service_Order_Line_Item__c', soliList);
+                }
                 DMLUtility.updateSobjectList('Service_Order_Header__c', soHeaderRec);
             }
             
@@ -261,27 +248,21 @@ global class CustomerOrderCtrl_V2 {
             }
             
             return BPUtility.getEncodedString(System.JSON.serialize(new ServiceOrderWrapper.SOInfo(soHeaderRecList[0])));
-        }catch(Exception e){
+        } catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @RemoteAction
     global static String saveUnitArrivalInfo(String jSONString) {
-        jSONString = BPUtility.getDecodedString(jSONString);
-        try {
-            CustomerOrderCtrl.saveUnitArrivalInfo(jSONString);  
-        } catch(Exception e){
-            throw new BlackPurlException(e.getMessage());
-        }
+        ServiceJobService.saveUnitArrivalInfo(BPUtility.getDecodedString(jSONString));
         return BPUtility.getEncodedString('Success');
     }
     
-    private static String convertListIntoStringForSOFields(List<ServiceOrderWrapper.ServiceNotes> serviceNotesList) {
+    public static String convertListIntoStringForSOFields(List<ServiceOrderWrapper.ServiceNotes> serviceNotesList) {
         String returnStr = '';
-        if(serviceNotesList.size() == 0) { 
-            returnStr = null;
+        if(serviceNotesList == null || serviceNotesList.size() == 0) { 
+            return null;
         }
         for(ServiceOrderWrapper.ServiceNotes serviceNote : serviceNotesList) {
             serviceNote.Value = (serviceNote.Value.contains('\n')) ? serviceNote.Value.replaceAll('\n', '') : serviceNote.Value;
@@ -441,7 +422,6 @@ global class CustomerOrderCtrl_V2 {
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     /**
@@ -485,6 +465,26 @@ global class CustomerOrderCtrl_V2 {
         }  
     }
     
+    /* START: Async CO checkout action*/
+    @RemoteAction
+    global static String getCOInvoiceItemListOnly(String coInvoiceHeaderId) {
+        coInvoiceHeaderId = BPUtility.getDecodedString(coInvoiceHeaderId);
+        return BPUtility.getEncodedString(System.JSON.serialize(COInvoiceItemService.getCOInvoiceItemList(coInvoiceHeaderId), true));
+    }
+    
+    @RemoteAction
+    global static String getTaxDetailOnCheckout(String coInvoiceHeaderId) {
+        coInvoiceHeaderId = BPUtility.getDecodedString(coInvoiceHeaderId);
+        return BPUtility.getEncodedString(System.JSON.serialize(COInvoiceItemService.getTaxDetailOnCheckout(coInvoiceHeaderId), true));
+    }
+    
+    @RemoteAction
+    global static String getInvoiceTotalInfo(String coHeaderId) {
+        coHeaderId = BPUtility.getDecodedString(coHeaderId);
+        return BPUtility.getEncodedString(System.JSON.serialize(COInvoiceItemService.getInvoiceTotalInfo(coHeaderId), true));
+    }
+    /* END: Async CO checkout action*/
+    
     @RemoteAction
     global static String getSalesTaxDetailsForDeal(String dealId) {
         dealId = BPUtility.getDecodedString(dealId);
@@ -512,7 +512,6 @@ global class CustomerOrderCtrl_V2 {
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
@@ -586,19 +585,19 @@ global class CustomerOrderCtrl_V2 {
         
         if(totalDepositOnCO > 0 
             || (dealList.size() > 0 && dealList[0].CO_Invoice_Items__r.size() == 0 && dealList[0].Status__c != 'Invoiced')) {
-            CustomerOrderCtrl.closeInvoice(BPUtility.getEncodedString(System.JSON.serialize(coInvItemObjList)), coHeaderId, currentCheckoutType, invoiceDateString);
+            COService.closeInvoice(BPUtility.getEncodedString(System.JSON.serialize(coInvItemObjList)), coHeaderId, currentCheckoutType, invoiceDateString);
             return '';
         } else {
             for(CO_Invoice_Item__c invItemRec : coInvoiceItemList) {
                 if(!invItemRec.isActive__c || (invItemRec.CO_Line_Item__c != null && invItemRec.CO_Line_Item__r.Qty__c > 0 && 
                     (invItemRec.CO_Line_Item__r.Qty__c != invItemRec.CO_Line_Item__r.Qty_Committed__c))) {
-                    CustomerOrderCtrl.closeInvoice(BPUtility.getEncodedString(System.JSON.serialize(coInvItemObjList)), coHeaderId, currentCheckoutType, invoiceDateString);
+                    COService.closeInvoice(BPUtility.getEncodedString(System.JSON.serialize(coInvItemObjList)), coHeaderId, currentCheckoutType, invoiceDateString);
                     return '';
                 }
             }
         }
         
-        CustomerOrderCtrl.closeOrder(BPUtility.getEncodedString(System.JSON.serialize(coInvItemObjList)), coHeaderId, currentCheckoutType, invoiceDateString);
+        COService.closeOrder(BPUtility.getEncodedString(System.JSON.serialize(coInvItemObjList)), coHeaderId, currentCheckoutType, invoiceDateString);
         return '';
     }
     
@@ -614,249 +613,119 @@ global class CustomerOrderCtrl_V2 {
         Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
         Boolean isAddLinkedFee = false;
         Boolean isCashSalesCreated = false;
-        //try{
-            if(String.isBlank(coHeaderId)) {
-            	isCashSalesCreated = true;
-                coHeaderId = BPUtility.getDecodedString(BPGlobalHeaderCtrl.createCustomerOrder());  
-                isAddLinkedFee = true;
-            }
-                
-            if(String.isNotBlank(feeId)) {
-                insertFeeInMerchGrid(feeId, coHeaderId, isAddLinkedFee, 1);
-            } else {
-                if(AccessControl.ifObjectFieldIsAccessible('CO_Line_Item__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
-                
-                List<COLIWrapper> coLineItemObjList = (List<COLIWrapper>) System.JSON.deserialize(jSONString, List<COLIWrapper>.class);
-                List<CO_Line_Item__c> coLineItemListToUpdate = new List<CO_Line_Item__c>();
-                Decimal previousQty;
-                String commitOrderControlSettingValue;
-                if(coLineItemObjList.size() > 0 && coLineItemObjList[0].CoLineItemId == null && String.isBlank(coLineItemObjList[0].DealId)) {
-                    List<CO_Header__c> coHeaderList = [Select Id, CO_Type__c, Merchandise_Commit_Order_controls__c, Hide_Merchandise_Section__c, 
-                    		(Select Id from CO_Line_Items__r where Is_In_Merch_Section__c = true LIMIT 1) from CO_Header__c where Id =: coHeaderId];
-                    
-                    commitOrderControlSettingValue = coHeaderList[0].Merchandise_Commit_Order_controls__c;
-                    if(coHeaderList.size() > 0 && coHeaderList[0].CO_Line_Items__r.size() == 0) {
-                        if(!GeneralConfiguration.isLoadNewCustomerOrder() || isAddLinkedFee) {
-                        	List<SObject> sObjectListToInsert = COService.addLinkedFee(coHeaderId, null, 'Merchandise');
-                        	if(sObjectListToInsert != null && sObjectListToInsert.size() > 0) {
-                            	coLineItemListToUpdate.addAll((List<CO_Line_Item__c>) sObjectListToInsert);
-                        	}
-	                        
-	                        // Add CO Section Detail record for Merchandise section when first record is added in Merchandise section.
-                            COSectionDetailService.createCOSection(coHeaderId, COSectionDetailService.MERCHANDISE);
-                        }
-                    }
-                }
-                
-                // get environment fee data for part
-                Set<String> partIdSet = new Set<String>();
-                for(COLIWrapper coLineItemObj : coLineItemObjList) {
-                    if(String.isNotBlank(coLineItemObj.PartId)) {
-                        partIdSet.add(coLineItemObj.PartId);
-                    }
-                }
-                Map<String, Part__c> partIdToPartRecMap = COService.getPartIdToPartRecMap(partIdSet);
-                
-                for(COLIWrapper coLineItemObj : coLineItemObjList) {
-                	
-                    CO_Line_Item__c coLineItemRec = new CO_Line_Item__c(CO_Header__c = coHeaderId, Deal__c = coLineItemObj.DealId);
-                    coLineItemRec.Qty__c = coLineItemObj.Qty ;
-                    coLineItemObj.Tax = (coLineItemObj.Tax == null) ? 0 : coLineItemObj.Tax;
-                    coLineItemObj.Price = (coLineItemObj.Price == null) ? 0 : coLineItemObj.Price;
-                    coLineItemRec.Special_Order__c = (coLineItemObj.isSpecialOrder == null) ? false : coLineItemObj.isSpecialOrder;
-                    
-                    if(isTaxIncludingPricing && String.isBlank(coLineItemObj.DealId)) {
-                        coLineItemRec.Price_When_Tax_Included__c = coLineItemObj.Price;
-                        coLineItemRec.Price__c = (coLineItemObj.Price / (1 + (coLineItemObj.Tax / 100))).setScale(2, RoundingMode.HALF_UP);
-                    } else {
-                        coLineItemRec.Price__c = coLineItemObj.Price;
-                    }
-                      
-                    if(coLineItemObj.CoLineItemId != null) {
-                        coLineItemRec.Id = coLineItemObj.CoLineItemId;
-                        if(isTaxIncludingPricing && String.isNotBlank(coLineItemObj.DealId)) {
-                        	coLineItemRec.Price_When_Tax_Included__c = coLineItemObj.Price;
-                        }
-                        //Analysis : Query only for deal section
-                        if(String.isNotBlank(coLineItemObj.DealId)) {
-	                        List<CO_Line_Item__c> coliList = [select Qty__c from CO_Line_Item__c where Id = :coLineItemObj.CoLineItemId];
-	                        if(coliList.size() > 0) {
-	                            previousQty = coliList[0].Qty__c;
-	                        }
-                        }
-                    }                
-                    
-                    if(String.isNotBlank(coLineItemObj.FeeId)) {
-                    	coLineItemRec.Fee__c =  coLineItemObj.FeeId;
-                    	coLineItemRec.Item_Description__c = coLineItemObj.ItemDescription;
-                        coLineItemRec.Qty_Committed__c = coLineItemObj.Qty;
-                    } if(String.isNotBlank(coLineItemObj.PartId)) {
-                    	coLineItemRec.Part__c = coLineItemObj.PartId;
-                    	if(coLineItemObj.IsNonInventoryPart != null && coLineItemObj.IsNonInventoryPart) {
-                    		coLineItemRec.Status__c = 'In Stock';
-                        	coLineItemRec.Qty_Committed__c = coLineItemObj.Qty;
-                    	} else if(coLineItemObj.QtyCommitted != null && coLineItemObj.Qty > 0) {
-	                       coLineItemRec.Qty_Committed__c = (coLineItemObj.QtyCommitted > coLineItemObj.Qty) ? coLineItemObj.Qty : coLineItemObj.QtyCommitted;    
-                    	}
-                    }
-                    
-                    coLineItemListToUpdate.add(coLineItemRec);
-                    
-                    // Create one Extra line for Env Fee
-                    if(coLineItemObj.CoLineItemId == null && coLineItemObj.PartId != null && String.isBlank(coLineItemObj.DealId)) {
-                    	coLineItemRec.Merchandise_Commit_Order_controls__c = commitOrderControlSettingValue;
-
-                        CO_Line_Item__c envFeeLineItemRec = COService.createEnvFeeLineItem(partIdToPartRecMap.get(coLineItemObj.PartId), coHeaderId);
-                        if(envFeeLineItemRec.Fee__c != null) {
-                            coLineItemListToUpdate.add(envFeeLineItemRec);
-                        }
-                    }
-                }
-                if(coLineItemListToUpdate.size() > 0) {
-                    DMLUtility.upsertSobjectList('CO_Line_Item__c', coLineItemListToUpdate);
-                    
-                    if(String.isNotBlank(coLineItemListToUpdate[0].Deal__c)) {
-	                    String dealId = coLineItemListToUpdate[0].Deal__c;
-	                    Set<String> coliIdSet = new Set<String>();
-	                    for(CO_Line_Item__c coliRec : coLineItemListToUpdate) {
-	                        coliIdSet.add(coliRec.Id);
-	                    }
-	                    if(String.isNotBlank(coLineItemObjList[0].CoLineItemId)) {
-	                        if(previousQty != coLineItemListToUpdate[0].Qty__c) {
-	                            CustomerOrderCtrl.createDealUnresolvedFulfillment(new List<String>(coliIdSet), dealId, Constants.UNRESOLVED_FULFILLMENT_TYPE_UPDATED);
-	                        }
-	                    } else {
-	                        CustomerOrderCtrl.createDealUnresolvedFulfillment(new List<String>(coliIdSet), dealId, Constants.UNRESOLVED_FULFILLMENT_TYPE_ADDED);
-	                    }
-	                    return getDealDetails(BPUtility.getEncodedString(dealId), BPUtility.getEncodedString('dealUnresolvedFulfillmentAndDealFulfillment'));
-                    }
-                }
-            }
-            if(isCashSalesCreated) {
-            	List<CO_Line_Item__c> coLineItemList = [Select Price__c, Price_When_Tax_Included__c, Tax__c FROM CO_Line_Item__c WHERE CO_Header__c =: coHeaderId AND Part__c != null];
-            	Decimal price, taxRate;
-            	String coLineItemId;
-            	if(coLineItemList.size() > 0) {
-            	    coLineItemId = coLineItemList[0].Id;
-            	    price = (isTaxIncludingPricing ? coLineItemList[0].Price_When_Tax_Included__c : coLineItemList[0].Price__c);
-            	    price = (price != null ? price.setScale(2, RoundingMode.HALF_UP) : 0);
-            	    taxRate = coLineItemList[0].Tax__c;
-            	}
-            	return BPUtility.getEncodedString('{"COHeaderId" : "' + coHeaderId + '", "COLineItemId" : "' + coLineItemId + '", "Tax" : ' + taxRate + ', "Price" : ' + price + '}');
-            } else {
-            	return getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('coHeader,coLineItem'));
-            }
-        /*}catch(Exception e){
-
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
+        if(String.isBlank(coHeaderId)) {
+            isCashSalesCreated = true;
+            coHeaderId = BPUtility.getDecodedString(BPGlobalHeaderCtrl.createCustomerOrder());  
+            isAddLinkedFee = true;
+        } else {
+            COService.validateSectionStatus(coHeaderId);
         }
-        return BPUtility.getEncodedString('');*/
-    }
-    
-    @RemoteAction
-    global static String saveCOLineItem(String coHeaderId, String jSONString, String feeId) {
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        jSONString = BPUtility.getDecodedString(jSONString);
-        feeId = BPUtility.getDecodedString(feeId);
-        return saveCOLineItem_Updated(coHeaderId, jSONString, feeId);
-        /*
-        Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
-        Boolean isAddLinkedFee = false;
-        try{
-            if(String.isBlank(coHeaderId)) {
-                coHeaderId = BPUtility.getDecodedString(BPGlobalHeaderCtrl.createCustomerOrder());  
-                isAddLinkedFee = true;
-            }
+            
+        if(String.isNotBlank(feeId)) { // assuming jSONString will have UUID for fee line item
+            insertFeeInMerchGrid(feeId, coHeaderId, isAddLinkedFee, 1, jSONString);
+        } else {
+            if(AccessControl.ifObjectFieldIsAccessible('CO_Line_Item__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
+            
+            List<COLIWrapper> coLineItemObjList = (List<COLIWrapper>) System.JSON.deserialize(jSONString, List<COLIWrapper>.class);
+            List<CO_Line_Item__c> coLineItemListToUpdate = new List<CO_Line_Item__c>();
+            Decimal previousQty;
+            String commitOrderControlSettingValue;
+            if(coLineItemObjList.size() > 0 && coLineItemObjList[0].CoLineItemId == null && String.isBlank(coLineItemObjList[0].DealId)) {
+                List<CO_Header__c> coHeaderList = [Select Id, CO_Type__c, Merchandise_Commit_Order_controls__c, Hide_Merchandise_Section__c, 
+                        (Select Id from CO_Line_Items__r where Is_In_Merch_Section__c = true LIMIT 1) from CO_Header__c where Id =: coHeaderId];
                 
-            if(String.isNotBlank(feeId)) {
-                insertFeeInMerchGrid(feeId, coHeaderId, isAddLinkedFee, 1);
-            } else {
-                if(AccessControl.ifObjectFieldIsCreateable('CO_Line_Item__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_CREATEABLE); }
-                if(AccessControl.ifObjectFieldIsUpdateable('CO_Line_Item__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_UPDATEABLE); }
-                if(AccessControl.ifObjectFieldIsAccessible('CO_Line_Item__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
-                
-                List<COLIWrapper> coLineItemObjList = (List<COLIWrapper>) System.JSON.deserialize(jSONString, List<COLIWrapper>.class);
-                List<CO_Line_Item__c> coLineItemListToUpdate = new List<CO_Line_Item__c>();
-                Decimal previousQty;
-                if(coLineItemObjList.size() > 0 && coLineItemObjList[0].CoLineItemId == null && String.isBlank(coLineItemObjList[0].DealId)) {
-                    List<CO_Header__c> coHeaderList = [Select Id, CO_Type__c, Hide_Merchandise_Section__c, (Select Id from CO_Line_Items__r where Is_In_Merch_Section__c = true)
-                                                 from CO_Header__c where Id =: coHeaderId];
-                    
-                    if(coHeaderList.size() > 0 && coHeaderList[0].CO_Line_Items__r.size() == 0
-                        && (!GeneralConfiguration.isLoadNewCustomerOrder() || isAddLinkedFee)) {
+                commitOrderControlSettingValue = coHeaderList[0].Merchandise_Commit_Order_controls__c;
+                if(coHeaderList.size() > 0 && coHeaderList[0].CO_Line_Items__r.size() == 0) {
+                    if(!GeneralConfiguration.isLoadNewCustomerOrder() || isAddLinkedFee) {
                         List<SObject> sObjectListToInsert = COService.addLinkedFee(coHeaderId, null, 'Merchandise');
                         if(sObjectListToInsert != null && sObjectListToInsert.size() > 0) {
                             coLineItemListToUpdate.addAll((List<CO_Line_Item__c>) sObjectListToInsert);
                         }
+                        
+                        // Add CO Section Detail record for Merchandise section when first record is added in Merchandise section.
+                        COSectionDetailService.createCOSection(coHeaderId, COSectionDetailService.MERCHANDISE);
                     }
                 }
+            }
+            
+            // get environment fee data for part
+            Set<String> partIdSet = new Set<String>();
+            for(COLIWrapper coLineItemObj : coLineItemObjList) {
+                if(String.isNotBlank(coLineItemObj.PartId)) {
+                    partIdSet.add(coLineItemObj.PartId);
+                }
+            }
+            Map<String, Part__c> partIdToPartRecMap = COService.getPartIdToPartRecMap(partIdSet);
+            Boolean isNonInventoryPartAvailable = false;
+            for(COLIWrapper coLineItemObj : coLineItemObjList) {
                 
-                for(COLIWrapper coLineItemObj : coLineItemObjList) {
-                    CO_Line_Item__c coLineItemRec = new CO_Line_Item__c();
-                    coLineItemRec.Deal__c = coLineItemObj.DealId;
-                    coLineItemRec.Qty__c = coLineItemObj.Qty ;
-                    coLineItemObj.Tax = (coLineItemObj.Tax == null) ? 0 : coLineItemObj.Tax;
-                    coLineItemObj.Price = (coLineItemObj.Price == null) ? 0 : coLineItemObj.Price;
-                    if(isTaxIncludingPricing && String.isBlank(coLineItemObj.DealId)) {
+                CO_Line_Item__c coLineItemRec = new CO_Line_Item__c(CO_Header__c = coHeaderId, Deal__c = coLineItemObj.DealId);
+                coLineItemRec.UUID__c = coLineItemObj.UUID;
+                coLineItemRec.Qty__c = coLineItemObj.Qty ;
+                coLineItemObj.Tax = (coLineItemObj.Tax == null) ? 0 : coLineItemObj.Tax;
+                coLineItemObj.Price = (coLineItemObj.Price == null) ? 0 : coLineItemObj.Price;
+                coLineItemRec.Special_Order__c = (coLineItemObj.isSpecialOrder == null) ? false : coLineItemObj.isSpecialOrder;
+                
+                if(isTaxIncludingPricing && String.isBlank(coLineItemObj.DealId)) {
+                    coLineItemRec.Price_When_Tax_Included__c = coLineItemObj.Price;
+                    coLineItemRec.Price__c = (coLineItemObj.Price / (1 + (coLineItemObj.Tax / 100))).setScale(2, RoundingMode.HALF_UP);
+                } else {
+                    coLineItemRec.Price__c = coLineItemObj.Price;
+                }
+                    
+                if(coLineItemObj.CoLineItemId != null) {
+                    coLineItemRec.Id = coLineItemObj.CoLineItemId;
+                    if(isTaxIncludingPricing && String.isNotBlank(coLineItemObj.DealId)) {
                         coLineItemRec.Price_When_Tax_Included__c = coLineItemObj.Price;
-                        coLineItemRec.Price__c = (coLineItemObj.Price / (1 + (coLineItemObj.Tax / 100))).setScale(2, RoundingMode.HALF_UP);
-                    } else {
-                        coLineItemRec.Price__c = coLineItemObj.Price;
                     }
-                    coLineItemRec.CO_Header__c = coHeaderId;
-                    coLineItemRec.Part__c = (coLineItemObj.PartId != '') ? coLineItemObj.PartId : null;
-                    coLineItemRec.Fee__c = (coLineItemObj.FeeId != '') ? coLineItemObj.FeeId : null;
-                      
-                    if(coLineItemObj.PartId != null && coLineItemObj.IsNonInventoryPart != null && coLineItemObj.IsNonInventoryPart) {
-                        coLineItemRec.Status__c = 'In Stock';
-                    }
-                    if(coLineItemRec.Fee__c != null) {
-                        coLineItemRec.Item_Description__c = coLineItemObj.ItemDescription;
-                    }
-                    if(coLineItemObj.isSpecialOrder == null) {
-                        coLineItemRec.Special_Order__c = false; // Special Order Flag
-                    } else {
-                        coLineItemRec.Special_Order__c = coLineItemObj.isSpecialOrder; // Special Order Flag
-                    }
-                    if(coLineItemObj.CoLineItemId != null) {
-                        coLineItemRec.Id = coLineItemObj.CoLineItemId;
-                        if(isTaxIncludingPricing && String.isNotBlank(coLineItemObj.DealId)) {
-                            coLineItemRec.Price_When_Tax_Included__c = coLineItemObj.Price;
-                        }
+                    //Analysis : Query only for deal section
+                    if(String.isNotBlank(coLineItemObj.DealId)) {
                         List<CO_Line_Item__c> coliList = [select Qty__c from CO_Line_Item__c where Id = :coLineItemObj.CoLineItemId];
                         if(coliList.size() > 0) {
                             previousQty = coliList[0].Qty__c;
                         }
-                    }                
-                    if(coLineItemObj.QtyCommitted != null && coLineItemObj.Qty > 0) {
-                        if( coLineItemObj.QtyCommitted  > coLineItemObj.Qty) {
-                            coLineItemRec.Qty_Committed__c = coLineItemObj.Qty;
-                        } else {
-                            coLineItemRec.Qty_Committed__c = coLineItemObj.QtyCommitted;    
-                        }
                     }
-                    if(coLineItemRec.Fee__c != null) {
+                }                
+                
+                if(String.isNotBlank(coLineItemObj.FeeId)) {
+                    coLineItemRec.Fee__c =  coLineItemObj.FeeId;
+                    coLineItemRec.Item_Description__c = coLineItemObj.ItemDescription;
+                    coLineItemRec.Qty_Committed__c = coLineItemObj.Qty;
+                } if(String.isNotBlank(coLineItemObj.PartId)) {
+                    coLineItemRec.Part__c = coLineItemObj.PartId;
+                    if(coLineItemObj.IsNonInventoryPart != null && coLineItemObj.IsNonInventoryPart) {
+                        coLineItemRec.Status__c = 'In Stock';
                         coLineItemRec.Qty_Committed__c = coLineItemObj.Qty;
+                        coLineItemRec.Item_Description__c = coLineItemObj.ItemDescription;
+                        isNonInventoryPartAvailable = true;
+                    } else if(coLineItemObj.QtyCommitted != null && coLineItemObj.Qty > 0) {
+                        coLineItemRec.Qty_Committed__c = (coLineItemObj.QtyCommitted > coLineItemObj.Qty) ? coLineItemObj.Qty : coLineItemObj.QtyCommitted;    
                     }
-                    
-                    if(coLineItemObj.PartId != null && coLineItemObj.IsNonInventoryPart != null && coLineItemObj.IsNonInventoryPart) {
-                        coLineItemRec.Qty_Committed__c = coLineItemObj.Qty;
-                    }
-                    
-                    coLineItemListToUpdate.add(coLineItemRec);
-                    
-                    // Create one Extra line for Env Fee
-                    if(coLineItemObj.CoLineItemId == null && coLineItemObj.PartId != null && String.isBlank(coLineItemObj.DealId)) {
-                        CO_Line_Item__c envFeeLineItemRec = COService.createEnvFeeLineItem(coLineItemObj.PartId, coHeaderId);
-                        if(envFeeLineItemRec.Fee__c != null) {
-                            coLineItemListToUpdate.add(envFeeLineItemRec);
-                        }
+                    if(coLineItemObj.NonInventoryPart != null && coLineItemObj.NonInventoryPart) {
+                        isNonInventoryPartAvailable = true;   
                     }
                 }
                 
-                if(coLineItemListToUpdate.size() > 0) {
-                    upsert coLineItemListToUpdate;
-                    
+                coLineItemListToUpdate.add(coLineItemRec);
+                
+                // Create one Extra line for Env Fee
+                if(coLineItemObj.CoLineItemId == null && coLineItemObj.PartId != null && String.isBlank(coLineItemObj.DealId)) {
+                    coLineItemRec.Merchandise_Commit_Order_controls__c = commitOrderControlSettingValue;
+
+                    CO_Line_Item__c envFeeLineItemRec = COService.createEnvFeeLineItem(partIdToPartRecMap.get(coLineItemObj.PartId), coHeaderId);
+                    envFeeLineItemRec.UUID__c = coLineItemObj.UUID;
+                    if(envFeeLineItemRec.Fee__c != null) {
+                        coLineItemListToUpdate.add(envFeeLineItemRec);
+                    }
+                }
+            }
+            if(coLineItemListToUpdate.size() > 0) {
+                DMLUtility.upsertSobjectList('CO_Line_Item__c', coLineItemListToUpdate);
+                if(isNonInventoryPartAvailable) {
+                    COSectionDetailService.setSectionStatus_future(new Set<Id>{coHeaderId}, COSectionDetailService.MERCHANDISE);
+                }
+                
+                if(String.isNotBlank(coLineItemListToUpdate[0].Deal__c)) {
                     String dealId = coLineItemListToUpdate[0].Deal__c;
                     Set<String> coliIdSet = new Set<String>();
                     for(CO_Line_Item__c coliRec : coLineItemListToUpdate) {
@@ -864,27 +733,41 @@ global class CustomerOrderCtrl_V2 {
                     }
                     if(String.isNotBlank(coLineItemObjList[0].CoLineItemId)) {
                         if(previousQty != coLineItemListToUpdate[0].Qty__c) {
-                            CustomerOrderCtrl.createDealUnresolvedFulfillment(new List<String>(coliIdSet), dealId, Constants.UNRESOLVED_FULFILLMENT_TYPE_UPDATED);
+                            DealService.createDealUnresolvedFulfillment(new List<String>(coliIdSet), dealId, Constants.UNRESOLVED_FULFILLMENT_TYPE_UPDATED);
                         }
                     } else {
-                        CustomerOrderCtrl.createDealUnresolvedFulfillment(new List<String>(coliIdSet), dealId, Constants.UNRESOLVED_FULFILLMENT_TYPE_ADDED);
+                        DealService.createDealUnresolvedFulfillment(new List<String>(coliIdSet), dealId, Constants.UNRESOLVED_FULFILLMENT_TYPE_ADDED);
                     }
-                    
-                    if(String.isNotBlank(dealId)) {
-                        return getDealDetails(BPUtility.getEncodedString(dealId), BPUtility.getEncodedString('dealUnresolvedFulfillmentAndDealFulfillment'));
-                    }
-                    
+                    return getDealDetails(BPUtility.getEncodedString(dealId), BPUtility.getEncodedString('dealUnresolvedFulfillmentAndDealFulfillment'));
                 }
             }
-            return getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('coHeader,coLineItem'));
-        }catch(Exception e){
-
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');*/
+        if(isCashSalesCreated) {
+            List<CO_Line_Item__c> coLineItemList = [Select Price__c, Price_When_Tax_Included__c, Tax__c FROM CO_Line_Item__c WHERE CO_Header__c =: coHeaderId AND Part__c != null];
+            Decimal price, taxRate;
+            String coLineItemId;
+            if(coLineItemList.size() > 0) {
+                coLineItemId = coLineItemList[0].Id;
+                price = (isTaxIncludingPricing ? coLineItemList[0].Price_When_Tax_Included__c : coLineItemList[0].Price__c);
+                price = (price != null ? price.setScale(2, RoundingMode.HALF_UP) : 0);
+                taxRate = coLineItemList[0].Tax__c;
+            }
+            return BPUtility.getEncodedString('{"COHeaderId" : "' + coHeaderId + '", "COLineItemId" : "' + coLineItemId + '", "Tax" : ' + taxRate + ', "Price" : ' + price + '}');
+        } else {
+            return getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('coHeader,coLineItem'));
+        }
     }
     
-    public static void insertFeeInMerchGrid(String lineItemId, String coHeaderId, Boolean isAddLinkedFee, Decimal qty) {
+    @RemoteAction
+    global static String saveCOLineItem(String coHeaderId, String jSONString, String feeId) {
+        coHeaderId = BPUtility.getDecodedString(coHeaderId);
+        if(isDummyServerCall(coHeaderId)) return null;
+        jSONString = BPUtility.getDecodedString(jSONString);
+        feeId = BPUtility.getDecodedString(feeId);
+        return saveCOLineItem_Updated(coHeaderId, jSONString, feeId);
+    }
+    
+    public static void insertFeeInMerchGrid(String lineItemId, String coHeaderId, Boolean isAddLinkedFee, Decimal qty, String uuidValue) {
         try{
             List<Fee__c> feeList = SOQLUtil.getFeeByFieldName(new Map<String, String>{'Id' => lineItemId});
             if(feeList.size() == 0) {
@@ -912,6 +795,7 @@ global class CustomerOrderCtrl_V2 {
             coliRec.Qty_Committed__c = coliRec.Qty__c;
             coliRec.Price__c = (feeList[0].Price__c != null) ? feeList[0].Price__c : 0;
             coliRec.Retail__c = coliRec.Price__c;
+            coliRec.UUID__c = uuidValue;
             coliListToInsert.add(coliRec);
             DMLUtility.insertSobjectList('CO_Line_Item__c', coliListToInsert);
             
@@ -926,6 +810,7 @@ global class CustomerOrderCtrl_V2 {
     global static String deleteCOLineItem(String lineItemId, String coHeaderId){
         lineItemId = BPUtility.getDecodedString(lineItemId);
         coHeaderId = BPUtility.getDecodedString(coHeaderId);
+        COService.validateSectionStatus(coHeaderId);
         try{
             String objectName = (Id.valueOf(lineItemId)).getSObjectType().getDescribe().getName();
             String dealId;
@@ -941,29 +826,20 @@ global class CustomerOrderCtrl_V2 {
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @RemoteAction 
     global static String getTechnicianList() {
-        return CustomerOrderCtrl.getTechnicianList();
+        return TechnicianService.getTechnicianList();
     }
     
     @RemoteAction
     global static String saveHoursLogged(String hoursLoggedJSONString, String coHeaderId) {
-        hoursLoggedJSONString = BPUtility.getDecodedString(hoursLoggedJSONString);
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        
-        try {
-            String reponse = CustomerOrderCtrl.saveHoursLoggedRec(hoursLoggedJSONString, coHeaderId);
-            if(reponse.contains('[]') || reponse.contains('HasError')) {
-                return BPUtility.getEncodedString(reponse);
-            }
-            return BPUtility.getEncodedString(System.JSON.serialize(ServiceJobService.getHoursLogged(reponse), true));
-        }catch(Exception e) {
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
+        String reponse = ServiceJobService.saveHoursLoggedRec(BPUtility.getDecodedString(hoursLoggedJSONString), BPUtility.getDecodedString(coHeaderId));
+        if(reponse.contains('[]') || reponse.contains('HasError')) {
+            return BPUtility.getEncodedString(reponse);
         }
-        return BPUtility.getEncodedString('[]');
+        return BPUtility.getEncodedString(System.JSON.serialize(ServiceJobService.getHoursLogged(reponse), true));
     }
     
     @RemoteAction
@@ -971,7 +847,8 @@ global class CustomerOrderCtrl_V2 {
         soHeaderId = BPUtility.getDecodedString(soHeaderId);
         hrsLoggedRecTd = BPUtility.getDecodedString(hrsLoggedRecTd);
         try {
-            List<Hours_Logged__c> hrsLoggedList = [Select Id, End_Date_Time__c, Available_For_QB_Sync__c, Available_For_Xero_Sync__c from Hours_Logged__c where Id =: hrsLoggedRecTd];
+            List<Hours_Logged__c> hrsLoggedList = [Select Id, Service_Order_Header__r.SO_Status__c, End_Date_Time__c, Available_For_QB_Sync__c, Available_For_Xero_Sync__c from Hours_Logged__c where Id =: hrsLoggedRecTd];
+            if(hrsLoggedList.size() > 0 && hrsLoggedList[0].Service_Order_Header__r.SO_Status__c == ServiceJobUtil.INVOICED) throw new BlackPurlException('Service job is already invoiced. You cannot delete this entry.');
             if(hrsLoggedList.size() > 0 && hrsLoggedList[0].End_Date_Time__c != null && soHeaderId != null) {
             	if(AccessControl.ifObjectFieldIsUpdateable('Hours_Logged__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_UPDATEABLE); }
                 if(hrsLoggedList[0].Available_For_QB_Sync__c || hrsLoggedList[0].Available_For_Xero_Sync__c) {
@@ -983,42 +860,42 @@ global class CustomerOrderCtrl_V2 {
             	delete new Hours_Logged__c(Id = hrsLoggedRecTd);
             }
             ServiceJobService.updateLabourCostingOnSOLIBasedOnTechHoursCosting(new Set<String>{soHeaderId});
+            ServiceJobService.calculateTechinicianHours(null, new Set<Id>{soHeaderId});
             
             return BPUtility.getEncodedString(System.JSON.serialize(ServiceJobService.getHoursLogged(soHeaderId), true));
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('[]');
     }
     
     @remoteAction
     global static String submitClaimRecords(String soHeaderId) {
-        return CustomerOrderCtrl.submitClaimRecords(soHeaderId);
+        return ServiceJobService.submitClaimRecords(soHeaderId);
     }
     
     @RemoteAction
     global static String getWizardInfo(String soHeaderId, String wizardName) {
-        return CustomerOrderCtrl.getWizardInfo(soHeaderId, wizardName);
+        return ServiceJobService.getWizardInfo(soHeaderId, wizardName);
     } 
     
     @RemoteAction
     global static String saveClaimResponse(String soHeaderId,String ClaimWizardJson,String StepNumber){
-        return CustomerOrderCtrl.saveClaimResponse(soHeaderId, ClaimWizardJson, StepNumber);
+        return ServiceJobService.saveClaimResponse(soHeaderId, ClaimWizardJson, StepNumber);
     }
     
     @RemoteAction
     global static String getProviderInfo(String vendorId) {
-        return CustomerOrderCtrl.getProviderInfo(vendorId);
+        return ServiceJobService.getProviderInfo(vendorId);
     }
     
     @RemoteAction
     global static String getServiceWorksheetPrintDetail(String coHeaderId) {
-        return CustomerOrderCtrl.getServiceWorksheetPrintDetail(coHeaderId);
+        return ServiceJobService.getServiceWorksheetPrintDetail(coHeaderId);
     }
     
     @RemoteAction
     global static void saveWorkseetSelectionJson(String coHeaderId, String jsonString) { 
-        CustomerOrderCtrl.saveWorkseetSelectionJson(coHeaderId, jsonString);
+        ServiceJobService.saveWorkseetSelectionJson(coHeaderId, jsonString);
     }
     
     @RemoteAction
@@ -1026,17 +903,15 @@ global class CustomerOrderCtrl_V2 {
         soHeaderId = BPUtility.getDecodedString(soHeaderId);
         List<Service_Order_Header__c> soHeaderRecList = SOQLUtil.getSODetailsByFieldName(new Map<String, String>{'Id' => soHeaderId});
         if(soHeaderRecList.size() > 0) {
-            List<Individual_Tax__c> individualItemsList = [select CO_Line_Item__c, Tax_Rate__c, Form_Label__c, 
-            													Enhanced_Tax_Amount__c, Sales_Tax_Item__r.Name__c, 
-                                                                Taxable_Amount__c, Tax_Amount__c,
+            List<Individual_Tax__c> individualItemsList = [select CO_Line_Item__c, Deal__c, Tax_Rate__c, Form_Label__c, SO_Payment_Role__c,
+            													Enhanced_Tax_Amount__c, Sales_Tax_Item_Name__c, Sales_Tax_Item__r.Name__c, 
+                                                                Taxable_Amount__c, Tax_Amount__c, SO_Payment_Role__r.Applicable_Tax_Name__c,
                                                                 Applicable_Tax__c, List_Tax_items_on_forms__c
-                                                                    from Individual_Tax__c where Service_Order_Line_Item__r.Service_Order_Header__c = :soHeaderId];
-            Map<String, Decimal> salesTaxNameToTaxValue = TaxCalculation.getTaxAmountWithFormLabel(individualItemsList);
+                                                                    from Individual_Tax__c where Service_Order_Line_Item__r.Service_Order_Header__c = :soHeaderId OR 
+                                                                    (SO_Payment_Role__r.Service_Order_Header__c = :soHeaderId AND SO_Payment_Role__r.RecordType.DeveloperName = 'Deductible')];
+            Map<String, Decimal> salesTaxNameToTaxValue = TaxCalculation.getTaxAmountWithFormLabel(individualItemsList, 'Third-Party');
             
-            SOHeaderPrintPreviewCtrl.PrintingInfo printingInfoObj = new SOHeaderPrintPreviewCtrl.PrintingInfo(new List<Account>(), new List<Customer_Owned_Unit__c>(), new List<CO_Header__c>(), soHeaderRecList[0], 
-                                new List<Service_Order_Kit_Header__c>(), new List<Individual_Tax__c>(), new List<Price_Level__c>(),
-                                salesTaxNameToTaxValue);
-                                                            
+            ServiceJobTotalsWrapper printingInfoObj = new ServiceJobTotalsWrapper(soHeaderRecList[0], new List<Service_Order_Kit_Header__c>(), salesTaxNameToTaxValue);
             return BPUtility.getEncodedString(System.JSON.serialize(printingInfoObj, true)); 
         }
         return '';
@@ -1080,7 +955,6 @@ global class CustomerOrderCtrl_V2 {
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
      /**
@@ -1099,19 +973,10 @@ global class CustomerOrderCtrl_V2 {
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
         
     @RemoteAction
     global static String createNewCustomerOrder(String customerId, String sellingGroup) {
-        //String coHeaderId = BPGlobalHeaderCtrl.createNewCustomerOrder(customerId, sellingGroup);
-        /**if(sellingGroup != 'Part Sale' && sellingGroup != 'Cash Sale') {
-            CustomerOrderCtrl.removeMerchandiseSection(coHeaderId, true);
-        }*/
-        /**if(BPUtility.getDecodedString(sellingGroup) != 'Part Sale' && BPUtility.getDecodedString(sellingGroup) != 'Cash Sale') {
-            CustomerOrderCtrl.removeMerchandiseSection(coHeaderId, true);
-        }
-        return COService.getCOHeaderDetailsByGridName(BPUtility.getDecodedString(coHeaderId), 'Customer Info');*/
         return '';
     }
     
@@ -1125,7 +990,7 @@ global class CustomerOrderCtrl_V2 {
             String coHeaderId = BPGlobalHeaderCtrl.createNewCO(customerId, BPUtility.getEncodedString(sellingGroup), isPreventMerchSectionCreation);
             if((sellingGroup != 'Part Sale' && sellingGroup != 'Cash Sale') 
                 || (sellingGroup == 'Part Sale' && isPreventMerchSectionCreation)) {
-                CustomerOrderCtrl.removeMerchandiseSection(coHeaderId, true);
+                MerchandiseService.removeMerchandiseSection(coHeaderId, true);
             }
             return coHeaderId;
         }
@@ -1133,63 +998,69 @@ global class CustomerOrderCtrl_V2 {
     
     @RemoteAction
     global static String getDealDetails(String objectId, String gridName) {
-        return CustomerOrderCtrl.getDealDetails(objectId, gridName);
+        return DealService.getDealDetails(objectId, gridName);
     }
     
     @RemoteAction
     global static String createDeal(String coHeaderId) {
-        return CustomerOrderCtrl.createDeal(coHeaderId);
+        return DealService.createDeal(coHeaderId);
     }
     
     @RemoteAction
     global static String saveDealInfoDetails(String coHeaderId, String dealId, String json) {
-        return CustomerOrderCtrl.saveDealInfoDetails(coHeaderId, dealId, json);
+        return DealService.saveDealInfoDetails(coHeaderId, dealId, json);
     }
     
     @RemoteAction
     global static String saveTemporaryUnit(String dealId, String jSONString) {
-        return CustomerOrderCtrl.saveTemporaryUnit(dealId, jSONString);
+        DealItem dealItemObj = DealItem.parse(BPUtility.getDecodedString(jSONString));
+        String returnJson = DealService.saveTemporaryUnit(BPUtility.getDecodedString(dealId), dealItemObj);
+        return String.isBlank(dealItemObj.Id) ? DealService.getDealDetails(dealId, null) : BPUtility.getEncodedString(returnJson);
+    }
+    
+    @RemoteAction
+    global static String saveTemporaryOrderUnit(String dealItemId,String jSONString) {
+        return BPUtility.getEncodedString(DealService.saveTemporaryOrderUnit(BPUtility.getDecodedString(dealItemId), BPUtility.getDecodedString(jSONString)));
     }
     
     @RemoteAction
     global static String updateDealStatus(String dealId, String dealStatus) {
-        return CustomerOrderCtrl.updateDealStatus(dealId, dealStatus);
+        return DealService.updateDealStatus(dealId, dealStatus);
     }
     
     @RemoteAction
     global static String addUnitToDeal(String dealItemId, String unitId, String dealId) {
-        return CustomerOrderCtrl.addUnitToDeal(dealItemId, unitId, dealId);
+        return DealService.addUnitToDeal(dealItemId, unitId, dealId);
     }
     
     @RemoteAction
     global static String updateDealUnitCostPrice(String dealUnitCostPriceItemjson, String dealId, String dealItemId) {
-        return CustomerOrderCtrl.updateDealUnitCostPrice(dealUnitCostPriceItemjson, dealId, dealItemId);
+        return DealService.updateDealUnitCostPrice(dealUnitCostPriceItemjson, dealId, dealItemId);
     }
     
     @RemoteAction
     global static String toggleRideawayPricingEnabled(String dealItemId, Decimal totalEnforceRideawayPrice, Boolean IsRideawayPricingEnabled) {
-        return CustomerOrderCtrl.toggleRideawayPricingEnabled(dealItemId, totalEnforceRideawayPrice, IsRideawayPricingEnabled);
+        return DealService.toggleRideawayPricingEnabled(dealItemId, totalEnforceRideawayPrice, IsRideawayPricingEnabled);
     }
     
     @RemoteAction
     global static String updateRideawayPricing(String dealItemId, String unitJsonString) {
-        return CustomerOrderCtrl.updateRideawayPricing(dealItemId, unitJsonString);
+        return DealService.updateRideawayPricing(dealItemId, unitJsonString);
     }
     
     @RemoteAction
     global static String updateStampDuty(String dealItemId, String stampDutyTotal) {
-        return CustomerOrderCtrl.updateStampDuty(dealItemId, stampDutyTotal);
+        return DealService.updateStampDuty(dealItemId, stampDutyTotal);
+    }
+
+    @RemoteAction
+    global static String updateStampDutyCalAndDutiableValue(String dealItemId, String stampDutyCalId, String dutiableValue, string tempUnitId) {
+        return DealService.updateStampDutyCalAndDutiableValue(dealItemId, stampDutyCalId, dutiableValue, tempUnitId);
     }
     
     @RemoteAction
     global static String updateStampDutyWhenRideawayPricingEnabled(String dealItemId, String stampDutyTotal) {
-        dealItemId = BPUtility.getDecodedString(dealItemId);
-        stampDutyTotal = BPUtility.getDecodedString(stampDutyTotal);
-        try {
-            return DealService.updateStampDutyWhenRideawayPricingEnabled(dealItemId, stampDutyTotal);
-        } catch(Exception e) {
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
-        }
+        return DealService.updateStampDutyWhenRideawayPricingEnabled(BPUtility.getDecodedString(dealItemId), BPUtility.getDecodedString(stampDutyTotal));
     } 
     
     @RemoteAction
@@ -1200,11 +1071,17 @@ global class CustomerOrderCtrl_V2 {
         if(String.isNotBlank(dealItemId)) {
             List<Deal_Item__c> dealItemList = [Select Deal__r.CO_Header__c, Customer_Owned_Unit__c, Deal__r.Status__c, Type__c, Customer_Owned_Unit__r.Status__c, Deal__r.Deal_Section_Trade_Only__c, Customer_Owned_Unit__r.Unit_Type__c From Deal_Item__c where Id =: dealItemId];
             if(dealItemList.size() > 0 && dealItemList[0].Deal__r.Status__c != 'Invoiced') {
-                if(dealItemList[0].Customer_Owned_Unit__r.Status__c == Constants.ON_ORDER_STATUS) {
-                    List<Customer_Owned_Unit__c> orduList = [Select Id, Is_Ordered_Unit_Added_To_Deal__c from Customer_Owned_Unit__c where Id =: dealItemList[0].Customer_Owned_Unit__c];
+                if(dealItemList[0].Customer_Owned_Unit__r != null && dealItemList[0].Customer_Owned_Unit__r.Unit_Type__c.equalsIgnoreCase('ORDU')) {
+                    List<Customer_Owned_Unit__c> orduList = [Select Id, (Select Id FROM Unit_Prices_Costs__r), Deal_Item__c from Customer_Owned_Unit__c where Id =: dealItemList[0].Customer_Owned_Unit__c];
                     if(orduList.size() > 0) {
-                        orduList[0].Is_Ordered_Unit_Added_To_Deal__c = false;
-                        DMLUtility.updateSobjectList('Customer_Owned_Unit__c', orduList);                    
+                        if(dealItemList[0].Customer_Owned_Unit__r.Status__c == Constants.ON_ORDER_STATUS && orduList[0].Deal_Item__c != null && !dealItemList[0].Deal__r.Status__c.equalsIgnoreCase(Constants.QUOTATION)) {
+                            orduList[0].Deal_Item__c = null;
+                            DMLUtility.updateSobjectList('Customer_Owned_Unit__c', orduList);                    
+                        } else if ((dealItemList[0].Customer_Owned_Unit__r.Status__c.equalsIgnoreCase(Constants.TEMP_ORDERD_UNIT_STATUS) || dealItemList[0].Customer_Owned_Unit__r.Status__c.equalsIgnoreCase(Constants.REQ_ORDERD_UNIT_STATUS))) {
+                            List<SObject> sobjDeleteList = new List<SObject>{orduList[0]};
+                            sobjDeleteList.addAll((List<SObject>)orduList[0].Unit_Prices_Costs__r);
+                            delete sobjDeleteList;      
+                        }
                     }
                 }
                 String couId = dealItemList[0].Customer_Owned_Unit__c;
@@ -1217,14 +1094,10 @@ global class CustomerOrderCtrl_V2 {
                 if(AccessControl.ifObjectIsDeletable('Deal_Item__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_DELETABLE); }
                 delete new Deal_Item__c(Id = dealItemId);
                 
-                CustomerOrderCtrl.updateStatusForDeal(dealId);
+                DealService.updateStatusForDeal(dealId);
                 
                 List<Deal_Item__c> newDealItemList = [Select Id, Deal__r.Deal_Section_Trade_Only__c, Deal__r.Type__c From Deal_Item__c where Deal__c =: dealId];
-            	if(!GeneralConfiguration.getTaxIncludingPricing() && newDealItemList.size() > 0 &&
-            							islimitDealItemSalesTax(newDealItemList[0].Deal__r.Deal_Section_Trade_Only__c)) {
-                    DealService.limitDealItemSalesTax(dealId);
-                }
-                
+            	
                 if(dealItemList[0].Type__c == Constants.DEAL_ITEM_TYPE_UNIT && String.isBlank(couId) && newDealItemList.size() > 0 &&
             							newDealItemList[0].Deal__r.Deal_Section_Trade_Only__c && newDealItemList[0].Deal__r.Type__c == 'Financed') {
             		List<Deal_Finance__c> dealFinanceList = [Select Id from Deal_Finance__c where Deal__c =: dealId];
@@ -1237,116 +1110,105 @@ global class CustomerOrderCtrl_V2 {
         return getDealDetails(BPUtility.getEncodedString(dealId), null);
     }
     
-    public static Boolean islimitDealItemSalesTax(Boolean isDealTradeOnly) {
-    	if(!isDealTradeOnly && GeneralConfiguration.isTradeTaxCreditCanNotExceedUnitTax()) {
-    		return true;
-    	}
-    	return false;
-    }
-    
     @RemoteAction
     global static String saveOptionFeesLineItem(String dealId, String dealItemId, String jSONString) {
-        return CustomerOrderCtrl.saveOptionFeesLineItem(dealId, dealItemId, jSONString);
+        if(isDummyServerCall(BPUtility.getDecodedString(dealId))) return null;
+        return DealService.saveOptionFeesLineItem(dealId, dealItemId, jSONString);
     }
     
     @RemoteAction
     global static String getDealItemDetails(String dealItemId) {
-        dealItemId = BPUtility.getDecodedString(dealItemId);
-        return CustomerOrderCtrl.getDealItemDetails(dealItemId);
+        return DealService.getDealItemDetails(BPUtility.getDecodedString(dealItemId));
     }
     
     @RemoteAction
     global static String removeOptionFeesLineItem(String dealItemId, String lineItemId) {
-        return CustomerOrderCtrl.removeOptionFeesLineItem(dealItemId, lineItemId);
+        return DealService.removeOptionFeesLineItem(dealItemId, lineItemId);
     }
        
     @RemoteAction
     global static String updateTradeIn(String dealId, String jsonString) {
-        return CustomerOrderCtrl.updateTradeIn(dealId, jsonString);
+        return DealService.updateTradeIn(dealId, jsonString);
+    }
+
+    @RemoteAction
+    global static String updateUnitDetails(String jsonString) {
+        return COService.updateUnitDetails(jsonString);
     }
     
     @RemoteAction
     global static String createDealMerchAndServiceSetion(String dealId, String coHeaderId) {
-        return CustomerOrderCtrl.createDealMerchAndServiceSetion(dealId, coHeaderId);
+        return DealService.createDealMerchAndServiceSetion(dealId, coHeaderId);
     }
     
     @RemoteAction
     global static String createDealMerchSection(String dealItemIdSetJson, String coHeaderId) {
-        dealItemIdSetJson = BPUtility.getDecodedString(dealItemIdSetJson);
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        return DealService.createDealMerchSection(dealItemIdSetJson, coHeaderId);
+        return DealService.createDealMerchSection(BPUtility.getDecodedString(dealItemIdSetJson), BPUtility.getDecodedString(coHeaderId));
     }
     
     @RemoteAction
     global static String createDealServiceSection(String dealItemIdSetJson, String coHeaderId) {
-        dealItemIdSetJson = BPUtility.getDecodedString(dealItemIdSetJson);
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        return BPUtility.getEncodedString(DealService.createDealServiceSection(dealItemIdSetJson, coHeaderId));
+        return BPUtility.getEncodedString(DealService.createDealServiceSection(BPUtility.getDecodedString(dealItemIdSetJson), BPUtility.getDecodedString(coHeaderId)));
     }
     
     @RemoteAction
     global static String setStatusForCommitAndInstallAction(String dealId, String coHeaderId) {
-        dealId = BPUtility.getDecodedString(dealId);
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        return BPUtility.getEncodedString(DealService.setStatusForCommitAndInstallAction(dealId, coHeaderId));
+        return BPUtility.getEncodedString(DealService.setStatusForCommitAndInstallAction(BPUtility.getDecodedString(dealId), BPUtility.getDecodedString(coHeaderId)));
     }
     
     @RemoteAction
     global static String moveDealMerchAndServiceLineItems(String optionFeeRecId, String coHeaderId) {
-        return CustomerOrderCtrl.moveDealMerchAndServiceLineItems(optionFeeRecId, coHeaderId);
+        return DealService.moveDealMerchAndServiceLineItems(optionFeeRecId, coHeaderId);
     }
     
     @RemoteAction
     global static String resolveFulfillment(String dealId, String unresolvedFulfillmentObjJSON, String chargeMethod, String selectedUnitId) {
-        return CustomerOrderCtrl.resolveFulfillment(dealId, unresolvedFulfillmentObjJSON, chargeMethod, selectedUnitId);
+        return DealService.resolveFulfillment(dealId, unresolvedFulfillmentObjJSON, chargeMethod, selectedUnitId);
     }    
     
    @RemoteAction
     global static String updateDealFinanceDetails(String dealId, String dealFinanceJSON) {
-        dealId = BPUtility.getDecodedString(dealId);
-        dealFinanceJSON = BPUtility.getDecodedString(dealFinanceJSON);
-        DealService.updateDealFinanceDetails(dealId, dealFinanceJSON);
-        return getDealDetails(BPUtility.getEncodedString(dealId), BPUtility.getEncodedString('dealFinanceSection'));
+        DealService.updateDealFinanceDetails(BPUtility.getDecodedString(dealId), BPUtility.getDecodedString(dealFinanceJSON));
+        return getDealDetails(dealId, BPUtility.getEncodedString('dealFinanceSection'));
     }
     
     @RemoteAction
     global static String removeFAndIProductLineItem(String dealId, String fAndIProductId) {
-        return CustomerOrderCtrl.removeFAndIProductLineItem(dealId, fAndIProductId);
+        return DealService.removeFAndIProductLineItem(dealId, fAndIProductId);
     }
     
     @RemoteAction
     global static String saveDealFAndIProduct(String dealId, String dealFAndIProductJSON) {
-        return CustomerOrderCtrl.saveDealFAndIProduct(dealId, dealFAndIProductJSON);
+        if(isDummyServerCall(BPUtility.getDecodedString(dealId))) return null;
+        return DealService.saveDealFAndIProduct(dealId, dealFAndIProductJSON);
     }
     
     @RemoteAction
     global static String updateDealFinanceStatus(String coHeaderId, String dealId, String dealFinanceObjJson, String financeStatus) {
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        dealId = BPUtility.getDecodedString(dealId);
-        dealFinanceObjJson = BPUtility.getDecodedString(dealFinanceObjJson);
-        financeStatus = BPUtility.getDecodedString(financeStatus);
-        DealWrapper.DealFinanceWrapper dealFinanceObj = (DealWrapper.DealFinanceWrapper) System.JSON.deserialize(dealFinanceObjJson, DealWrapper.DealFinanceWrapper.class);
+        DealWrapper.DealFinanceWrapper dealFinanceObj = (DealWrapper.DealFinanceWrapper) System.JSON.deserialize(BPUtility.getDecodedString(dealFinanceObjJson), DealWrapper.DealFinanceWrapper.class);
         
         if(String.isBlank(dealFinanceObj.Id)) {
             return BPUtility.getEncodedString('{}'); 
         }  
-        DealService.updateFinanceStatus(coHeaderId, dealId, dealFinanceObj, financeStatus);
+        DealService.updateFinanceStatus(BPUtility.getDecodedString(coHeaderId), BPUtility.getDecodedString(dealId), dealFinanceObj, BPUtility.getDecodedString(financeStatus));
         return BPUtility.getEncodedString('Success');
     }
     
     @RemoteAction
     global static String recalculationOfDealKHLineItems(String dealKHJSON, String dealKHLineItemJSON) {
-        return CustomerOrderCtrl.recalculationOfDealKHLineItems(dealKHJSON, dealKHLineItemJSON);
+        if(isDummyServerCall(BPUtility.getDecodedString(dealKHJSON))) return null;
+        return DealService.recalculationOfDealKHLineItems(dealKHJSON, dealKHLineItemJSON);
     }    
     
     @remoteAction
     global static String insertOptionAndFeeLineItems(String partId, String coHeaderId, String dealId, String dealItemId, String jSONString, Boolean isSuppress, Boolean isDuplicateCheck) {
-        return CustomerOrderCtrl.insertOptionAndFeeLineItems(partId, coHeaderId, dealId, dealItemId, jSONString, isSuppress, isDuplicateCheck);
+        if(isDummyServerCall(BPUtility.getDecodedString(partId))) return null;
+        return DealService.insertOptionAndFeeLineItems(partId, coHeaderId, dealId, dealItemId, jSONString, isSuppress, isDuplicateCheck);
     }  
         
     @remoteAction
     global static String getDealFinanceMasterData() {
-        return CustomerOrderCtrl.getDealFinanceMasterData();
+        return DealService.getDealFinanceMasterData();
     }
     
     @remoteAction
@@ -1357,15 +1219,13 @@ global class CustomerOrderCtrl_V2 {
     
     @RemoteAction
     global static String saveCODeposit(String jsonString){
-        return CustomerOrderCtrl.saveCODeposit(jsonString);
+        return COService.saveCODeposit(jsonString);
     }
     
     @remoteAction
     global static String removeDealFinancing(String dealIdStr, String dealFinanceIdStr) {
-        String dealId = BPUtility.getDecodedString(dealIdStr); 
-        String dealFinanceId = BPUtility.getDecodedString(dealFinanceIdStr);
-        DealService.removeDealFinancing(dealId, dealFinanceId);
-        return CustomerOrderCtrl.getDealDetails(BPUtility.getEncodedString(dealId), BPUtility.getEncodedString('dealInfo'));
+        DealService.removeDealFinancing(BPUtility.getDecodedString(dealIdStr), BPUtility.getDecodedString(dealFinanceIdStr));
+        return DealService.getDealDetails(dealIdStr, BPUtility.getEncodedString('dealInfo'));
     }
     
     /**
@@ -1415,35 +1275,27 @@ global class CustomerOrderCtrl_V2 {
     }
     
     @RemoteAction
-    global static String refreshCOPricingAndTax(String coHeaderId, String customerId){
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        customerId = BPUtility.getDecodedString(customerId);
-        CO_Header__c coHeaderRec = new CO_Header__c(Id = coHeaderId, Customer__c = customerId);
-        COTriggerHelper.isRecalculateCOPLAndTax = true;
-        CustomerOrderCtrl.updateCOPricingAndTax(new List<CO_Header__c> {coHeaderRec}, customerId, true);
+    global static String refreshCOPricingAndTax(String recalculationObjJson, String customerId){
+        COService.refreshCOPricingAndTax(BPUtility.getDecodedString(recalculationObjJson));
         return 'Success';
     }
     
     public static Boolean isRefreshCOKit = false;
     @RemoteAction 
-    global static String refreshCOPricingAndTaxOnKit(String coHeaderId, String customerId){
-        coHeaderId = BPUtility.getDecodedString(coHeaderId);
-        customerId = BPUtility.getDecodedString(customerId);
-        isRefreshCOKit = true;
-        COService.updateCOPricingAndTaxOnKit(coHeaderId, customerId);
-        return COService.getCOHeaderDetailsByGridName(coHeaderId, 'coHeader,coLineItem,closedCOInvoiceHeader');
+    global static String refreshCOPricingAndTaxOnKit(String recalculationObjJson, String coHeaderId){
+        COService.refreshCOPricingAndTaxOnKit(BPUtility.getDecodedString(recalculationObjJson));
+        return COService.getCOHeaderDetailsByGridName(BPUtility.getDecodedString(coHeaderId), 'coHeader,coLineItem,closedCOInvoiceHeader');
     }
     
     @RemoteAction
-    global static String refreshSOPricingAndTax(String soHeaderId){
-        soHeaderId = BPUtility.getDecodedString(soHeaderId);
-        ServiceJobService.refreshSOPricingAndTax(new List<String> {soHeaderId});
+    global static String refreshSOPricingAndTax(String recalculationObjJson){
+        ServiceJobService.refreshSOPricingAndTax(BPUtility.getDecodedString(recalculationObjJson));
         return 'Success';
     }
     
     @RemoteAction 
     global static void setCOStatusAsQuote(String coHeaderId){
-        CustomerOrderCtrl.setCOStatusAsQuote(coHeaderId);
+        COService.setCOStatusAsQuote(coHeaderId);
     }
     
     /**
@@ -1486,7 +1338,8 @@ global class CustomerOrderCtrl_V2 {
                 }
             }
             
-            if(soHeaderRecList != null && soHeaderRecList.size() > 0 && soHeaderRecList[0].Work_Status__c!= 'Complete' && 
+            if(soHeaderRecList != null && soHeaderRecList.size() > 0 && !ServiceJobUtil.isJobComplete(soHeaderRecList[0].SO_Status__c) && 
+                soHeaderRecList[0].SO_Status__c != ServiceJobUtil.READY_TO_INVOICE && 
                 soHeaderRecList[0].Status__c!= 'Reviewed' && !isClockedEntry &&
                 soHeaderRecList[0].Service_Order_Line_Items__r.size() == 0) {
                 List<CO_Header__c> coHeader = SOQLUtil.getCOHeaderDetails(coHeaderId);
@@ -1519,7 +1372,7 @@ global class CustomerOrderCtrl_V2 {
     **/
     @RemoteAction  
     global static void removeMerchandiseSection(String coHeaderId, Boolean flag) {
-        CustomerOrderCtrl.removeMerchandiseSection(coHeaderId, flag);
+        MerchandiseService.removeMerchandiseSection(coHeaderId, flag);
     }
     
     /**
@@ -1529,13 +1382,13 @@ global class CustomerOrderCtrl_V2 {
     **/
     @RemoteAction  
     global static String removeDeal(String dealId) {
-        return CustomerOrderCtrl.removeDeal(dealId);
+        return DealService.removeDeal(dealId);
     }
     
     @RemoteAction
-    global static String moveLineItem(String sectionFrom, String sectionTo, String idToMove, String coHeaderId) {
-        COService.moveLineItem(sectionFrom, sectionTo, idToMove, coHeaderId);
-        return getCOHeaderDetailsByGridName(coHeaderId, BPUtility.getEncodedString(null));
+    global static String moveLineItem(String idToMove, String destinationId, String sectionTo, String coHeaderId) {
+        COMoveLineItemService.moveLineItem(idToMove, destinationId);
+        return '';
     }
     
     /**
@@ -1545,7 +1398,7 @@ global class CustomerOrderCtrl_V2 {
     **/
     @RemoteAction
     global static String getAlternatePartsList(String partId) {
-        return CustomerOrderCtrl.getAlternatePartsList(partId);
+        return COService.getAlternatePartsList(partId);
     }
     
     /**
@@ -1556,42 +1409,43 @@ global class CustomerOrderCtrl_V2 {
     **/
     @RemoteAction
     global static String addServiceOrderLineItems(String partIdsString, String soHeaderId) {
-        partIdsString = BPUtility.getDecodedString(partIdsString);
-        soHeaderId = BPUtility.getDecodedString(soHeaderId);
         try{
-            String coHeaderId = COService.addRelatedPartInSO(partIdsString, soHeaderId);
-            return getSOHeaderDetails(BPUtility.getEncodedString(soHeaderId), BPUtility.getEncodedString('soHeader,Grid Items'));
+            String coHeaderId = COService.addRelatedPartInSO(BPUtility.getDecodedString(partIdsString), BPUtility.getDecodedString(soHeaderId));
+            return getSOHeaderDetails(soHeaderId, BPUtility.getEncodedString('soHeader,Grid Items'));
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
-        return CustomerOrderCtrl.addServiceOrderLineItems(partIdsString, soHeaderId);
     }
     
+    /* params - 
+        jSONString  - it will have extra key for UUID used for async CO action
+    */
     @remoteAction
     global static String insertCOLineItems(String partId, String coHeaderId, String jSONString, Boolean isSuppress, Boolean isDuplicateCheck, String soHeaderId, String customerId) {
         partId = BPUtility.getDecodedString(partId);
+        if(isDummyServerCall(partId)) return null;
+        jSONString = BPUtility.getDecodedString(jSONString);
         
         String resultStr = '{}';
         
         if(isSuppress || String.isBlank(partId)) {
             if(isSuppress) {
-                CustomerOrderCtrl.insertSuppressLineItem(BPUtility.getDecodedString(coHeaderId), partId);
+                COService.insertSuppressLineItem(BPUtility.getDecodedString(coHeaderId), partId);
             }
             if(String.isNotBlank(BPUtility.getDecodedString(soHeaderId)) && BPUtility.getDecodedString(soHeaderId) != 'null') {
-                resultStr = addLineItems(BPUtility.getEncodedString(partId), soHeaderId);
+                resultStr = addLineItems(BPUtility.getEncodedString(jSONString), soHeaderId);
             } else { 
-                resultStr = saveCOLineItem(coHeaderId, jSONString, BPUtility.getEncodedString(null));
+                resultStr = saveCOLineItem(coHeaderId, BPUtility.getEncodedString(jSONString), BPUtility.getEncodedString(null));
             }
         } else if(String.isNotBlank(partId)) {
             coHeaderId = BPUtility.getDecodedString(coHeaderId);
-            if(isDuplicateCheck && !CustomerOrderCtrl.isSuppressLineItemOnCO(coHeaderId, partId) && CustomerOrderCtrl.isDuplicatePartOnCO(coHeaderId, partId)) {
+            if(isDuplicateCheck && !COService.isSuppressLineItemOnCO(coHeaderId, partId) && COService.isDuplicatePartOnCO(coHeaderId, partId)) {
                 resultStr = BPUtility.getEncodedString('{"DuplicatePart" : true}');
             } else { 
                 if(String.isNotBlank(BPUtility.getDecodedString(soHeaderId)) && BPUtility.getDecodedString(soHeaderId) != 'null') {
-                    resultStr = addLineItems(BPUtility.getEncodedString(partId), soHeaderId);
+                    resultStr = addLineItems(BPUtility.getEncodedString(jSONString), soHeaderId);
                 } else {
-                    resultStr = saveCOLineItem(BPUtility.getEncodedString(coHeaderId), jSONString, BPUtility.getEncodedString(null));
+                    resultStr = saveCOLineItem(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(jSONString), BPUtility.getEncodedString(null));
                 }
             }
         }
@@ -1607,18 +1461,16 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        
-        return '';
     }
     
     @remoteAction 
     global static String showHistoryOnSuppressPopup(String partId, String coHeaderId) {
-        return CustomerOrderCtrl.showHistoryOnSuppressPopup(partId, coHeaderId);
+        return COService.showHistoryOnSuppressPopup(partId, coHeaderId);
     }
     
     @RemoteAction
     global static String activateQuoteCO(String coHeaderId){
-        return CustomerOrderCtrl.activateQuoteCO(coHeaderId);
+        return COService.activateQuoteCO(coHeaderId);
     }
     
     @RemoteAction
@@ -1638,7 +1490,7 @@ global class CustomerOrderCtrl_V2 {
     **/
     @RemoteAction
     global static String deleteCustomerOrder(String coHeaderId){
-        return CustomerOrderCtrl.deleteCustomerOrder(coHeaderId);
+        return COService.deleteCustomerOrder(coHeaderId);
     }
         
     @RemoteAction
@@ -1654,7 +1506,7 @@ global class CustomerOrderCtrl_V2 {
         if(response != 'Success') {
             return 'Some error occured. Please try again later';
         }
-        return CustomerOrderCtrl.getDealDetails(BPUtility.getEncodedString(dealId), BPUtility.getEncodedString('dealInfo'));
+        return DealService.getDealDetails(BPUtility.getEncodedString(dealId), BPUtility.getEncodedString('dealInfo'));
     }
     
     @RemoteAction
@@ -1686,16 +1538,15 @@ global class CustomerOrderCtrl_V2 {
     }
     
     @RemoteAction
-    global static String insertKitHeaderInMerchGrid(String lineItemId, String coHeaderId) {
-        lineItemId = BPUtility.getDecodedString(lineItemId);
+    global static String insertKitHeaderInMerchGrid(String jsonStr, String coHeaderId) {
+        jsonStr = BPUtility.getDecodedString(jsonStr);
         coHeaderId = BPUtility.getDecodedString(coHeaderId);
         try{
-            coHeaderId = MerchandiseService.insertMerchKit(lineItemId, coHeaderId);
+            coHeaderId = MerchandiseService.insertMerchKit(jsonStr, coHeaderId);
             return getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('coHeader,coLineItem'));
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @RemoteAction
@@ -1707,6 +1558,7 @@ global class CustomerOrderCtrl_V2 {
     @RemoteAction
     global static String updateCOKHLineItemsRecalculation(String cokhJSON, String coHeaderId, String cokliJson) {
         cokhJSON = BPUtility.getDecodedString(cokhJSON);
+        if(isDummyServerCall(cokhJSON)) return null;
         coHeaderId = BPUtility.getDecodedString(coHeaderId);
         cokliJson = BPUtility.getDecodedString(cokliJson);
         try{
@@ -1718,23 +1570,22 @@ global class CustomerOrderCtrl_V2 {
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
-    global static String insertKitHeaderInDealMerchGrid(String kitHeaderId, String dealId, String coHeaderId) {
-        kitHeaderId = BPUtility.getDecodedString(kitHeaderId);
+    global static String insertKitHeaderInDealMerchGrid(String jsonStr, String dealId, String coHeaderId) {
+        jsonStr = BPUtility.getDecodedString(jsonStr);
+        if(isDummyServerCall(jsonStr)) return null;
         dealId = BPUtility.getDecodedString(dealId);
         coHeaderId = BPUtility.getDecodedString(coHeaderId);
         Savepoint sp = Database.setSavepoint();
         try{
-            MerchandiseService.insertKitHeaderInDealMerchGrid(kitHeaderId, dealId, coHeaderId);
+            MerchandiseService.insertKitHeaderInDealMerchGrid(jsonStr, dealId, coHeaderId);
             return getDealDetails(BPUtility.getEncodedString(dealId), BPUtility.getEncodedString('dealUnresolvedFulfillmentAndDealFulfillment'));
         }catch(Exception e){
             Database.rollback(sp);
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
@@ -1750,7 +1601,6 @@ global class CustomerOrderCtrl_V2 {
             Database.rollback(sp);
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
@@ -1761,14 +1611,12 @@ global class CustomerOrderCtrl_V2 {
         soHeaderId = BPUtility.getDecodedString(soHeaderId);
         Savepoint sp = Database.setSavepoint();
         try{
-            //SO_KLI_Recalculation.SOPriceCalcultaionByPriceLevelForSOKitHeaders(customerId, coHeaderId, new List<Id>{soKHId}, soHeaderId);
             SO_KLI_Recalculation.soKitPriceCalculation(new Set<Id>{soKHId}, new Set<Id>{soHeaderId}, coHeaderId);
             return 'Success';
         }catch(Exception e){
             Database.rollback(sp);
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
@@ -1780,7 +1628,6 @@ global class CustomerOrderCtrl_V2 {
         }catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
@@ -1789,19 +1636,20 @@ global class CustomerOrderCtrl_V2 {
         try {
             List<Id> unitIdList = COService.getUnitIdList(recordId); // recId dealItem Id or SO Header Id
             Map<Id, UnitWrapper.Documents> unitIdIdToUnitImageMap = new Map<Id, UnitWrapper.Documents>();
-            for(Id unitId: unitIdList) {
-                List<UnitWrapper.Documents> imageList = COService.getUnitImages(unitId, true);
-                if(imageList.size() > 0) {
-                    unitIdIdToUnitImageMap.put(unitId, imageList[0]);
-                } else {
-                    unitIdIdToUnitImageMap.put(unitId, null);
+            if(!unitIdList.isEmpty()) {
+                Map<Id, List<UnitWrapper.Documents>> unitIdIdToUnitImageListMap = COService.getUnitImages(unitIdList, true);
+                for(Id unitId: unitIdIdToUnitImageMap.keySet()) {
+                    if(!unitIdIdToUnitImageListMap.get(unitId).isEmpty()) {
+                        unitIdIdToUnitImageMap.put(unitId, unitIdIdToUnitImageListMap.get(unitId)[0]);
+                    } else {
+                        unitIdIdToUnitImageMap.put(unitId, null);
+                    }
                 }
             }
             return BPUtility.getEncodedString(System.JSON.serialize(unitIdIdToUnitImageMap));
         } catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
@@ -1813,7 +1661,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
 
     @remoteAction
@@ -1833,7 +1680,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e){ 
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
@@ -1845,7 +1691,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
         
     @remoteAction
@@ -1857,7 +1702,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
@@ -1870,7 +1714,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e){
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return BPUtility.getEncodedString('');
     }
     
     @remoteAction
@@ -1938,6 +1781,11 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
+    }
+
+    @RemoteAction
+    global static void saveUserDefinedFields(String userDefinedFieldsJSON) {
+        COFormService.saveUserDefinedFields(BPUtility.getDecodedString(userDefinedFieldsJSON));
     }
     
     @RemoteAction
@@ -2021,6 +1869,18 @@ global class CustomerOrderCtrl_V2 {
         }
     }
     
+    global static void saveCOSectionTaxInfo(String coSectionTaxInfoJSON) {}
+    
+    @RemoteAction
+    global static String saveCOSectionTaxDetails(String coSectionTaxInfoJSON) {
+        return BPUtility.getEncodedString(system.JSON.serialize(COService.saveCOSectionTaxInfo(BPUtility.getDecodedString(coSectionTaxInfoJSON))));
+    }
+
+    @RemoteAction
+    global static void saveDealItemInfo(String dealItemInfoJSON) {
+        DealService.saveDealItemInfo(BPUtility.getDecodedString(dealItemInfoJSON));
+    }
+    
     @RemoteAction
     global static String saveDealItemTaxInfo(String dealItemTaxInfoJSON) {
         dealItemTaxInfoJSON = BPUtility.getDecodedString(dealItemTaxInfoJSON);
@@ -2030,6 +1890,11 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
+    }
+    
+    @RemoteAction
+    global static String getCOHeaderTotals(String coHeaderId) {
+        return BPUtility.getEncodedString(system.JSON.serialize(COService.getCOHeaderTotals(BPUtility.getDecodedString(coHeaderId)), true));
     }
     
     /**
@@ -2099,22 +1964,13 @@ global class CustomerOrderCtrl_V2 {
         }
     }
     
-     @RemoteAction 
+    @RemoteAction 
     global static String getCoBuyer(String customerId) {
         customerId = BPUtility.getDecodedString(customerId);
-        try {
-            String query = 'Select ';
-            for(String fieldName : DealWrapper.getCoBuyerFields()) {
-                query += BPUtility.escapeSingleQuotes(fieldName) + ', ';
-            }
-            query = query.substring(0, query.length()-2);
-            query += ' from Account where Id = \'' + BPUtility.escapeSingleQuotes(customerId) +'\'';
-            List<Account> coBuyerInfoList= Database.query(query);
-            return BPUtility.getEncodedString(system.JSON.serialize(new DealWrapper.CoBuyerWrapper(coBuyerInfoList[0])));
-        } catch(Exception e) {
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
-        }
-        return '';
+        String query = 'Select ' + String.join(DealWrapper.getCoBuyerFields(), ',');
+        query += ' from Account where Id = \'' + BPUtility.escapeSingleQuotes(customerId) +'\'';
+        List<Account> coBuyerInfoList = Database.query(query);
+        return BPUtility.getEncodedString(system.JSON.serialize(new DealWrapper.CoBuyerWrapper(coBuyerInfoList[0])));
     }
     
     @RemoteAction
@@ -2137,7 +1993,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return null;
     }
     
     @RemoteAction
@@ -2189,8 +2044,7 @@ global class CustomerOrderCtrl_V2 {
     global static String finalizeClaimResponse(String soHeaderId, String ClaimWizardJson) {
     	soHeaderId = BPUtility.getDecodedString(soHeaderId);
         ClaimWizardJson = BPUtility.getDecodedString(ClaimWizardJson);
-    	CustomerOrderCtrl.updateVariance(soHeaderId, ClaimWizardJson, true);
-    	CustomerOrderCtrl.changeStatus(BPUtility.getEncodedString(soHeaderId), BPUtility.getEncodedString('Approved'), BPUtility.getEncodedString('claim'));
+    	ServiceJobService.updateVariance(soHeaderId, ClaimWizardJson, true);
     	return 'Success';
     }
     
@@ -2232,19 +2086,6 @@ global class CustomerOrderCtrl_V2 {
     	} catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return 'Success';
-    }
-	
-	@RemoteAction 
-    global static String getPartsLocator(String partId, Integer quantity, String searchType) {
-    	try {
-    		partId = BPUtility.getDecodedString(partId);
-    		searchType = BPUtility.getDecodedString(searchType);
-            return BPUtility.getEncodedString(BRPPartsIntegration.getPartsLocator(partId, quantity, searchType));
-            } catch(Exception e) {
-            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
-        }
-        return 'success';
     }
     
     @RemoteAction
@@ -2255,7 +2096,6 @@ global class CustomerOrderCtrl_V2 {
     	} catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return 'Success';
     }
     
     @RemoteAction
@@ -2268,10 +2108,20 @@ global class CustomerOrderCtrl_V2 {
         try {
             invoiceDateValidateJSONString = BPUtility.getDecodedString(invoiceDateValidateJSONString);
             return BPUtility.getEncodedString(system.JSON.serialize(COApexValidation.validateInvoiceDate(invoiceDateValidateJSONString)));
+		} catch(Exception e) {
+            throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
+        }
+    }
+	
+	@RemoteAction 
+    global static String getPartsLocator(String partId, Integer quantity, String searchType) {
+    	try {
+    		partId = BPUtility.getDecodedString(partId);
+    		searchType = BPUtility.getDecodedString(searchType);
+            return BPUtility.getEncodedString(BRPAPIManager.getPartLocator(partId, quantity, searchType));
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return 'success';
     }
     
     @RemoteAction
@@ -2293,7 +2143,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return 'success';
     }
 
     @RemoteAction 
@@ -2316,7 +2165,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return '';
     }
 	
 	@RemoteAction
@@ -2329,7 +2177,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return 'success';
     }
     
     @RemoteAction 
@@ -2340,7 +2187,6 @@ global class CustomerOrderCtrl_V2 {
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return '';
     }
 
     @RemoteAction
@@ -2402,12 +2248,22 @@ global class CustomerOrderCtrl_V2 {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString())); 
         } 
     }
+
+    @RemoteAction
+    global static void pauseTechnician(String soHeaderId, String technicianId) { 
+        TechnicianService.pauseTechnician(BPUtility.getDecodedString(soHeaderId), BPUtility.getDecodedString(technicianId));
+    }
+
+    @RemoteAction
+    global static void resumeTechnician(String soHeaderId, String technicianId) { 
+        TechnicianService.resumeTechnician(BPUtility.getDecodedString(soHeaderId), BPUtility.getDecodedString(technicianId));
+    }
     
     @RemoteAction
     global static String getHoursLogged(String soHeaderId) { 
         soHeaderId = BPUtility.getDecodedString(soHeaderId);
         try {
-            return BPUtility.getEncodedString(System.JSON.serialize(ServiceJobService.getHoursLogged(soHeaderId), true));
+        	return BPUtility.getEncodedString(System.JSON.serialize(ServiceJobService.getHoursLogged(soHeaderId), true));
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString())); 
         } 
@@ -2493,11 +2349,6 @@ global class CustomerOrderCtrl_V2 {
         } 
     }
 
-    @RemoteAction
-    global static String getFormJson(String coId) {
-        return BPUtility.getEncodedString(System.JSON.serialize(COFormService.getFormJson(BPUtility.getDecodedString(coId)), true));
-    }
-
     // DP360 related methods
     @RemoteAction
     global static String getOpenLeadsFromDP360() { 
@@ -2530,6 +2381,11 @@ global class CustomerOrderCtrl_V2 {
         }
     }
     
+    @RemoteAction    
+    global static String getFormJson(String coPrintFormJson) {
+        return BPUtility.getEncodedString(System.JSON.serialize(COFormService.getFormJson(BPUtility.getDecodedString(coPrintFormJson)), true));
+    }
+
  	@RemoteAction
     global static String updateDP360DealSalePrice(String updateUnitPriceJson) {
         return BPUtility.getEncodedString(DP360LeadService.updateDP360DealSalePrice(BPUtility.getDecodedString(updateUnitPriceJson)));
@@ -2604,7 +2460,7 @@ global class CustomerOrderCtrl_V2 {
 
     @RemoteAction
     global static String getCODepositByCOHeaderId(String coHeaderId) {
-        return CustomerOrderCtrl.getCODepositByCOHeaderId(coHeaderId);
+        return COService.getCODepositByCOHeaderId(coHeaderId);
     }
 
     @RemoteAction
@@ -2620,7 +2476,7 @@ global class CustomerOrderCtrl_V2 {
 
     @RemoteAction
     global static Boolean updateOptionFeeStatusAndDealStatus(String coHeaderId) {
-        return CustomerOrderCtrl.updateOptionFeeStatusAndDealStatus(BPUtility.getDecodedString(coHeaderId));
+        return DealService.updateOptionFeeStatusAndDealStatus(BPUtility.getDecodedString(coHeaderId));
     }
 
     @RemoteAction
@@ -2640,5 +2496,164 @@ global class CustomerOrderCtrl_V2 {
     @RemoteAction
     global static String getRefundMaxCreditAmount() {
         return BPUtility.getEncodedString(System.JSON.serialize(new Map<String, Decimal> {'RefundMaxCreditAmount' => PreferredPaymentService.getRefundMaxCreditAmount()}));
+    }
+
+    /**
+     * Name: saveUnitStatus
+     * Desc: Change Temporary unit status on deal
+     * @param: (1) unit id (2) unit status
+     * @return: String - Sucess or Error
+    **/
+    @RemoteAction
+    global static String saveUnitStatus(String unitId, String unitStatus) {
+        return BPUtility.getEncodedString(System.JSON.serialize(DealService.saveUnitStatus(BPUtility.getDecodedString(unitId), BPUtility.getDecodedString(unitStatus))));
+    }
+    
+    @RemoteAction
+    global static String getUnreceivedStockPartVODetails(String partId){
+        return BPUtility.getEncodedString(System.JSON.serialize(COService.getUnreceivedStockPartVODetails(BPUtility.getDecodedString(partId)), true));
+    }
+
+    @RemoteAction
+    global static String reallocateOnOrderPartToCO(String reallocatePartJSON) {
+        return BPUtility.getEncodedString(System.JSON.serialize(COService.reallocateOnOrderPartToCO(BPUtility.getDecodedString(reallocatePartJSON)), true));
+    }
+
+    @RemoteAction
+    global static String getMakeModelSubmodelList() {
+        return BPUtility.getEncodedString(MakeModelSubModelService.getMakeModelSubmodelList());
+    }
+    
+    public static Boolean isDummyServerCall(String value) {
+        return (value != null && value.equalsIgnoreCase('dummy'));
+    }
+
+    @RemoteAction
+    global static String getSOJobStatus() {
+        return BPUtility.getEncodedString(System.JSON.serialize(ServiceJobUtil.getActiveSOStatusRecList(), true));
+    }
+
+    @RemoteAction
+    global static void reactivateCustomerOrder(String coHeaderId){
+        COService.reactivateCustomerOrder(BPUtility.getDecodedString(coHeaderId));
+    }
+    
+    @RemoteAction
+    global static String getCOSpecificSettings() {
+        return BPUtility.getEncodedString(System.JSON.serialize(COService.getCOSpecificSettings(), true));
+    }
+    
+    @RemoteAction
+    global static String getMerchandiseSalesTaxAmount(String coHeaderId) {
+        return BPUtility.getEncodedString(MerchandiseService.getMerchandiseSalesTaxAmount(BPUtility.getDecodedString(coHeaderId)));
+    }
+    
+    @RemoteAction
+    global static String getServiceJobSalesTaxAmount(String soId) {
+        return BPUtility.getEncodedString(ServiceJobService.getServiceJobSalesTaxAmount(BPUtility.getDecodedString(soId)));
+    }
+    
+    @RemoteAction
+    global static String getDealSalesTaxAmount(String dealId) {
+        return BPUtility.getEncodedString(DealService.getDealSalesTaxAmount(BPUtility.getDecodedString(dealId)));
+    }
+    
+    @RemoteAction
+    global static String moveHoursLog(String soHeaderIdDestination, String hoursLogId) {
+        return BPUtility.getEncodedString(ServiceJobService.moveHoursLog(BPUtility.getDecodedString(soHeaderIdDestination), BPUtility.getDecodedString(hoursLogId)));
+    }
+
+    @RemoteAction
+    global static String toggleLockInUnitPricing(String dealItemId, Boolean IsLockInUnitPricing) {
+        return DealService.toggleLockInUnitPricing(BPUtility.getDecodedString(dealItemId), IsLockInUnitPricing);
+    }
+
+    @RemoteAction
+    global static String getDealSalespersons(String dealId) { return getSalespersonsBySectionId(dealId); }
+
+    @RemoteAction
+    global static String getSalespersonsBySectionId(String sectionJson) {
+        return BPUtility.getEncodedString(System.JSON.serialize(COService.getSalespersonsBySectionId(BPUtility.getDecodedString(sectionJson))));
+    }
+
+    @RemoteAction
+    global static void addRemoveCOSalesperson(String coSalespersonJsonStr) {
+        COService.addRemoveSalespersonOnCOSection(BPUtility.getDecodedString(coSalespersonJsonStr));
+    }
+
+    @RemoteAction
+    global static Decimal getCustomerOpenARBalance(String customerId) {
+        return AccountingUtil.getCustomerOpenARBalance(BPUtility.getDecodedString(customerId));
+    }
+    
+    global static void updateSOWorkStatus(String soHeaderId, String workStatus) {
+        ServiceJobService.updateSOWorkStatus(BPUtility.getDecodedString(soHeaderId), BPUtility.getDecodedString(workStatus), null);
+    }
+
+    @RemoteAction
+    global static void updateNewSOWorkStatus(String soHeaderId, String workStatus, String workStatusName) {
+        ServiceJobService.updateSOWorkStatus(BPUtility.getDecodedString(soHeaderId), BPUtility.getDecodedString(workStatus), BPUtility.getDecodedString(workStatusName));
+    }
+
+    @RemoteAction
+    global static String getCOInvoicesARBalance(String coHeaderId) {
+        return BPUtility.getEncodedString(System.JSON.serialize(COService.getCOInvoicesARBalance(BPUtility.getDecodedString(coHeaderId))));
+    }
+
+    @RemoteAction
+    global static String saveNotesForCustomerForPartsSale(String coHeaderId, String notesJson) {
+        return BPUtility.getEncodedString(System.JSON.serialize(MerchandiseService.saveNotesForCustomerForPartsSale(BPUtility.getDecodedString(coHeaderId), BPUtility.getDecodedString(notesJson))));
+    }
+
+    global static void saveBulkDiscountPercent(String coHeaderId, Boolean isPartDiscount, Decimal discountPct) {}
+
+    @RemoteAction
+    global static void saveMerchBulkDiscountPercent(String coHeaderId, Boolean isPartDiscount, Decimal discountPct) {
+       MerchandiseService.saveMerchBulkDiscountPercent(BPUtility.getDecodedString(coHeaderId), isPartDiscount, discountPct);
+    }
+
+    @RemoteAction
+    global static void saveServiceBulkDiscountPercent(String soHeaderId, String discountType, Decimal discountPct) {
+       ServiceJobService.saveServiceBulkDiscountPercent(BPUtility.getDecodedString(soHeaderId), BPUtility.getDecodedString(discountType), discountPct);
+    }
+    
+    @RemoteAction
+    global static String getAllCustomerContacts(String customerId) {
+        return ViewCustomerCtrl.getCustomerContactByCustomerId(customerId);
+    }
+
+    @RemoteAction
+    global static void saveCOContactAndShippingAddressInfo(String coJson) {
+        COService.saveCOContactAndShippingAddressInfo(BPUtility.getDecodedString(coJson));
+    }
+
+    @RemoteAction
+    global static String getGenericCOU() {
+        return BPUtility.getEncodedString(System.JSON.serialize(COService.getGenericCOU()));
+    }
+    
+    @RemoteAction
+    global static void setOptionFeeInstallFlag(String dealId) {
+        DealService.setOptionFeeInstallFlag(BPUtility.getDecodedString(dealId));
+    }
+
+    @RemoteAction
+    global static void updateBulkSOStatus(String soIdsJson, String soStatusId) {
+        ServiceJobService.updateBulkSOStatus(BPUtility.getDecodedString(soIdsJson), BPUtility.getDecodedString(soStatusId));
+    }
+
+    @RemoteAction
+    global static void deleteBulkCOItems(String coItemsJson) {
+        COBulkDeleteService.deleteBulkCOItems(BPUtility.getDecodedString(coItemsJson));
+    }
+    
+    @RemoteAction
+    public static String getAllStampDutyList() {
+        return BPUtility.getEncodedString(System.JSON.serialize(StampDutyService.getAllStampDutyList()));
+    }
+
+    @RemoteAction
+    global static String getStampDutyCalcMethodPickListValues(){
+        return BPUtility.getEncodedString(Utility.getPicklistValues('Stamp_duty_calculators__c.Calculation_method__c'));
     }
 }

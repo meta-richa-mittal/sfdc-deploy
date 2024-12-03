@@ -1,0 +1,51 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0" controller="GlobalController">
+    <link href="https://fonts.googleapis.com/css?family=Barlow:300,400,600" rel="stylesheet" />
+    <div class="fadein viewA" ui-view="UnitReceiving" autoscroll='false'></div>
+
+    <div>
+        <route-loading-indicator></route-loading-indicator>
+        <div ng-if="!isRouteLoading" ng-cloak="ng-cloak"> 
+            <div class="LoadingDiv" ng-show="M_AddEditUO.isLoading">
+                <div class="loadingIconContainer">
+                    <c:BPLoading />
+                </div>
+            </div>
+            <c:AddEditUnitModal isComingFromUnitOrdering="true" showFactoryOptions="true" scopeVarName="M_AddEditUO" scopeMethodName="F_AddEditUO" unitDataFieldObj="M_AddEditUO.unitRec" mapFieldObj="M_AddEditUO.mapPrimaryDataField" fieldValidationObj="M_AddEditUO.UnitOrderValidationModal" factoryOptionScopeVar="M_AddEditUO" />
+            <div class="loadingDivIcon"> </div>
+        </div>
+    </div>
+    
+    <bp-ng-modal-window id-val="bulkOrderModalWindow" disable-primary-action = "M_AddEditUO.numberOfUnits > 50" mobal-window-payload="M_AddEditUO.bulkOrderModalWindowPayload" cancel-btn-action="F_AddEditUO.hideModalWindow('bulkOrderModalWindow');" primary-btn-action="F_AddEditUO.loadBulkData()">
+        <p class="delete-info" ng-if="!M_AddEditUO.isAllowBulkOrdering && M_AddEditUO.bulkDataUploadResult.responseStatus != 'Error'">
+            {{ 'Cannot_bulk_order_when_a_VIN_or_Stock_number_has_been_specified' | translate }} 
+        </p>
+        <div class="delete-info c-sub-heading banner-container coral-light2 MB20" ng-if="M_AddEditUO.bulkDataUploadResult.responseStatus == 'Error' && M_AddEditUO.isAllowBulkOrdering">
+            <i class="bp-icons bp-font-18 bp-red-font MT-3">warningFilled</i>
+            <div>
+                <p>{{M_AddEditUO.bulkDataUploadResult.response}}</p>
+            </div>
+        </div>
+        <div  class="delete-info" ng-if="M_AddEditUO.isAllowBulkOrdering">
+           <p ng-if = "M_AddEditUO.bulkDataUploadResult.responseStatus != 'Error'"> {{'You_are_ordering_the_following_unit' | translate}} </p>
+            <div class="unit-info">
+                <span>{{M_AddEditUO.unitRec.Condition}}</span>
+                <span>{{M_AddEditUO.UnitMakeName}}</span>
+                <span>{{M_AddEditUO.unitRec.ModelName}}</span>
+                <span>{{M_AddEditUO.unitRec.SubModelName}}</span>
+                <span>{{M_AddEditUO.unitRec.Year}}</span>
+                <span><span ng-if="M_AddEditUO.unitRec.ExteriorColour" class="comma">,</span>{{M_AddEditUO.unitRec.ExteriorColour}}</span>
+            </div>
+            <div class="input-container">
+                <label>{{ 'How_many_of_this_unit_are_you_ordering' | translate }}?</label>
+                <numbers-only 
+                                        class-value="c-secondary-input  c-input-search"
+                                        max-length="50"
+                                        include-blank="true"
+                                        input-model-value="M_AddEditUO.numberOfUnits"
+                                        id-value="bulkHandlingInputId" 
+                                        disabled-value ="M_AddEditUO.bulkDataUploadResult.responseStatus == 'Error'"/>
+                <span ng-if = "M_AddEditUO.numberOfUnits > 50" class="error-message">{{'Cannot_order_more_than_50_units' | translate}}</span>
+            </div>
+        </div>
+    </bp-ng-modal-window>
+</apex:page>

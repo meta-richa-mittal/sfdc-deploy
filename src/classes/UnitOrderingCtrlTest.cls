@@ -1,5 +1,10 @@
 @isTest
 private class UnitOrderingCtrlTest {
+    @testsetup
+    private static void setup(){
+    	TestDataFactory.disableFLSChecks();
+        BPScriptManager.createDefaultUnitProductType();
+    }
     
     static testMethod void getVendorsListTest() {
         Account vendor = TestUtil.createVendor(false,'test');
@@ -115,7 +120,11 @@ private class UnitOrderingCtrlTest {
         insert customerOwnedUnit;
         
         test.startTest();
-        String jsonData = UnitOrderingCtrl.getOrderHistoryList(BPUtility.getEncodedString(vendor.id));
+        UnitOrderingWrapper.UnitOrderingFilterWrapper filterJson = new UnitOrderingWrapper.UnitOrderingFilterWrapper();
+        filterJson.StartIndex = 0;
+		filterJson.RecordCount = 50;
+		filterJson.VendorId = vendor.id;        
+        String jsonData = UnitOrderingCtrl.getOrderHistoryList(BPUtility.getEncodedString(System.JSON.serialize(filterJson)));
         test.stopTest();
         jsonData = BPUtility.getDecodedString(jsonData);
         List<UnitOrderingWrapper.UnitOrderWrapper> vendorList = (List<UnitOrderingWrapper.UnitOrderWrapper>) System.JSON.deserialize(jsonData, List<UnitOrderingWrapper.UnitOrderWrapper>.class);
@@ -270,12 +279,16 @@ private class UnitOrderingCtrlTest {
         customerOwnedUnit.Mileage_Type__c = 'Km';
         customerOwnedUnit.Vendor__c = vendor.id;
         insert customerOwnedUnit;
-        customerOwnedUnit = [SELECT Unit_Number__c, Cylinders__c, Stock_Id__c, VIN_Number__c, Year__c, Make_Name__c,Model_Detail__c, Date_Expected__c, Date_Ordered__c, Unit_Model__r.Name__c, Sub_Model__r.Sub_Model_Name__c, Factory_Order_No__c, Status__c, CreatedDate, Stocked_In_DateTime__c, Total_Cost__c, Vendor__r.Purchase_Tax__r.Rate__c,Tax_Amount__c, Invoice_Number__c, Compliance_Date__c, Registration_Serial__c, Year_Of_1st_Rego__c, Unit_Purchase_Tax__c, Unit_Purchase_Tax__r.Rate__c, Overridden_Total_Cost_With_Tax__c, Total_Cost_With_Tax__c FROM Customer_Owned_Unit__c
-        WHERE Id =: customerOwnedUnit.Id];
-        UnitOrderingWrapper.UnitOrderWrapper uow = new UnitOrderingWrapper.UnitOrderWrapper(customerOwnedUnit);
+
+        String query = 'SELECT ' + String.join(UnitOrderingWrapper.fieldsListForOrderUnit(), ',') + ' FROM Customer_Owned_Unit__c WHERE Id = \'' + customerOwnedUnit.Id + '\'';
+        List<Customer_Owned_Unit__c> customerOwnedUnitList = (List<Customer_Owned_Unit__c>)Database.query(query);
+
+        UnitOrderingWrapper.UnitOrderWrapper uow = new UnitOrderingWrapper.UnitOrderWrapper(customerOwnedUnitList[0]);
         List<UnitOrderingWrapper.UnitOrderWrapper> uowList = new List<UnitOrderingWrapper.UnitOrderWrapper>();
         uowList.add(uow);
-        String jsonString = System.JSON.serialize(uowList);
+        UnitOrderingService.UnitReceivingWrapper receivingObj = new UnitOrderingService.UnitReceivingWrapper();
+        receivingObj.OrderedUnits = uowList;
+		String jsonString = System.JSON.serialize(receivingObj);
 		jsonString = BPUtility.getEncodedString(jsonString);
 		test.startTest();
 		String response = UnitOrderingCtrl.receiveUnit(jsonString);
@@ -299,12 +312,16 @@ private class UnitOrderingCtrlTest {
         customerOwnedUnit.Mileage_Type__c = 'Km';
         customerOwnedUnit.Vendor__c = vendor.id;
         insert customerOwnedUnit;
-        customerOwnedUnit = [SELECT Unit_Number__c, Stock_Id__c, Cylinders__c, VIN_Number__c, Date_Expected__c, Date_Ordered__c, Year__c, Make_Name__c,Model_Detail__c, Unit_Model__r.Name__c, Sub_Model__r.Sub_Model_Name__c, Factory_Order_No__c, Status__c, CreatedDate, Stocked_In_DateTime__c, Total_Cost__c, Vendor__r.Purchase_Tax__r.Rate__c,Tax_Amount__c, Invoice_Number__c, Compliance_Date__c, Registration_Serial__c, Year_Of_1st_Rego__c, Unit_Purchase_Tax__c, Unit_Purchase_Tax__r.Rate__c, Overridden_Total_Cost_With_Tax__c, Total_Cost_With_Tax__c FROM Customer_Owned_Unit__c
-        WHERE Id =: customerOwnedUnit.Id];
-        UnitOrderingWrapper.UnitOrderWrapper uow = new UnitOrderingWrapper.UnitOrderWrapper(customerOwnedUnit);
+
+        String query = 'SELECT ' + String.join(UnitOrderingWrapper.fieldsListForOrderUnit(), ',') + ' FROM Customer_Owned_Unit__c WHERE Id = \'' + customerOwnedUnit.Id + '\'';
+        List<Customer_Owned_Unit__c> customerOwnedUnitList = (List<Customer_Owned_Unit__c>)Database.query(query);
+
+        UnitOrderingWrapper.UnitOrderWrapper uow = new UnitOrderingWrapper.UnitOrderWrapper(customerOwnedUnitList[0]);
         List<UnitOrderingWrapper.UnitOrderWrapper> uowList = new List<UnitOrderingWrapper.UnitOrderWrapper>();
         uowList.add(uow);
-        String jsonString = System.JSON.serialize(uowList);
+        UnitOrderingService.UnitReceivingWrapper receivingObj = new UnitOrderingService.UnitReceivingWrapper();
+        receivingObj.OrderedUnits = uowList;
+		String jsonString = System.JSON.serialize(receivingObj);
 		jsonString = BPUtility.getEncodedString(jsonString);
 		test.startTest();
 		String response = UnitOrderingCtrl.receiveUnit(jsonString);
@@ -358,7 +375,7 @@ private class UnitOrderingCtrlTest {
         sortAttrs.SortingOrder = 'ASC';
         String jsonString = system.json.serialize(sortAttrs);
         test.startTest();
-		String response = UnitOrderingCtrl.applySortingOnActiveOrderList(BPUtility.getEncodedString(vendor.Id),BPUtility.getEncodedString(jsonString));
+		String response = UnitOrderingCtrl.applySortingOnActiveOrderList(BPUtility.getEncodedString(vendor.id),BPUtility.getEncodedString(jsonString));
         test.StopTest();
         response = BPUtility.getDecodedString(response);
 		List<UnitOrderingWrapper.UnitOrderWrapper> unitList = (List<UnitOrderingWrapper.UnitOrderWrapper>) System.JSON.deserialize(response, List<UnitOrderingWrapper.UnitOrderWrapper>.class);
@@ -387,7 +404,11 @@ private class UnitOrderingCtrlTest {
         sortAttrs.SortingOrder = 'ASC';
         String jsonString = system.json.serialize(sortAttrs);
         test.startTest();
-		String response = UnitOrderingCtrl.applySortingOnOrderHistoryList(BPUtility.getEncodedString(vendor.Id),BPUtility.getEncodedString(jsonString));
+        UnitOrderingWrapper.UnitOrderingFilterWrapper filterJson = new UnitOrderingWrapper.UnitOrderingFilterWrapper();
+        filterJson.StartIndex = 0;
+		filterJson.RecordCount = 50;
+		filterJson.VendorId = vendor.id;  
+		String response = UnitOrderingCtrl.applySortingOnOrderHistoryList(BPUtility.getEncodedString(System.JSON.serialize(filterJson)),BPUtility.getEncodedString(jsonString));
         test.StopTest();
         response = BPUtility.getDecodedString(response);
         //system.assert(false,response);

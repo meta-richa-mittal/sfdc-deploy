@@ -1,0 +1,449 @@
+<apex:page standardStylesheets="false" 
+    showChat="false" 
+    showHeader="false" 
+    sidebar="false" 
+    applyBodyTag="false"
+    applyHtmlTag="false"
+    Controller="NewPrintVendorOrderReceivingCtrl"
+    renderAs="pdf"
+    > 
+<html>
+    <head>
+        <style type="text/css" media="print">
+            body {
+                float: left;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0px;
+                font-family: sans-serif;
+            }
+            .header-section{
+                margin-bottom: 9px;
+                clear: both;
+            }
+            .c-pull-left {
+                float: left;
+            }
+            .c-pull-right {
+                float: right;
+            }
+            .store-info {
+                text-align: right;
+                width: 350px;
+                
+            }
+            .store-info label {
+                font-weight: bold;
+                font-size: 11px;
+                line-height: 11px;
+                color: #000;
+                text-transform: uppercase;
+                margin-bottom: 5px;
+                width: 100%;
+            }
+            .store-info p {
+                text-align: right;
+                width: 350px;
+                color: #000;
+                margin: 0px;
+                padding: 0px;
+                
+            }
+            .store-info p.tax-heading {
+                font-size: 18px;
+                line-height: 21px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            .store-info .tax-heading {
+                font-size: 18px;
+                line-height: 21px;
+                font-weight: bold;
+                margin-bottom: 7px;
+            }
+            .store-info p.company-name {
+                font-size: 11px;
+                line-height: 13px;
+                font-weight: bold;
+                margin-bottom: 4px;
+            }
+            .store-info p.company-address {
+                font-size: 10px;
+                line-height: 10px;
+                margin-bottom: 3px;
+            }
+            .store-info p.tax-id-info {
+                font-size: 10px;
+                line-height: 10px;
+            }
+            .customer-info-container {
+                margin-top: 5px;
+            }
+            .customer-info-container.fs11 {
+                font-size: 11px;
+            }
+            .customer-info-container .second-row {
+                margin-top: 10px;
+            }
+            .customer-info-container .customer-info-section {
+                width: 500px;
+            }
+            .customer-info-container .customer-info-section .first-container {
+                width: 250px;
+            }
+            .customer-info-container .customer-info-section  label{
+                font-weight: bold;
+                line-height: 11px;
+                color: #000;
+                text-transform: uppercase;
+                margin-bottom: 5px;
+                width: 100%;
+            }
+            .customer-info-container .customer-info-section .first-container .customer-name {
+                font-weight: bold;
+                line-height: 11px;
+                color: #000;
+                width:100%;
+                margin-bottom: 3px;
+            }
+            .customer-info-container .customer-info-section .first-container .customer-address {
+                font-weight: normal;
+                line-height: 10px;
+                color: #000; 
+                width: 250px;
+            }
+            .customer-info-container .customer-info-section .first-container .customer-address1 {
+                font-weight: normal;
+                line-height: 10px;
+                color: #000; 
+                margin-bottom: 3px;
+            }
+            .customer-info-container .customer-info-section .second-container {
+                width: 250px;
+            }
+            .customer-info-container .customer-info-section .second-container label {
+                height: 11px;
+            }
+            .customer-info-container .customer-info-section .second-container p {
+                font-weight: normal;
+                line-height: 11px;
+                color: #000;
+                width: 100%;
+            }
+            .customer-info-container .customer-info-section .second-container p .width100 {
+                width: 100%;
+            }
+            .customer-other-info {
+                margin-bottom: 3px;
+                line-height: 10px;
+                font-weight: normal;
+            }
+            .customer-info-container .customer-info-section .second-container p  .customer-other-info .email-container {
+                width: 90px;
+            }
+            .M0 {
+                margin: 0px !important;
+            }
+            .bold {
+                font-weight: bold;
+            }
+            .customer-info-container{
+                margin-bottom: 20px;
+            }
+            .PL2 {
+                padding-right: 2px;
+            }
+            .invoice-info p {
+                line-height: 10px;
+                width: 200px !important;
+            }
+            .invoice-info {
+                width: 200px;
+            }
+            .second-container.ship-to {
+                position: absolute;
+                left: 300px;
+            }
+            .ML50 {
+                margin-left: 50px !important;
+            }
+            .customer-info-section.second-row .ship-to-section label {
+                width: 51px;
+            }
+            .customer-info-section.second-row .ship-to-section div {
+                width: 185px;
+                float: left;
+            }
+            .contact-label {
+                font-weight: bold;
+            }
+            .contact-name {
+                padding-left: 10px;
+            }
+
+            .order-info1 {
+                position: absolute;
+            }
+            p.order-info2 {
+                margin-top: 17px;
+                margin-bottom: 3px;
+            }
+            .customer-info-container.fs11 {
+                width: 100%;
+            }
+            .MB3 {
+                margin-bottom: 3px !important;
+            }
+
+            .table-header {
+                width :100% !important; 
+                background: #FFF !important;
+                border-bottom :1px solid black !important;
+                font-weight: bold !important;
+            }
+            .header-container {
+                color: #000 !important; 
+                padding: 7px 0 0 5px; 
+                margin: 0px;
+                font-size: 12px; 
+                height: 16px;
+            }
+            .order-item {
+                padding-left: 5px; 
+                float: left;
+            }
+            .order-total {
+                padding-right: 15px; 
+                float: right; 
+                font-weight: bold;
+            }
+            .table-header-container, .table-body-container {
+                padding-left: 20px;
+                padding-top: 5px;
+                height: 25px;
+            }
+            .table-header-container {
+                background-color: #dfe1e5;
+                display: flex;
+                align-items: center;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            .table-body-container .table-row {
+                margin-bottom: 5px;
+                font-size: 11px;
+            }
+            .table-container .column1 {
+                width: 53px;
+            }
+            .table-container .column2 {
+                width: 40px;
+            }
+            .table-container .column3 {
+                width: 190px;
+            }
+            .table-container .column4 {
+                width: 250px;
+                padding-right: 5px;
+            }
+            .table-container .column5 {
+                width: 110px;
+                text-align: left;
+            }
+            .table-container .column6 {
+                width: 105px;
+                text-align: right;
+                padding-right: 10px;
+            }
+            .table-container .column7 {
+                width: 180px;
+                text-align: right;
+                padding-right: 15px;
+            }
+            .table-container span {
+                display: inline-block;
+            }
+            .needed-for-section {
+                position: relative;
+                left: 120px;
+                font-style: italic;
+                width: 532px;
+                border: 1px solid #dfe1e5;
+                margin-top: 2px;
+                margin-bottom: 5px;
+                font-size: 11px;
+                display: inline-block;
+            }
+            .table-container tr table.needed-for-section {
+                border: 1px solid black;
+            }
+            tr.needed-for-items {
+                padding: 5px;
+            }
+            .table-container .needed-for-items .column1 {
+                font-weight: bold;
+                width: 50px;
+                padding-left: 5px;
+                text-align: left;
+                padding-right: 3px;
+            }
+            .table-container .needed-for-items .column2 {
+                width: 45px;
+                padding-right: 5px;
+                text-align: right;
+            }
+            .table-container .needed-for-items .column3 {
+                width: 140px;
+                text-transform: capitalize;
+            }
+            .table-container .needed-for-items .column4 {
+                width: 280px;
+            }
+
+            table {
+                border-collapse: collapse;
+            }
+            table thead tr {
+                font-size: 12px;
+                font-weight: bold;
+                background-color: #dfe1e5;
+            }
+            table thead tr th {
+                padding-bottom: 5px;
+                padding-top: 5px;
+            }
+            table tbody tr {
+                font-size: 11px;
+            }
+            .table-container tr {
+                text-align: left;
+            }
+            .table-container thead th.column1 {
+                text-align: center;
+            }
+            .table-container tbody td.column1 {
+                text-align: right;
+                padding-right: 5px;
+            }
+            .ML50 {
+                margin-left: 50px !important;
+            }
+            .company-logo-right {
+                position: absolute;
+                right: 0px;
+            }
+            .company-logo-left {
+                position: absolute;
+                left: 0px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="invoice-main-container c-pull-left">
+            <c:StandardDocumentHeader headerText="VENDOR RECEIVING"
+                isNotComingFromCo="true"
+                orderLabel2="Received by:"
+                customerInfoLabel="RECEIVED FROM"
+                orderLabel="RECEIPT#"
+            />
+        </div>
+        <apex:variable value="{!0}" var="neededForIndex"/>
+        <div class="main-section-container c-pull-left">
+            <div class="table-header">
+                <p class="header-container">
+                	<span class="order-item">RECEIVED ITEMS</span>
+					<span class="order-total">
+                        <apex:outputText value="{0, number, currency}">
+                            <apex:param value="{!vendorOrderReceivingDetailObj.ReceivedTotal}"/>
+                        </apex:outputText>
+                        <apex:OutputText rendered="{!vendorOrderReceivingDetailObj.VendorInfo.IsForeignExchangeCostingEnabled && vendorOrderReceivingDetailObj.VendorInfo.IsForeignVendor}"> {!vendorOrderReceivingDetailObj.VendorInfo.FXCurrencyCode}</apex:OutputText>
+                    </span>                
+                </p>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="column1">Qty</th>
+                            <th class="column2">Unit</th>
+                            <th class="column3">Item# (MFG#)</th>
+                            <th class="column4">Description</th>
+                            <th class="column5">Location</th>
+                            <th class="column6">Cost</th>
+                            <th class="column7">Sub Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <apex:repeat value="{!vorGroupDetailObjList}" var="vorGroupItem">
+                            <tr>
+                                <td class="column1">
+                                    <apex:outputText value="{0, number, 0.00}">
+                                        <apex:param value="{!vorGroupItem.ReceivedQty}"/>
+                                    </apex:outputText>
+                                </td>
+                                <td class="column2">{!vorGroupItem.UnitType}</td>
+                                <td class="column3">{!vorGroupItem.ItemCode}
+                                    <apex:outputPanel rendered="{!vorGroupItem.MFGNo != null}">
+                                        ({!vorGroupItem.MFGNo})
+                                    </apex:outputPanel>
+                                </td>
+                                <td class="column4">{!vorGroupItem.ItemDescription}</td>
+                                <td class="column5">{!vorGroupItem.Location}</td>
+                                <td class="column6">
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!vorGroupItem.Cost}"/>
+                                    </apex:outputText>
+                                </td>
+                                <td class="column7">
+                                    <apex:outputText value="{0, number, currency}">
+                                        <apex:param value="{!vorGroupItem.Total}"/>
+                                    </apex:outputText>
+                                </td>
+                            </tr>
+                            <apex:outputPanel rendered="{!vorGroupItem.vendorOrderLineItems.size > 0 && vorGroupItem.IsNonStockLineExists}" layout="none">
+                                <tr>
+                                    <td colspan="6">
+                                        <apex:variable value="{!0}" var="neededForIndex"/>
+                                        <table class="needed-for-section">
+                                            <tbody>
+                                                <apex:repeat value="{!vorGroupItem.vendorOrderLineItems}" var="voliItem">
+                                                    <apex:variable var="neededForIndex" value="{!neededForIndex + 1}"/>
+                                                    <tr class="needed-for-items">
+                                                        <td class="column1">
+                                                            <apex:outputPanel rendered="{!neededForIndex == 1}" layout="none">
+                                                                Order for
+                                                            </apex:outputPanel>
+                                                        </td>
+                                                        <td class="column2">
+                                                            <apex:outputPanel rendered="{!voliItem.ReceivedQty!=null}">
+                                                                <apex:outputText value="{0, number, 0.00}">
+                                                                    <apex:param value="{!voliItem.ReceivedQty}"/>
+                                                                </apex:outputText>
+                                                            </apex:outputPanel>
+                                                        </td>
+                                                        <td class="column3">
+                                                            <apex:outputPanel rendered="{!voliItem.NeededFor!=null}">
+                                                                <span>{!voliItem.NeededFor}</span>
+                                                            </apex:outputPanel>
+                                                        </td>
+                                                        <td class="column4">
+                                                            <apex:outputPanel rendered="{!voliItem.NeededForReason!=null}">
+                                                                <span>{!voliItem.NeededForReason}</span>
+                                                            </apex:outputPanel>
+                                                        </td>
+                                                    </tr>
+                                                </apex:repeat>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </apex:outputPanel>
+                        </apex:repeat>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html> 
+</apex:page>

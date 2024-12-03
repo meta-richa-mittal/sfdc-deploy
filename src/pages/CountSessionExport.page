@@ -1,0 +1,192 @@
+<!-- <apex:page controller="CountSessionExportCtrl" contentType="{!contentType}" cache="true" showChat="false" showHeader="false" sidebar="false" applyBodyTag="false" applyHtmlTag="false" >
+    <apex:outputText value="{!fileContent}" escape="false"/>
+</apex:page>  -->
+
+<apex:page standardStylesheets="false" showHeader="false" sidebar="false" controller="CountSessionExportCtrl" readOnly="true">
+    <html ng-app="prevRecords">
+        <head> 
+            <apex:stylesheet value="{!Assests}/css/bootstrap.min.css"/>
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/Jquery.min.js" />
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/bootstrap.min.js" />
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/angular.min.js" />
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/alasql.min.js" />
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/moment.min.js" />
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/underscore-min.js" />
+            <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet" />
+            <link rel="stylesheet" href="{!JSENCODE(Assests)}/web-font/dist/bp-icons.css" />
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@blackpurl/web-components@0.1.1-beta.12/dist/themes/light.css"/>
+            <script type="module" src="https://cdn.jsdelivr.net/npm/@blackpurl/web-components@0.1.1-beta.12/dist/index.js"></script>
+			<script type="module" src="{!JSENCODE(Assests)}/LIT/dist/index.js" />
+            
+              <style>
+            	.bp-spinner {
+            		position: absolute;
+            		left: 50%;
+            		top: 50%;
+            	}
+            </style>
+        </head>
+        
+        <script type="text/javascript">
+            function encodeString(inputString){
+                if(inputString == null) {
+                    return inputString;
+                }
+                var outputString = window.btoa(inputString);
+                return outputString;
+            }
+            
+            function decodeString(inputString){
+                if(inputString == null) {
+                    return inputString; 
+                }
+                var outputString = window.atob(inputString);
+                return outputString;
+            }
+            
+            function debug(logString){
+            }
+            var PrevRecords = angular.module('prevRecords', []);
+            PrevRecords.controller('prevRecordsCtrl', function ($scope, countSessionPreviewService, $q) {
+                $scope.PreviewPage = {};
+                $scope.PreviewPage.CountSessionid = "{!JSENCODE(URLENCODE($CurrentPage.parameters.id))}" ? "{!JSENCODE(URLENCODE($CurrentPage.parameters.id))}" : null;
+                $scope.PreviewPage.CountSessionTab =  "{!JSENCODE($CurrentPage.parameters.tab)}" ?  "{!JSENCODE($CurrentPage.parameters.tab)}" : null;
+                $scope.PreviewPage.filterFormJson = {};
+                $scope.PreviewPage.SearchName = '';
+                $scope.PreviewPage.exportData = [];
+                $scope.PreviewPage.Result = [];
+                $scope.PreviewPage.isLoading = true;
+                $scope.PreviewPage.loadGridData = function(CountSessionid, CountSessionTab, UniqueFieldLastValue,loadFirstTime) {
+                    countSessionPreviewService.getCountSessionReportData(CountSessionid, CountSessionTab, UniqueFieldLastValue).then(function(Result) {
+                        if(loadFirstTime) {
+                            $scope.PreviewPage.Result = Result;
+                        } else {
+                            $scope.PreviewPage.Result.CountSessionLineItems = $scope.PreviewPage.Result.CountSessionLineItems.concat(Result.CountSessionLineItems);
+                            $scope.PreviewPage.Result.UniqueFieldLastValue = Result.UniqueFieldLastValue;
+                        }
+                        
+                        if(!Result.IsProcessComplete){
+                                $scope.PreviewPage.loadGridData(CountSessionid, CountSessionTab, Result.UniqueFieldLastValue,false);
+                        } else {
+
+                           var CountSessionLineItems  = _.sortBy($scope.PreviewPage.Result.CountSessionLineItems, 'PartNumber')
+                           $scope.PreviewPage.Result.CountSessionLineItems = CountSessionLineItems;
+                            generateCSVData($scope.PreviewPage.Result);
+                        }
+                   }, function(errorSearchResult) {
+                        $scope.PreviewPage.filterList.FilterType = errorSearchResult;
+                        Notification.error("Error occurred while fetching the records.");
+                    });
+                }
+
+
+                function generateCSVData(Result) {
+                    var reportHeaderData = [];
+                    var reportPropHeader = {};
+                       if($scope.PreviewPage.CountSessionTab == 'Counted parts') {
+                            reportPropHeader = {
+                            'PartNumber': 'Part #', 
+                            'Description': 'Description', 
+                            'VendorName': 'Vendor', 
+                            'Locations' : 'Location',  
+                            'QtyAvailable' : 'Available', 
+                            'CountedQty' : 'Counted', 
+                            'Variance' : 'Variance', 
+                            'Cost' :'Cost', 
+                            'TotalVariance' : 'Total Variance'
+                        }; 
+                    } else if($scope.PreviewPage.CountSessionTab == 'Uncounted parts') {
+                        reportPropHeader = {
+                            'PartNumber': 'Part #', 
+                            'Description': 'Description', 
+                            'VendorName': 'Vendor', 
+                            'Locations' : 'Location',  
+                            'QtyAvailable' : 'Available', 
+                            'Cost' :'Cost', 
+                            'TotalCost' : 'Total Cost'
+                        }; 
+                    } else if($scope.PreviewPage.CountSessionTab == 'Issues to resolve') {
+                        reportPropHeader = {
+                            'PartNumber' : 'Part #', 
+                            'Description' : 'Description', 
+                            'VendorName' : 'Vendor', 
+                            'Locations' : 'Location',  
+                            'CountedQty' : 'Count Qty', 
+                            'IssueDescription' : 'Issue'
+                        }; 
+                    } else if($scope.PreviewPage.CountSessionTab == 'Adjustments') {
+                        reportPropHeader = {
+                            'PartNumber' : 'Part #',
+                            'Description' : 'Description', 
+                            'VendorName' : 'Vendor', 
+                            'Locations' : 'Location',  
+                            'QtyAvailable' : 'Available', 
+                            'CountedQty' : 'Counted', 
+                            'Variance' : 'Variance', 
+                            'Cost' : 'Cost', 
+                            'NetAdjustment' : 'Net Adjustment'
+                        }; 
+                    }
+                    
+                      var exportRecObjEmpty = {};
+                      angular.forEach(reportPropHeader, function(col, key) {
+                        for(i=0;i<Result.CountSessionInfo.length;i++) {
+                            if(key != 'PartNumber' && key != 'Description') {
+                                Result.CountSessionInfo[i][key] = ''
+                            }
+                        }
+                        exportRecObjEmpty[key] = '';
+                      })
+                      Result.CountSessionInfo.push(exportRecObjEmpty);
+                      Result.CountSessionInfo.push(reportPropHeader);
+                      Result.CountSessionInfo.push(exportRecObjEmpty);
+                      var countInfo = alasql('SELECT * FROM ?', [Result.CountSessionInfo, {headers:true}]); 
+                       var gridData = alasql('SELECT * FROM ?', [Result.CountSessionLineItems, {headers:false}]);
+                       var exportData = countInfo.concat(gridData);
+                       alasql('SELECT * INTO CSV("GridExport.csv") FROM ?',[exportData]);
+                       setTimeout(function(){
+                       		self.close();
+                       		$scope.PreviewPage.isLoading = false;
+                       },1000); 
+                }
+                
+            });
+            
+            // Service Starts   
+            PrevRecords.service("countSessionPreviewService", function ($q) {
+                // Get the report data based on filters
+                this.getCountSessionReportData = function(filterJSON, selectedObjName, uniqueValueFieldLastValue)
+                {   
+                    filterJSON = encodeString(filterJSON);
+                    selectedObjName = encodeString(selectedObjName);
+                    uniqueValueFieldLastValue = encodeString(uniqueValueFieldLastValue);
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.CountSessionExportCtrl.getCountSessionReportData}', filterJSON, selectedObjName, uniqueValueFieldLastValue,
+                        function (result, event) {
+                           if (event.type == 'exception') {
+                                deferred.reject(event.message);
+                            } else {
+                                var gridData = decodeString(result);
+                                var find = '\'';
+                                var re = new RegExp(find, 'g');
+                                gridData = gridData.replace(re, '');
+                                deferred.resolve(JSON.parse(gridData));
+                            }
+                        }, {
+                            escape : true
+                    });
+                    return deferred.promise;
+                }
+            });
+        </script>
+        
+        <body ng-controller="prevRecordsCtrl" ng-init="PreviewPage.loadGridData(PreviewPage.CountSessionid,PreviewPage.CountSessionTab,null,true);">
+        	<div class="LoadingDiv" ng-show="PreviewPage.isLoading">
+            <div class="loadingIconContainer">
+                <c:BPLoading />
+            </div>
+        </div>
+        </body>
+    </html>
+</apex:page>

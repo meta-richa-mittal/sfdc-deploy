@@ -58,11 +58,18 @@ public without sharing class CustomerOwnedUnit {
     public String FactoryOrderNo;
     public String FormattedName;
     public String ActiveOnSection;
+    public String VendorId;
+    public String ExpectedDate;
+	public String OrderedDate;
+    public String ApplicableStampDutyCalName;
+    public String ApplicableStampDutyCalId;
     
     /* added by kajal 26th april, 2017 #1937 */
     public String BaseUnitId;
     public Decimal TotalBasePrice;
     public Decimal TotalBaseCost;
+    public Decimal TotalPrice;
+    public Decimal TotalCost;
     /* added by kajal 26th april, 2017 #1937 */
     public String RegExpiryDate;/* added by kajal 1st may, 2017 #1975 */
     public String ComplianceDate;
@@ -84,6 +91,11 @@ public without sharing class CustomerOwnedUnit {
     public String UnitData13;
     public String UnitData14;
     public String UnitData15;
+    public String ProductTypeId;
+    public String ProductType;
+    public UnitProductTypeWrapper UnitOptionalFields;
+    public List<UnitWrapper.PriceAndCostTrackingWrapper> PriceAndCostTrackingWrapperList;
+
     
     public CustomerOwnedUnit(Customer_Owned_Unit__c coUnitRec, List<Unit_Price_Cost__c> upcList) {
     	setCOUFields(coUnitRec, upcList);
@@ -100,19 +112,8 @@ public without sharing class CustomerOwnedUnit {
     	this.MakeName = (coUnitRec.Unit_Make__c != null) ? coUnitRec.Unit_Make__r.Name : '';
     	this.Name = coUnitRec.Name;
     	
-    	this.Plate = coUnitRec.Plate__c;
-    	this.Color = coUnitRec.Colour__c;
     	this.Id = coUnitRec.Id;
-    	
-    	this.Mileage = coUnitRec.Mileage_Value__c;
-    	this.MileageType = coUnitRec.Mileage_Type__c;
-    	this.OtherSerialNo = coUnitRec.Other_Serial_No__c;
-    	this.KeyNo = coUnitRec.Key_No__c;
-    	this.InteriorColour = coUnitRec.Interior_Colour__c;
-    	this.EngineSerialNo = coUnitRec.Engine_Serial_No__c;
-    	this.Displacement = coUnitRec.Displacement__c;
-    	this.Cylinders = coUnitRec.Cylinders__c;
-    	this.Gears = coUnitRec.Gears__c;
+    
     	this.UnitType = coUnitRec.Unit_Type__c;
     	this.StockId = coUnitRec.Stock_Id__c;
     	this.UnitId = coUnitRec.Unit_Id__c;
@@ -122,15 +123,14 @@ public without sharing class CustomerOwnedUnit {
 		this.SubModelName =  (coUnitRec.Sub_Model__c != null) ? coUnitRec.Sub_Model__r.Sub_Model_Name__c : '';
     		
     	this.MakeModelDescription = (coUnitRec.Sub_Model__c != null) ? coUnitRec.Sub_Model__r.Description__c : '';
-    	if(coUnitRec.Manufactured_Date__c != null){
-    		this.ManufacturedDate = BPUtility.getFormatedDateTime(datetime.newInstance(coUnitRec.Manufactured_Date__c.year(), coUnitRec.Manufactured_Date__c.month(),coUnitRec.Manufactured_Date__c.day()));
-    	}
     	this.IsTaxable = coUnitRec.Taxable__c;
         this.IsPublishInFeeds = coUnitRec.Publish_in_feeds__c;
     	this.ApplicableTax = coUnitRec.Applicable_Tax__c;
     	this.ApplicableTaxName = (coUnitRec.Applicable_Tax__c != null) ? coUnitRec.Applicable_Tax__r.Name__c : '';
-    	this.Displacement = coUnitRec.Displacement__c;
     	this.IsAutomatic = coUnitRec.Automatic__c;
+
+        this.ApplicableStampDutyCalId = coUnitRec.Stamp_Duty_Calculators__c;
+        this.ApplicableStampDutyCalName = (coUnitRec.Stamp_Duty_Calculators__c != null) ? coUnitRec.Stamp_Duty_Calculators__r.Name__c : '';
     	
     	this.Status = coUnitRec.Status__c;
     	this.IsNewUnit = coUnitRec.New_Unit__c;
@@ -182,48 +182,30 @@ public without sharing class CustomerOwnedUnit {
     		} else if(coUnitRec.Status__c == 'Cancelled' || coUnitRec.Status__c == 'Traded'){
     			this.StatusColor = 'Black';
     		}
+            this.VendorId = coUnitRec.Vendor__c;
+            this.ExpectedDate = (coUnitRec.Date_Expected__c != null) ? 
+								BPUtility.getFormatedDateTime(datetime.newInstance(coUnitRec.Date_Expected__c.year(), coUnitRec.Date_Expected__c.month(), coUnitRec.Date_Expected__c.day())) : '' ;
+			this.OrderedDate = (coUnitRec.Date_Ordered__c != null) ? 
+								BPUtility.getFormatedDateTime(datetime.newInstance(coUnitRec.Date_Ordered__c.year(), coUnitRec.Date_Ordered__c.month(), coUnitRec.Date_Ordered__c.day())) : '' ;
+            this.PriceAndCostTrackingWrapperList = new List<UnitWrapper.PriceAndCostTrackingWrapper>();
+            for(Unit_Price_Cost__c unitPriceAndCostRec : coUnitRec.Unit_Prices_Costs__r) {
+                this.PriceAndCostTrackingWrapperList.add(new UnitWrapper.PriceAndCostTrackingWrapper(unitPriceAndCostRec));
+            }
     	}
     	
     	this.IsActive = (coUnitRec.Status__c == 'Inactive') ? false : true;
     	
     	this.FactoryOrderNo = coUnitRec.Factory_Order_No__c;
     	this.FormattedName = coUnitRec.Formatted_Name__c;
-    	this.ComplianceDate = coUnitRec.Compliance_Date__c;
-    	this.RegistrationSerial = coUnitRec.Registration_Serial__c;
-    	this.YearOf1stRego = coUnitRec.Year_Of_1st_Rego__c;
-    	/* added by kajal 26th april, 2017 #1937 */
-    	if(upcList.size() > 0) {
-    		this.BaseUnitId = upcList[0].Id;
-    		this.TotalBaseCost = (upcList[0].Total_Cost__c != null) ? upcList[0].Total_Cost__c : 0;
-    		this.TotalBasePrice = (upcList[0].Total_Price__c != null) ? upcList[0].Total_Price__c : 0;
-    	} else {
-    		this.TotalBaseCost = 0;
-    		this.TotalBasePrice = 0;
-    	}
-    	/* added by kajal 26th april, 2017 #1937 */
-    	/* added by kajal 1st may, 2017 #1975 */
-    	if(coUnitRec.Reg_Expiry_Date__c != null){
-    		this.RegExpiryDate = BPUtility.getFormatedDateTime(datetime.newInstance(coUnitRec.Reg_Expiry_Date__c.year(), coUnitRec.Reg_Expiry_Date__c.month(),coUnitRec.Reg_Expiry_Date__c.day()));
-    	}
-    	/* added by kajal 1st may, 2017 #1975 */
-    	
+
+        this.BaseUnitId = !upcList.isEmpty() ? upcList[0].Id : null;
+    	this.TotalBaseCost = coUnitRec.Total_Base_Units_Cost__c != null ? coUnitRec.Total_Base_Units_Cost__c.setScale(2, RoundingMode.HALF_UP) : 0;
+        this.TotalBasePrice = coUnitRec.Total_Base_Unit_Price__c != null ? coUnitRec.Total_Base_Unit_Price__c.setScale(2, RoundingMode.HALF_UP) : 0;
+    	this.TotalCost = coUnitRec.Total_Cost__c != null ? coUnitRec.Total_Cost__c.setScale(2, RoundingMode.HALF_UP) : 0;
+        this.TotalPrice = coUnitRec.Total_Price__c != null ? coUnitRec.Total_Price__c.setScale(2, RoundingMode.HALF_UP) : 0;
     	this.AssignedTags = TagUtil.getTagsList(coUnitRec);
-    	
-    	this.UnitData01 = coUnitRec.Unit_Data_01__c;
-    	this.UnitData02 = coUnitRec.Unit_Data_02__c;
-    	this.UnitData03 = coUnitRec.Unit_Data_03__c;
-    	this.UnitData04 = coUnitRec.Unit_Data_04__c;
-    	this.UnitData05 = coUnitRec.Unit_Data_05__c;
-    	this.UnitData06 = coUnitRec.Unit_Data_06__c;
-    	this.UnitData07 = coUnitRec.Unit_Data_07__c;
-    	this.UnitData08 = coUnitRec.Unit_Data_08__c;
-    	this.UnitData09 = coUnitRec.Unit_Data_09__c;
-    	this.UnitData10 = coUnitRec.Unit_Data_10__c;
-    	this.UnitData11 = coUnitRec.Unit_Data_11__c;
-    	this.UnitData12 = coUnitRec.Unit_Data_12__c;
-    	this.UnitData13 = coUnitRec.Unit_Data_13__c;
-    	this.UnitData14 = coUnitRec.Unit_Data_14__c;
-    	this.UnitData15 = coUnitRec.Unit_Data_15__c;
+        this.ProductTypeId = coUnitRec.Product_type__c;
+        this.ProductType = coUnitRec.Product_type__c != null ? coUnitRec.Product_type__r.Name__c : '';
     }
     
     /**
@@ -306,22 +288,14 @@ public without sharing class CustomerOwnedUnit {
                                                     'Registration_Serial__c',
                                                     'Year_Of_1st_Rego__c',
                                                     'Total_Cost__c',
-                                                    'Unit_Data_01__c',
-                                                    'Unit_Data_02__c',
-                                                    'Unit_Data_03__c',
-                                                    'Unit_Data_04__c',
-                                                    'Unit_Data_05__c',
-                                                    'Unit_Data_06__c',
-                                                    'Unit_Data_07__c',
-                                                    'Unit_Data_08__c',
-                                                    'Unit_Data_09__c',
-                                                    'Unit_Data_10__c',
-                                                    'Unit_Data_11__c',
-                                                    'Unit_Data_12__c',
-                                                    'Unit_Data_13__c',
-                                                    'Unit_Data_14__c',
-                                                    'Unit_Data_15__c',
-                                                    'Notes__c'
+                                                    'Total_Price__c',
+                                                    'Notes__c',
+                                                    'Product_type__c',
+                                                    'Product_type__r.Name__c',
+                                                    'Date_Ordered__c',
+                                                    'Date_Expected__c',
+                                                    'Stamp_Duty_Calculators__c',
+                                                    'Stamp_Duty_Calculators__r.Name__c'
                                                 };/*total cost and price fields added by kajal 26th april, 2017 #1937 *//* Reg_Expiry_Date__c added by kajal 1st may, 2017 #1975 */
         return COUFields;
     }

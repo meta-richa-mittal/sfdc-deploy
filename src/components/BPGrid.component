@@ -1,0 +1,88 @@
+<apex:component controller="GlobalController">
+<div class="c-table-container desktop-view">
+    <!-- <div class="disable-grid-container" ng-if="F_WPM.isControlDisabled()"></div> -->
+     <table class="c-table-respoinsive" ng-class="{'c-disable-grid': F_WPM.isControlDisabled(),  'c-disable-with-opacity-grid': M_WPM.isSyncBPProductWithStoreProduct}">
+        <col width="10%" />
+        <col width="20%" />
+        <col width="15%" />
+        <col width="15%" />
+        <col width="20%" />
+        <col width="10%" />
+        <col width="10%" />
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Website product</th>
+                <th>Variant options</th>
+                <th>Vendor</th>
+                <th>Blackpurl part</th>
+                <th>Ignore product</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="prodRec in M_WPM.productList" ng-if="M_WPM.productList.length > 0" ng-class="{'c-selected-row': prodRec.isSelected}">
+                <td>
+                    <bp-ng-badge value="{{prodRec.Status}}"  class-value="{{prodRec.Status  | lowercase}}-badge " />
+                </td>
+                <td>
+                    <a ng-if="prodRec.ProductURL" href="{{prodRec.ProductURL}}" target="_blank">{{prodRec.Title}}</a>
+                    <span ng-if="!prodRec.ProductURL">{{prodRec.Title}}</span>
+                </td>
+                <td>{{::prodRec.VariantOptions}}</td>
+                <td>{{::prodRec.ProductVendor}}</td>
+                <td class="pos-rel" >
+                    <auto-completev3 index="{{$index}}" is-error="prodRec.isError" list-data="M_WPM.PardIdList" template-name="PartAutoComplete" default-value="prodRec.PartCodeDesc" section-name="WPMSection" ng-if="!prodRec.IsIgnored" section-id="WPMSection"  /> 
+                </td>
+                <td> <bp-ng-slider value="{{prodRec.IsIgnored}}" ng-class-name= "{'c-checkd-slider':prodRec.IsIgnored}" on-click-fun="F_WPM.openIgnoreModalWindow('ignoreModalWindow', $index, prodRec.Id)" field-value="Ignore"></bp-ng-slider>  </td>
+                <td>
+                    <div class="flex-container items-right">
+                        <span ng-if="prodRec.Status == 'linked' && prodRec.ProductId"> 
+                            <bp-ng-button name="" ng-if="M_WPM.isSyncBPProductWithStoreProduct !=  prodRec.Id" tool-tip-title="Create & manage variant and options" font-name="addSquareFilled" font-class="bp-font-16 bp-dark-grey1-font" class-value="c-icon-btn" action="F_WPM.showCreateAndManageVariantsModal(prodRec.ProductId,prodRec.Id)" disabled-value="" is-image-include="true" />
+                            <span class="bp-reverse_new" ng-if="M_WPM.isSyncBPProductWithStoreProduct == prodRec.Id" > 
+                                <i class="c-input-white-loading-icon c-adjust-position">
+                                    <svg class="input-blue-spiner" width="85px" height="85px" viewBox="0 0 66 66" xmlns="https://www.w3.org/2000/svg">
+                                        <circle class="input-blue-spiner-path" fill="none" stroke-width="10" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+                                    </svg>
+                                </i>
+                            </span>
+                        </span>
+                        
+                        <bp-ng-button name="" ng-click="F_WPM.openDeleteModalWindow('deleteModalWindow',prodRec.Id)" tool-tip-title="Delete" font-name="delete" font-class="bp-font-16 bp-dark-grey1-font" class-value="c-icon-btn" action="" disabled-value="" is-image-include="true" />
+                        
+                    </div> 
+                </td>
+            </tr>
+            <tr class="dummy-rec-opacity_{{$index}}" ng-repeat="rec in M_WPM.dummyRecJSON" ng-if="M_WPM.isloadDummyState">
+                <td class="dummy-first-rec dummy-animation">
+                    <span></span>
+                </td>
+                <td class="dummy-rec dummy-animation">
+                    <span></span>
+                </td>
+                <td class="dummy-rec dummy-animation"> <span></span></td>
+                <td class="dummy-rec dummy-animation"> <span></span></td>
+                <td class="dummy-rec dummy-animation"> <span></span></td>
+                <td class="dummy-rec dummy-animation"> <span></span></td>
+                <td class="dummy-last-rec dummy-animation"> <span></span></td>
+            </tr>
+            <tr ng-if="M_WPM.productList.length == 0" class="no-record-found">
+                <td colspan="7">No product found, re-adjust your filters.</td>
+            </tr>
+        </tbody>
+    </table> 
+</div>
+<div class="modile-view-grid">
+    <div ng-repeat="prodRec in M_WPM.productList" class="card-grid-container" ng-class="{'c-selected-row': prodRec.isSelected}">
+        <entity-card entity-card-payload="prodRec.cardJSON" first-img-action="F_WPM.showCreateAndManageVariantsModal(prodRec.ProductId);" second-img-action= "F_WPM.openDeleteModalWindow('deleteModalWindow',prodRec.cardJSON.headerJSON.cardNameJSON.Id)">
+            <div class="transclude-container">
+                 <div class="auto-complete-container pos-rel" ng-if="!prodRec.IsIgnored" >
+                    <label>Blackpurl part</label>
+                    <auto-completev3 index="{{$index}}"  is-error="prodRec.isError" list-data="M_WPM.PardIdList" template-name="PartAutoComplete" default-value="prodRec.PartCodeDesc" section-name="WPMSection" section-id="WPMSection"  /> 
+                </div>
+                <bp-ng-slider value="{{prodRec.IsIgnored}}" ng-class-name= "{'c-checkd-slider':prodRec.IsIgnored}" on-click-fun="F_WPM.openIgnoreModalWindow('ignoreModalWindow', $index, prodRec.Id)" field-value="Ignore"></bp-ng-slider>
+            </div>
+        </entity-card>
+    </div>
+</div>
+</apex:component>

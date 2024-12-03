@@ -1,0 +1,383 @@
+<apex:component controller="GlobalController">
+    <div class="userGroupInfoArea">  
+        <div class="heading-text bp-first-letter-capitalize">
+        {{
+            M_AddEditUnit.unitRec.isEditModel ? "Edit temporary unit" : "Set a temporary unit"
+        }}
+        </div>
+        <div ng-if = "!M_AddEditUnit.showFactoryOptionSection">
+            <div class="row MB20">
+                <div class="col-xs-6">
+                    <div class="form-input">
+                        <label class="print-item-label">{{ 'Make_Object_Display_Label' | translate }}</label>
+                        <div class="bp-cell  searchInputArea " ng-class = "{'showingOverlay' : M_AddEditUnit.showMakeList }">
+                            <input  type="text" id="MakeUnitOrdering" class="bp-input-text searchInput" placeholder="Select a make"
+                                autocomplete="off" ng-focus = "F_AddEditUnit.getMakeList()" ng-blur = "F_AddEditUnit.hideMakeList();F_AddEditUnit.ValidateUnitFields('MakeName');"
+                                ng-model="M_AddEditUnit.unitRec.MakeName"
+                                ng-class="{'bp-redborder' : M_AddEditUnit.UnitValidation['MakeName']['isError'] == true}"
+                                ng-click = "F_AddEditUnit.setFocusOnElement('MakeUnitOrdering')"
+                                ng-keyup="F_AddEditUnit.keyBoardNavigation($event, filteredMake, 'make'); F_AddEditUnit.clearMakeModelSubModelValue();" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click = "F_AddEditUnit.setFocusOnElement('MakeUnitOrdering')">arrowDown</i>
+                            <div class="searchResultOverlay" id="makeDropDownDiv">
+                                <ul>
+                                    <li ng-repeat="unitMake in M_AddEditUnit.UnitMakeList | filter:{'UnitMakeName' : M_AddEditUnit.unitRec.MakeName} as filteredMake"
+                                        ng-mousedown="F_AddEditUnit.selectUnitMake(unitMake)"
+                                        ng-class="{'selected-row': $index == M_AddEditUnit.makeCurrentIndex}"
+                                        id="make{{$index}}">
+                                        <div class="fullName text-capitalize">{{unitMake.UnitMakeName}}</div>
+                                    </li>  
+                                </ul> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <div class="form-input">
+                        <label class="print-item-label">{{ 'Label_Year' | translate }}</label>
+                        <div class="bp-cell  searchInputArea " ng-class = "{'showingOverlay' : M_AddEditUnit.showYears }">
+                            <numbers-only 
+                                class-value="bp-input-text searchInput"
+                                id-value="YearAddEditUnit"
+                                place-holder-value="Select year"
+                                include-blank="true"
+                                blur-value="M_AddEditUnit.showYears = false"
+                                focus-value="F_AddEditUnit.getYears('Year')"
+                                input-model-value="M_AddEditUnit.SearchYear"
+                                input-keyup-value="F_AddEditUnit.keyBoardNavigation($event, filteredYear, 'year')" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click = "F_AddEditUnit.setFocusOnElement('YearAddEditUnit')">arrowDown</i>
+                            <div class="searchResultOverlay" id="yearDropDownDiv">
+                                <ul>
+                                    <li  ng-if="filteredYear.length > 0" ng-repeat="yearValue in M_AddEditUnit.Years | filter:{'year' : M_AddEditUnit.SearchYear} as filteredYear"
+                                        ng-mousedown="M_AddEditUnit.unitRec.Year = yearValue.year; M_AddEditUnit.SearchYear = yearValue.year;"
+                                        ng-class="{'selected-row': $index == M_AddEditUnit.yearCurrentIndex}"
+                                        id="year{{$index}}">
+                                        <div class="fullName">{{yearValue.year}}</div>
+                                    </li>
+                                    <li  ng-if="filteredYear.length == 0" id="TradeInNoResults" class="BP_angucomplete-row-NoResults-Msg">
+                                        <div class="">{{ 'No_Results_Found' | translate }}</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row MB20">
+                <div class="col-xs-6">
+                    <div class="form-input">
+                        <label class="print-item-label">{{ Custom_Label_Model | translate }}</label>
+                    <div class="bp-cell  searchInputArea " ng-class = "{'showingOverlay' : M_AddEditUnit.showModelList }">
+                        <input  type="text" id="ModelUnitOrdering" class="bp-input-text searchInput" placeholder="Select a model"
+                            autocomplete="off" ng-focus = "F_AddEditUnit.getModelList()" ng-blur = "F_AddEditUnit.hideModelList();F_AddEditUnit.ValidateUnitFields('ModelName');"
+                            ng-model="M_AddEditUnit.unitRec.ModelName"
+                            ng-class="{'bp-redborder' : M_AddEditUnit.UnitValidation['ModelName']['isError'] == true}"
+                            ng-keyup="F_AddEditUnit.keyBoardNavigation($event, filteredModel, 'model'); F_AddEditUnit.clearModelSubModelValue();" />
+                            <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click = "F_AddEditUnit.setFocusOnElement('ModelUnitOrdering')">arrowDown</i>
+                            <div class="searchResultOverlay" id="modelDropDownDiv">
+                              <ul>
+                                  <li ng-if = "unitModel.UnitModelName" ng-repeat="unitModel in M_AddEditUnit.UnitModelList | filter:{'UnitModelName' : M_AddEditUnit.unitRec.ModelName} as filteredModel"
+                                      ng-mousedown="F_AddEditUnit.selectUnitModel(unitModel)"
+                                      ng-class="{'selected-row': $index == M_AddEditUnit.modelCurrentIndex}"
+                                      id="model{{$index}}">
+                                      <div class="fullName text-capitalize">{{unitModel.UnitModelName}}</div>
+                                  </li>
+                              </ul>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+                <div class="col-xs-6">
+                    <div class="form-input">
+                        <div class="bp-cell  searchInputArea ">
+                            <label class="print-item-label">{{ 'Exterior_color' | translate }}</label>
+                            <input type="text" class="bp-input-text inputText" placeholder="{{ 'Placeholder_color' | translate }}"
+                                        ng-model="M_AddEditUnit.unitRec.ExteriorColour" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row MB20">
+                <div class="col-xs-6">
+                    <div class="form-input">
+                        <label class="print-item-label">{{ Custom_Label_Sub_Model | translate }}</label>
+                        <div class="bp-cell  searchInputArea " ng-class = "{'showingOverlay' : M_AddEditUnit.showSubModelList }">
+                            <input  type="text" id="SubModelUnitOrdering" class="bp-input-text searchInput" placeholder="Select a sub-model"
+                                autocomplete="off" ng-focus = "F_AddEditUnit.getSubModelList()" ng-blur = "F_AddEditUnit.hideSubModelList();F_AddEditUnit.ValidateUnitFields('SubModelName');"
+                                ng-model="M_AddEditUnit.unitRec.SubModelName" 
+                                ng-keyup="F_AddEditUnit.keyBoardNavigation($event, filteredSubModel, 'subModel'); F_AddEditUnit.clearSubModelValue();" /> 
+                                <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click = "F_AddEditUnit.setFocusOnElement('SubModelUnitOrdering')">arrowDown</i>
+                            <div class="searchResultOverlay" id="subModelDropDownDiv">
+                                <ul>
+                                    <li ng-if="M_AddEditUnit.UnitSubModelList.length > 0 && unitSubModel.SubModelName" ng-repeat="unitSubModel in M_AddEditUnit.UnitSubModelList | filter:{'SubModelName' : M_AddEditUnit.unitRec.SubModelName} as filteredSubModel"
+                                        ng-mousedown="F_AddEditUnit.selectUnitSubModel(unitSubModel)"
+                                        ng-class="{'selected-row': $index == M_AddEditUnit.subModelCurrentIndex}"
+                                        id="subModel{{$index}}">
+                                        <div class="fullName text-capitalize">{{unitSubModel.SubModelName}}</div>
+                                    </li>
+                                    <li ng-if="M_AddEditUnit.UnitSubModelList.length == 0">
+                                        <div class="fullName">{{ 'No_sub_model_found' | translate }}</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+                    <div class="form-input">
+                    <label class="print-item-label">{{ 'Condition' | translate }}</label>
+                    <div class="bp-cell  searchInputArea " ng-class = "{'showingOverlay' : M_AddEditUnit.showConditionList }">
+                        <input  type="text" id="Condition" class="bp-input-text searchInput" placeholder="{{ 'Please_select' | translate }}"
+                            autocomplete="off" ng-focus = "F_AddEditUnit.getConditionList()" ng-blur = "F_AddEditUnit.hideConditionList();F_AddEditUnit.ValidateUnitFields('Condition');"
+                            ng-model="M_AddEditUnit.unitRec.Condition" readonly="readonly"
+                            ng-class="{'bp-redborder' : M_AddEditUnit.UnitValidation['Condition']['isError'] == true}"
+                            />
+                            <i ng-include="'{!Application_Images}/Icons/arrowDown.svg'" class="bp-blue downArrow" ng-click = "F_AddEditUnit.setFocusOnElement('Condition')"></i>
+                            <div class="searchResultOverlay" id="ConditionDropDownDiv">
+                              <ul>
+                                  <li ng-if = "condition" ng-repeat="condition in M_AddEditUnit.ConditionList"
+                                      ng-mousedown="F_AddEditUnit.selectCondition(condition)"
+                                      ng-class="{'selected-row': condition == M_AddEditUnit.unitRec.Condition}"
+                                      id="model{{$index}}">
+                                      <div class="fullName text-capitalize">{{condition}}</div>
+                                  </li>
+                              </ul>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+            </div>
+            <div class="row MB20">
+                <div class="col-xs-6"></div>
+                <div class="col-xs-6">
+                    <div class="form-input">
+                    <label class="print-item-label">{{ 'Mileage_type' | translate }}</label>
+                    <div class="bp-cell  searchInputArea " ng-class = "{'showingOverlay' : M_AddEditUnit.showMileageTypes }">
+                        <input  type="text" id="MileageType" class="bp-input-text searchInput" placeholder="{{ 'Please_select' | translate }}"
+                            autocomplete="off" ng-focus = "F_AddEditUnit.getMileageTypeList()" ng-blur = "F_AddEditUnit.hideMileageTypeList();F_AddEditUnit.ValidateUnitFields('MileageType');"
+                            ng-model="M_AddEditUnit.unitRec.MileageType" readonly="readonly"
+                            ng-class="{'bp-redborder' : M_AddEditUnit.UnitValidation['MileageType']['isError'] == true}"
+                            />
+                            <i ng-include="'{!Application_Images}/Icons/arrowDown.svg'" class="bp-blue downArrow" ng-click = "F_AddEditUnit.setFocusOnElement('MileageType')"></i>
+                            <div class="searchResultOverlay" id="MileageTypeDropDownDiv">
+                              <ul>
+                                  <li ng-if = "mileage" ng-repeat="mileage in M_AddEditUnit.MileageTypeList"
+                                      ng-mousedown="F_AddEditUnit.selectMileageType(mileage)"
+                                      ng-class="{'selected-row': mileage == M_AddEditUnit.unitRec.MileageType}"
+                                      id="model{{$index}}">
+                                      <div class="fullName text-capitalize">{{mileage}}</div>
+                                  </li>
+                              </ul>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+            </div>
+        </div>
+        <div ng-if = "M_AddEditUnit.showFactoryOptionSection">
+            <div class="MB20" ng-if="F_AddEditUnit.isCurrentLocaleAustralia()">
+                <div class="c-slider-container enforce-rideaway-pricing">
+                    <label class="print-item-label">{{ 'Enforce_rideaway_pricing' | translate }}</label>
+                    <label class="bp-switch">
+                        <input type="checkbox" ng-model="M_AddEditUnit.UnitPriceData.IsRideawayPricingEnabled" ng-change="F_AddEditUnit.toggleRideawayPriceItem()"/>
+                        <div class="bp-slider round"></div>
+                    </label>
+                </div>
+                <div class="row MB20" ng-show="M_AddEditUnit.UnitPriceData.IsRideawayPricingEnabled">
+                    <div class="input-box-edit-price rideaway-price">
+                        <span class="dollar">$</span>
+                        <numbers-only 
+                            id-value="InputForRideawayPrice"
+                            class-value="bp-input-text"
+                            precision-length="2"
+                            input-model-value="M_AddEditUnit.UnitPriceData.TotalEnforceRideawayPrice"
+                            input-keyup-value="F_AddEditUnit.enableSaveAction($event,'RideawayPrice')"
+                            force-precision-length="true"
+                            blur-value="F_AddEditUnit.restoreOriginalValueOnBlur($event,'RideawayPrice')"
+                            disabled-value="!GroupOnlyPermissions['Override price'].enabled"
+                            />
+
+                        <button class="bp-btn bp-btn-normal edit-price-save-btn bp-font-12" id="SaveBtnRideawayPrice" ng-show="M_AddEditUnit.shownSaveButton == 'RideawayPrice'"
+                        ng-mousedown="F_AddEditUnit.updateRideawayPricing()"
+                        ng-keydown="F_AddEditUnit.actionOnSaveButton($event,'RideawayPrice')"
+                        ng-blur="F_AddEditUnit.restoreOriginalValueOnBlur($event,'RideawayPrice')">{{ 'Save_Label' | translate }}</button>
+                    
+                    </div>
+                    <p ng-if="M_AddEditUnit.TotalPartAndLabor && M_AddEditUnit.UnitPriceData.IsRideawayPricingEnabled" class="bp-font-14 bp-grey-font PT3 ride-away-message" translate="Value_of_parts_and_labor_included" translate-values="{{ { Value_Of_Part_Labour : (M_AddEditUnit.TotalPartAndLabor| currency ) } }}"></p>
+                </div>
+            </div>
+
+            <div class="MB20 enforce-rideaway-pricing" ng-if="F_AddEditUnit.isCurrentLocaleAustralia()"> 
+                <label class="edit-price-form-group-label">{{ 'Stamp_duty' | translate }}</label>                  
+                <div class="input-box-edit-price stamp-duty">  
+                    <span class="dollar">$</span>
+                    <numbers-only 
+                    id-value="InputForStampDuty"
+                    class-value="bp-input-text"
+                    precision-length="2"
+                    force-precision-length="true"
+                    input-model-value="M_AddEditUnit.UnitPriceData.TotalStampDuty"
+                    input-keyup-value="F_AddEditUnit.enableSaveAction($event,'StampDuty')"
+                    blur-value = "F_AddEditUnit.restoreOriginalValueOnBlur($event,'StampDuty')"
+                    disabled-value="!GroupOnlyPermissions['Override price'].enabled"
+                    />
+                </div>
+                <div class="input-box-edit-price">  
+                    <button class="bp-btn bp-btn-normal edit-stamp-duty-save-btn bp-font-12"  
+                        ng-show="M_AddEditUnit.shownSaveButton == 'StampDuty'" 
+                        ng-mousedown="F_AddEditUnit.updateStampDutyTotal()" 
+                        ng-keydown="F_AddEditUnit.actionOnSaveButton($event,'StampDuty')"
+                        ng-blur="F_AddEditUnit.restoreOriginalValueOnBlur($event,'StampDuty')">{{ 'Save_Label' | translate }}</button>
+                </div>
+            </div>
+
+            <div class="MB20 multi-select-drop-down-container" ng-if = "M_AddEditUnit.IsUnitPricingEnabledForMake">
+                <div class="form-input ">
+                        <label class="print-item-label">Select default factory options</label>
+                        <multi-select is-justify-content="true" result-list = "M_AddEditUnit.factoryOptionDefaultList" type = "factory option" message-text = "M_AddEditUnit.tempUnitDefaultFOPTMsg"/> 
+                </div>
+                <div class="add-selected-btn-container">
+                    <button class="bp-btn save-btn bp-btn-normal" ng-disabled = "!M_AddEditUnit.selectedFactoryOptionListID.length || M_AddEditUnit.selectedFactoryOptionListID.length == 0" ng-click = "F_AddEditUnit.addSelectedFactoryOption()" ng-class = "{'active-add-selected-btn':M_AddEditUnit.selectedFactoryOptionListID.length > 0}">
+                        Add selected
+                    </button>
+                </div>
+            </div>
+
+
+            <div class="table-responsive temp-unit-factory-option-main-container">
+                <table>
+                    <col width="10%" />
+                    <col width="50%" />
+                    <col width="15%" />
+                    <col width="15%" />
+                    <col width="10%" />
+                    <thead ng-if = "M_AddEditUnit.FactoryOprionList.length > 0" >
+                        <tr>
+                            <th class="first-child">Type</th>
+                            <th class="second-child">Item description</th>
+                            <th class="text-right third-child">Total price</th>
+                            <th class="text-right fourth-child">Total cost</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat = "factoryRec in M_AddEditUnit.FactoryOprionList  track by $index" ng-init = "factoryIndex = $index">
+                            <td class="first-child">{{factoryRec.Type}}</td>
+                            <td class="second-child">
+                                <span ng-if = "M_AddEditUnit.editFactoryOptionLineItemIndex != $index || factoryRec.Type == 'Base'">{{factoryRec.ItemDescription}} </span>
+                                <input ng-if = "M_AddEditUnit.editFactoryOptionLineItemIndex == $index && factoryRec.Type != 'Base'" class="large-input"
+                                 type="text" maxlength="255" ng-model = "factoryRec.ItemDescription" autocomplete="off" id = "itemDesc_{{$index}}"
+                                />
+                            </td>
+                            <td class="text-right third-child">
+                               <span ng-if = "M_AddEditUnit.editFactoryOptionLineItemIndex != $index">{{factoryRec.TotalPrice | currency}} </span>
+                               <span ng-if = "M_AddEditUnit.editFactoryOptionLineItemIndex == $index">
+                                    <span class="currency_display bp-grey">$</span>
+                                    <numbers-only 
+                                        input-model-value = "factoryRec.TotalPrice" 
+                                        include-negative = "true"
+                                        include-zero = "true"
+                                        id-value = "Price_{{$index}}"
+                                        place-holder-value = "Price"
+                                        class-value = "text-right"
+                                        precision-length = "2"
+                                        disabled-value="M_AddEditUnit.UnitPriceData.IsRideawayPricingEnabled"
+                                    />
+                            </span>
+                            </td>
+                            <td class="text-right fourth-child">
+                                <span ng-if = "M_AddEditUnit.editFactoryOptionLineItemIndex != $index">{{factoryRec.TotalCost | currency}} </span>
+                                <span ng-if = "M_AddEditUnit.editFactoryOptionLineItemIndex == $index">
+                                    <span class="currency_display bp-grey">$</span>
+                                    <numbers-only 
+                                        input-model-value = "factoryRec.TotalCost" 
+                                        include-negative = "false"
+                                        include-zero = "true"
+                                        id-value = "Cost_{{$index}}"
+                                        place-holder-value = "Price"
+                                        class-value = "text-right"
+                                        precision-length = "2"
+                                    />
+                            </span>
+                            </td>
+                            <td>
+                                <div class="flex-container items-right">
+                                    <a ng-if = "M_AddEditUnit.editFactoryOptionLineItemIndex != $index" data-toggle="tooltip" ng-click = "F_AddEditUnit.editFactoryOptionLineItem($index)" title="Edit"  tooltip-loader = "tooltip-loader" class="button icon Edit bp-curser-pointer"><i class="bp-icons bp-font-18 bp-fw-100">edit</i> <span class="button-text" aira-hidden="true">Edit</span></a>
+                                    <div ng-if = "M_AddEditUnit.editFactoryOptionLineItemIndex == $index">
+                                        <button class="bp-blue-font bp-blue-hover save-btn" ng-click = "F_AddEditUnit.savePriceAndCostOptionForTempUnit(factoryRec,'isEdit')">Save</button>
+                                        <a ng-if = "factoryRec.Type != 'Base'" data-toggle="tooltip" title="Delete" ng-click = "F_AddEditUnit.deletePriceAndCostOptionForTempUnit(factoryRec.Id)" tooltip-loader = "tooltip-loader" class="button icon delete bp-curser-pointer"><span class="button-text" aira-hidden="true">Delete</span></a>
+                                    </div>
+                               </div>
+                            </td>
+                        </tr>
+                        <tr ng-if = "M_AddEditUnit.showCreateFactoryOptionRow">
+                            <td class="first-child">Factory</td>
+                            <td class="second-child">
+                                <input class="large-input" id = "factoryDesc"
+                                 type="text" maxlength="255" ng-model = "M_AddEditUnit.createFactoryRec.ItemDescription" placeholder="Enter item description" autocomplete="off"
+                                />
+                            </td>
+                            <td class="text-right third-child">
+                               <span>
+                                    <span class="currency_display bp-grey">$</span>
+                                    <numbers-only 
+                                        input-model-value = "M_AddEditUnit.createFactoryRec.TotalPrice" 
+                                        include-negative = "true"
+                                        include-zero = "true"
+                                        id-value = "factoryPrice"
+                                        place-holder-value = "Price"
+                                        class-value = "text-right"
+                                        precision-length = "2"
+                                    />
+                            </span>
+                            </td>
+                            <td class="text-right fourth-child">
+                                <span>
+                                    <span class="currency_display bp-grey">$</span>
+                                    <numbers-only 
+                                        input-model-value = "M_AddEditUnit.createFactoryRec.TotalCost" 
+                                        include-negative = "false"
+                                        include-zero = "true"
+                                        id-value = "factoryCost"
+                                        place-holder-value = "Cost"
+                                        class-value = "text-right"
+                                        precision-length = "2"
+                                    />
+                            </span>
+                            </td>
+                            <td>
+                                <div class="flex-container items-right">
+                                    <div>
+                                        <a class="bp-blue-font bp-blue-hover" ng-click = "F_AddEditUnit.savePriceAndCostOptionForTempUnit(M_AddEditUnit.createFactoryRec, 'isAddNew')">Save</a>
+                                    </div>
+                               </div>
+                            </td>
+                        </tr>
+                        <tr class="add-new-entity-container">
+                            <td colspan="5">
+                                <div  class="bp-curser-pointer" ng-click = "F_AddEditUnit.createNewFactoryOption()">
+                                    <i class="bp-icons bp-font-18 bp-blue-font stroke-3 MT-5">addCircle</i> 
+                                    <a class="bp-blue-font bp-blue-hover">Add a factory option</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+        <div class="formBtn transaction-btn-container">
+            <div class="g-search-box-ctas">
+                <button class="button subtle" ng-click="F_AddEditUnit.hideAddEditUnitOrderModal()"  tabindex="2">Cancel</button>
+            </div>
+            <button class="button primary H500" ng-click="F_AddEditUnit.showTempUnitFactoryOptionSection()" ng-if = "!M_AddEditUnit.showFactoryOptionSection" ng-disabled = "!M_AddEditUnit.unitRec.MakeName || !M_AddEditUnit.unitRec.ModelName">
+                Next
+            </button>
+            <button class="button primary H500" ng-click="F_AddEditUnit.hideAddEditUnitOrderModal()" ng-if = "M_AddEditUnit.showFactoryOptionSection">
+                {{
+                    M_AddEditUnit.unitRec.isEditModel ? "Save" : "Set temporary unit"
+                }}
+            </button>
+           
+        </div>
+    </div>
+</apex:component>

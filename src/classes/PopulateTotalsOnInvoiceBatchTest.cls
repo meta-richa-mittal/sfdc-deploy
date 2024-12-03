@@ -2,6 +2,7 @@
 private class PopulateTotalsOnInvoiceBatchTest {
     @testsetup
     private static void setup(){
+		TestDataFactory.disableFLSChecks();
     	Account customer = TestDataFactory.createCustomer('Test001', 'Individual', 'Fname', 'Lname');
     	CO_Header__c coHeader = TestDataFactory.createCoHeader(customer.Id);
     	List<CO_Invoice_Header__c> coInvoiceHeaderList = new List<CO_Invoice_Header__c>();

@@ -9,11 +9,13 @@ public without sharing class FactoryOptionModelWrapper {
     public String ModelName;
     public List<UnitSubModelWrapper> ActiveSubModelList;
     
-    public FactoryOptionModelWrapper(Unit_Model__c unitModelRec, List<Unit_Sub_Model__c> unitSubModelList) {
+    public FactoryOptionModelWrapper(Unit_Model__c unitModelRec, List<Unit_Sub_Model__c> unitSubModelList, Boolean isFirstCall) {
         this.Id = unitModelRec.Id;
         this.ModelName = unitModelRec.Name__c;
-        
-        this.ActiveSubModelList = new List<UnitSubModelWrapper>{new UnitSubModelWrapper(unitModelRec)};
+        this.ActiveSubModelList = new List<UnitSubModelWrapper>();
+        if(isFirstCall) {
+            this.ActiveSubModelList.add(new UnitSubModelWrapper(unitModelRec));
+        }
         for(Unit_Sub_Model__c unitSubModelRec : unitSubModelList) {
             ActiveSubModelList.add(new UnitSubModelWrapper(unitSubModelRec));
         }

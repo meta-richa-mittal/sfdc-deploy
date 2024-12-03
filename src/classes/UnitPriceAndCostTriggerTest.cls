@@ -2,6 +2,10 @@
 **/ 
 @isTest
 private class UnitPriceAndCostTriggerTest {
+	@testsetup
+    private static void setup(){
+    	TestDataFactory.disableFLSChecks();
+    }
 
     static testMethod void insertUnitPriceAndCostTriggerTest() {
     	Account customer = TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'Agra', '1111111112', null, null, false, true,'Individual','firstname1', 'lastname', '9999999999', 'BillingStreet');
@@ -98,13 +102,13 @@ private class UnitPriceAndCostTriggerTest {
         insert customerOwnedUnit;
         
         Unit_Price_Cost__c unitPriceAndCostBase = new Unit_Price_Cost__c(Customer_Owned_Unit__c = customerOwnedUnit.Id, Type__c = 'Base', 
-        	Item_Description__c ='Test',Total_Price__c = 2000, Cost__c = 2500, Total_Cost__c = 2500, Qty__c = 1, Price__c = 2000);
+        	Item_Description__c ='Test',Total_Price__c = 2000, Cost__c = 2500, Total_Cost__c = 2500, Qty__c = 1, Price__c = 2000, Taxable__c = true);
         Unit_Price_Cost__c unitPriceAndCostBase1 = new Unit_Price_Cost__c(Customer_Owned_Unit__c = customerOwnedUnit.Id, Type__c = 'Base', 
-        	Item_Description__c ='Test',Total_Price__c = 2000, Cost__c = 2500, Total_Cost__c = 300, Qty__c = 1, Price__c = 2000);
+        	Item_Description__c ='Test',Total_Price__c = 2000, Cost__c = 2500, Total_Cost__c = 300, Qty__c = 1, Price__c = 2000, Taxable__c = true);
         Unit_Price_Cost__c unitPriceAndCostBaseFact = new Unit_Price_Cost__c(Customer_Owned_Unit__c = customerOwnedUnit.Id, Type__c = 'Factory', 
-        	Item_Description__c ='Test',Total_Price__c = 2000, Cost__c = 800, Total_Cost__c = 800, Qty__c = 1, Price__c = 2000);
+        	Item_Description__c ='Test',Total_Price__c = 2000, Cost__c = 800, Total_Cost__c = 800, Qty__c = 1, Price__c = 2000, Taxable__c = true);
         Unit_Price_Cost__c unitPriceAndCostBaseFact1 = new Unit_Price_Cost__c(Customer_Owned_Unit__c = customerOwnedUnit.Id, Type__c = 'Factory', 
-        	Item_Description__c ='Test',Total_Price__c = 2000, Cost__c = 2500, Total_Cost__c = 300, Qty__c = 1, Price__c = 2000);
+        	Item_Description__c ='Test',Total_Price__c = 2000, Cost__c = 2500, Total_Cost__c = 300, Qty__c = 1, Price__c = 2000, Taxable__c = true);
         	
         insert new List<Unit_Price_Cost__c>{unitPriceAndCostBase, unitPriceAndCostBase1, unitPriceAndCostBaseFact, unitPriceAndCostBaseFact1};
         

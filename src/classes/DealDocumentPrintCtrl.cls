@@ -9,14 +9,16 @@ global without sharing class DealDocumentPrintCtrl {
     public String companyLogoURL { get{return GeneralConfiguration.getCompanyLogoUrl();} private set;}
     public String dateFormat { get{ return BPUtility.getDateFormat();}private set;}
     
-    public static String Application{get;}
-    public static String Assests{get;}
-    public static String Application_Images{get;}
+    public static String Application{get;set;}
+    public static String Assests{get;set;}
+    public static String Application_Images{get;set;}
     public String dealId;
     public static String documentType {get; set;}
     public boolean isDisplayTaxInvoice { get{return GeneralConfiguration.isDisplayTaxInvoice();} private set;}
     public String brandingLocationId {get;private set;}
     public Boolean isHidePartNumbersOnDocuments{get{return GeneralConfiguration.isHidePartNumbersOnDocuments();} private set;}
+    public Boolean isHideKitDetailsOnDocuments{get{return GeneralConfiguration.isHideKitDetailsOnDocuments();} private set;}
+    public String DealFormId { get{return GeneralConfiguration.getFormIdToIncludeOnDealDocuments();} private set;}
     
     public DealDocumentDetail dealDocumentDetailRecord {get; private set;}
     public String DealDocumentDetailJson {get; private set;}
@@ -74,20 +76,27 @@ global without sharing class DealDocumentPrintCtrl {
             
             BrandingLocationWrapper brandingLocationObj = COService.getBrandingLocationDataForPrint(brandingLocationId);
             
-            List<Individual_Tax__c> individualItemsList = [SELECT CO_Line_Item__c, Tax_Rate__c, Form_Label__c, 
-                                                                Taxable_Amount__c, Tax_Amount__c,
-                                                                Enhanced_Tax_Amount__c, Sales_Tax_Item__r.Name__c,
-                                                                Applicable_Tax__c, List_Tax_items_on_forms__c
-                                                                FROM Individual_Tax__c WHERE Option_Fee__r.Deal__c =: deal.Id
-                                                                    OR Deal_Unit_Price_Cost__r.Deal_Item__r.Deal__c =: deal.Id
-                                                                    OR F_I_Product__r.Deal_Finance__r.Deal__c =: deal.Id
-                                                                    OR (Deal_Item__r.Deal__c =: deal.Id AND Deal_Item__r.Type__c = 'Trade In')];
+            List<Individual_Tax__c> individualItemsList = DealUtil.getDealRelatedIndividualTaxes(deal.Id);
                                                                     
-            List<CO_Invoice_Payment__c> coInvoicePaymentList = [SELECT Name, LastModifiedDate, Payment_Date__c, Payment_Method__c, Amount__c, CreatedDate FROM CO_Invoice_Payment__c WHERE CO_Invoice_Header__c =: coInvoiceHeaderId ORDER BY Payment_Date__c DESC];
+            List<CO_Invoice_Payment__c> coInvoicePaymentList = [SELECT Name, LastModifiedDate, Payment_Date__c, Reference__c, Payment_Method__c, Amount__c, CreatedDate, Reverse_Link__c, Deposit_Payment_Method__c FROM CO_Invoice_Payment__c WHERE CO_Invoice_Header__c =: coInvoiceHeaderId ORDER BY Payment_Date__c DESC];
                         
             List<Deal_Finance__c> dealFinanceList = SOQLUtil.getDealFinanceRecord(new Map<String, String>{'Deal__c' => deal.Id});
             
-            DealDocumentDetail dealDocumentObj = new DealDocumentDetail(brandingLocationObj, deal, dealItemList, individualItemsList, coInvoicePaymentList, dealFinanceList);
+            Map<String, String> unitIdToProductTypeIdMap = new Map<String, String>();
+            for(Deal_Item__c dealItemRec: dealItemList) {
+                if(String.isNotBlank(dealItemRec.Customer_Owned_Unit__r.Product_type__c)) unitIdToProductTypeIdMap.put(dealItemRec.Customer_Owned_Unit__c, dealItemRec.Customer_Owned_Unit__r.Product_type__c);
+            }
+            List<FilterJSON> filerObjList = new List<FilterJSON>{
+                new FilterJSON('Unit_Product_Type__c', 'IN', String.join(unitIdToProductTypeIdMap.values(), ',')),
+                new FilterJSON('Active__c', SOQLUtility.EQUALS, SOQLUtility.TRUE_VALUE),
+                new FilterJSON('Include_In_Deal_Document__c', SOQLUtility.EQUALS, SOQLUtility.TRUE_VALUE)
+            };
+
+            UnitProductTypeService.OptionalFieldAPINameToRecMap = UnitProductTypeService.getUnitOptionalFieldAPINameToRecMap(filerObjList);
+            UnitProductTypeService.UnitDataFieldsAPINameToLabelMap = GeneralConfiguration.getUnitDataFieldsAPINameToLabelMap();
+            Map<Id, Customer_Owned_Unit__c> unitIdToRecMap = Unit_Service.getUnitIdToRecMap(unitIdToProductTypeIdMap.keySet(), Unit_Service.UnitPrimaryFields, new List<String>(UnitProductTypeService.OptionalFieldAPINameToRecMap.keySet()));
+            
+            DealDocumentDetail dealDocumentObj = new DealDocumentDetail(brandingLocationObj, deal, dealItemList, individualItemsList, coInvoicePaymentList, dealFinanceList, unitIdToRecMap);
             dealDetails = System.JSON.serialize(dealDocumentObj,true);
         }
         
@@ -107,7 +116,7 @@ global without sharing class DealDocumentPrintCtrl {
         public String DealDocumentWarrantyText{get; set;}
         public Boolean IsSignatureLineforDealDocument{get; set;}
         public List<TransactionDetail> Transactions {get; set;}
-        public List<TaxDetail> SalesTaxList {get; set;}
+        public List<PrintCustomerOrderInvoiceCtrl.TaxDetail> SalesTaxList {get; set;}
         public DealDetailWrapper DealDetailWrapperObj {get; set;}
         public Decimal DueFromCustomer {get; set;}
         public Decimal DueFromFinance {get; set;}
@@ -118,7 +127,7 @@ global without sharing class DealDocumentPrintCtrl {
         public Decimal Total {get; set;}
         public Decimal GSTOnPurchases {get; set;}
         
-        public DealDocumentDetail(BrandingLocationWrapper brandingLocationObj, Deal__c dealsInfo, List<Deal_Item__c> dealItems, List<Individual_Tax__c> individualItemsList, List<CO_Invoice_Payment__c> coInvoicePaymentList, List<Deal_Finance__c> dealFinanceList) {
+        public DealDocumentDetail(BrandingLocationWrapper brandingLocationObj, Deal__c dealsInfo, List<Deal_Item__c> dealItems, List<Individual_Tax__c> individualItemsList, List<CO_Invoice_Payment__c> coInvoicePaymentList, List<Deal_Finance__c> dealFinanceList, Map<Id, Customer_Owned_Unit__c> unitIdToRecMap) {
             
             if(brandingLocationObj != null) {
                 this.CompanyInfo = new CustomerDetail.Company(brandingLocationObj);
@@ -132,27 +141,41 @@ global without sharing class DealDocumentPrintCtrl {
             this.IsTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
             this.CompanyInfo.BusinessPhone = this.CompanyInfo.FormattedBusinessPhone != null ? this.CompanyInfo.FormattedBusinessPhone: '';
             this.DealInfo = new DealHeaderWrapper(dealsInfo);
-            DealDetailWrapperObj = new DealDetailWrapper(dealItems);
+            DealDetailWrapperObj = new DealDetailWrapper(dealItems, unitIdToRecMap);
             
             Map<String, Decimal> salesTaxNameToTaxValue = TaxCalculation.getTaxAmountWithFormLabel(individualItemsList);
             Decimal SalesTaxTotal = 0;
-            this.SalesTaxList = new List<TaxDetail>();
-            for(String taxName : salesTaxNameToTaxValue.keySet()){
-                this.SalesTaxList.add(new TaxDetail(taxName, salesTaxNameToTaxValue.get(taxName)));
-                SalesTaxTotal += salesTaxNameToTaxValue.get(taxName);
+            this.SalesTaxList = TaxEngine.setTaxDetails(salesTaxNameToTaxValue);
+            for(Decimal taxAmt : salesTaxNameToTaxValue.values()){
+                SalesTaxTotal += taxAmt;
             }
-            
+            if(dealFinanceList.size() > 0) {
+                this.DealFinanceObj = new DealWrapper.DealFinanceWrapper(dealFinanceList[0]);
+            }
             this.Transactions = new List<TransactionDetail>();
             
             this.AmountPaid = 0;
             Decimal amountPaidByFinance = 0;
             Decimal amountPaidByCustomer = 0;
+            Decimal usedDealDeposit = 0;
             if(String.isNotBlank(documentType) && documentType == 'Bill of sale'){
                 for(CO_Invoice_Payment__c coPaymentRec : coInvoicePaymentList) {
-                    this.Transactions.add(new TransactionDetail(coPaymentRec));
+                    if(String.isBlank(coPaymentRec.Reverse_Link__c) && !coPaymentRec.Payment_Method__c.equalsIgnoreCase('Financing') &&
+                      (String.isBlank(coPaymentRec.Deposit_Payment_Method__c) || !coPaymentRec.Deposit_Payment_Method__c.equalsIgnoreCase('Financing'))) {
+                        if(coPaymentRec.Payment_Method__c.equalsIgnoreCase('Use Deal Deposit') && this.DealFinanceObj != null) {
+                            if(usedDealDeposit < this.DealFinanceObj.DownPayment) {
+                                TransactionDetail txnObj = new TransactionDetail(coPaymentRec);
+                                txnObj.Amount = ((usedDealDeposit + coPaymentRec.Amount__c) <= this.DealFinanceObj.DownPayment ? coPaymentRec.Amount__c : (this.DealFinanceObj.DownPayment - usedDealDeposit));
+                                usedDealDeposit += txnObj.Amount;
+                                this.Transactions.add(txnObj);
+                            }
+                        } else {
+                            this.Transactions.add(new TransactionDetail(coPaymentRec));
+                        }
                     if(coPaymentRec.Payment_Method__c != 'Charge Account') {
                     	this.AmountPaid += ((coPaymentRec.Amount__c != null) ? coPaymentRec.Amount__c : 0);
                     }
+                }
                 }
             	if(this.DealInfo.Status != 'Invoiced') {
             		for(CO_Deposit__c coDepositRec : dealsInfo.CO_Deposits__r){
@@ -161,10 +184,11 @@ global without sharing class DealDocumentPrintCtrl {
 		                		amountPaidByFinance += coDepositRec.Amount__c;
 		                	} else {
 		                		amountPaidByCustomer += coDepositRec.Amount__c;
+                                this.AmountPaid += ((coDepositRec.Amount__c != null) ? coDepositRec.Amount__c : 0);
 		                	}
-		                	
-		            		this.Transactions.add(new TransactionDetail(coDepositRec));
-		            		this.AmountPaid += ((coDepositRec.Amount__c != null) ? coDepositRec.Amount__c : 0);
+		                	if(!coDepositRec.Payment_Method__c.equalsIgnoreCase('Financing')) {
+                                this.Transactions.add(new TransactionDetail(coDepositRec));
+                            }
 		            	}
 		            }
             	}
@@ -175,59 +199,62 @@ global without sharing class DealDocumentPrintCtrl {
                             amountPaidByFinance += coDepositRec.Amount__c;
                         } else {
                             amountPaidByCustomer += coDepositRec.Amount__c;
+                            this.AmountPaid += ((coDepositRec.Amount__c != null) ? coDepositRec.Amount__c : 0);
                         }
                         
-                        this.Transactions.add(new TransactionDetail(coDepositRec));
-                        this.AmountPaid += ((coDepositRec.Amount__c != null) ? coDepositRec.Amount__c : 0);
+                        if(!coDepositRec.Payment_Method__c.equalsIgnoreCase('Financing')) {
+                            this.Transactions.add(new TransactionDetail(coDepositRec));
+                        }
                     }
                 }
             } 
+            
             this.SubTotal = DealDetailWrapperObj.TotalUnits + DealDetailWrapperObj.TotalInstalledOption 
                             + DealDetailWrapperObj.TotalMerchandiseOption + DealDetailWrapperObj.TotalOtherProductsAndFee 
                             + DealDetailWrapperObj.TotalTradeIn + DealDetailWrapperObj.TotalStampDuty + DealDetailWrapperObj.TotalLienPayout;
-           if(dealFinanceList.size() > 0) {
-                this.DealFinanceObj = new DealWrapper.DealFinanceWrapper(dealFinanceList[0]);
+            if(dealFinanceList.size() > 0) {
                 this.SubTotal += (this.DealFinanceObj !=null && this.DealFinanceObj.FIProductTotal != null) ? this.DealFinanceObj.FIProductTotal : 0;
                 if(this.IsTaxIncludingPricing) {
                     this.SubTotal += (this.DealFinanceObj !=null && this.DealFinanceObj.FIProductTax != null) ? this.DealFinanceObj.FIProductTax : 0;
                 }             
             }
            
-           this.BalanceDue = 0;
-           this.Total = 0;
-           this.Total = this.SubTotal;
+            this.BalanceDue = 0;
+            this.Total = 0;
+            this.Total = this.SubTotal;
            
-           if(!this.IsTaxIncludingPricing) { 
+            if(!this.IsTaxIncludingPricing) { 
                 this.Total += SalesTaxTotal;
-           }
-           this.BalanceDue = this.Total - this.AmountPaid;
+            }
+            this.BalanceDue = this.Total - this.AmountPaid;
            
-           if(this.DealFinanceObj != null) {
+            if(this.DealFinanceObj != null) {
                 this.DealFinanceObj.DownPayment = (this.DealFinanceObj.DownPayment != null) ? this.DealFinanceObj.DownPayment : 0;
                 this.AmountFinanced = this.Total - this.DealFinanceObj.DownPayment;
                 if(this.DealInfo.Status == 'Invoiced') {
                     this.DueFromCustomer = 0;
                     this.DueFromFinance = 0;
                 } else {
-                  this.DueFromCustomer = this.DealFinanceObj.DownPayment - amountPaidByCustomer;
-                  this.DueFromFinance = this.AmountFinanced - amountPaidByFinance;
+                    this.DueFromCustomer = this.DealFinanceObj.DownPayment - amountPaidByCustomer;
+                    this.DueFromFinance = DealService.getActualAmountFinanced(this.AmountFinanced, this.DealFinanceObj, this.IsTaxIncludingPricing) - amountPaidByFinance;
                 }
-           }
-           
-           if(documentType == 'Bill of sale' && GeneralConfiguration.getTaxIncludingPricing()) {
-           		Boolean isTradeInExists = false;
-           		Integer unitWithSKUAddedCount = 0;
-           		for(Deal_Item__c dealItemRec: dealsInfo.Deal_Items__r) {
-           			if(dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_TRADE_IN) {
-           				isTradeInExists = true;
-           			} else if(dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_UNIT && dealItemRec.Customer_Owned_Unit__c != null) {
-           				unitWithSKUAddedCount++;
-           			}
-           		}
-           		if(unitWithSKUAddedCount > 0 && isTradeInExists) {
-           			this.GSTOnPurchases = (SalesTaxTotal + (dealsInfo.Trade_In_Total__c - dealsInfo.Pre_Tax_Trade_In_Total__c)*-1).setScale(2, RoundingMode.HALF_UP);
-           		}
-           }
+                this.DueFromFinance = this.DueFromFinance < 0 ? 0 : this.DueFromFinance;
+            }
+            
+            if(documentType == 'Bill of sale' && GeneralConfiguration.getTaxIncludingPricing()) {
+                Boolean isTradeInExists = false;
+                Integer unitWithSKUAddedCount = 0;
+                for(Deal_Item__c dealItemRec: dealsInfo.Deal_Items__r) {
+                    if(dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_TRADE_IN) {
+                        isTradeInExists = true;
+                    } else if(dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_UNIT && dealItemRec.Customer_Owned_Unit__c != null) {
+                        unitWithSKUAddedCount++;
+                    }
+                }
+                if(unitWithSKUAddedCount > 0 && isTradeInExists) {
+                    this.GSTOnPurchases = (SalesTaxTotal + (dealsInfo.Trade_In_Total__c - dealsInfo.Pre_Tax_Trade_In_Total__c)*-1).setScale(2, RoundingMode.HALF_UP);
+                }
+            }
         }
     }       
     
@@ -250,6 +277,8 @@ global without sharing class DealDocumentPrintCtrl {
         public String OrderNumber {get; private set;}
         public String OrderDate {get; private set;}
         public String CustomerPONumber {get; private set;}
+        public Boolean isDealSectionTradeOnly {get; private set;}
+        public String CoBuyerName {get; set;}
         
         public String CompanyLocale {get; private set;}
         public List<String> NotesForCustomer {get; private set;}
@@ -258,6 +287,7 @@ global without sharing class DealDocumentPrintCtrl {
                 this.COType  = dealInfo.CO_Header__r.CO_Type__c;
                 this.DealType = dealInfo.Type__c;
                 this.CustomerName = dealInfo.CO_Header__r.Customer__r.Name;
+                this.CoBuyerName = dealInfo.Co_Buyer__c != null ? dealInfo.Co_Buyer__r.Name : null;
                 String billingStreet = (dealInfo.CO_Header__r.Customer__r.BillingStreet == null ) ? '' : dealInfo.CO_Header__r.Customer__r.BillingStreet;
                 if(dealInfo.CO_Header__r.Customer__r.Preferred_Email__c == null) {
                   if(dealInfo.CO_Header__r.Customer__r.Email__c != null) {
@@ -271,16 +301,16 @@ global without sharing class DealDocumentPrintCtrl {
                     this.CustomerEmail = dealInfo.CO_Header__r.Customer__r.Preferred_Email__c;
                 }
                 
-                if(dealInfo.CO_Header__r.Customer__r.Preferred_Phone__c == null) {
-                    if(dealInfo.CO_Header__r.Customer__r.Home_Number__c != null) {
-                        this.CustomerPhone = dealInfo.CO_Header__r.Customer__r.Home_Number__c;
-                    } else if(dealInfo.CO_Header__r.Customer__r.Mobile__c != null) {
-                        this.CustomerPhone = dealInfo.CO_Header__r.Customer__r.Mobile__c;
-                    } else if(dealInfo.CO_Header__r.Customer__r.Work_Number__c != null) {
-                        this.CustomerPhone = dealInfo.CO_Header__r.Customer__r.Work_Number__c;
+                if(dealInfo.CO_Header__r.Customer__r.Formatted_Preferred_Phone__c == null) {
+                    if(dealInfo.CO_Header__r.Customer__r.Formatted_Home_number__c != null) {
+                        this.CustomerPhone = dealInfo.CO_Header__r.Customer__r.Formatted_Home_number__c;
+                    } else if(dealInfo.CO_Header__r.Customer__r.Formatted_Mobile_Number__c != null) {
+                        this.CustomerPhone = dealInfo.CO_Header__r.Customer__r.Formatted_Mobile_Number__c;
+                    } else if(dealInfo.CO_Header__r.Customer__r.Formatted_Work_Number__c != null) {
+                        this.CustomerPhone = dealInfo.CO_Header__r.Customer__r.Formatted_Work_Number__c;
                     }
                 } else {
-                    this.CustomerPhone = dealInfo.CO_Header__r.Customer__r.Preferred_Phone__c;
+                    this.CustomerPhone = dealInfo.CO_Header__r.Customer__r.Formatted_Preferred_Phone__c;
                 }
                 List<String> bsList = billingStreet.split('\n');
                 this.CustomerAddress = (bsList.size() > 0) ? bsList[0] : '';
@@ -298,9 +328,10 @@ global without sharing class DealDocumentPrintCtrl {
                 this.InvoiceDate = (dealInfo.Invoice_Number__r.Invoice_Date__c != null) ? BPUtility.getFormatedDateTime(dealInfo.Invoice_Number__r.Invoice_Date__c) : BPUtility.getFormatedDateTime(System.now());
                 this.OrderDate = (dealInfo.CO_Header__r.LastModifiedDate__c != null) ? BPUtility.getFormatedDateTime(dealInfo.CO_Header__r.LastModifiedDate__c) : '';
                 this.InvoiceStatus = dealInfo.Invoice_Number__r.Status__c;
-                this.SoldBy =  (dealInfo.Salesperson__r.Technician_Name__c != null) ? dealInfo.Salesperson__r.Technician_Name__c : UserInfo.getName();
+                this.SoldBy = (String.isNotBlank(dealInfo.Salesperson_Name__c) ? dealInfo.Salesperson_Name__c : dealInfo.CO_Header__r.Owner__r.Name);
                 this.CustomerPONumber = (dealInfo.CO_Header__r.Customer_PO_Number__c == null) ? '' : dealInfo.CO_Header__r.Customer_PO_Number__c;
                 this.NotesForCustomer = (dealInfo.Notes_For_Customer__c != null) ?  dealInfo.Notes_For_Customer__c.split('\n') : new List<String>();
+                this.isDealSectionTradeOnly = dealInfo.Deal_Section_Trade_Only__c;
             }
         }
 
@@ -317,7 +348,7 @@ global without sharing class DealDocumentPrintCtrl {
         public Decimal TotalOtherProductsAndFee {get; private set;}
         public Decimal TotalStampDuty {get; private set;}
         
-        public DealDetailWrapper(List<Deal_Item__c> dealItemList) {
+        public DealDetailWrapper(List<Deal_Item__c> dealItemList, Map<Id, Customer_Owned_Unit__c> unitIdToRecMap) {
             this.UnitList = new List<DealUnitDetails>();
             this.TradeInList = new List<DealTradeInDetails>();
             this.TotalUnits = 0;
@@ -346,18 +377,20 @@ global without sharing class DealDocumentPrintCtrl {
                 }
             }
             
+            Map<String, UnitDetailWrapper> unitIdToDetailMap = new Map<String, UnitDetailWrapper>();
             for(Deal_Item__c dealItemRec : dealItemList) {
-                //if(dealItemRec.Customer_Owned_Unit__c != null) {
-                    if(String.isNotBlank(dealItemRec.Type__c) && dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_UNIT) {
-                        List<Deal_Kit_Header__c> dealKitHeaders = new List<Deal_Kit_Header__c>();
-                        if(dealItemIdToDKHListMap.containsKey(dealItemRec.Id)) {
-                            dealKitHeaders = dealItemIdToDKHListMap.get(dealItemRec.Id);
-                        }
-                        this.UnitList.add(new DealUnitDetails(dealItemRec, dealKitHeaders));
-                    } else if(String.isNotBlank(dealItemRec.Type__c) && dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_TRADE_IN) {
-                        this.TradeInList.add(new DealTradeInDetails(dealItemRec));
+                if(String.isNotBlank(dealItemRec.Type__c) && dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_UNIT) {
+                    List<Deal_Kit_Header__c> dealKitHeaders = new List<Deal_Kit_Header__c>();
+                    if(dealItemIdToDKHListMap.containsKey(dealItemRec.Id)) {
+                        dealKitHeaders = dealItemIdToDKHListMap.get(dealItemRec.Id);
                     }
-                //}
+                    this.UnitList.add(new DealUnitDetails(dealItemRec, dealKitHeaders, unitIdToRecMap.get(dealItemRec.Customer_Owned_Unit__c)));
+                } else if(String.isNotBlank(dealItemRec.Type__c) && dealItemRec.Type__c == Constants.DEAL_ITEM_TYPE_TRADE_IN) {
+                    this.TradeInList.add(new DealTradeInDetails(dealItemRec, unitIdToRecMap.get(dealItemRec.Customer_Owned_Unit__c)));
+                    if(dealItemRec.Transfer_Plate_Reg_to_New_Unit__c && dealItemRec.Transfer_To__c != null) {
+                        unitIdToDetailMap.put(dealItemRec.Transfer_To__c, new UnitDetailWrapper(dealItemRec.Customer_Owned_Unit__r.Plate__c, dealItemRec.Customer_Owned_Unit__r.Reg_Expiry_Date__c));
+                    }
+                }
             }            
             for(DealUnitDetails dealUnitRec: UnitList) {
                 TotalUnits += dealUnitRec.UnitAndPriceCost;
@@ -365,6 +398,10 @@ global without sharing class DealDocumentPrintCtrl {
                 TotalMerchandiseOption += dealUnitRec.MerchandiseOptionCost;
                 TotalOtherProductsAndFee += dealUnitRec.OtherProductsAndFeeCost;
                 TotalStampDuty += dealUnitRec.StampDuty;
+                if(unitIdToDetailMap.containsKey(dealUnitRec.ItemDesc.COUId)) {
+                    dealUnitRec.ItemDesc.PlateNo = unitIdToDetailMap.get(dealUnitRec.ItemDesc.COUId).PlateNo;
+                    dealUnitRec.ItemDesc.RegExpiryDate = unitIdToDetailMap.get(dealUnitRec.ItemDesc.COUId).RegExpiryDate;
+                }
             }
             
             for(DealTradeInDetails dealTradeInRec: TradeInList) {
@@ -380,10 +417,10 @@ global without sharing class DealDocumentPrintCtrl {
         public Decimal LienPayout {get; private set;}
         public Decimal SalesTax {get; private set;}
         
-        public DealTradeInDetails(Deal_Item__c dealItemRec) {
+        public DealTradeInDetails(Deal_Item__c dealItemRec, Customer_Owned_Unit__c unitRec) {
             this.AgreedValue = 0;
             this.SalesTax = 0;
-            this.ItemDesc = new UnitDescriptionWrapper(dealItemRec);
+            this.ItemDesc = new UnitDescriptionWrapper(dealItemRec, unitRec);
             
             Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
             this.AgreedValue = (dealItemRec.Agreed_Value__c != null) ? -dealItemRec.Agreed_Value__c : 0;
@@ -412,7 +449,7 @@ global without sharing class DealDocumentPrintCtrl {
         public Decimal OtherProductsAndFeeCost {get; private set;}
         public Decimal StampDuty {get; private set;}
         
-        public DealUnitDetails(Deal_Item__c dealItemRec, List<Deal_Kit_Header__c> dealKitHeaderList) {
+        public DealUnitDetails(Deal_Item__c dealItemRec, List<Deal_Kit_Header__c> dealKitHeaderList, Customer_Owned_Unit__c unitRec) {
             this.UnitAndPriceCost = 0;
             this.InstalledOptionCost = 0;
             this.MerchandiseOptionCost = 0;
@@ -423,7 +460,7 @@ global without sharing class DealDocumentPrintCtrl {
             this.DealUnitPriceCost = new List<DealUnitPriceCostWrapper>();
             Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing(); 
  
-            this.ItemDesc = new UnitDescriptionWrapper(dealItemRec);
+            this.ItemDesc = new UnitDescriptionWrapper(dealItemRec, unitRec);
             
             String locale = GeneralConfiguration.getCompanyLocale();
             if((String.isBlank(locale) || locale != 'Australia')) {
@@ -445,7 +482,7 @@ global without sharing class DealDocumentPrintCtrl {
             this.DealKitHeaderList = getDealKitHeaderList(dealItemRec.Options_Fees__r, dealKitHeaderList);
             
             for(DealWrapper.DealKitHeader dealKitHeaderRec : this.DealKitHeaderList) {
-                if(dealKitHeaderRec.hasChildren && dealKitHeaderRec.Price!= 0) {
+                if(dealKitHeaderRec.hasChildren && (dealKitHeaderRec.Price != 0 || GeneralConfiguration.getConfigurations().Include_Zero_Priced_Deal_Options_On_Doc__c)) {
                     if(dealKitHeaderRec.IsInstall) {
                         this.InstalledOptionCost += dealKitHeaderRec.Price;
                         InstalloptionAndFeeList.add(dealKitHeaderRec);
@@ -455,7 +492,7 @@ global without sharing class DealDocumentPrintCtrl {
                     }
                 } else {
                     for(DealWrapper.OptionAndFeeInfo optionAndFeeRec : dealKitHeaderRec.OptionAndFeeList) {
-                        if(optionAndFeeRec.Total != 0){
+                        if(optionAndFeeRec.Total != 0 || GeneralConfiguration.getConfigurations().Include_Zero_Priced_Deal_Options_On_Doc__c) {
                             if(optionAndFeeRec.IsInstall) {
                                 this.InstalledOptionCost += optionAndFeeRec.Total;
                                 InstalloptionAndFeeList.add(dealKitHeaderRec);
@@ -509,16 +546,19 @@ global without sharing class DealDocumentPrintCtrl {
         public String Make {get; private set;}
         public String Model {get; private set;}
         public String Submodel {get; private set;}
-        public String Colour {get; private set;}
         public String Mileage {get; private set;}
         public String UnitName {get; private set;}
         public String COUId {get; private set;}
         public List<String> NotesList {get; private set;}
         public Boolean IsNewUnit {get; private set;}
-        public String EngineNo {get; private set;}
+        public Boolean IsConsignment {get; private set;}
         public String PlateNo {get; private set;}
+        public String RegExpiryDate {get; private set;}
+        public String InsuranceProvider {get; private set;}
+        public String InsurancePolicy {get; private set;}
+        public List<ServiceJobWorksheetWrapper.UnitDataFieldWrapper> UnitOptionalFieldObjList {get; private set;}
         
-        public UnitDescriptionWrapper(Deal_Item__c dealItem){
+        public UnitDescriptionWrapper(Deal_Item__c dealItem, Customer_Owned_Unit__c unitRec) {
             this.COUId = dealItem.Customer_Owned_Unit__c;
             this.Type = (dealItem.Type__c == null) ? '' : dealItem.Type__c;
             this.UnitNumber = (dealItem.Customer_Owned_Unit__r.Stock_Id__c == null) ? '' : dealItem.Customer_Owned_Unit__r.Stock_Id__c;
@@ -530,11 +570,10 @@ global without sharing class DealDocumentPrintCtrl {
                          : dealItem.Customer_Owned_Unit__r.Unit_Model__r.Name__c;
             this.Submodel = (dealItem.Customer_Owned_Unit__r.Sub_Model__r.Sub_Model_Name__c == null) ? (dealItem.Sub_Model__r.Sub_Model_Name__c != null ? dealItem.Sub_Model__r.Sub_Model_Name__c : '') 
                         : dealItem.Customer_Owned_Unit__r.Sub_Model__r.Sub_Model_Name__c;
-            this.Colour = (dealItem.Customer_Owned_Unit__r.Colour__c == null) ? (dealItem.Colour__c != null ? dealItem.Colour__c : '') : dealItem.Customer_Owned_Unit__r.Colour__c;
-            this.Mileage = ((dealItem.Customer_Owned_Unit__r.Mileage_Value__c == null) ? 0 : dealItem.Customer_Owned_Unit__r.Mileage_Value__c) +
-                            ((dealItem.Customer_Owned_Unit__r.Mileage_Value__c == null || dealItem.Customer_Owned_Unit__r.Mileage_Type__c == null) ? 
+            this.Mileage = ((dealItem.Mileage__c == null) ? 0 : dealItem.Mileage__c) +
+                            ((dealItem.Mileage__c == null || dealItem.Mileage_Type__c == null) ? 
                             (GeneralConfiguration.getDefaultOdometerType() != null ? GeneralConfiguration.getDefaultOdometerType() : 'Km') : 
-                            dealItem.Customer_Owned_Unit__r.Mileage_Type__c);
+                            dealItem.Mileage_Type__c);
                   
             this.NotesList = (dealItem.Customer_Owned_Unit__r.Notes__c == null) ? new List<String>() : (dealItem.Customer_Owned_Unit__r.Notes__c).split('\n');
             if(dealItem.Customer_Owned_Unit__c == null) {
@@ -548,8 +587,26 @@ global without sharing class DealDocumentPrintCtrl {
                 this.UnitName += ', '+ this.Submodel;
             }
             this.IsNewUnit = (dealItem.Type__c == Constants.DEAL_ITEM_TYPE_UNIT && dealItem.Customer_Owned_Unit__c == null) ? true : dealItem.Customer_Owned_Unit__r.New_Unit__c;
-            this.EngineNo = (dealItem.Customer_Owned_Unit__r.Engine_Serial_No__c != null) ? dealItem.Customer_Owned_Unit__r.Engine_Serial_No__c : '';
-            this.PlateNo = (dealItem.Customer_Owned_Unit__r.Plate__c != null) ? dealItem.Customer_Owned_Unit__r.Plate__c : '';
+            this.IsConsignment = (dealItem.Customer_Owned_Unit__c == null) ? false : dealItem.Customer_Owned_Unit__r.Consignment__c;
+            this.InsuranceProvider = dealItem.Deal__r.Insurance_Provider__c;
+            this.InsurancePolicy = dealItem.Deal__r.Insurance_Policy__c;
+            if(UnitProductTypeService.OptionalFieldAPINameToRecMap != null && unitRec != null && UnitProductTypeService.UnitDataFieldsAPINameToLabelMap != null) {
+                this.UnitOptionalFieldObjList = new List<ServiceJobWorksheetWrapper.UnitDataFieldWrapper>();
+                for(String apiName: UnitProductTypeService.OptionalFieldAPINameToRecMap.keySet()) {
+                    String fieldName = UnitProductTypeService.OptionalFieldAPINameToRecMap.get(apiName).Name;
+                    String fieldType = UnitProductTypeService.couFieldsMap.get(UnitProductTypeService.namespace + apiName) != null ? String.valueOf((UnitProductTypeService.couFieldsMap.get(UnitProductTypeService.namespace + apiName)).getDescribe().getType()).toLowerCase() : '';
+                    fieldType = UnitProductTypeService.FieldTypeLabelToValueMap.containsKey(fieldType) ? UnitProductTypeService.FieldTypeLabelToValueMap.get(fieldType) : fieldType;
+                    String fieldValue = UnitProductTypeService.getFieldValueFromRec(fieldType, unitRec.get(apiName));
+                    String fieldCat = UnitProductTypeService.OptionalFieldAPINameToRecMap.get(apiName).Category__c;
+                    if(String.isNotBlank(fieldValue) && fieldName != 'Mileage type' && fieldName != 'Mileage') {
+                        if(fieldCat != 'Miscellaneous') {
+                            this.UnitOptionalFieldObjList.add(new ServiceJobWorksheetWrapper.UnitDataFieldWrapper(fieldName, fieldValue));
+                        } else if(UnitProductTypeService.UnitDataFieldsAPINameToLabelMap.keySet().contains(apiName)) {
+                            this.UnitOptionalFieldObjList.add(new ServiceJobWorksheetWrapper.UnitDataFieldWrapper(UnitProductTypeService.UnitDataFieldsAPINameToLabelMap.get(apiName), fieldValue));
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -559,6 +616,7 @@ global without sharing class DealDocumentPrintCtrl {
         public String Method {get; private set;}
         public String TransactionDate {get; private set;}
         public decimal Amount {get; private set;}
+        public String ReferenceNo {get; private set;}
         
         public TransactionDetail(CO_Deposit__c coDepositRec) {
             IsDeposit   = true;
@@ -566,6 +624,7 @@ global without sharing class DealDocumentPrintCtrl {
             Method      = coDepositRec.Payment_Method__c;
             Amount      = coDepositRec.Amount__c;
             TransactionDate = coDepositRec.Payment_Date__c != null ? BPUtility.getFormatedDateTime(coDepositRec.Payment_Date__c) : BPUtility.getFormatedDateTime(coDepositRec.CreatedDate);
+            ReferenceNo = String.isNotBlank(coDepositRec.Reference__c) ? coDepositRec.Reference__c : '';
         }
                 
         public TransactionDetail(CO_Invoice_Payment__c coPaymentRec) {
@@ -574,19 +633,17 @@ global without sharing class DealDocumentPrintCtrl {
             Method      = coPaymentRec.Payment_Method__c;
             Amount      = coPaymentRec.Amount__c;
             TransactionDate = coPaymentRec.Payment_Date__c != null ? BPUtility.getFormatedDateTime(coPaymentRec.Payment_Date__c) : BPUtility.getFormatedDateTime(coPaymentRec.CreatedDate);
+            ReferenceNo = String.isNotBlank(coPaymentRec.Reference__c) ? coPaymentRec.Reference__c : '';
         }
     }
-    
-     public class TaxDetail{
-      public String TaxName {get; private set;}
-      public Decimal TaxAmount {get; private set;}
-        
-        public TaxDetail(String taxName, Decimal taxAmount){
-            if(taxAmount == null){
-                taxAmount = 0;
-            }
-            this.TaxName = taxName;
-            this.TaxAmount = taxAmount;
+
+    public class UnitDetailWrapper {
+        public String PlateNo {get; private set;}
+        public String RegExpiryDate {get; private set;}
+
+        public UnitDetailWrapper(String plateNo, Date regExpiryDate) {
+            this.PlateNo = plateNo;
+            this.RegExpiryDate = (regExpiryDate != null) ? BPUtility.getFormatedDateTime(datetime.newInstance(regExpiryDate.year(), regExpiryDate.month(), regExpiryDate.day())): '';
         }
     }
     
@@ -657,10 +714,10 @@ global without sharing class DealDocumentPrintCtrl {
                                             CO_Header__r.Customer__r.BillingPostalCode,
                                             CO_Header__r.Customer__r.BillingCountry,
                                             CO_Header__r.Customer__r.Email__c,
-                                            CO_Header__r.Customer__r.Home_Number__c,
-                                            CO_Header__r.Customer__r.Mobile__c,
-                                            CO_Header__r.Customer__r.Preferred_Phone__c,
-                                            CO_Header__r.Customer__r.Work_Number__c,
+                                            CO_Header__r.Customer__r.Formatted_Home_number__c,
+                                            CO_Header__r.Customer__r.Formatted_Mobile_Number__c,
+                                            CO_Header__r.Customer__r.Formatted_Preferred_Phone__c,
+                                            CO_Header__r.Customer__r.Formatted_Work_Number__c,
                                             CO_Header__r.Customer__r.Home_Number_SMS__c,
                                             CO_Header__r.Customer__r.Mobile_Number_SMS__c, 
                                             CO_Header__r.Customer__r.Preferred_SMS__c,
@@ -670,6 +727,7 @@ global without sharing class DealDocumentPrintCtrl {
                                             CO_Header__r.Customer__r.Work_Email__c,
                                             CO_Header__r.LastModifiedDate__c,
                                             CO_Header__r.Customer_PO_Number__c,
+                                            CO_Header__r.Owner__r.Name,
                                             Invoice_Number__c,
                                             Invoice_Number__r.Name,
                                             Invoice_Number__r.Invoice_Number__c,
@@ -678,13 +736,14 @@ global without sharing class DealDocumentPrintCtrl {
                                             Invoice_Number__r.Status__c,
                                             Invoice_Number__r.LastModifiedDate,
                                             Type__c, 
-                                            Salesperson__r.Technician_Name__c,
+                                            Salesperson_Name__c,
                                             Deal_Section_Trade_Only__c,
                                             Pre_Tax_Trade_In_Total__c,
                                             Trade_In_Total__c,
                                             Notes_For_Customer__c,
+                                            Co_Buyer__r.Name,
                                             (SELECT id, Type__c, Customer_Owned_Unit__c, Notes__c FROM Deal_Items__r),
-                                            (Select Name, Amount__c, Payment_Method__c, CreatedDate, LastModifiedDate, Payment_Date__c From CO_Deposits__r ORDER BY Payment_Date__c DESC)
+                                            (Select Name, Amount__c, Payment_Method__c, CreatedDate, LastModifiedDate, Payment_Date__c, Reference__c From CO_Deposits__r ORDER BY Payment_Date__c DESC)
                                             FROM Deal__c 
                                             WHERE Id IN: dealIdsList
                                     ];
@@ -726,7 +785,7 @@ global without sharing class DealDocumentPrintCtrl {
                 }
                 
                 query = query.substring(0, query.length()-2);
-                query += ' FROM Options_Fees__r), ';
+                query += ' FROM Options_Fees__r ORDER BY CreatedDate ASC), ';
                 query += '(SELECT ';
                 
                 for(String fieldsName : DealWrapper.getDealUnitPriceCost()){
@@ -734,7 +793,7 @@ global without sharing class DealDocumentPrintCtrl {
                     query += fieldsName + ', ';
                 }
                 query = query.substring(0, query.length()-2);
-                query += ' FROM Deal_Unit_Prices_Costs__r) FROM Deal_Item__c WHERE Id IN: dealItemId';
+                query += ' FROM Deal_Unit_Prices_Costs__r ORDER BY Type__c ASC, Unit_Price_Cost__r.Name ASC) FROM Deal_Item__c WHERE Id IN: dealItemId ORDER BY CreatedDate';
                 dealItemList = Database.query(query);
             }
         }

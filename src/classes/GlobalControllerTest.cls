@@ -1,10 +1,13 @@
 @isTest
 public without sharing class GlobalControllerTest {
-    
+    @testSetup
+    private static void setupTestData() {
+		TestDataFactory.disableFLSChecks();
+   }
     static testMethod void getStaticResourceURLTest() {
-        BP_Configurations__c BPConfigurationsRec = new BP_Configurations__c();
+        BP_Configurations__c BPConfigurationsRec = BP_Configurations__c.getOrgDefaults();
         BPConfigurationsRec.isLoadStaticResource__c = true;
-        insert BPConfigurationsRec;
+        upsert BPConfigurationsRec;
         GlobalController globalControllerObj = new GlobalController();
         system.assertEquals(GlobalController.Application.length() > 0, true);
     }

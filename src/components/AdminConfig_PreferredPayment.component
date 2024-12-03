@@ -1,0 +1,226 @@
+<apex:component controller="GlobalController">
+    <div class="LoadingDiv" ng-show="AdminConfig.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="PreferredPayments">
+        <div class="settings_Header row">
+            <div class="col-lg-3 col-md-3">
+                <div class="fixedHeaderText bp-pointer-cursor" ng-click="AdminConfig.toogleSectionView('showPreferredPayments');">
+                    <span class="headerlabel">
+                    <i class="fa fa-angle-down" ng-show="AdminConfig.toggleObj.showPreferredPayments" ></i>
+                    <i class="fa fa-angle-right" ng-show="!AdminConfig.toggleObj.showPreferredPayments" ></i>
+                    <span class="divider">|</span>
+                    <span class="T2">{{ 'Preferred_payments' | translate}}</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div id="PreferredPayments_Setting" ng-show="AdminConfig.toggleObj.showPreferredPayments">
+            <div class="main_section row" >
+                <div class="form">
+                    <div class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Integration_configured' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 labelValueCenter margin8">
+                            {{AdminConfig.PreferredPayments.IntegrationConfigured}}
+                        </div>
+                    </div>
+                    <div ng-if="AdminConfig.PreferredPayments.IntegrationConfigured == 'No'" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Public_key' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 margin8">
+                            <div class="searchInputArea feeSearchInputArea">
+                                <input type="text" ng-blur="AdminConfig.validateKeysForPP()" ng-model="AdminConfig.PreferredPayments.PublicKey" class="searchInput form-control inputValueText" />
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="AdminConfig.PreferredPayments.IntegrationConfigured == 'No'" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Private_key' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 margin8">
+                            <div class="searchInputArea feeSearchInputArea">
+                                <input type="text" ng-blur="AdminConfig.validateKeysForPP()" ng-model="AdminConfig.PreferredPayments.PrivateKey" class="searchInput form-control inputValueText" />
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="AdminConfig.PreferredPayments.IntegrationConfigured == 'No' && AdminConfig.hasBothKeysPopulatedForPP" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Configure_integration' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 margin8">
+                            <button class="btn btn-default greenBtn" ng-click="AdminConfig.configurePPIntegration()">{{ 'Execute_script' | translate}}</button>
+                        </div>
+                    </div>
+                    <div ng-if="AdminConfig.PreferredPayments.IntegrationConfigured == 'Yes'" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Configuration_enabled' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 labelSwitchControl margin8">
+                            <span>{{ 'Label_No' | translate }}</span>
+                            <label class="bp-switch margin8">
+                                <input ng-model="AdminConfig.PreferredPayments.Enabled" ng-change="AdminConfig.enableConfiguration()" type="checkbox"/>
+                                <div class="bp-slider round"></div>
+                            </label>
+                            <span>{{ 'Label_Yes' | translate }}</span>
+                        </div>
+                    </div>
+                    <div ng-if="AdminConfig.PreferredPayments.IntegrationConfigured == 'Yes'" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Max_Credit_Amount' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 MLR8">
+                            <numbers-only id-value = "maxCreditAmount"
+                                            class-value = "form-control"
+                                            input-model-value = "AdminConfig.PreferredPayments.MaxCreditAmount" 
+                                            include-negative = "false"
+                                            include-zero = "true"
+                                            precision-length = "2"
+                                            place-holder-value=""
+                                            max-length = '16'
+                                            include-blank = 'false'
+                                            blur-value = "AdminConfig.savePPConfigChange()"
+                                            />
+                        </div>
+                    </div>
+                    <div ng-if="AdminConfig.PreferredPayments.IntegrationConfigured == 'Yes'" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Terminal_listing' | translate}}</label>
+                        </div>
+                        <div class="col-md-5 MLR8" ng-class= "{'overflow-control': AdminConfig.PreferredPayments.TerminalList.length > 10}">
+                            <table class="pp-table-setting terminal-table-content">
+                                <col width="30%"  />
+                                <col width="25%"  />
+                                 <col width="15%"  />
+                                 <col width="30%"  />
+                                <thead>
+                                    <tr>
+                                        <th class="listingHeader line-height-medium">
+                                            {{'Registration_code' | translate}}
+                                        </th>
+                                        <th class="listingHeader line-height-medium">
+                                            {{'Nickname' | translate}}
+                                        </th>
+                                        <th class="listingHeader line-height-medium">
+                                            {{'Status' | translate}}
+                                        </th>
+                                        <th class="listingHeader text-center line-height-medium">
+                                            {{'Signature_Required' | translate}}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat = "terminalRec in AdminConfig.PreferredPayments.TerminalList track by $index">
+                                        <td class="H200 line-height-normal">
+                                            {{terminalRec.RegistrationCode}}
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                            {{terminalRec.Nickname}}
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                            {{terminalRec.Status}}
+                                        </td>
+                                        <td class="text-small text-center line-height-normal">
+                                            {{terminalRec.IsSignatureRequired ? 'Yes' : 'No'}}
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="AdminConfig.PreferredPayments.TerminalList.length == 0">
+                                        <td class="text-small line-height-normal">
+                                            {{'No_terminals_defined' | translate}}
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div ng-if="AdminConfig.PreferredPayments.IntegrationConfigured == 'Yes'" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Terminals_from_preferred_payments' | translate}}</label>
+                        </div>
+                        <div ng-if="AdminConfig.showFetchPPTerminalsBtn" class="col-md-2 margin8">
+                            <button ng-click="AdminConfig.fetchPPTerminals()" class="btn btn-default greenBtn">{{ 'Fetch_pp_terminals' | translate}}</button>
+                        </div>
+                        <div ng-if="!AdminConfig.showFetchPPTerminalsBtn" class="col-md-5 MLR8" ng-class= "{'overflow-control': AdminConfig.terminalListFromPP.length > 10}">
+                            <table class="pp-table-setting terminal-table-content">
+                                <col width="30%"  />
+                                <col width="25%"  />
+                                 <col width="20%"  />
+                                 <col width="20%"  />
+                                <thead>
+                                    <tr>
+                                        <th class="listingHeader  line-height-medium">
+                                            {{'Registration_code' | translate}}
+                                        </th>
+                                        <th class="listingHeader  line-height-medium">
+                                            {{'Nickname' | translate}}
+                                        </th>
+                                        <th class="listingHeader  line-height-medium">
+                                            {{'Status' | translate}}
+                                        </th>
+                                        <th class="listingHeader  line-height-medium">
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="terminalList in AdminConfig.terminalListFromPP">
+                                        <td class="H200 line-height-normal">
+                                            {{terminalList.serial_number}}
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                            {{terminalList.nickname}}
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                            {{terminalList.status}}
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                            <button ng-click="AdminConfig.syncToBP(terminalList)" class="syncBtn">{{ 'Sync_to_bp' | translate}}</button>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="AdminConfig.terminalListFromPP.length == 0">
+                                        <td class="text-small line-height-normal">
+                                            {{'No_terminals_defined' | translate}}
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                        </td>
+                                        <td class="text-small line-height-normal">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div ng-if="AdminConfig.PreferredPayments.IntegrationConfigured == 'Yes' && AdminConfig.PreferredPayments.TerminalList.length > 0" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Manage_terminals' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 margin8">
+                            <a ng-href="{{AdminConfig.PreferredPayments.ManageTerminalsURL}}" target="_blank">
+                                <button class="btn btn-default greenBtn">{{ 'Manage' | translate}}</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div ng-if="AdminConfig.PreferredPayments.IntegrationConfigured == 'Yes'" class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Add_terminal' | translate}}</label>
+                        </div>
+                        <div class="col-md-2 margin8">
+                            <a ng-href="{{AdminConfig.PreferredPayments.AddTerminalURL}}" target="_blank">
+                                <button class="btn btn-default greenBtn">{{ 'New_terminal' | translate}}</button>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</apex:component>

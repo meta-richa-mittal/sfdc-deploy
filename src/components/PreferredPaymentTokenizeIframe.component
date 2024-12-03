@@ -1,0 +1,66 @@
+<apex:component controller="GlobalController">
+    <apex:attribute name="Application_Images" Description="" required="false" type="String"/>
+    <apex:attribute name="Application" Description="" required="false" type="String"/>
+    <apex:stylesheet value="{!Application}/css/PreferredPaymentTokenizeIframe.css"/>  
+    <script>
+        var PreferredPaymentTokenizeIframe = angular.module('PreferredPaymentTokenizeIframe', ['autocomplete', 'autocomplete1']);
+        PreferredPaymentTokenizeIframe.controller('PreferredPaymentTokenizeIframe', function ($scope, $compile, $rootScope, $q, $state, $stateParams) {
+                    $scope.PreferredPaymentTokenizeModel = {};
+                    $scope.PreferredPaymentTokenizeModel.cancelBtnAction = function(){
+                        angular.element('#PreferredPaymentTokenizeIframe').modal('hide');
+                        angular.element("body").addClass("modal-open");
+                        notification.error("Payment cancelled");
+                    }
+
+                    function resetPrizmForm(){
+                        var template1 = $compile(angular.element('#PreferredPaymentTokenizeIframe'))($scope);
+                        angular.element("#PreferredPaymentTokenizeIframeContainer").prepend(template1);
+                    }
+
+                    function getToken(event) {
+                        if(event && event.data && event.origin === 'https://iframe.ecrypt.com') {
+                            var msg = event.data;
+                            if(msg && msg.includes('token')) {
+                                var msgObj = JSON.parse(JSON.parse(msg));
+                                if(msgObj.token) {
+                                    processPayment(msgObj.token);
+                                }
+                    	    }
+                        }
+                    }
+                    
+                    $rootScope.$on('openPreferredPaymentTokenizeIframe', function() {
+                            resetPrizmForm();
+                        angular.element('#PreferredPaymentTokenizeIframe').modal({
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                        angular.element('#PreferredPaymentTokenizeIframe').show();
+                    });
+        
+                    function processPayment(token) {
+                        $rootScope.$emit('processPreferredCardNotPresentPayment', token);
+                    }
+                    window.addEventListener('message', getToken);
+            });
+            </script>
+<div ng-controller="PreferredPaymentTokenizeIframe" id="PreferredPaymentTokenizeIframeContainer">
+    <div class="modal fade-scale bp-model-dialog PreferredPaymentTokenizeIframe" id="PreferredPaymentTokenizeIframe" tabindex="-1" role="dialog" setdata="" aria-labelledby="myModalLabel" >
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-close-icon">
+                    <i ng-click = "PreferredPaymentTokenizeModel.cancelBtnAction()" class="bp-icons bp-font-12 bp-blue-font c-close-icon stroke-3">close</i>
+                </div>
+                <div class="modal-body PreferredPaymentTokenizeIframeModel">
+                    <div class="payment-iframe-container" id="ecrypt-iframe-wrapper"></div>
+                    <div class="prizm-logo">
+                        <div class="prizm-logo-label"><label>Card information security provided by </label></div>
+                        <div class="prizm-logo-img"><i ng-include="'{!Application_Images}/Icons/Ecrypt-Logo-ecrypt-1.svg'"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <c:PreferredPaymentTokenizeIframeScript PreferredPaymentPublicKey="{!(PreferredPaymentPublicKey)}"/>
+</div>
+</apex:component>

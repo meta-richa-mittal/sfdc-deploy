@@ -1,0 +1,8 @@
+<apex:page controller="BRPAuthorizationCtrl" showChat="false" sidebar="false" docType="html-5.0" standardstylesheets="false">
+    <apex:pageBlock title="Authorize BRP">
+    	<apex:pageMessages></apex:pageMessages>
+	    <apex:form >
+        	<apex:commandButton action="{!authorizeBRP}" value="Authorize BRP" id="BRPButton"/>
+    	</apex:form>
+    </apex:pageBlock>
+</apex:page>

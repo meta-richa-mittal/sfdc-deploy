@@ -165,7 +165,7 @@ public without sharing class ExportStockUnitUtil {
             fileData += (businessProfile.Business_Name__c != null ? businessProfile.Business_Name__c : '').escapeCsv() + fileSeparatorComma;
             fileData += (businessProfile.Business_Phone__c != null ? businessProfile.Business_Phone__c : '').escapeCsv() + fileSeparatorComma;
             fileData += (businessProfile.Business_City__c != null ? businessProfile.Business_City__c : '').escapeCsv() + fileSeparatorComma;
-            fileData += (businessProfile.Business_State__c != null ? businessProfile.Business_State__r.Name__c : '').escapeCsv() + fileSeparatorComma;
+            fileData += (businessProfile.Business_State__c != null ? businessProfile.Business_State__r.Display_Name__c : '').escapeCsv() + fileSeparatorComma;
             fileData += (businessProfile.Business_Postal_Code__c != null ? businessProfile.Business_Postal_Code__c : '').escapeCsv() + fileSeparatorComma;
             
             fileData += (stockUnit.Mileage_Value__c != null ? stockUnit.Mileage_Value__c.intValue() + ' ' : '').escapeCsv() + fileSeparatorComma;
@@ -311,7 +311,7 @@ public without sharing class ExportStockUnitUtil {
 	            this.Password = ftpConfigs[0].FTP_Password__c;
 	            this.OrgName = ftpConfigs[0].Org_Name__c;
             }
-            this.Namespace = [SELECT NameSpacePrefix FROM ApexClass limit 1].NameSpacePrefix;
+            this.Namespace = (GeneralConfiguration.getPackageNamespace() == null) ? '' : GeneralConfiguration.getPackageNamespace();
             this.AttachmentId = attachmentId;
         }
     }

@@ -83,12 +83,17 @@ public without sharing class UnitPricingSOQLUtil {
     	return Database.query(query);
     }
 
-    public static List<Unit_Sub_Model__c> getActiveSubModelsByModelId(String modelId) {
+    public static List<Unit_Sub_Model__c> getActiveSubModelsByModelId(UnitPricingService.UnitSubmodelFilterWrapper filterObj) {
         if(!AccessControl.ifObjectFieldIsAccessible('Unit_Sub_Model__c')) {throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE);}
         String query = 'SELECT Id, Unit_Model__r.Name__c, Unit_Model__r.Default_Holdback__c, Unit_Model__r.Default_Price__c, Unit_Model__r.Default_Cost__c, Sub_Model_Name__c, Cost__c, Price__c, Holdback__c, (SELECT id FROM Submodel_Factory_Option_Junctions__r)' ;
-        query += ' FROM Unit_Sub_Model__c WHERE  Active__c = true AND Unit_Model__c =: modelId';
-        query += ' ORDER BY Sub_Model_Name__c ASC LIMIT ' + SOQLUtil.getAvailableQueryRowsLimit();
-        return Database.query(query);
+        query += ' FROM Unit_Sub_Model__c ' + getWhereClauseByFilterStr(filterObj);
+        query += ' ORDER BY Sub_Model_Name__c ASC ' + SOQLUtility.getLimitClause(filterObj.StartIndex, filterObj.RecordCount);
+        List<SObject> sobjList = SOQLUtility.getQueryResults('Unit_Sub_Model__c', query);
+    	
+    	if(filterObj.StartIndex != null && filterObj.StartIndex > 2000 && filterObj.RecordCount != null) {
+    		sobjList = SOQLUtility.getLimitRecordsBasedOnRecordCount(sobjList, filterObj.StartIndex);
+    	}
+    	return sobjList;
     }
 
     public static List<Unit_Model__c> getActiveModelsByModelId(String modelId) {
@@ -109,6 +114,21 @@ public without sharing class UnitPricingSOQLUtil {
         if(!AccessControl.ifObjectFieldIsAccessible('Unit_Model__c')) {throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE);}
         String query = 'SELECT Id, Default_Cost__c, Default_Price__c FROM Unit_Model__c WHERE Id =: modelId' ;
         return Database.query(query);
+    }
+
+    private static String getWhereClauseByFilterStr(UnitPricingService.UnitSubmodelFilterWrapper filterObj) {
+    	List<String> filterStrList = new List<String>{'Active__c = true'};
+    	
+    	if(filterObj != null) {
+	    	if(String.isNotBlank(filterObj.SearchKeyword)) {
+                filterObj.SearchKeyword = BPUtility.escapeSingleQuotes(filterObj.SearchKeyword.trim());
+                filterStrList.add('(Sub_Model_Name__c LIKE \'' + filterObj.SearchKeyword + '%\')');
+	    	}
+	    	if(String.isNotBlank(filterObj.ModelId)) {
+                filterStrList.add('(Unit_Model__c = \'' + filterObj.ModelId + '\')');
+	    	}
+    	}
+    	return (!filterStrList.isEmpty() ? ' WHERE ' + String.join(filterStrList, ' AND ') : '');
     }
     
 }

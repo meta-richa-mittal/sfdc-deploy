@@ -44,8 +44,8 @@ global without sharing class UnitPricingCtrl {
     }
 
     @remoteAction
-    global static String getModelPricingAndOptionsDetails(String modelId) {
-        return BPUtility.getEncodedString(system.JSON.serialize(UnitPricingService.getModelPricingAndOptionsDetails(BPUtility.getDecodedString(modelId)), true));
+    global static String getModelPricingAndOptionsDetails(String filterJson) {
+        return BPUtility.getEncodedString(system.JSON.serialize(UnitPricingService.getModelPricingAndOptionsDetails(BPUtility.getDecodedString(filterJson)), true));
     }
 
     @remoteAction

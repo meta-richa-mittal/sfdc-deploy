@@ -37,40 +37,23 @@ public without sharing class DealKH_Recalculation {
         } else {
             dealKHList = SOQLUtil.getDealKitHeaderDetailsByFieldName(new Map<String, String>{'Deal_Item__c'=> dealItemId});
         }
-        
-        dealKHList = applyPriceLevel(dealKHList);
-        dealKHList = applySalesTax(dealKHList, customerId);
-        List<Sobject> sobjListToUpdate = new List<Sobject>(); 
-        if(dealKHList.size() > 0) {
-            sobjListToUpdate.addAll((List<Sobject>)dealKHList);
-            for(Deal_Kit_Header__c dealKHRec : dealKHList) {
-                if(dealKHRec.Options_Fees__r != null) {
-                    sobjListToUpdate.addAll((List<Sobject>)dealKHRec.Options_Fees__r);
-                }
+        if(!dealKHList.isEmpty()) {
+            if(!CustomerOrderCtrl_V2.isRefreshCOKit || (COTriggerHelper.isResetPricing != null && COTriggerHelper.isResetPricing)) {
+                dealKHList = applyPriceLevel(dealKHList);
             }
-            update sobjListToUpdate;
-            //system.assert(false, dealKHList[0].Options_Fees__r);
-            /*update dealKHList;
-            List<Option_Fee__c> optionList = [select Price__c from Option_Fee__c where Deal_Kit_Header__c =: dealKHId];
-            system.assert(false, optionList);*/
+            dealKHList = applySalesTax(dealKHList, customerId);
+            List<Sobject> sobjListToUpdate = new List<Sobject>(); 
+            if(!dealKHList.isEmpty()) {
+                sobjListToUpdate.addAll((List<Sobject>)dealKHList);
+                for(Deal_Kit_Header__c dealKHRec : dealKHList) {
+                    if(dealKHRec.Options_Fees__r != null) {
+                        sobjListToUpdate.addAll((List<Sobject>)dealKHRec.Options_Fees__r);
+                    }
+                }
+                update sobjListToUpdate;
+            }
         }
         return 'Success';
-        
-        /*if(dealKHList.size() > 0) {
-            Deal_Kit_Header__c dealKHRec = dealKHList[0];
-            if(!dealKHRec.Is_Fixed_Price__c) {
-                dealKHRec = applyPriceLevel(dealKHRec);
-            }
-            
-            if(dealKHRec.Deal_Item__r.Deal__r.CO_Header__r.Customer__c != null) {
-                dealKHRec = applySalesTax(dealKHRec, dealKHRec.Deal_Item__r.Deal__r.CO_Header__r.Customer__c);
-            } else {
-                dealKHRec = applySalesTax(dealKHRec, null);
-            }
-            //system.assert(false, dealKHRec + '\n\n\n' + dealKHRec.Options_Fees__r);
-            update dealKHRec;
-        }
-        return 'Success';*/
     }
     
     /**
@@ -141,7 +124,7 @@ public without sharing class DealKH_Recalculation {
                 continue;
             }
             for(Option_Fee__c optionFeeRec : dealKHRec.Options_Fees__r) {
-                if(optionFeeRec.Is_Fixed_Price__c) {
+                if(optionFeeRec.Is_Fixed_Price__c || (COTriggerHelper.isRetainItemPrices && optionFeeRec.Part__c == null && optionFeeRec.Labour_Code__c == null)) {
                     continue;
                 }
                 partPriceBase = dealItemIdTodealItemRecMap.get(dealKHRec.Deal_Item__c).Part_Price_Base_From_Price_Level__c;
@@ -153,8 +136,12 @@ public without sharing class DealKH_Recalculation {
                 	String pricingField = TaxCalculation.getPricingFieldByPLBaseValueField(partPriceBase);
                 	
                 	Part__c partRec = partIdToPartRecordMap.get(optionFeeRec.Part__c);
-                	optionFeeRec.Retail__c = (partRec.get(pricingField) != null) ? Decimal.valueOf(String.valueOf(partRec.get(pricingField))) : 0;
-                	optionFeeRec.Price__c = optionFeeRec.Actual_Kit_Price__c = (optionFeeRec.Retail__c != null) ? 
+                	if(pricingField == 'Average_Cost__c' && (partRec.Average_Cost__c == null || partRec.Average_Cost__c == 0)) {
+                        optionFeeRec.Retail__c = partRec.Last_Cost__c != null ? partRec.Last_Cost__c : 0;
+                    } else {
+                        optionFeeRec.Retail__c = (partRec.get(pricingField) != null) ? Decimal.valueOf(String.valueOf(partRec.get(pricingField))) : 0;
+                    }
+                    optionFeeRec.Price__c = optionFeeRec.Actual_Kit_Price__c = (optionFeeRec.Retail__c != null) ? 
                 								optionFeeRec.Retail__c.setScale(2, RoundingMode.HALF_UP) : 0;
                 	optionFeeRec.Price_When_Tax_Included__c = isTaxIncludingPricing ? optionFeeRec.Price__c : 0;
                 	
@@ -211,57 +198,15 @@ public without sharing class DealKH_Recalculation {
      * Desc: Apply Sales Tax
     **/
     public static List<Deal_Kit_Header__c> applySalesTax(List<Deal_Kit_Header__c> dealKHList, String customerId) {
+        Boolean isRecalculateTaxes = !CustomerOrderCtrl_V2.isRefreshCOKit || (COTriggerHelper.isRecalculateTaxes != null && COTriggerHelper.isRecalculateTaxes);
+        Map<Id, Id> recIdToApplicableTaxIdMap = new Map<Id, Id>();
         
-        if(customerId == null && dealKHList.size() > 0) {
-            customerId = dealKHList[0].Deal_Item__r.Deal__r.CO_Header__r.Customer__c;
+        if(isRecalculateTaxes) {
+            TaxEngine.populateExemptionMap(TaxEngine.getSectionIdsForExemptions(TaxEngine.DKH, dealKHList));
+            TaxEngine.setApplicableTaxes(TaxEngine.DKH, dealKHList, null, recIdToApplicableTaxIdMap);
         }
-        
-        Id coHeaderId = null;
-        Map<Id, Set<Id>> coHeaderIdToSalesTaxItemIdsMap = new Map<Id, Set<Id>>();
-        if(!dealKHList.isEmpty()) {
-            coHeaderId = dealKHList[0].Deal_Item__r.Deal__r.CO_Header__c;
-            // Get list of Tax Exemptions for given coHeader ids
-            coHeaderIdToSalesTaxItemIdsMap = TaxCalculation.getCOHeaderIdToTaxExemptionsIds(new Set<Id>{coHeaderId});
-        }
-        
-        // Entity Tax Rate
-        List<Id> salesTaxIdList = new List<Id>();
-        for(Deal_Kit_Header__c DealKHRec : dealKHList) {
-            for(Option_Fee__c optionFeeRec : dealKHRec.Options_Fees__r) {
-                if(optionFeeRec.Fee__c != null && optionFeeRec.Fee__r.Taxable__c && optionFeeRec.Fee__r.Applicable_Tax__c != null) {
-                    salesTaxIdList.add(optionFeeRec.Fee__r.Applicable_Tax__c);
-                } else if(optionFeeRec.Labour_Code__c != null && optionFeeRec.Labour_Code__r.Taxable__c && optionFeeRec.Deal_Item__r.Applicable_Tax__c != null) {
-                    salesTaxIdList.add(optionFeeRec.Deal_Item__r.Applicable_Tax__c);
-                } else if(optionFeeRec.Part__c != null && optionFeeRec.Part__r.Taxable__c && optionFeeRec.Deal_Item__r.Applicable_Tax__c != null) {
-                    salesTaxIdList.add(optionFeeRec.Deal_Item__r.Applicable_Tax__c);
-                }
-            }
-        }
-        
-        if(AccessControl.ifObjectFieldIsAccessible('Applicable_Taxes__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
-        List<Applicable_Taxes__c> applicableTaxList = TaxManagementSOQLUtil.getApplicableTaxListBySalesTaxIdList(salesTaxIdList);
-                                                            
-        Map<Id, List<Applicable_Taxes__c>> salesTaxIdToAppTaxRecordsMap = new Map<Id, List<Applicable_Taxes__c>>();
-         
-        for(Applicable_Taxes__c appTax : applicableTaxList) {
-            List<Applicable_Taxes__c> appTaxRecordList = new List<Applicable_Taxes__c>();
-            if(salesTaxIdToAppTaxRecordsMap.containsKey(appTax.Sales_Tax__c)) {
-                appTaxRecordList = salesTaxIdToAppTaxRecordsMap.get(appTax.Sales_Tax__c);
-            } 
-            appTaxRecordList.add(appTax);
-            salesTaxIdToAppTaxRecordsMap.put(appTax.Sales_Tax__c, appTaxRecordList);
-        }
-        
-        Map<Id, Decimal> salesTaxIdToTaxRateMap = new Map<Id, Decimal>();
-        for(Id salesTaxId : salesTaxIdToAppTaxRecordsMap.keyset()) {
-            Decimal salesTaxRate = 0;
-            for(Applicable_Taxes__c appTax : salesTaxIdToAppTaxRecordsMap.get(salesTaxId)) {
-                salesTaxRate += ((appTax.Sales_Tax_Item__r.Rate__c != null) ? appTax.Sales_Tax_Item__r.Rate__c : 0);
-            }
-            salesTaxIdToTaxRateMap.put(salesTaxId, salesTaxRate);
-        }
+
         Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
-        
         Decimal taxAmount = 0;
         Decimal dealKHTotal = 0;
         
@@ -270,47 +215,28 @@ public without sharing class DealKH_Recalculation {
         for(Deal_Kit_Header__c dealKHRec : dealKHList) {
         	taxAmount = 0;
         	dealKHTotal = 0;
-        	Decimal unfixedKitHeaderTotal = 0;
             for(Option_Fee__c optionFeeRec : dealKHRec.Options_Fees__r) {
+                Boolean isTaxChange = false;
+                String optionFeeOldTaxId, entityTaxId;
                 Id salesTaxId;
-                if(optionFeeRec.Fee__r.Applicable_Tax__c != null) {
-                    salesTaxId = optionFeeRec.Fee__r.Applicable_Tax__c;
-                } else if(optionFeeRec.Deal_Item__r.Applicable_Tax__c != null && (optionFeeRec.Part__c != null || optionFeeRec.Labour_Code__c != null)) {
-                    salesTaxId = optionFeeRec.Deal_Item__r.Applicable_Tax__c;
-                }       
-                optionFeeRec.Applicable_Tax__c = salesTaxId;
                 Decimal exemptionRate = 0;
-                Decimal enhancedTaxAmount = 0;
-                if(salesTaxIdToAppTaxRecordsMap.containsKey(salesTaxId)) {
-                    for(Applicable_Taxes__c appTax : salesTaxIdToAppTaxRecordsMap.get(salesTaxId)) {
-                        if(coHeaderId != null && coHeaderIdToSalesTaxItemIdsMap.get(coHeaderId).contains(appTax.Sales_Tax_Item__c)) {
-                            exemptionRate += appTax.Sales_Tax_Item__r.Rate__c;
-                        } else {
-                        	Individual_Tax__c individualTaxRec = new Individual_Tax__c();
-	                    	individualTaxRec.Option_Fee__c = optionFeeRec.Id;
-                            individualTaxRec.Sales_Tax_Item__c = appTax.Sales_Tax_Item__c;                            
-                            if(!TaxCalculation.IsEnhancedTaxCalculationApplicable || appTax.Sales_Tax_Item__r.Rate_Type__c == TaxManagementService.FIXED_RATE) {
-                                individualTaxRec.Tax_Rate__c = appTax.Sales_Tax_Item__r.Rate__c; 
-                            } else {
-                                optionFeeRec.Qty__c = optionFeeRec.Qty__c != null ? optionFeeRec.Qty__c : 1;
-                                optionFeeRec.Price__c = optionFeeRec.Price__c != null ? optionFeeRec.Price__c : 0;
-                    
-                                Decimal taxableAmount = (optionFeeRec.Qty__c * optionFeeRec.Price__c);
-                                individualTaxRec.Enhanced_Tax_Amount__c = TaxCalculation.getEnhancedTaxAmount(taxableAmount, appTax.Sales_Tax_Item__r);
-                                enhancedTaxAmount += individualTaxRec.Enhanced_Tax_Amount__c; 
-                            }
-                            individualTaxRec.Sales_Tax_Item__c = appTax.Sales_Tax_Item__c; 
-                            individualTaxToInsert.add(individualTaxRec);
-                        } 
-                    } 
-                }
-                    
                 Decimal rate = 0;
-                if(salesTaxIdToTaxRateMap.containsKey(salesTaxId)) {
-                    rate = salesTaxIdToTaxRateMap.get(salesTaxId);
+                Decimal enhancedTaxAmount = 0;
+                if(isRecalculateTaxes) {
+                    optionFeeOldTaxId = optionFeeRec.Applicable_Tax__c;
+                    salesTaxId = optionFeeRec.Applicable_Tax__c = recIdToApplicableTaxIdMap.get(optionFeeRec.Id);
+                    entityTaxId = DealUtil.getApplicableTaxOnEntity(optionFeeRec);
+                    if(salesTaxId != null) {
+                        exemptionRate = TaxEngine.getExemptionAndIndividualTaxes(TaxEngine.DKH, dealKHRec, optionFeeRec, salesTaxId, individualTaxToInsert);
+                        if(TaxEngine.salesTaxIdToTaxRateMap.containsKey(salesTaxId)) {
+                            rate = TaxEngine.salesTaxIdToTaxRateMap.get(salesTaxId);
+                        }
+                    }
+                    isTaxChange = (isRecalculateTaxes && optionFeeRec.Sales_Tax_Percentage__c != rate - exemptionRate);
+                    optionFeeRec.Sales_Tax_Percentage__c = rate - exemptionRate;
+                } else {
+                    isTaxChange = COTriggerHelper.isResetPricing;
                 }
-                
-                optionFeeRec.Sales_Tax_Percentage__c = rate - exemptionRate;
                 optionFeeRec.Price__c = optionFeeRec.Price__c.setScale(2, RoundingMode.HALF_UP);
                 if(isTaxIncludingPricing) {
                     if(dealKHRec.Is_Fixed_Price__c || optionFeeRec.Is_Fixed_Price__c) {
@@ -320,45 +246,27 @@ public without sharing class DealKH_Recalculation {
                     		optionFeeRec.Price__c = (optionFeeRec.Price__c / (1 + (optionFeeRec.Sales_Tax_Percentage__c / 100))).setScale(2, RoundingMode.HALF_UP);
                     		optionFeeRec.Price_When_Tax_Included__c = (optionFeeRec.Price__c * (1 + (optionFeeRec.Sales_Tax_Percentage__c / 100))).setScale(2, RoundingMode.HALF_UP);
                     	}
-                    } else if(optionFeeRec.Price_When_Tax_Included__c == null || exemptionRate > 0) {
+                    } else if(COTriggerHelper.isRetainItemPrices && optionFeeRec.Part__c == null && optionFeeRec.Labour_Code__c == null && optionFeeRec.Price_When_Tax_Included__c != null) {
+                        optionFeeRec.Price__c = (optionFeeRec.Price_When_Tax_Included__c / (1 + (optionFeeRec.Sales_Tax_Percentage__c / 100))).setScale(2, RoundingMode.HALF_UP);
+                    } else if(isTaxChange || optionFeeRec.Price_When_Tax_Included__c == null || exemptionRate > 0 || (optionFeeOldTaxId != optionFeeRec.Applicable_Tax__c) || (entityTaxId != optionFeeRec.Applicable_Tax__c)) {
                     	optionFeeRec.Price_When_Tax_Included__c = (optionFeeRec.Price__c * (1 + (optionFeeRec.Sales_Tax_Percentage__c / 100))).setScale(2, RoundingMode.HALF_UP);
                     }
                     dealKHTotal += (optionFeeRec.Price_When_Tax_Included__c * optionFeeRec.Qty__c);
                     taxAmount += ((optionFeeRec.Price__c * optionFeeRec.Qty__c * optionFeeRec.Sales_Tax_Percentage__c) / 100);
-                    
-                    if(!optionFeeRec.Is_Fixed_Price__c) {
-	                	unfixedKitHeaderTotal += (optionFeeRec.Price_When_Tax_Included__c * optionFeeRec.Qty__c);
-	                	//unfixedLineItemList.add(optionFeeRec);
-	                }
-	                
                 } else {
                     // Deal Kit Header
                     dealKHTotal += (optionFeeRec.Price__c * optionFeeRec.Qty__c);
                     taxAmount += ((optionFeeRec.Price__c * optionFeeRec.Qty__c * optionFeeRec.Sales_Tax_Percentage__c) / 100) + enhancedTaxAmount;
-                    if(!optionFeeRec.Is_Fixed_Price__c) {
-	                	unfixedKitHeaderTotal += (optionFeeRec.Price__c * optionFeeRec.Qty__c);
-	                	//unfixedLineItemList.add(optionFeeRec);
-	                }
                 }
                 
                 optionFeeRec.Fixed_Price__c = optionFeeRec.Price__c;
             }
-        	//resolveRoundOffIssue(dealKHRec.Options_Fees__r, unfixedKitHeaderTotal, isTaxIncludingPricing);
             dealKHRec.Tax_Amount__c = taxAmount.setScale(2, RoundingMode.HALF_UP);
             dealKHRec.Fixed_Price__c = dealKHTotal.setScale(2, RoundingMode.HALF_UP);
         }
-		
-        /** START : Added this to delete existing individual tax record - Handling refresh co pricing and tax from co page */
-        if(AccessControl.ifObjectFieldIsAccessible('Individual_Tax__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
-        List<Individual_Tax__c> individualListTodelete = new List<Individual_Tax__c>([select Id from Individual_Tax__c where Option_Fee__r.Deal_Kit_Header__c IN :dealKHList]);
-        
-        if(AccessControl.ifObjectIsDeletable('Individual_Tax__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_DELETABLE); }
-        if(individualListTodelete.size() > 0) {
-			delete individualListTodelete;        
-        }
-        /** END : Added this to delete existing individual tax record - Handling refresh co pricing and tax from co page */
-                
-        if(individualTaxToInsert.size() > 0) {
+		if(isRecalculateTaxes) {
+            if(AccessControl.ifObjectFieldIsAccessible('Individual_Tax__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
+            DMLUtility.deleteSObjectList('Individual_Tax__c', [select Id from Individual_Tax__c where Option_Fee__r.Deal_Kit_Header__c IN :dealKHList]);
             DMLUtility.insertSobjectList('Individual_Tax__c', individualTaxToInsert);
         }
         return dealKHList;
@@ -373,7 +281,7 @@ public without sharing class DealKH_Recalculation {
                 dealKHList[0].Is_Install__c = dealKitObj.IsInstall;
                 DMLUtility.updateSobjectList('Deal_Kit_Header__c', dealKHList);
                 if(dealKHList[0].Deal_Item__r.Deal__r.Status__c == Constants.IN_PROGRESS && (dealKHList[0].CO_Kit_Headers__r.size() > 0 || dealKHList[0].Service_Order_Kit_Headers__r.size() > 0 || (dealKHList[0].Options_Fees__r.size() > 0 && dealKHList[0].Options_Fees__r[0].Status__c == Constants.COMMITTED))) {
-                    CustomerOrderCtrl.moveDealMerchAndServiceLineItems(BPUtility.getEncodedString(dealKitObj.Id), BPUtility.getEncodedString(dealKitObj.CoHeaderId));
+                    DealService.moveDealMerchAndServiceLineItems(BPUtility.getEncodedString(dealKitObj.Id), BPUtility.getEncodedString(dealKitObj.CoHeaderId));
                 }
                 return 'Success';
             }
@@ -406,12 +314,11 @@ public without sharing class DealKH_Recalculation {
         }
         if(dealKitObj.Price < fixedTotal) {
             return 'Kit Header Total cannot Less than Line Item Total';
-        } else if(unfixedTotal < 0) {
-            return 'Incorrect item inserted'; 
         } else if(unfixedTotal == 0) {
             return 'Kit Header Line Item price cannot be updated because no unfixed line item with price greater than 0 is present to adjust the total price';
         } else {
             Decimal adjustment = (dealKitObj.Price - fixedTotal) / unfixedTotal;
+            adjustment = (adjustment < 0) ? (adjustment * -1) : adjustment;
             Decimal counter = 1;
             Decimal subTotal = 0;
             for(DealWrapper.OptionAndFeeInfo optionFeeObj : dealKitObj.OptionAndFeeList) {
@@ -455,6 +362,9 @@ public without sharing class DealKH_Recalculation {
                     ((Option_Fee__c)sObjectListToUpdate[sObjectListToUpdate.indexOf(unfixedQtyOneKitLi)]).Price__c += dealKitObj.Price - totalPrice;
                 }
                 totalPrice = dealKitObj.Price;
+            }
+            if(totalPrice < 0){
+                return 'Kit total price cannot be negative.';
             }
             Deal_Kit_Header__c dealKitHeaderRec = new Deal_Kit_Header__c(Id = dealKitObj.Id, Fixed_Price__c = totalPrice, 
                                                                             Tax_Amount__c = totalTaxAmount.setScale(2, RoundingMode.HALF_UP),
@@ -503,13 +413,11 @@ public without sharing class DealKH_Recalculation {
             }
             if(dealKitObj.Price < fixedTotal) {
                 return 'Kit Header Total cannot Less than Line Item Total';
-            } else if(unfixedTotal < 0) {
-                return 'Incorrect item inserted'; 
             } else if(unfixedTotal == 0) {
                 return 'Kit Header Line Item price cannot be updated because no unfixed line item with price greater than 0 is present to adjust the total price';
             } else {
                 Decimal adjustment = (dealKitObj.Price - fixedTotal) / unfixedTotal;
-                //system.assert(false, adjustment+'   ' + fixedTotal + '   ' + unfixedTotal + '   ' + dealKitObj.Price);
+                adjustment = (adjustment < 0) ? (adjustment * -1) : adjustment;
                 for(DealWrapper.OptionAndFeeInfo optionFeeObj : dealKitObj.OptionAndFeeList) {
                     if(optionFeeObj.Id == optionFeeItemObj.Id) {
                         optionFeeObj.IsFixedPriceForCO = true;
@@ -570,6 +478,9 @@ public without sharing class DealKH_Recalculation {
                     ((Option_Fee__c)sObjectListToUpdate[sObjectListToUpdate.indexOf(unfixedQtyOneKitLi)]).Price__c += dealKitObj.Price - totalPrice;
                 }
                 totalPrice = dealKitObj.Price;
+            }
+            if(totalPrice < 0){
+                return 'Kit total price cannot be negative.';
             }
             Deal_Kit_Header__c dealKitHeaderRec = new Deal_Kit_Header__c(Id = dealKitObj.Id, Fixed_Price__c = totalPrice, Tax_Amount__c = totalTaxAmount.setScale(2, RoundingMode.HALF_UP));
             sObjectListToUpdate.add(dealKitHeaderRec);

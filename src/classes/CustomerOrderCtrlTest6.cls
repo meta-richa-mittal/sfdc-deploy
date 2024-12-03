@@ -9,7 +9,9 @@ private class CustomerOrderCtrlTest6 {
  	
  	@testSetup
     private static void setupTestData() {
+        TestDataFactory.disableFLSChecks();
         TestUtil.createNameSpaceInGeneralConfig();
+        BPScriptManager.executeServiceJobStatusUpdateBatch();
     }
     
  	static testMethod void updateSOLineItemsLabourTest() {
@@ -35,56 +37,27 @@ private class CustomerOrderCtrlTest6 {
     
     @future
 	private static void updateSOLineItemsLabourTestAsyncHandling(String coHeaderId, String customerId, String labourCodeId) {
-		String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeaderId)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('soHeader')));
+        String soHeader = ServiceJobService.createServiceJobWithSpecificFields(coHeaderId, null, null, true, false);
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         System.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
         
         String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(labourCodeId), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id), BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(customerId)));
         
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
        // system.assert(false,SOHeaderDetails1);
         soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0].QtyNeeded = 20.00 ;
         System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0]);
 
-        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeaderId)));
-        String SOHeaderDetails2 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
+        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeaderId)));
+        String SOHeaderDetails2 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj2 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails2, SOHeaderWrapper.class);
         //system.assert(false, soHeaderDetailsObj2);
         
         system.assertEquals(soHeaderDetailsObj2.SOList[0].SOGridItems[0].SOKH.SOLIList[0].QtyNeeded, 20.00);
 	}
     
-        static testMethod void savePinItemsUnpinTest() {
-        Account vendor = TestUtil.createVendor(true, 'Test Vendor');
-        Category__c testCategory = TestUtil.createCategory(true, 'Test Category');
-        Price_Level__c defaultPriceLevel = TestUtil.createPriceLevel(true, 'Default Price Level', 'MSRP', 10 , true, true);
-        Sales_Tax__c defaultSalesTax = TestUtil.createSalesTax(true, 'Test Sales Tax', true, true, true);
-        Part__c part = TestUtil.createPart(true, 'TestPart', vendor.Id, 'TestPart', testCategory.Id, 10, 20, 50, 100, 100);
-        Account customer = TestUtil.createCustomer(true, 'customerName', 'abc@abc.com', 'Agra', '1111111112', null, null, false, true,'Individual','firstname1', 'lastname', '9999999999', 'BillingStreet');
-        CO_Header__c coHeader = TestUtil.createCOHeader(true, customer.Id);
-        Fee__c fee = TestUtil.createFee(True, True, testCategory.Id, 'FeeCode', CoHeader.Id, 'Description', 100, True);
-        Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
-        Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
-        Transaction_Type__c transactionType = TestUtil.createTransactionType(true, 'code', 'Customer');
-        
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
-        SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
-       
-        String savePinItem = BPUtility.getDecodedString(CustomerOrderCtrl.savePinItems(BPUtility.getEncodedString('{"PinnedItemList":["Transaction Type","Unit"]}')));
-        List<User> currentUserInfo = SOQLUtil.getCurrentUserInfo();
-        system.assertEquals(currentUserInfo[0].SO_Pinned_Info__c, 'Transaction Type,Unit');
-        
-        String savePinItem1 = BPUtility.getDecodedString(CustomerOrderCtrl.savePinItems(BPUtility.getEncodedString('{"PinnedItemList":[""]}')));
-        List<User> currentUserInfo1 = SOQLUtil.getCurrentUserInfo();
-        system.assertEquals(currentUserInfo1[0].SO_Pinned_Info__c, null);
-                
-        
-        
-    }
     static testMethod void hoursLoggedTest() {
         Account vendor = TestUtil.createVendor(true, 'Test Vendor');
         Category__c testCategory = TestUtil.createCategory(true, 'Test Category');
@@ -102,15 +75,13 @@ private class CustomerOrderCtrlTest6 {
         Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, LabourCode.Id, Part.Id, 1, 5.0);  
         
         Test.startTest();
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = ServiceJobService.createServiceJobWithSpecificFields(coHeader.Id, null, null, true, false);
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         System.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
         
         String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(customer.Id)));
         Test.stopTest();
-        //String hoursLogged = CustomerOrderCtrl.saveHoursLogged('{"SOHeaderId":"'+soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id+'","PreviouslyLogged":"1d 1h 1m","OriginalEstimate":"0d 0h 0m ","coHeaderId":"'+coHeader.Id+'","index":0,"WorkPerformedDate":"01/18/2016","Employee":"","Notes":"","TimeSpent_D":"1","TimeSpent_M":"1","TimeSpent_H":"1","RemainingEstimate_D":0,"RemainingEstimate_M":0,"RemainingEstimate_H":0}', coHeader.Id);
-        //system.assertEquals(hoursLogged.contains('1d 1h 1m'), true);
     }
     
         static testMethod void InsertFeeInMerchGridTest() 
@@ -128,12 +99,10 @@ private class CustomerOrderCtrlTest6 {
         Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(true, customer.Id, UnitMake.Id, UnitModel.Id, null);
         Transaction_Type__c transactionType = TestUtil.createTransactionType(true, 'code', 'Customer');
         
-        String InsertFeeInMerchDetails = BPUtility.getDecodedString(CustomerOrderCtrl.insertFeeInMerchGrid( BPUtility.getEncodedString(fee.Id), BPUtility.getEncodedString(coHeader.Id)));
-        //String coheaderDetails = CustomerOrderCtrl.getCOHeaderDetailsByGridName(coHeader.Id, String gridName);
-        COHeaderWrapper coHeaderDetails1 = (COHeaderWrapper) System.JSON.deserialize(InsertFeeInMerchDetails, COHeaderWrapper.class);
-        system.assertEquals(coHeaderDetails1.allCOLineItemRecs[0].Item, 'FeeCode - Description');
-        
-        
+        CustomerOrderCtrl_V2.insertFeeInMerchGrid(fee.Id, coHeader.Id, false, 1, null);
+        String COHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCOHeaderDetailsByGridName(BPUtility.getEncodedString(coHeader.Id), null));
+        CustomerOrderWrapper.COHeaderWrapper coHeaderDetailsObj = (CustomerOrderWrapper.COHeaderWrapper) System.JSON.deserialize(COHeaderDetails1, CustomerOrderWrapper.COHeaderWrapper.class);
+        System.assertEquals(coHeaderDetailsObj.COKHList[0].COLIList[0].Item, 'FeeCode - Description');
     }
     
 static testMethod void insertKitHeaderInMerchGridTest() 
@@ -154,11 +123,11 @@ static testMethod void insertKitHeaderInMerchGridTest()
         Kit_Header__c kitHeader = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, true, false, unitMake.Id, unitModel.Id);
         Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, null, Part.Id, 1, 5.0);   
         
-        String insertKitHeaderInMerchGridDetails = BPUtility.getDecodedString(CustomerOrderCtrl.insertKitHeaderInMerchGrid( BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(coHeader.Id)));
-        //String coheaderDetails = CustomerOrderCtrl.getCOHeaderDetailsByGridName(coHeader.Id, String gridName);
-        COHeaderWrapper coHeaderDetails1 = (COHeaderWrapper) System.JSON.deserialize(insertKitHeaderInMerchGridDetails, COHeaderWrapper.class);
+        String jSONString = '{"entityId" : "' + kitHeader.Id + '", "UUID" : ""}';
+        String insertKitHeaderInMerchGridDetails = BPUtility.getDecodedString(CustomerOrderCtrl_V2.insertKitHeaderInMerchGrid(BPUtility.getEncodedString(jSONString), BPUtility.getEncodedString(coHeader.Id)));
+        CustomerOrderWrapper.COHeaderWrapper coHeaderDetails1 = (CustomerOrderWrapper.COHeaderWrapper) System.JSON.deserialize(insertKitHeaderInMerchGridDetails, CustomerOrderWrapper.COHeaderWrapper.class);
         //system.assert(false, coHeaderDetails1);
-        system.assertEquals(coHeaderDetails1.allCOLineItemRecs[0].Item, 'TestPart - TestPart');
+        system.assertEquals(coHeaderDetails1.COKHList[0].COLIList[0].Item, 'TestPart - TestPart');
         
         
     }
@@ -181,19 +150,17 @@ static testMethod void insertKitHeaderInMerchGridTest()
         Kit_Header__c kitHeader = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, true, false, unitMake.Id, unitModel.Id);
         Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, null, Part.Id, 1, 5.0);   
         
-        String insertKitHeaderInMerchGridDetails = BPUtility.getDecodedString(CustomerOrderCtrl.insertKitHeaderInMerchGrid( BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(coHeader.Id)));
-        COHeaderWrapper coHeaderDetails1 = (COHeaderWrapper) System.JSON.deserialize(insertKitHeaderInMerchGridDetails, COHeaderWrapper.class);
-        system.assertEquals(coHeaderDetails1.allCOLineItemRecs[0].Item, 'TestPart - TestPart');
-        system.assertEquals(coHeaderDetails1.MerchandiseTotal, 55.00);
+        String jSONString = '{"entityId" : "' + kitHeader.Id + '", "UUID" : ""}';
+        String insertKitHeaderInMerchGridDetails = BPUtility.getDecodedString(CustomerOrderCtrl_V2.insertKitHeaderInMerchGrid(BPUtility.getEncodedString(jSONString), BPUtility.getEncodedString(coHeader.Id)));
+        CustomerOrderWrapper.COHeaderWrapper coHeaderDetails1 = (CustomerOrderWrapper.COHeaderWrapper) System.JSON.deserialize(insertKitHeaderInMerchGridDetails, CustomerOrderWrapper.COHeaderWrapper.class);
         //system.assert(false, coHeaderDetails1 );
-        String removelineitemDetails = BPUtility.getDecodedString(CustomerOrderCtrl.removeLineItemsInMerchGrid( BPUtility.getEncodedString(coHeaderDetails1.COKHList[0].COLIList[0].CoLineItemId), BPUtility.getEncodedString(coHeader.Id)));
-        //String coheaderDetails = CustomerOrderCtrl.getCOHeaderDetailsByGridName(coHeader.Id, String gridName);
-        COHeaderWrapper coHeaderDetails2 = (COHeaderWrapper) System.JSON.deserialize(removelineitemDetails, COHeaderWrapper.class);
+        system.assertEquals(coHeaderDetails1.COKHList[0].COLIList[0].Item, 'TestPart - TestPart');
+        system.assertEquals(coHeaderDetails1.coHeaderRec.MerchandiseTotal, 55.00);
+        //system.assert(false, coHeaderDetails1 );
+        String removelineitemDetails = BPUtility.getDecodedString(CustomerOrderCtrl_V2.deleteCOLineItem( BPUtility.getEncodedString(coHeaderDetails1.COKHList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
+        CustomerOrderWrapper.COHeaderWrapper coHeaderDetails2 = (CustomerOrderWrapper.COHeaderWrapper) System.JSON.deserialize(removelineitemDetails, CustomerOrderWrapper.COHeaderWrapper.class);
         //system.assert(false, coHeaderDetails2 );
-        system.assertEquals(coHeaderDetails2.allCOLineItemRecs.size(), 0 );
-        
-        
-        
+        system.assertEquals(coHeaderDetails2.COKHList.size(), 0 );
     }
     
         static testMethod void splitCOKHItemTest() 
@@ -214,15 +181,12 @@ static testMethod void insertKitHeaderInMerchGridTest()
         Kit_Header__c kitHeader = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, true, false, unitMake.Id, unitModel.Id);
         Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, null, Part.Id, 1, 5.0);   
         
-        String insertKitHeaderInMerchGridDetails = BPUtility.getDecodedString(CustomerOrderCtrl.insertKitHeaderInMerchGrid( BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(coHeader.Id)));
-        String splitCOKHDetails = BPUtility.getDecodedString(CustomerOrderCtrl.splitCOKHItem(BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(coHeader.Id)));
-        COHeaderWrapper coHeaderDetails1 = (COHeaderWrapper) System.JSON.deserialize(splitCOKHDetails, COHeaderWrapper.class);
-        //system.assert(false, coHeaderDetails1 );
-        system.assertEquals(coHeaderDetails1.allCOLineItemRecs[0].Item, 'TestPart - TestPart');
-        system.assertEquals(coHeaderDetails1.MerchandiseTotal, 55.00);
-        
-        
-        
+        String jSONString = '{"entityId" : "' + kitHeader.Id + '", "UUID" : ""}';
+        String insertKitHeaderInMerchGridDetails = BPUtility.getDecodedString(CustomerOrderCtrl_V2.insertKitHeaderInMerchGrid(BPUtility.getEncodedString(jSONString), BPUtility.getEncodedString(coHeader.Id)));
+        String splitCOKHDetails = BPUtility.getDecodedString(CustomerOrderCtrl_V2.splitCOKHItem(BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(coHeader.Id)));
+        CustomerOrderWrapper.COHeaderWrapper coHeaderDetails1 = (CustomerOrderWrapper.COHeaderWrapper) System.JSON.deserialize(splitCOKHDetails, CustomerOrderWrapper.COHeaderWrapper.class);
+        system.assertEquals(coHeaderDetails1.COKHList[0].COLIList[0].Item, 'TestPart - TestPart');
+        system.assertEquals(coHeaderDetails1.coHeaderRec.MerchandiseTotal, 55.00);
     }
     
      
@@ -249,14 +213,14 @@ static testMethod void submitClaimTest() {
         part.Order_Lots__c = 2;
         insert part;
         
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = ServiceJobService.createServiceJobWithSpecificFields(coHeader.Id, null, null, true, false);
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         system.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
         
         String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(part.Id), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(customer.Id)));
         
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
         soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0].QtyNeeded = 50.00 ;
         //system.assert(false, soHeaderDetailsObj1 );
@@ -265,182 +229,29 @@ static testMethod void submitClaimTest() {
         COLineItemTriggerHelper.isTriggerExecute = false;
         COTriggerHelper.isTriggerExecute = false;
         Test.startTest();
-        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeader.Id)));
+        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeader.Id)));
         
-        SOHeaderWrapper soHeaderDetailsObj2 = (SOHeaderWrapper) System.JSON.deserialize(updatedSOLI, SOHeaderWrapper.class);
-        soHeaderDetailsObj2.SOList[0].SOHeaderInfo.TransactionTypeId = transactionType.Id ;
-        soHeaderDetailsObj2.SOList[0].SOHeaderInfo.ProviderId = vendor.Id;
+        List<ServiceOrderWrapper.SOWrapper> soHeaderDetailsObj2 = (List<ServiceOrderWrapper.SOWrapper>) System.JSON.deserialize(updatedSOLI, List<ServiceOrderWrapper.SOWrapper>.class);
+        soHeaderDetailsObj2[0].SOInfo.TransactionTypeId = transactionType.Id ;
+        soHeaderDetailsObj2[0].SOInfo.ProviderId = vendor.Id;
         
         //system.assert(false, soHeaderDetailsObj2 );
-        String jsonStr = System.Json.serialize(soHeaderDetailsObj2.SOList[0].SOHeaderInfo);
+        String jsonStr = System.Json.serialize(soHeaderDetailsObj2[0].SOInfo);
         
-        String soHeaderInfo = BPUtility.getDecodedString(CustomerOrderCtrl.saveSOHeaderInfo(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(jsonStr)));
+        String soHeaderInfo = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveSOHeaderInfo(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(jsonStr)));
         SOHeaderWrapper.SOHeader soHeaderDetailsObj3 = (SOHeaderWrapper.SOHeader) System.JSON.deserialize(soHeaderInfo, SOHeaderWrapper.SOHeader.class);
         
         //system.assert(false, soHeaderDetailsObj3);
-       String deductible =  BPUtility.getDecodedString(CustomerOrderCtrl.addDeductibleAmount(BPUtility.getEncodedString('{"SoHeaderId":"'+soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id+'","DeductibleStatus":null,"DeductibleId":null,"DeductibleAmount":"10","CoHeaderId":"'+coHeader.Id+'"}')));
+       String deductible =  BPUtility.getDecodedString(CustomerOrderCtrl_V2.addDeductibleAmount(BPUtility.getEncodedString('{"SoHeaderId":"'+soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id+'","DeductibleStatus":null,"DeductibleId":null,"DeductibleAmount":"10","CoHeaderId":"'+coHeader.Id+'"}')));
        SOHeaderWrapper details12 = (SOHeaderWrapper) System.JSON.deserialize(deductible, SOHeaderWrapper.class);
        //system.assertEquals(details12.SOList[0].DeductibleItem.DeductibleAmount, 10.000);
-       String submittedClaim = BPUtility.getDecodedString(CustomerOrderCtrl.submitClaimRecords(BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id)));
+       String submittedClaim = BPUtility.getDecodedString(CustomerOrderCtrl_V2.submitClaimRecords(BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id)));
        
        List<Claim_Line_Item__c> claimLineItemList = [select Claimed_Qty__c, Claimed_Price__c, Claimed_Subtotal__c,  Item_Desc__c, Approved_Qty__c, Approved_Price__c, Approved_Subtotal__c, Variance__c from Claim_Line_Item__c];
        Test.stoptest();
        system.assertEquals(claimLineItemList.size(), 1);
-       
-       
-         
          }
          
-
-    /* Added by Ankit 
-        Modified by nidhi*/
-    
-    
-   static testMethod void DealLineItemStatusAfterCloseOrderTest() {
-        
-        /*TestUtil.createtaxsettingInGeneralConfig();
-        Price_Level__c defaultPriceLevel = TestUtil.createPriceLevel(false, 'Default Price Level', 'MSRP', 10 , true, true);
-        Sales_Tax__c defaultSalesTax = TestUtil.createSalesTax(false, 'Test Sales Tax', true, true, true);
-        
-        Account customer =  TestUtil.createCustomer(false, 'customerName', 'abc@abc.com', 'jaipur', '1111111111', null, null, false, true,'Individual');
-        customer.Is_Customer__c = true;
-        
-        Account vendor = TestUtil.createVendor(false, 'Test Vendor');
-        Category__c testCategory = TestUtil.createCategory(false, 'Test Category');
-        insert new List<SObject>{defaultPriceLevel, defaultSalesTax, customer, vendor};
-        
-        Part__c testPart1 = TestUtil.createPart(false, 'Part11', vendor.Id, 'Test Part1', testCategory.Id);
-        
-        Unit_Make__c unitmake = TestUtil.createUnitMake(false, 'unitMakeName', '12A', true);
-        
-        insert new List<SObject>{testPart1, unitmake};
-        Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(false, customer.Id, UnitMake.Id, UnitModel.Id, null);
-        customerOwnedUnit.Unit_Type__c = 'Stock';
-        customerOwnedUnit.Status__c = 'Available';
-        insert customerOwnedUnit;
-        
-        CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
-        insert coHeader;
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
-        
-        List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
-        
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
-        DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
-        
-        DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
-        optionAndFeeRec1.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
-        optionAndFeeRec1.Qty = 2;
-        optionAndFeeRec1.PartId = testPart1.Id;
-        optionAndFeeRec1.IsInstall = false; 
-        optionAndFeeRec1.SalesTaxPercentage = 0;
-        optionAndFeeRec1.Price = 0;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
-        String dealInfoObjJson = BPUtility.getDecodedString(CustomerOrderCtrl.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
-        DealWrapper.DealInfoWrapper dealInfoObj = (DealWrapper.DealInfoWrapper) System.JSON.deserialize(dealInfoObjJson, DealWrapper.DealInfoWrapper.class);
-        
-        Test.startTest();
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
-        DealWrapper.DealFulfillmentSectionWrapper DealFulfillmentSectionObj = (DealWrapper.DealFulfillmentSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.DealFulfillmentSectionWrapper.class);
-        List<CO_Invoice_Header__c> coInvoiceHeaderlist = [select  Status__c, Total_Payment__c from CO_Invoice_Header__c where Status__c = 'Active'];
-        String COInvoiceItemJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoiceItemsByCOInvoiceHeaderId(BPUtility.getEncodedString(coInvoiceHeaderlist[0].Id)));
-        List<COInvoiceItem> coInvoiceItemList = (List<COInvoiceItem>) System.JSON.deserialize(COInvoiceItemJSON, List<COInvoiceItem>.class);
-        for(COInvoiceItem coInvoiceItemObj : coInvoiceItemList) {
-            if(String.isBlank(coInvoiceItemObj.DealId)) {
-                coInvoiceItemObj.isActive = true;
-            }
-        }
-        String closedInvoice = BPUtility.getDecodedString(CustomerOrderCtrl.closedInvoiceAction(BPUtility.getEncodedString(System.JSON.serialize(coInvoiceItemList)), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('Deal')));
-        coInvoiceHeaderlist = [select  Status__c, Total_Payment__c from CO_Invoice_Header__c where Status__c = 'Active'];
-        COInvoiceItemJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCOInvoiceItemsByCOInvoiceHeaderId(BPUtility.getEncodedString(coInvoiceHeaderlist[0].Id)));
-        coInvoiceItemList = (List<COInvoiceItem>) System.JSON.deserialize(COInvoiceItemJSON, List<COInvoiceItem>.class);
-        for(COInvoiceItem coInvoiceItemObj : coInvoiceItemList) {
-            if(String.isNotBlank(coInvoiceItemObj.DealId)) {
-                coInvoiceItemObj.isActive = true;
-            }
-        }
-        
-        List <Deal__C> dealList1 = [Select Status__c from Deal__c where Id = :dealList[0].Id];
-        system.assertEquals('Fulfilled', dealList1[0].Status__c);
-        
-        String dealJson = BPUtility.getDecodedString(CustomerOrderCtrl.getDealDetails(BPUtility.getEncodedString(coHeader.Id), null));
-        DealWrapper dealInfoObj1 = (DealWrapper) System.JSON.deserialize(dealJson, DealWrapper.class);
-        System.assertEquals(dealInfoObj1.DealFulfillmentSectionObj.DealMerchandiseList[0].COLIList[0].SubTotal, 66);
-        System.assertEquals(dealInfoObj1.DealFulfillmentSectionObj.DealMerchandiseList[0].COLIList[0].Status, 'Invoiced');
-        Test.stopTest();
-        String closedOrder = BPUtility.getDecodedString(CustomerOrderCtrl.closedorderAction(BPUtility.getEncodedString(System.JSON.serialize(coInvoiceItemList)), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('Customer')));
-        
-        COHeaderWrapper coHeaderDetails1 = (COHeaderWrapper) System.JSON.deserialize(closedOrder, COHeaderWrapper.class);
-        
-        dealList = [Select Status__c from Deal__c where Id = :dealList[0].Id];
-        system.assertEquals('Invoiced', dealList[0].Status__c);
-        //List<Customer_Owned_Unit__c> unitList = [Select Status__c from Customer_Owned_Unit__c where Id = :customerOwnedUnit.Id];
-        //system.assertEquals('Sold', unitList[0].Status__c);
-        
-        VendorOrderReceivingCtrl_PartialTest.DealLineItemStatusAfterCloseOrderTest_Partial(dealList1[0].Id);*/
-        system.assert(true,true);
-    }
-    
-    /**
-     static testMethod void createUnresolvedFulfillmentForAddInServiceOrderTest() {
-        Price_Level__c defaultPriceLevel = TestUtil.createPriceLevel(true, 'Default Price Level', 'MSRP', 10 , true, true);
-        Sales_Tax__c defaultSalesTax = TestUtil.createSalesTax(true, 'Test Sales Tax', true, true, true);
-        
-        Account customer =  TestUtil.createCustomer(false, 'customerName', 'abc@abc.com', 'jaipur', '1111111111', null, null, false, true,'Individual');
-        customer.Is_Customer__c = true;
-        insert customer;
-        
-        Account vendor = TestUtil.createVendor(true, 'Test Vendor');
-        Category__c testCategory = TestUtil.createCategory(true, 'Test Category');
-        Part__c testPart1 = TestUtil.createPart(true, 'Part11', vendor.Id, 'Test Part1', testCategory.Id);
-        
-        Account vendor1 = TestUtil.createVendor(true, 'Test Vendor 1');
-        Category__c testCategory1 = TestUtil.createCategory(true, 'Test Category 1');
-        Part__c testpart2 = TestUtil.createPart(true, 'Part12', vendor1.Id, 'TestPart2', testCategory1.Id);
-        
-        Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true);
-        Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(false, customer.Id, UnitMake.Id, UnitModel.Id, null);
-        customerOwnedUnit.Unit_Type__c = 'Stock';
-        customerOwnedUnit.Status__c = 'Available';
-        insert customerOwnedUnit;
-        
-        CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
-        insert coHeader;
-        Labour_Code__c labourCode = TestUtil.createLabourCode(true, true, testCategory.Id, 'Code', coHeader.Id, 'Description', true, 10, 'LabourCodeName', 10, true);
-        
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
-        List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
-        
-        Test.startTest();
-        
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
-        DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
-        
-        DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
-        optionAndFeeRec1.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
-        optionAndFeeRec1.Qty = 2;
-        optionAndFeeRec1.LabourId = labourCode.Id;
-        optionAndFeeRec1.IsInstall = true;
-        optionAndFeeRec1.SalesTaxPercentage = 0;
-        optionAndFeeRec1.Price = 0;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
-        String dealInfoObjJson = BPUtility.getDecodedString(CustomerOrderCtrl.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
-        DealWrapper.DealInfoWrapper dealInfoObj = (DealWrapper.DealInfoWrapper) System.JSON.deserialize(dealInfoObjJson, DealWrapper.DealInfoWrapper.class);
-        
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
-        DealWrapper.DealFulfillmentSectionWrapper DealFulfillmentSectionObj = (DealWrapper.DealFulfillmentSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.DealFulfillmentSectionWrapper.class);
-        // Edited by kv 01/31/2017
-        List<Service_Order_Header__c> soList = [Select Id, (Select Id, Labour_Code__c, Qty_Needed__c, Kit_Price__c from Service_Order_Line_Items__r) from Service_Order_Header__c where CO_Header__c = :coHeader.Id];
-        String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(testpart2.Id), BPUtility.getEncodedString(soList[0].Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(customer.Id)));
-        
-        List<Deal_Unresolved_Fulfillment__c> unresolvedFulfillmentList = [Select Id, Action_Required__c, Updated_Quantity__c from Deal_Unresolved_Fulfillment__c where Deal__c = :dealList[0].Id];
-        system.assertEquals(1, unresolvedFulfillmentList.size());
-        system.assertEquals('Add to Deal', unresolvedFulfillmentList[0].Action_Required__c);
-        system.assertEquals(1, unresolvedFulfillmentList[0].Updated_Quantity__c);
-    }
-    **/
     static testMethod void getMakeListTest() {
         Unit_Make__c unitMake1 = TestUtil.createUnitMake(false, 'unitMakeName1', '11A', true);
         Unit_Make__c unitMake2 = TestUtil.createUnitMake(false, 'unitMakeName2', '12A', true);
@@ -511,9 +322,9 @@ static testMethod void submitClaimTest() {
         
         CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
         insert coHeader;
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
 
         Test.startTest();
@@ -523,25 +334,25 @@ static testMethod void submitClaimTest() {
         DealWrapper.DealFinanceWrapper dealFinanceWrapperObj = new DealWrapper.DealFinanceWrapper(new Deal_Finance__c());
         dealFinanceWrapperObj.FinanceCompanyId = vendor.Id;
         dealFinanceWrapperObj.DownPayment = 100;
-        String dealFinanceJSON = BPUtility.getDecodedString(CustomerOrderCtrl.updateDealFinanceDetails(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(System.JSON.serialize(dealFinanceWrapperObj))));
+        String dealFinanceJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateDealFinanceDetails(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(System.JSON.serialize(dealFinanceWrapperObj))));
         
         DealWrapper.FIProductWrapper fAndIproductObj = new DealWrapper.FIProductWrapper(new F_I_Product__c());
         fAndIproductObj.ProductId = testProduct1.Id;
         fAndIproductObj.DealId = dealList[0].Id;
         fAndIproductObj.DealFinanceId = [Select Id from Deal_Finance__c limit 1].Id;
         
-        String fAndIproductJson = BPUtility.getDecodedString(CustomerOrderCtrl.saveDealFAndIProduct(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(System.JSON.serialize(fAndIproductObj))));
+        String fAndIproductJson = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveDealFAndIProduct(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(System.JSON.serialize(fAndIproductObj))));
         DealWrapper.FIProductWrapper DealFAndIProductObj = (DealWrapper.FIProductWrapper) System.JSON.deserialize(fAndIproductJson, DealWrapper.FIProductWrapper.class);
         system.assertEquals(DealFAndIProductObj.SalesTax, 7.41);
         system.assertEquals(DealFAndIProductObj.Total, 92.59);
         system.assertEquals(testProduct1.Id, DealFAndIProductObj.ProductId);
         
-        String getDealFinanceData = BPUtility.getDecodedString(CustomerOrderCtrl.getDealFinanceMasterData());
+        String getDealFinanceData = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getDealFinanceMasterData());
        List<SOHeaderWrapper.VendorAsProvider> DealFinanceObj = (List<SOHeaderWrapper.VendorAsProvider> ) System.JSON.deserialize(getDealFinanceData, List<SOHeaderWrapper.VendorAsProvider> .class);
         system.assertEquals(DealFinanceObj[0].Name, 'Test Vendor');
         system.assertEquals(DealFinanceObj.size(), 1 );
         
-        String getDealFinanceData1 = BPUtility.getDecodedString(CustomerOrderCtrl.getProviderInfo(BPUtility.getEncodedString(vendor.Id)));
+        String getDealFinanceData1 = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getProviderInfo(BPUtility.getEncodedString(vendor.Id)));
        System.assertEquals(getDealFinanceData1.contains('Test Vendor'), true);
     }
     
@@ -564,145 +375,19 @@ static testMethod void submitClaimTest() {
         CO_Line_Item__c coLineItemRec = TestUtil.createCOLineItem(true, coHeader1.Id, part.Id, 50);
         CO_Deposit__c coDeposit = TestUtil.createCODeposit(true, coHeader1.Id, 'Debit', 500);
         
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader1.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader1.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader1.Id];
         
         Test.startTest();
-        String coDepositJSON = BPUtility.getDecodedString(CustomerOrderCtrl.getCODepositByCOHeaderId(BPUtility.getEncodedString(coHeader1.Id)));
-        
-        String coDealDeposite = BPUtility.getDecodedString(CustomerOrderCtrl.saveCODealDeposit(BPUtility.getEncodedString(coDepositJSON), BPUtility.getEncodedString(dealList[0].Id)));
+        String coDepositJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getCODepositByCOHeaderId(BPUtility.getEncodedString(coHeader1.Id)));
+        List<CODeposit> coDeposits = (List<CODeposit>)System.JSON.deserialize(coDepositJSON, List<CODeposit>.class);
+        coDeposits[0].Deal = dealList[0].Id;
+        String coDealDeposit = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveCODeposit(BPUtility.getEncodedString(system.json.serialize(coDeposits))));
         Test.stopTest();
         
-        List<CODeposit> coDeposits = (List<CODeposit>) System.JSON.deserialize(coDealDeposite, List<CODeposit>.class);
-        System.assertEquals(coDealDeposite.contains(''), true );
+        coDeposits = (List<CODeposit>)System.JSON.deserialize(coDealDeposit, List<CODeposit>.class);
+        System.assertEquals(coDealDeposit.contains(dealList[0].Id), true );
     }
-    
-    /*static testMethod void resolveFulfillmentForDealMerchKitTest() {
-        Price_Level__c defaultPriceLevel = TestUtil.createPriceLevel(true, 'Default Price Level', 'MSRP', 10 , true, true);
-        Sales_Tax__c defaultSalesTax = TestUtil.createSalesTax(true, 'Test Sales Tax', true, true, true);
-        
-        Account customer =  TestUtil.createCustomer(false, 'customerName', 'abc@abc.com', 'jaipur', '1111111111', null, null, false, true,'Individual');
-        customer.Is_Customer__c = true;
-        insert customer;
-        
-        Account vendor = TestUtil.createVendor(true, 'Test Vendor');
-        Category__c testCategory = TestUtil.createCategory(true, 'Test Category');
-        Part__c testPart1 = TestUtil.createPart(true, 'Part11', vendor.Id, 'Test Part1', testCategory.Id);
-        CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
-        insert coHeader;
-        Labour_Code__c labourCode = TestUtil.createLabourCode(true, true, testCategory.Id, 'Code', coHeader.Id, 'Description', true, 10, 'LabourCodeName', 10, true);
-        
-        Test.startTest();
-        
-        Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true); 
-        Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(false, customer.Id, UnitMake.Id, UnitModel.Id, null);
-        customerOwnedUnit.Unit_Type__c = 'Stock';
-        customerOwnedUnit.Status__c = 'Available';
-        insert customerOwnedUnit;
-        
-        Kit_Header__c kitHeader1 = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, false, false, unitMake.Id, unitModel.Id);
-        Kit_Header_Line_Item__c kitHeaderLineItem1 = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader1.Id, 5.0, null, testPart1.Id, 1, 5.0);
-        
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
-        List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
-        
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
-        DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
-        
-        DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
-        optionAndFeeRec1.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
-        optionAndFeeRec1.Qty = 1;
-        optionAndFeeRec1.PartId = testPart1.Id;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
-        
-        String dealInfoObjJson = BPUtility.getDecodedString(CustomerOrderCtrl.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
-        DealWrapper.DealInfoWrapper dealInfoObj = (DealWrapper.DealInfoWrapper) System.JSON.deserialize(dealInfoObjJson, DealWrapper.DealInfoWrapper.class);
-        
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
-        Test.stopTest();
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.insertKitHeaderInDealMerchGrid(BPUtility.getEncodedString(kitHeader1.Id), BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
-        dealWrapperObj = (DealWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.class);
-        
-        system.assertEquals(1, dealWrapperObj.DealUnresolvedFulfillmentList.size());
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.resolveFulfillment(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(System.JSON.serialize(dealWrapperObj.DealUnresolvedFulfillmentList[0])),BPUtility.getEncodedString('Invoice'), BPUtility.getEncodedString(customerOwnedUnit.Id)));
-        dealWrapperObj = (DealWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.class);
-        
-        system.assertEquals(0, dealWrapperObj.DealUnresolvedFulfillmentList.size());
-        system.assertEquals(2, dealWrapperObj.UnitList[0].DealKitHeaderList.size());
-        
-    }*/
-    /*
-    static testMethod void resolveFulfillmentForDealServiceKitTest() {
-        Price_Level__c defaultPriceLevel = TestUtil.createPriceLevel(true, 'Default Price Level', 'MSRP', 10 , true, true);
-        Sales_Tax__c defaultSalesTax = TestUtil.createSalesTax(true, 'Test Sales Tax', true, true, true);
-        
-        Account customer =  TestUtil.createCustomer(false, 'customerName', 'abc@abc.com', 'jaipur', '1111111111', null, null, false, true,'Individual');
-        customer.Is_Customer__c = true;
-        insert customer;
-        
-        Account vendor = TestUtil.createVendor(true, 'Test Vendor');
-        Category__c testCategory = TestUtil.createCategory(true, 'Test Category');
-        CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
-        insert coHeader;
-        Labour_Code__c labourCode = TestUtil.createLabourCode(true, true, testCategory.Id, 'Code', coHeader.Id, 'Description', true, 10, 'LabourCodeName', 10, true);
-        
-        Test.startTest();
-        
-        Unit_Make__c unitmake = TestUtil.createUnitMake(true, 'unitMakeName', '12A', true); 
-        Unit_Model__c unitmodel = TestUtil.createUnitModel(true, 'unitModelName', '12A', true, unitMake.Id);
-        Customer_Owned_Unit__c customerOwnedUnit = TestUtil.createCustomerOwnedUnit(false, customer.Id, UnitMake.Id, UnitModel.Id, null);
-        customerOwnedUnit.Unit_Type__c = 'Stock';
-        customerOwnedUnit.Status__c = 'Available';
-        insert customerOwnedUnit;
-        
-        Kit_Header__c kitHeader1 = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, false, true, unitMake.Id, unitModel.Id);
-        Kit_Header_Line_Item__c kitHeaderLineItem1 = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader1.Id, 5.0, labourCode.Id, null, 1, 5.0);
-        
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
-        List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
-        
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
-        DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
-        
-        DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
-        optionAndFeeRec1.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
-        optionAndFeeRec1.Qty = 1;
-        optionAndFeeRec1.LabourId = labourCode.Id;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
-        
-        DealWrapper.UnitSectionWrapper dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
-        
-        String dealInfoObjJson = BPUtility.getDecodedString(CustomerOrderCtrl.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
-        DealWrapper.DealInfoWrapper dealInfoObj = (DealWrapper.DealInfoWrapper) System.JSON.deserialize(dealInfoObjJson, DealWrapper.DealInfoWrapper.class);
-        
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
-        Test.stopTest();
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.insertKitHeaderInDealMerchGrid(BPUtility.getEncodedString(kitHeader1.Id), BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
-        dealWrapperObj = (DealWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.class);
-        
-        system.assertEquals(1, dealWrapperObj.DealUnresolvedFulfillmentList.size());
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.resolveFulfillment(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(System.JSON.serialize(dealWrapperObj.DealUnresolvedFulfillmentList[0])),BPUtility.getEncodedString('Invoice'), BPUtility.getEncodedString(customerOwnedUnit.Id)));
-        dealWrapperObj = (DealWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.class);
-        
-        List<Service_Order_Header__c> soList = [Select Id from Service_Order_Header__c where CO_Header__c =: coHeader.Id];
-        
-        
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(kitHeader1.Id),BPUtility.getEncodedString(soList[0].Id),BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(customer.Id)));
-        SOHeaderWrapper soWrapperObj = (SOHeaderWrapper) System.JSON.deserialize(dealWrapperJSON, SOHeaderWrapper.class);
-        
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soWrapperObj.SOList[0].SOGridItems[0].SOKH.SOLIList[0])),BPUtility.getEncodedString(coHeader.Id)));
-        DealWrapper.DealUnresolvedFulfillmentWrapper dealUnresolvedWrapperObj = (DealWrapper.DealUnresolvedFulfillmentWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.DealUnresolvedFulfillmentWrapper.class);
-        
-        system.assertEquals(kitHeader1.Id, dealUnresolvedWrapperObj.KitHeaderId);
-        
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.resolveFulfillment(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(System.JSON.serialize(dealWrapperObj.DealUnresolvedFulfillmentList[0])),BPUtility.getEncodedString('Invoice'), BPUtility.getEncodedString(customerOwnedUnit.Id)));
-        dealWrapperObj = (DealWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.class);
-        
-        system.assertEquals(0, dealWrapperObj.DealUnresolvedFulfillmentList.size());
-        system.assertEquals(4, dealWrapperObj.UnitList[0].DealKitHeaderList.size());
-        
-    }*/
     
     static testMethod void insertDealKitHeaderInGridTest() {
         Price_Level__c defaultPriceLevel = TestUtil.createPriceLevel(true, 'Default Price Level', 'MSRP', 10 , true, true);
@@ -729,19 +414,19 @@ static testMethod void submitClaimTest() {
         Kit_Header_Line_Item__c kitHeaderLineItem1 = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, labourCode.Id, null, 1, 5.0);
         Kit_Header_Line_Item__c kitHeaderLineItem2 = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, null, testPart1.Id, 1, 5.0);
         
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         
         Test.startTest();
         
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
         
         DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
         optionAndFeeRec1.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
         optionAndFeeRec1.Qty = 1;
         optionAndFeeRec1.KitHeaderId = kitHeader.Id;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
         DealWrapper.UnitSectionWrapper dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
         
         system.assertEquals(1, dealUnitInfoObj.DealKitHeaderList.size());
@@ -773,18 +458,18 @@ static testMethod void submitClaimTest() {
         Kit_Header__c kitHeader = TestUtil.createKitHeader(true, false, false, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 0, false, true, unitMake.Id, unitModel.Id);
         Kit_Header_Line_Item__c kitHeaderLineItem1 = TestUtil.createKitHeaderLineItem(true, false, false, KitHeader.Id, 5.0, labourCode.Id, null, 1, 5.0);
         
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         
         Test.startTest();
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
         
         DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
         optionAndFeeRec1.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
         optionAndFeeRec1.Qty = 1;
         optionAndFeeRec1.KitHeaderId = kitHeader.Id;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
         DealWrapper.UnitSectionWrapper dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
         
         system.assertEquals(10, dealUnitInfoObj.DealKitHeaderList[0].Price);
@@ -792,7 +477,7 @@ static testMethod void submitClaimTest() {
         Test.stopTest();
         
         dealUnitInfoObj.DealKitHeaderList[0].Price = 50;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.recalculationOfDealKHLineItems(BPUtility.getEncodedString(System.JSON.serialize(dealUnitInfoObj.DealKitHeaderList[0])),BPUtility.getEncodedString('null')));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.recalculationOfDealKHLineItems(BPUtility.getEncodedString(System.JSON.serialize(dealUnitInfoObj.DealKitHeaderList[0])),BPUtility.getEncodedString('null')));
         dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
         
         system.assertEquals(50, dealUnitInfoObj.DealKitHeaderList[0].Price);
@@ -825,18 +510,18 @@ static testMethod void submitClaimTest() {
         Kit_Header__c kitHeader = TestUtil.createKitHeader(true, false, false, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 0, false, true, unitMake.Id, unitModel.Id);
         Kit_Header_Line_Item__c kitHeaderLineItem1 = TestUtil.createKitHeaderLineItem(true, false, false, KitHeader.Id, 50, null, testPart1.Id, 1, 50);
         
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         
         Test.startTest();
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
         
         DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
         optionAndFeeRec1.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
         optionAndFeeRec1.Qty = 1;
         optionAndFeeRec1.KitHeaderId = kitHeader.Id;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
         DealWrapper.UnitSectionWrapper dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
         
         system.assertEquals(33, dealUnitInfoObj.DealKitHeaderList[0].Price);
@@ -844,7 +529,7 @@ static testMethod void submitClaimTest() {
         Test.stopTest();
         
         dealUnitInfoObj.DealKitHeaderList[0].OptionAndFeeList[0].Price = 100;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.recalculationOfDealKHLineItems(BPUtility.getEncodedString(System.JSON.serialize(dealUnitInfoObj.DealKitHeaderList[0])),BPUtility.getEncodedString(System.JSON.serialize(dealUnitInfoObj.DealKitHeaderList[0].OptionAndFeeList[0]))));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.recalculationOfDealKHLineItems(BPUtility.getEncodedString(System.JSON.serialize(dealUnitInfoObj.DealKitHeaderList[0])),BPUtility.getEncodedString(System.JSON.serialize(dealUnitInfoObj.DealKitHeaderList[0].OptionAndFeeList[0]))));
         dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
         
         system.assertEquals(100, dealUnitInfoObj.DealKitHeaderList[0].Price);
@@ -876,25 +561,25 @@ static testMethod void submitClaimTest() {
         Kit_Header__c kitHeader = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, true, true, unitMake.Id, unitModel.Id);
         Kit_Header_Line_Item__c kitHeaderLineItem1 = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, labourCode.Id, null, 1, 5.0);
         
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         
         Test.startTest();
         
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
         
         DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
         optionAndFeeRec1.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
         optionAndFeeRec1.Qty = 1;
         optionAndFeeRec1.KitHeaderId = kitHeader.Id;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
         DealWrapper.UnitSectionWrapper dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
         
         system.assertEquals(1, dealUnitInfoObj.DealKitHeaderList.size());
         system.assertEquals(1, dealUnitInfoObj.DealKitHeaderList[0].OptionAndFeeList.size());
         
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.removeOptionFeesLineItem(BPUtility.getEncodedString(dealUnitInfoObj.DealItemObj.Id), BPUtility.getEncodedString(dealUnitInfoObj.DealKitHeaderList[0].Id)));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.removeOptionFeesLineItem(BPUtility.getEncodedString(dealUnitInfoObj.DealItemObj.Id), BPUtility.getEncodedString(dealUnitInfoObj.DealKitHeaderList[0].Id)));
         dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
         system.assertEquals(0, dealUnitInfoObj.DealKitHeaderList.size());
     }
@@ -909,13 +594,13 @@ static testMethod void submitClaimTest() {
         CO_Header__c coHeader = TestUtil.createCOHeader(true, null);
         Part__c testPart = TestUtil.createPart(true, '123', vendor.Id, 'Test Part', testCategory.Id, 10, 20, 50, 100, 100);
         COLineItem coliObj1 = new COLineItem(new CO_Line_Item__c(Part__c = testPart.Id));
-        CustomerOrderCtrl.insertCOLineItems(BPUtility.getEncodedString(testPart.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(System.JSON.serialize(new List<COLineItem>{coliObj1})), false, false, BPUtility.getEncodedString(null), BPUtility.getEncodedString(null));
+        CustomerOrderCtrl_V2.insertCOLineItems(BPUtility.getEncodedString(testPart.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(System.JSON.serialize(new List<COLineItem>{coliObj1})), false, false, BPUtility.getEncodedString(null), BPUtility.getEncodedString(null));
         COLineItem coliObj2 = new COLineItem(new CO_Line_Item__c(Part__c = testPart.Id));
-        String suppressedLineItem = BPUtility.getDecodedString(CustomerOrderCtrl.insertCOLineItems(BPUtility.getEncodedString(testPart.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(System.JSON.serialize(new List<COLineItem>{coliObj2})), false, true, BPUtility.getEncodedString(null), BPUtility.getEncodedString(null)));
+        String suppressedLineItem = BPUtility.getDecodedString(CustomerOrderCtrl_V2.insertCOLineItems(BPUtility.getEncodedString(testPart.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(System.JSON.serialize(new List<COLineItem>{coliObj2})), false, true, BPUtility.getEncodedString(null), BPUtility.getEncodedString(null)));
         Test.stopTest();
         system.assertEquals(true, suppressedLineItem.contains('DuplicatePart'));
         
-        suppressedLineItem = CustomerOrderCtrl.insertCOLineItems(BPUtility.getEncodedString(testPart.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(System.JSON.serialize(new List<COLineItem>{coliObj2})), true, false, BPUtility.getEncodedString(null), BPUtility.getEncodedString(null));
+        suppressedLineItem = CustomerOrderCtrl_V2.insertCOLineItems(BPUtility.getEncodedString(testPart.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(System.JSON.serialize(new List<COLineItem>{coliObj2})), true, false, BPUtility.getEncodedString(null), BPUtility.getEncodedString(null));
         List<Suppress_CO_Item__c> suppressItemList = [Select CO_Header__c, Part__c from Suppress_CO_Item__c];
         system.assertEquals(1, suppressItemList.size());
         system.assertEquals(coHeader.Id, suppressItemList[0].CO_Header__c);
@@ -944,27 +629,27 @@ static testMethod void submitClaimTest() {
         CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
         insert coHeader;
         
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         
         Test.startTest();
         
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
         
         DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
         optionAndFeeRec1.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
         optionAndFeeRec1.PartId = testPart1.Id;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.insertOptionAndFeeLineItems(BPUtility.getEncodedString(testPart1.Id), BPUtility.getEncodedString(coHeader.Id),BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1)), false, false));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.insertOptionAndFeeLineItems(BPUtility.getEncodedString(testPart1.Id), BPUtility.getEncodedString(coHeader.Id),BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1)), false, false));
         
         DealWrapper.OptionAndFeeInfo optionAndFeeRec2 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
         optionAndFeeRec2.DealItemId = dealWrapperObj.UnitList[0].DealItemObj.Id;
         optionAndFeeRec2.PartId = testPart1.Id;
-        String suppressdLineItem = BPUtility.getDecodedString(CustomerOrderCtrl.insertOptionAndFeeLineItems(BPUtility.getEncodedString(testPart1.Id), BPUtility.getEncodedString(coHeader.Id),BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec2)), false, true));
+        String suppressdLineItem = BPUtility.getDecodedString(CustomerOrderCtrl_V2.insertOptionAndFeeLineItems(BPUtility.getEncodedString(testPart1.Id), BPUtility.getEncodedString(coHeader.Id),BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec2)), false, true));
         Test.stopTest();
         system.assertEquals(true, suppressdLineItem.contains('DuplicatePart'));
         
-        suppressdLineItem = BPUtility.getDecodedString(CustomerOrderCtrl.insertOptionAndFeeLineItems(BPUtility.getEncodedString(testPart1.Id), BPUtility.getEncodedString(coHeader.Id),BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec2)), true, false));
+        suppressdLineItem = BPUtility.getDecodedString(CustomerOrderCtrl_V2.insertOptionAndFeeLineItems(BPUtility.getEncodedString(testPart1.Id), BPUtility.getEncodedString(coHeader.Id),BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec2)), true, false));
         List<Suppress_CO_Item__c> suppressItemList = [Select CO_Header__c, Part__c from Suppress_CO_Item__c];
         system.assertEquals(1, suppressItemList.size());
         system.assertEquals(coHeader.Id, suppressItemList[0].CO_Header__c);
@@ -993,8 +678,8 @@ static testMethod void submitClaimTest() {
         optionAndFeeRec.Is_Install__c = false;
         optionAndFeeRec.Part__c = part.Id;
         insert optionAndFeeRec;
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = ServiceJobService.createServiceJobWithSpecificFields(coHeader.Id, null, null, true, false);
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         Service_Order_Header__c soHeaderRec = new Service_Order_Header__c(Id = soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id);
@@ -1012,7 +697,7 @@ static testMethod void submitClaimTest() {
         Test.StopTest();
          
          //ayushi start
-        String partJSON = BPUtility.getDecodedString(CustomerOrderCtrl.showHistoryOnSuppressPopup(BPUtility.getEncodedString(part.Id),BPUtility.getEncodedString(coHeader.Id)));
+        String partJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.showHistoryOnSuppressPopup(BPUtility.getEncodedString(part.Id),BPUtility.getEncodedString(coHeader.Id)));
         List<DuplicatePartWrapper> coLineItemList = (List<DuplicatePartWrapper>) System.JSON.deserialize(partJSON, List<DuplicatePartWrapper>.class);
         //ayushi end
         system.assertEquals(4,coLineItemList.size());
@@ -1046,7 +731,7 @@ static testMethod void submitClaimTest() {
         
         Test.startTest();
         
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
         
         DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
@@ -1056,11 +741,11 @@ static testMethod void submitClaimTest() {
         optionAndFeeRec1.IsInstall = false; 
         optionAndFeeRec1.SalesTaxPercentage = 0;
         optionAndFeeRec1.Price = 0;
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
-        String dealInfoObjJson = BPUtility.getDecodedString(CustomerOrderCtrl.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
+        String dealInfoObjJson = BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
         DealWrapper.DealInfoWrapper dealInfoObj = (DealWrapper.DealInfoWrapper) System.JSON.deserialize(dealInfoObjJson, DealWrapper.DealInfoWrapper.class);
         
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
         DealWrapper.DealFulfillmentSectionWrapper DealFulfillmentSectionObj = (DealWrapper.DealFulfillmentSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.DealFulfillmentSectionWrapper.class);
         
         system.assertEquals(1, DealFulfillmentSectionObj.DealMerchandiseList.size());
@@ -1069,7 +754,8 @@ static testMethod void submitClaimTest() {
         Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, true, true, KitHeader.Id, 5.0, null, testPart1.Id, 1, 5.0);
         Test.stopTest();
         
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.insertKitHeaderInDealMerchGrid(BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
+        CustomerOrderWrapper.LineItemWrapper lineObj = new CustomerOrderWrapper.LineItemWrapper(KitHeader.Id, null);
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.insertKitHeaderInDealMerchGrid(BPUtility.getEncodedString(System.JSON.serialize(lineObj)), BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
         dealWrapperObj = (DealWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.class);
         
         system.assertEquals(1, dealWrapperObj.DealUnresolvedFulfillmentList.size());
@@ -1099,12 +785,12 @@ static testMethod void submitClaimTest() {
         
         CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
         insert coHeader;
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
         
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         Test.startTest();
         
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
         
         DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
@@ -1115,17 +801,17 @@ static testMethod void submitClaimTest() {
         optionAndFeeRec1.SalesTaxPercentage = 0;
         optionAndFeeRec1.Price = 0;
         
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
         DealWrapper.UnitSectionWrapper dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
         system.assertEquals(1, dealUnitInfoObj.DealKitHeaderList.size());
         system.assertEquals(1, dealUnitInfoObj.DealKitHeaderList[0].OptionAndFeeList.size());
-        BPUtility.getDecodedString(CustomerOrderCtrl.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
+        BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
         DealWrapper.DealFulfillmentSectionWrapper DealFulfillmentSectionObj = (DealWrapper.DealFulfillmentSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.DealFulfillmentSectionWrapper.class);
         Test.stopTest();        
         system.assertEquals(1, DealFulfillmentSectionObj.DealMerchandiseList.size());
         system.assertEquals(3, DealFulfillmentSectionObj.DealMerchandiseList[0].COLIList[0].Qty);// part qty
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.removeLineItemsInMerchGrid(BPUtility.getEncodedString(DealFulfillmentSectionObj.DealMerchandiseList[0].COLIList[0].CoLineItemId), BPUtility.getEncodedString(coHeader.Id)));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.deleteCOLineItem(BPUtility.getEncodedString(DealFulfillmentSectionObj.DealMerchandiseList[0].COLIList[0].CoLineItemId), BPUtility.getEncodedString(coHeader.Id)));
         dealWrapperObj = (DealWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.class);
         
         system.assertEquals(1, dealWrapperObj.DealUnresolvedFulfillmentList.size());
@@ -1159,7 +845,7 @@ static testMethod void submitClaimTest() {
         
         List<Deal__c> dealList = new List<Deal__c>{dealRec};
         
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
         Test.startTest();
         DealWrapper.OptionAndFeeInfo optionAndFeeRec1 = new DealWrapper.OptionAndFeeInfo(new Option_Fee__c());
@@ -1170,10 +856,10 @@ static testMethod void submitClaimTest() {
         optionAndFeeRec1.SalesTaxPercentage = 0;
         optionAndFeeRec1.Price = 0;
         
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
         DealWrapper.UnitSectionWrapper dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
-        BPUtility.getDecodedString(CustomerOrderCtrl.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
+        BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
         DealWrapper.DealFulfillmentSectionWrapper DealFulfillmentSectionObj = (DealWrapper.DealFulfillmentSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.DealFulfillmentSectionWrapper.class);
         system.assertEquals(1, DealFulfillmentSectionObj.DealMerchandiseList.size());
         Test.stopTest();
@@ -1185,14 +871,15 @@ static testMethod void submitClaimTest() {
     	Kit_Header__c kitHeader = TestUtil.createKitHeader(true, true, true, 'Cause', 'Code', 'Concern', 'Correction', 'Description', 10.0, false, false, unitmakeId, unitModelId);// service kit = false
         Kit_Header_Line_Item__c kitHeaderLineItem = TestUtil.createKitHeaderLineItem(true, false, false, KitHeader.Id, 5.0, null, testPart2Id, 3, 5.0); 
 
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.insertKitHeaderInDealMerchGrid(BPUtility.getEncodedString(kitHeader.Id), BPUtility.getEncodedString(dealId), BPUtility.getEncodedString(coHeaderId)));
+        CustomerOrderWrapper.LineItemWrapper lineObj = new CustomerOrderWrapper.LineItemWrapper(kitHeader.Id, null);
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.insertKitHeaderInDealMerchGrid(BPUtility.getEncodedString(System.JSON.serialize(lineObj)), BPUtility.getEncodedString(dealId), BPUtility.getEncodedString(coHeaderId)));
         DealWrapper dealWrapperObj = (DealWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.class);
         
         
         system.assertEquals(1, dealWrapperObj.DealUnresolvedFulfillmentList.size());
         system.assertEquals('Add to Deal', dealWrapperObj.DealUnresolvedFulfillmentList[0].ActionRequired);
         
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.removeLineItemsInMerchGrid(BPUtility.getEncodedString(dealWrapperObj.DealUnresolvedFulfillmentList[0].COKitHeaderId), BPUtility.getEncodedString(coHeaderId)));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.deleteCOLineItem(BPUtility.getEncodedString(dealWrapperObj.DealUnresolvedFulfillmentList[0].COKitHeaderId), BPUtility.getEncodedString(coHeaderId)));
         dealWrapperObj = (DealWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.class);
         system.assertEquals(0, dealWrapperObj.DealUnresolvedFulfillmentList.size());// No chk for action req since no line item left in unresolved fulFillmentSection
     }
@@ -1220,13 +907,13 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
         
         CO_Header__c coHeader = new CO_Header__c(CO_Type__c='Customer', Selling_Group__c='Unit Deal', Customer__c=customer.Id);
         insert coHeader;
-        CustomerOrderCtrl.createDeal(BPUtility.getEncodedString(coHeader.Id));
+        CustomerOrderCtrl_V2.createDeal(BPUtility.getEncodedString(coHeader.Id));
         
         List<Deal__c> dealList = [Select id from Deal__c where CO_Header__c = :coHeader.Id];
         
         //Test.startTest();
         
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.addUnitToDeal(BPUtility.getEncodedString(null),BPUtility.getEncodedString(customerOwnedUnit.Id),BPUtility.getEncodedString(dealList[0].Id)));
         //Test.startTest();
         DealWrapper dealWrapperObj = DealWrapper.parse(dealWrapperJSON);
         
@@ -1238,12 +925,12 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
         optionAndFeeRec1.SalesTaxPercentage = 0;
         optionAndFeeRec1.Price = 0;
         Test.startTest();
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveOptionFeesLineItem(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString(dealWrapperObj.UnitList[0].DealItemObj.Id),BPUtility.getEncodedString(System.JSON.serialize(optionAndFeeRec1))));
         DealWrapper.UnitSectionWrapper dealUnitInfoObj = (DealWrapper.UnitSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.UnitSectionWrapper.class);
         system.assertEquals(1, dealUnitInfoObj.DealKitHeaderList.size());
         system.assertEquals(1, dealUnitInfoObj.DealKitHeaderList[0].OptionAndFeeList.size());
-        BPUtility.getDecodedString(CustomerOrderCtrl.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
-        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
+        BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateDealStatus(BPUtility.getEncodedString(dealList[0].Id),BPUtility.getEncodedString('In Progress')));
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.createDealMerchAndServiceSetion(BPUtility.getEncodedString(dealList[0].Id), BPUtility.getEncodedString(coHeader.Id)));
         DealWrapper.DealFulfillmentSectionWrapper DealFulfillmentSectionObj = (DealWrapper.DealFulfillmentSectionWrapper) System.JSON.deserialize(dealWrapperJSON, DealWrapper.DealFulfillmentSectionWrapper.class);
         List<Service_Order_Header__c> soList = [Select Id, (Select Id, Labour_Code__c, Qty_Needed__c, Kit_Price__c from Service_Order_Line_Items__r) from Service_Order_Header__c where CO_Header__c = :coHeader.Id];
         Test.stopTest();
@@ -1257,10 +944,11 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
     @future
     static void createUnresolvedFulfillmentForRemoveKitInSOTest_future(String coHeaderId)
     {   
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('soHeader')));
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         
-        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl.removeLineItems(BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOGridItems[0].SOKH.SOLIList[0].SOKitHeaderId), BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id)) );
+        String dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.removeLineItems(BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOGridItems[0].SOKH.SOLIList[0].SOKitHeaderId), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id)) );
+        dealWrapperJSON = BPUtility.getDecodedString(CustomerOrderCtrl_V2.getDealDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString('dealUnresolvedFulfillmentSection')));
         
         List<DealWrapper.DealUnresolvedFulfillmentWrapper> unresolvedFulfillmentList = (List<DealWrapper.DealUnresolvedFulfillmentWrapper>) System.JSON.deserialize(dealWrapperJSON, List<DealWrapper.DealUnresolvedFulfillmentWrapper>.class);
         system.assertEquals(1,unresolvedFulfillmentList.size());
@@ -1309,21 +997,21 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
     @future
 	private static void salesTaxCalculationForThirdPartyAsyncHandling(String transactionTypeId, String vendorId, String salestaxItemId, String partId, String customerId) {
 		CO_Header__c coHeader = TestUtil.createCOHeader(true, customerId);
-		String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = ServiceJobService.createServiceJobWithSpecificFields(coHeader.Id, null, null, true, false);
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         system.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
         soHeaderDetailsObj.SOList[0].SOHeaderInfo.TransactionTypeId = transactionTypeId ;
         soHeaderDetailsObj.SOList[0].SOHeaderInfo.ProviderId = vendorId;
         String jsonStr = System.Json.serialize(soHeaderDetailsObj.SOList[0].SOHeaderInfo);
         
-        String soHeaderInfo = BPUtility.getDecodedString(CustomerOrderCtrl.saveSOHeaderInfo(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(jsonStr)));
+        String soHeaderInfo = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveSOHeaderInfo(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(jsonStr)));
         
         Tax_Exemption__c taxExemption = Testutil.createSOTaxExemption(true, soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id, salestaxItemId);
         
         String lineitems = BPUtility.getDecodedString(CustomerOrderCtrl.addLineItems(BPUtility.getEncodedString(partId), BPUtility.getEncodedString(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id), BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(customerId)));
         
-        String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
+        String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
         soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0].QtyNeeded = 1.00 ;
         //system.assert(false, soHeaderDetailsObj1 );
@@ -1332,9 +1020,9 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
         COLineItemTriggerHelper.isTriggerExecute = false;
         COTriggerHelper.isTriggerExecute = false;
         
-        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeader.Id)));
+        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeader.Id)));
         
-        String SOHeaderDetails2 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
+        String SOHeaderDetails2 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj3 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails2, SOHeaderWrapper.class);
 //        system.assertEquals(soHeaderDetailsObj3.SOList[0].SOGridItems[0].SOKH.SOLIList[0].KitPrice, 55.93);
 	}
@@ -1371,15 +1059,15 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
         
         CO_Header__c coHeader = TestUtil.createCOHeader(true, customer.Id);
         
-        String soHeader = BPUtility.getDecodedString(CustomerOrderCtrl.createSOHeader(BPUtility.getEncodedString(coHeader.Id)));
-        String SOHeaderDetails = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
+        String soHeader = ServiceJobService.createServiceJobWithSpecificFields(coHeader.Id, null, null, true, false);
+        String SOHeaderDetails = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString('soHeader')));
         SOHeaderWrapper soHeaderDetailsObj = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails, SOHeaderWrapper.class);
         system.assertEquals(soHeaderDetailsObj.SOList[0].SOHeaderInfo.Name, 'Service Job 1');
         soHeaderDetailsObj.SOList[0].SOHeaderInfo.TransactionTypeId = transactionType.Id ;
         soHeaderDetailsObj.SOList[0].SOHeaderInfo.ProviderId = vendor.Id;
         String jsonStr = System.Json.serialize(soHeaderDetailsObj.SOList[0].SOHeaderInfo);
         
-        String soHeaderInfo = BPUtility.getDecodedString(CustomerOrderCtrl.saveSOHeaderInfo(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(jsonStr)));
+        String soHeaderInfo = BPUtility.getDecodedString(CustomerOrderCtrl_V2.saveSOHeaderInfo(BPUtility.getEncodedString(coHeader.Id), BPUtility.getEncodedString(jsonStr)));
         
         Tax_Exemption__c taxExemption = Testutil.createSOTaxExemption(true, soHeaderDetailsObj.SOList[0].SOHeaderInfo.Id, salestaxItem.Id);
         
@@ -1391,7 +1079,7 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
     
     @future
 	private static void salesTaxCalculationForThirdPartyATestAsyncHandling(String coHeaderId) {
-		String SOHeaderDetails1 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
+		String SOHeaderDetails1 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj1 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails1, SOHeaderWrapper.class);
         soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0].QtyNeeded = 1.00 ;
         //system.assert(false, soHeaderDetailsObj1 );
@@ -1400,9 +1088,9 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
         COLineItemTriggerHelper.isTriggerExecute = false;
         COTriggerHelper.isTriggerExecute = false;
         
-        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeaderId)));
+        String updatedSOLI = BPUtility.getDecodedString(CustomerOrderCtrl_V2.updateSOLineItems(BPUtility.getEncodedString(System.JSON.serialize(soHeaderDetailsObj1.SOList[0].SOGridItems[0].SOKH.SOLIList[0])), BPUtility.getEncodedString(coHeaderId)));
         
-        String SOHeaderDetails2 = BPUtility.getDecodedString(CustomerOrderCtrl.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
+        String SOHeaderDetails2 = BPUtility.getDecodedString(ServiceJobService.getSOHeaderDetails(BPUtility.getEncodedString(coHeaderId), BPUtility.getEncodedString(null)));
         SOHeaderWrapper soHeaderDetailsObj3 = (SOHeaderWrapper) System.JSON.deserialize(SOHeaderDetails2, SOHeaderWrapper.class);
         system.assertEquals(soHeaderDetailsObj3.SOList[0].SOGridItems[0].SOKH.SOLIList[0].KitPrice, 51.27);
 	}
@@ -1447,7 +1135,7 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
         CO_Deposit__c coDeposit = TestDataFactory.createCODeposit(coHeader.Id, cashDrawer.Id, 'Store Credit', 100);
 
         Service_Order_Header__c soHeader = TestDataFactory.createSOHeader(coHeader.Id);
-        soHeader.Work_Status__c = 'Complete';
+        soHeader.SO_Status_Ref__c = ServiceJobUtil.getSOStatusConfigByName(ServiceJobUtil.JOB_COMPLETE).Id;
         update soHeader;
 
         Unit_Make__c unitMakeRec = TestDataFactory.createUnitMake('Test make', 'TES', true);
@@ -1490,7 +1178,7 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
         update coInvoicePaymentRec;
 
         Service_Order_Header__c soHeader = TestDataFactory.createSOHeader(coHeader.Id);
-        soHeader.Work_Status__c = 'Complete';
+        soHeader.SO_Status_Ref__c = ServiceJobUtil.getSOStatusConfigByName(ServiceJobUtil.JOB_COMPLETE).Id;
         update soHeader;
 
         Unit_Make__c unitMakeRec = TestDataFactory.createUnitMake('Test make', 'TES', true);
@@ -1518,6 +1206,13 @@ static testMethod void createUnresolvedFulfillmentForRemoveKitInSOTest() {
         Map<String, Set<String>> validationErrorToErrorTextSetMap = (Map<String, Set<String>>)JSON.deserialize(BPUtility.getDecodedString(response), Map<String, Set<String>>.class);
         system.assertEquals(6, validationErrorToErrorTextSetMap.get('Error').size());
     }  
+    
+    @isTest 
+    private static void testGetSOJobStatus() {
+        BPScriptManager.executeServiceJobStatusUpdateBatch();
+        List<String> jobStatusList = ServiceJobUtil.getActiveSOStatusList();
+        system.assertEquals(14, jobStatusList.size());
+    }
     public class VendorPaginationSorting {
         public Integer ChangesCount;
         public Integer CurrentPage;

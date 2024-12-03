@@ -1,0 +1,138 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0" controller="GlobalController" cache="true" expires="{!cacheExpiresIn}">
+	 <apex:includeScript value="{!JSENCODE(Assests)}/Js/angular-drag-and-drop-lists.min.js" /> 
+    <div class="no-permission-container" ng-if="!F_WPM.isWebsiteAccessible()">
+		<span>{{'Not_Permitted_To_View_Website'| translate }}</span>
+	</div>
+	<div ng-if="F_WPM.isWebsiteAccessible()" >
+		<div class="data-container" id="scrollContainer" when-scrolled='F_WPM.loadProductMoreData()' ng-class="{'c-adjust-height': F_WPM.countReviewAndPublish()}">
+			<bp-ng-header header-payload="M_WPM.headerJSON" refresh-icon-action="F_WPM.pollProductsFromWebsite()"
+				first-btn-action="F_WPM.showFullPageModalWindow('website-product-full-page-modal', 'create-website-product-modal')"
+				second-button-action="F_WPM.showFullPageModalWindow('website-product-full-page-modal', 'create-website-variants-modal')" first-btn-disable="F_WPM.isControlDisabled()" second-btn-disable="F_WPM.isControlDisabled()"></bp-ng-header>
+			<div ng-if="M_WPM.isNoProductFoundOnLoad" class="no-product-container">
+				<span>Looks like you don't have any products to manage. </span>
+				<span>
+					<a ng-click="F_WPM.showFullPageModalWindow('website-product-full-page-modal', 'create-website-product-modal')">Create products </a>,
+					<a ng-click="F_WPM.showFullPageModalWindow('website-product-full-page-modal', 'create-website-variants-modal')">create product variants</a> or 
+					<a ng-click="F_WPM.pollProductsFromWebsite()">sync products from your website</a> to get started. 
+				</span> 
+			</div>
+			<div ng-if="!M_WPM.isNoProductFoundOnLoad">
+				<c:WebsiteProductManagementFilterSection />
+				<c:BPGrid />
+				
+			</div>
+				<bp-ng-modal-window id-val="ignoreModalWindow" mobal-window-payload="M_WPM.ModalWindowPayload" cancel-btn-action="F_WPM.hideModalWindow('ignoreModalWindow',M_WPM.ModalWindowPayload.primaryBtn.isLoading);" primary-btn-action="F_WPM.deleteAction('ignoreModalWindow')">
+					<cite class="delete-info">
+						Ignore will delete the variant from shopify as well as Blackpurl. This action is not reversible.
+					</cite>
+				</bp-ng-modal-window>
+				<bp-ng-modal-window id-val="deleteModalWindow" mobal-window-payload="M_WPM.ModalWindowPayload" cancel-btn-action="F_WPM.hideModalWindow('deleteModalWindow',M_WPM.ModalWindowPayload.primaryBtn.isLoading);" primary-btn-action="F_WPM.deleteAction('deleteModalWindow')">
+					<cite class="delete-info">
+						This product will be deleted from your website. This action is not reversible.
+					</cite>
+				</bp-ng-modal-window>
+				<bp-ng-modal-window id-val="UnSavedData" mobal-window-payload="M_WPM.ModalWindowPayload" cancel-btn-action="F_WPM.hideModalWindow('UnSavedData');" primary-btn-action="F_WPM.hideModalWindow('UnSavedData');F_WPM.unSavedChangesModalReviewAction(M_WPM.ModalWindowPayload.actionName);" secondary-btn-action = "F_WPM.setDefaultState(true);">
+					<cite class="delete-info">
+						Do you want to save or discard these changes?
+					</cite>
+				</bp-ng-modal-window>
+
+				<bp-ng-modal-window id-val="poolingModalWindow" mobal-window-payload="M_WPM.ModalWindowPayload" cancel-btn-action="F_WPM.hideModalWindow('poolingModalWindow');" primary-btn-action="F_WPM.pollProducts()">
+					<cite class="delete-info">
+						<p class="MB20">
+							Polling your website for new products can take quite some time to complete, depending on the number of products you have.
+						</p>
+						<p class="MB20">
+							You will not be able to create or manage your website products from Blackpurl until the poll completes.
+						</p>
+						<p>
+							Do you want to proceed?
+						</p>
+						
+					</cite>
+				</bp-ng-modal-window>
+                <bp-ng-modal-window id-val="AddEditOptionModalWindow" mobal-window-payload="M_WPM.ModalWindowPayload" cancel-btn-action="F_WPM.hideModalWindow('AddEditOptionModalWindow');F_WPM.resetOptionJSON();" 
+					primary-btn-action="F_WPM.saveVariantOptions()">
+					<div class="add-edit-option-modal-container">
+					<div class="c-sub-heading banner-container cyan-banner MB43" ng-if="F_WPM.getVariantOptionsKeys().length == 3" >
+						<i class="bp-icons bp-font-18 bp-cyan-font">info</i>
+						<div>
+							<p>You have reached the maximum number of allowed options.</p>
+							<span>You can only edit or delete an existing option.</span>
+						</div>
+					</div>
+					<ul ng-class="{'c-border-top': F_WPM.getVariantOptionsKeys().length > 0}">
+                            <li ng-repeat="optionItem in M_WPM.optionsJson  track by $index" ng-init = "rowIndex = $index" 
+                             >
+								<div class="left-container">
+                                    <div class="left_container_label" dnd-list="optionItem"
+                                    dnd-dragover="F_WPM.dragOverCallBack(event, $index, type, dropEffect, external, callback)"
+                                    
+                                    dnd-dragstart="F_WPM.dragStartCallBack(event,$index,F_WPM.getItemKeys(optionItem))"
+                                    dnd-draggable="F_WPM.getItemKeys(optionItem)" dnd-effect-allowed="move" dnd-selected="M_WPM.selected = F_WPM.getItemKeys(optionItem)"  ng-class="{'selected': M_WPM.selected === F_WPM.getItemKeys(optionItem)}"
+                            
+                                    dnd-drop="F_WPM.dropCallBack(event, $index, F_WPM.getItemKeys(optionItem), external, type)">
+                                        <i class="bp-icons bp-font-13 bp-light-grey-font c-drag-icon ML-2">drag</i>
+                                        <label>  {{F_WPM.getItemKeys(optionItem)}}</label>
+			</div>
+                                    <div class="left-container_product_values">
+                                        <ul ng-repeat="Recitem in optionItem track by $index" >
+                                            <li  ng-repeat="item in Recitem track by $index" ng-init = "itemIndex = $index"
+                                                dnd-draggable="item"
+                                                dnd-drop="F_WPM.dropCallBackColumn(event, $index, item, external, rowIndex)"
+                                                dnd-list="item" 
+                                                dnd-effect-allowed="move"
+                                                dnd-dragstart="F_WPM.dragStartCallBack(event,$index,item)"
+                                                dnd-selected="M_WPM.selected = item"
+                                                ng-class="{'selected': M_WPM.selected === item}">
+                                               <i class="bp-icons bp-font-13 bp-light-grey-font bp-lh-25 c-drag-icon ML-2 MT-2">drag</i> {{item}}
+                                            </li>
+                                        </ul>
+                                    </div>
+            				</div>
+								<div class="right-container">
+                                    <bp-ng-button name=""  tool-tip-title="Edit" font-name="edit" font-class="bp-font-16 bp-dark-grey1-font" class-value="c-icon-btn" action="F_WPM.editVariantOption(F_WPM.getItemKeys(optionItem), optionItem,$index)" disabled-value="" is-image-include="true" />
+                                    <bp-ng-button name=""  tool-tip-title="Delete" font-name="delete" font-class="bp-font-16 bp-dark-grey1-font" class-value="c-icon-btn" action="F_WPM.deleteVariantOption(F_WPM.getItemKeys(optionItem), optionItem,$index)" disabled-value="" is-image-include="true" />
+		</div>
+							</li>
+						</ul>
+						<div class="c-form-field-container">
+							<div class="c-form-field">
+								<label>Option name</label>
+								<input type="text" ng-model="M_WPM.variantOptionKey" placeholder="Ex: Size" class="c-input-search c-secondary-input" 
+									ng-disabled="F_WPM.getVariantOptionsKeys().length >= 3" />
+							</div>
+							<div class="c-form-field">
+								<label>Values (Separate each value by a comma)</label>
+								<input type="text" ng-model="M_WPM.variantOptionValue" placeholder="Ex: S,M,L" class="c-input-search c-secondary-input" 
+									ng-disabled="F_WPM.getVariantOptionsKeys().length >= 3" />
+							</div>
+						</div>
+						<bp-ng-button disabled-value="F_WPM.getVariantOptionsKeys().length >= 3 || (!M_WPM.variantOptionKey || !M_WPM.variantOptionValue)" name="Add option" class-value="c-action-btn c-btn" 
+							action="F_WPM.addUpdateVariantOptions()" font-name = "addSquare" font-class="bp-font-16 bp-dark-blue-font"></bp-ng-button>
+					</div>
+				</bp-ng-modal-window>
+			</div>
+		<bp-ng-footer footer-payload="M_WPM.footerPayload" second-button-action = "F_WPM.setDefaultState();" first-btn-action="F_WPM.showFullPageModalWindow('website-product-full-page-modal', 'Review-and-publish-changes')" ng-if = "F_WPM.countReviewAndPublish()"></bp-ng-footer>
+		<bp-ng-footer class-value="c-modal-footer" footer-payload="M_WPM.createProductFooterPayload" second-button-action="F_WPM.setDefaultState();" 
+   			first-btn-action="F_WPM.modalFooterFirstBtnAction()" 
+   			ng-if="F_WPM.showCreatePrductFooter()"></bp-ng-footer>
+		<full-page-modal id-value="website-product-full-page-modal" close-action="F_WPM.hideFullPageModalWindow('website-product-full-page-modal')" 
+			class-value="bp-full-page-modal wpm-full-page-modal-window-container {{(F_WPM.showCreatePrductFooter() ? 'c-adjust-height' : '')}}" 
+			ng-class="{'create-website-product-modal': M_WPM.visibleFullPageModalName == 'create-website-product-modal' 
+						|| M_WPM.visibleFullPageModalName == 'create-website-variants-modal'}"
+			scroll-action="F_WPM.searchPartWithFilters(M_WPM.createProductPartList.length, 20, true)">
+			<div class="c-full-page-modal-container" ng-if="M_WPM.visibleFullPageModalName == 'create-website-product-modal'" 
+				ng-class="{'c-mobile-view-container': M_WPM.isCreateProductFromSelectedCLicked}">
+				<c:WPMCreateProduct />
+			</div>
+			<div class="c-full-page-modal-container" ng-if="M_WPM.visibleFullPageModalName == 'Review-and-publish-changes'">
+				<c:WPMReviewAndPublish />
+			</div>
+			<div class="c-full-page-modal-container" ng-if="M_WPM.visibleFullPageModalName == 'create-website-variants-modal'">
+				<c:WPMCreateVariants />
+			</div>
+		</full-page-modal>
+	</div>
+	<a ng-click="F_WPM.scrollToDiv()" id="scroll" style="display: none;"><span class="top-container"><i class="bp-icons bp-font-13 bp-fw-100 MR3">arrowTop</i><span class="scroll-top-text">Top</span></span></a>
+</apex:page>

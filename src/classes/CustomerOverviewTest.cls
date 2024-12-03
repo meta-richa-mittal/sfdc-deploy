@@ -21,7 +21,10 @@
  */
 @isTest
 private class CustomerOverviewTest {
-	
+	@testSetup
+    private static void setupTestData() {
+		TestDataFactory.disableFLSChecks();
+   }
 	/**
      * Name: CustomerOverviewFunctionalTest
      * Desc: Testing to check the opertaions on customer View Page

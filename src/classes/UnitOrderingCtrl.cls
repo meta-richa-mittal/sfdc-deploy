@@ -58,18 +58,18 @@ global without sharing class UnitOrderingCtrl {
     }
     
     @RemoteAction
-    global static String getOrderHistoryList(String vendorId){
-        vendorId = BPUtility.getDecodedString(vendorId);
-        List<UnitOrderingWrapper.UnitOrderWrapper> unitList = UnitOrderingService.getOrderHistoryList(vendorId);
+    global static String getOrderHistoryList(String filterJson){
+        filterJson = BPUtility.getDecodedString(filterJson);
+        List<UnitOrderingWrapper.UnitOrderWrapper> unitList = UnitOrderingService.getOrderHistoryList(filterJson, null);
         return BPUtility.getEncodedString(system.JSON.serialize(unitList));
     }
     
     @RemoteAction
-    global static String applySortingOnOrderHistoryList(String vendorId, String jSONString){
-        vendorId = BPUtility.getDecodedString(vendorId);
+    global static String applySortingOnOrderHistoryList(String filterJson, String jSONString){
+        filterJson = BPUtility.getDecodedString(filterJson);
         jSONString = BPUtility.getDecodedString(jSONString);
         
-        List<UnitOrderingWrapper.UnitOrderWrapper> unitList = UnitOrderingService.getOrderHistoryList(vendorId, jSONString);
+        List<UnitOrderingWrapper.UnitOrderWrapper> unitList = UnitOrderingService.getOrderHistoryList(filterJson, jSONString);
         return BPUtility.getEncodedString(system.JSON.serialize(unitList));
     }
     
@@ -126,11 +126,16 @@ global without sharing class UnitOrderingCtrl {
         values = values.substring(0, values.length()-2);
         values += ' )';
         
-        String response = QuickBookQueryService.validateUniqueEntityValue('Bill', 'DocNumber', values, 'IN');
-        if(QuickBookQueryService.refreshToken !=  null) {
-			QBUtil.saveRefreshToken(QuickBookQueryService.refreshToken, QuickBookQueryService.refreshTokenExpiresIn);
-		}
-        return BPUtility.getEncodedString(response);
+        List<IFW_IntegrationConfig__c> integrationConfigList = IFW_SOQLUtil.getIntegrationConfigWithItems(QBUtil.QUICKBOOKS_ONLINE, null);
+        if(integrationConfigList == null || integrationConfigList.isEmpty()) throw new BlackpurlException('QB config is not defind.');
+        
+        List<String> filterConditions = new List<String>{'DocNumber IN ' + values};
+        try{
+            QBQueryResponseWrapper.QBResponseWrapper qbResponse = QBCalloutManager.getDataAndUpdateRecords(IntegrationUtility.BILL, filterConditions, integrationConfigList[0]);  
+            return BPUtility.getEncodedString(QBUtil.isInvoiceNumberDuplicate(IntegrationUtility.BILL, 'IN', qbResponse));
+        } catch (Exception e) {
+            return BPUtility.getEncodedString(System.JSON.serialize(new ResponseWrapper('error', 'Error while validating unit invoice number from QB. Please contact your administrator.')));
+        }      
     }
     
     /**
@@ -171,11 +176,10 @@ global without sharing class UnitOrderingCtrl {
 	@RemoteAction 
     global static String getVehicleSpecification(String vin) {
     	try {
-            return BPUtility.getEncodedString(BRPVehicleIntegration.getVehicleSpecification(BPUtility.getDecodedString(vin)));
+            return BPUtility.getEncodedString(BRPAPIManager.getVehicleSpecification(BPUtility.getDecodedString(vin)));
         } catch(Exception e) {
             throw new BlackPurlException(BlackPurlException.getErrorMessage(e.getMessage(), e.getStackTraceString()));
         }
-        return 'success';
     }
 
     @remoteAction
@@ -188,7 +192,16 @@ global without sharing class UnitOrderingCtrl {
     	return BPUtility.getEncodedString(UnitPricingService.getDefaultFactoryOptionsByRecId(BPUtility.getDecodedString(unitId), 
     											BPUtility.getDecodedString(makeId), BPUtility.getDecodedString(modelId), BPUtility.getDecodedString(subModelId)));
     }
-
+	
+	//To create bulk specified number of units that are replica of passed unitId
+	@RemoteAction
+    global static String createBulkUnits(String unitId, Integer numberOfUnits) {
+        return BPUtility.getEncodedString(
+            system.JSON.serialize(
+                UnitOrderingService.createBulkUnits(BPUtility.getDecodedString(unitId), numberOfUnits)
+            )
+        );
+    }
     /**
      * Name: getAllPurchaseTaxList
      * Desc: Method to get all active purchase tax list 
@@ -210,14 +223,37 @@ global without sharing class UnitOrderingCtrl {
     global static String setUnitsPurchaseTax(String unitIdSetJson, String purchaseTaxId) {
         return BPUtility.getEncodedString(system.JSON.serialize(UnitOrderingService.setUnitsPurchaseTax((Set<String>) JSON.deserialize(BPUtility.getDecodedString(unitIdSetJson), Set<String>.class), BPUtility.getDecodedString(purchaseTaxId))));
     }
-	
-	//To create bulk specified number of units that are replica of passed unitId
-	@RemoteAction
-    global static String createBulkUnits(String unitId, Integer numberOfUnits) {
-        return BPUtility.getEncodedString(
-            system.JSON.serialize(
-                UnitOrderingService.createBulkUnits(BPUtility.getDecodedString(unitId), numberOfUnits)
-            )
-        );
+    
+    /**
+     * Name: getRequiredUnitListForOrder
+     * Desc: get required status ordered units
+     * @param: 
+     * @return: String - List of unit Wrapper
+    **/
+    @RemoteAction
+    global static String getRequiredUnitListForOrder() {
+        return BPUtility.getEncodedString(system.JSON.serialize(UnitOrderingService.getRequiredUnitListForOrder()));
+    }
+
+    /**
+     * Name: removeOrderUnitExistOnCO
+     * Desc: Change status of order unit from On Order to Required
+     * @param: 
+     * @return: String - Sucess/ Error
+    **/
+    @RemoteAction
+    global static String removeOrderUnitExistOnCO(String unitId, String vendorId){
+        UnitOrderingService.removeOrderUnitExistOnCO(BPUtility.getDecodedString(unitId));
+        return getActiveOrderList(vendorId); 
+    }
+
+    @RemoteAction
+    public static String getAllStampDutyList() {
+        return BPUtility.getEncodedString(System.JSON.serialize(StampDutyService.getAllStampDutyList()));
+    }
+
+    @RemoteAction
+    global static String getStampDutyCalcMethodPickListValues(){
+        return BPUtility.getEncodedString(Utility.getPicklistValues('Stamp_duty_calculators__c.Calculation_method__c'));
     }
 }

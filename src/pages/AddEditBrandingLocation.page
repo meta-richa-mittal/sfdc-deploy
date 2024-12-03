@@ -1,0 +1,299 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0"
+    controller="GlobalController">
+    <div class="gridLoadingDiv" style="position: fixed; top: 37%; left: 42%;" ng-show="M_AddEditBL.isLoading">
+                <c:BPLoading />
+    </div>
+     <div class="content bp-wrapper-container">
+     	<div class="bp-subHeader bp-techScheduler-subHeader">
+            <div class="row container bp-top-header bp-tech-navigation-bar PB0">
+                <section class="bp-breadcrumb-container">
+                    <nav class="bp-breadcrumb-nav">
+                        <ul>
+                            <li><a ui-sref="homePage">Home</a></li>
+                            <li> <a ui-sref="UserSetting">{{'System_Settings' | translate}}</a></li>
+                            <li> <a ui-sref="BrandingLocation">Branding management</a></li>
+                            <li ng-if="!M_AddEditBL.BrandingLocationId"> <a class="bp-breadcrumb-active" >New branding location</a></li>
+                            <li ng-if="M_AddEditBL.BrandingLocationId"> <a class="bp-breadcrumb-active" >{{M_AddEditBL.defaultBlList.BusinessLocationName}}</a></li>
+                        </ul>
+                    </nav>
+                </section>
+                <h1  class="col-xs-6  bp-hasEyebrow M0 P0">New branding location</h1>
+            </div>
+        </div>
+     	<div class = "pageContent">
+        	<div class="container add-edit-branding-location">
+        		<div class="left-container">
+        			<div class="bp-form header-text">
+        				<label>Business details</label>
+        			</div>
+        			<div class="bp-form">
+        				<label>Business/Location name</label>
+        				<input type="text" ng-model = "M_AddEditBL.defaultBlList.BusinessLocationName" 
+        				ng-class="{'bp-redborder' : M_AddEditBL.BLValidation['BusinessLocationName']['isError'] == true}" />
+        			</div>
+        			<div class="bp-form">
+        				<label>Business phone</label>
+        				<input type="text" ng-model = "M_AddEditBL.defaultBlList.BusinessPhone" 
+        				ng-class="{'bp-redborder' : M_AddEditBL.BLValidation['BusinessPhone']['isError'] == true}"/>
+        			</div>
+        			<div class="bp-form">
+        				<label>Business email address</label>
+        				<input type="text" ng-model = "M_AddEditBL.defaultBlList.BusinessEmailAddress"
+        				ng-class="{'bp-redborder' : M_AddEditBL.BLValidation['BusinessEmailAddress']['isError'] == true}"/>
+        			</div>
+        			<div class="bp-form">
+        				<label>Tax ID</label>
+        				<input type="text" ng-model = "M_AddEditBL.defaultBlList.TaxID"/>
+        			</div>
+        			<div class="bp-form header-text logo-text">
+        				<label>Upload your logo</label>
+        			</div>
+        			<div class="bp-form upload-logo-container">
+        				<label>Your logo will appear on your invoices and print documents.</label>
+        				<label>It’s best if your logo is saved on a transparent or white background. </label>
+        				<div ng-if="M_AddEditBL.defaultBlList.AttachmentId == undefined || M_AddEditBL.defaultBlList.AttachmentId == null" >
+	        				<droplet class ="" ng-model="M_AddEditBL.FileUpload.interface">
+				           		<div class="search-entity-wrapper browse_but pt12 PB10">
+									<droplet-upload-single class= "logo-upload" ng-model="M_AddEditBL.FileUpload.interface">
+					                </droplet-upload-single>
+                                    <button class="bp-btn bp-btn-normal" ng-show = "!M_AddEditBL.defaultBlList.AttachmentNameWithExtension">Choose a file</button>
+                                    <button class="bp-btn bp-btn-normal" ng-show = "M_AddEditBL.defaultBlList.AttachmentNameWithExtension">Re-upload logo</button>
+					                <div class ="" ng-if="M_AddEditBL.defaultBlList.AttachmentNameWithExtension">
+				           				<div class="logo-informatin PT25">
+				           					<span>&#10004;</span>
+				           					<label class="logo-name">{{M_AddEditBL.defaultBlList.AttachmentNameWithExtension}}</label>
+				           				</div>
+				           				<label>{{M_AddEditBL.defaultBlList.AttachmentFileSizeInKB}} KB</label>
+				           			</div>
+				                 </div>
+				            </droplet>
+                            <label class="text-upload-logo">Your file should be in a .jpg or .png format and shouldn’t exceed 250KB</label>
+			            </div>
+			            
+			            <div ng-if="M_AddEditBL.defaultBlList.AttachmentId != undefined && M_AddEditBL.defaultBlList.AttachmentId != null" class="edit-branding-location-logo-container" >
+	        				
+				           			<div class ="PT25">
+				           			<span><img src="{{M_AddEditBL.defaultBlList.AttachmentURL}}" width="87px" height="87px"/></span>
+				           				<div class="logo-informatin PT25">
+				           				<span>&#10004;</span>
+				           				<label class="logo-name">{{M_AddEditBL.defaultBlList.AttachmentNameWithExtension}}</label>
+				           				</div>
+				           				<label>{{M_AddEditBL.defaultBlList.AttachmentFileSizeInKB}} KB</label>
+				           			</div>
+	        				<droplet class ="" ng-model="M_AddEditBL.FileUpload.interface">
+				           		<div class="search-entity-wrapper browse_but PT25">
+									<droplet-upload-single class= "logo-upload" ng-model="M_AddEditBL.FileUpload.interface">
+					                </droplet-upload-single>
+				                     <button>Re-upload logo</button>
+				                 </div>
+				            </droplet>
+			            </div>
+        			</div>
+        		</div>
+        		
+        		<div class="right-container">
+        			<div class="bp-form header-text">
+        				<label>Business address</label>
+        			</div>
+        			<div class="bp-form">
+        				<label>Street address 1</label>
+        				<input type="text" ng-model = "M_AddEditBL.defaultBlList.BusinessStreetAddress1"
+        				ng-class="{'bp-redborder' : M_AddEditBL.BLValidation['BusinessStreetAddress1']['isError'] == true}"/>
+        			</div>
+        			<div class="bp-form">
+        				<label>Street address 2</label>
+        				<input type="text" ng-model = "M_AddEditBL.defaultBlList.BusinessStreetAddress2"/>
+        			</div>
+        			<div class="bp-form">
+        				<label>City</label>
+        				<input type="text" ng-model = "M_AddEditBL.defaultBlList.BusinessCity"
+        				ng-class="{'bp-redborder' : M_AddEditBL.BLValidation['BusinessCity']['isError'] == true}"/>
+        			</div>
+        			<div class="bp-form">
+        				<div class="h-left-container">
+        				<label>Postcode</label>
+        				<input type="text" ng-model = "M_AddEditBL.defaultBlList.BusinessPostalCode"
+        				ng-class="{'bp-redborder' : M_AddEditBL.BLValidation['BusinessPostalCode']['isError'] == true}"/>
+        			</div>
+        				<div class="h-right-container">
+	        				<label>State</label>
+	        				
+	        				<div class="searchInputArea" ng-class="{'showingOverlay' : M_AddEditBL.isFocusedState}">
+                           <input type="text" id="customer-State"  placeholder="{{ 'Placeholder_country_name' | translate }}" 
+                              name="country"
+                              ng-focus = "F_AddEditBL.showCountry('state')"
+                              ng-blur = "F_AddEditBL.hideCountry('state')"
+                              ng-class="{'bp-redborder' : M_AddEditBL.BLValidation['BusinessState']['isError'] == true}"
+                               ng-model="M_AddEditBL.defaultBlList.BusinessState" readonly="readonly" ng-disabled=""/>
+                           <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click = "F_AddEditBL.setFocus('customer-State')">arrowDown</i>
+                           
+                           <div class="searchResultOverlay" id="autocompleteScrollDiv">
+                              <ul>
+                                 <li ng-repeat = "stateRec in M_AddEditBL.State" ng-mousedown = "F_AddEditBL.selectStateName(stateRec)">
+                                    <div class="fullName">{{stateRec.StateName}}</div>
+                                 </li>
+                              </ul>
+                           </div>
+                        </div>
+        				</div>
+        			</div>
+        			<div class="bp-form">
+        				<label>Country</label>
+        				
+        				<div class="searchInputArea" ng-class="{'showingOverlay' : M_AddEditBL.isFocusedCountry}">
+                           <input type="text" id="customer-Country"  placeholder="{{ 'Placeholder_country_name' | translate }}" 
+                              name="country"
+                              ng-focus = "F_AddEditBL.showCountry('country')"
+                              ng-blur = "F_AddEditBL.hideCountry('country')"
+                              ng-class="{'bp-redborder' : M_AddEditBL.BLValidation['BusinessCountry']['isError'] == true}"
+                               ng-model="M_AddEditBL.defaultBlList.BusinessCountry" readonly="readonly" ng-disabled=""/>
+                           <i class="bp-icons bp-font-14 bp-blue-font stroke-5 downArrow MT-3" ng-click = "F_AddEditBL.setFocus('customer-Country')">arrowDown</i>
+                           
+                           <div class="searchResultOverlay" id="autocompleteScrollDiv">
+                              <ul>
+                                 <li ng-repeat = "country in M_AddEditBL.CustomerMasterData.CountryList" ng-mousedown = "F_AddEditBL.selectCountryName(country)" >
+                                    <div class="fullName">{{country.CountryName}}</div>
+                                 </li>
+                              </ul>
+                           </div>
+                        </div>
+        			
+        			
+        			
+        			</div>
+        		</div>
+     			<div class="document-setting-container">
+     				<div class="bp-form header-text">
+        				<label>Document settings </label>
+        			</div>
+        			<div class="document-setting-details">
+        				<div class="bp-form header-text">
+                            <label class="h-text">Customer invoice </label>
+        				</div>
+        				 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsSignatureforCustomerInvoice" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Add space for signature</label>
+                		</div>
+                		 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsDisclaimerforCustomerInvoice" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Disclaimer</label>
+                		</div>
+        				<div class="text-area-container bp-form" ng-if="M_AddEditBL.defaultBlList.IsDisclaimerforCustomerInvoice">
+        					<textarea class="bp-input-text" ng-model="M_AddEditBL.defaultBlList.DisclaimerforCustomerInvoice" placeholder="Add notes"></textarea>
+        				</div>
+        			</div>
+     				
+     				<div class="document-setting-details">
+        				<div class="bp-form header-text">
+                            <label class="h-text">Service job </label>
+        				</div>
+        				 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsSignatureforServiceJob" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Add space for signature</label>
+                		</div>
+                		 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsDisclaimerforServiceJob" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Disclaimer</label>
+                		</div>
+        				<div class="text-area-container bp-form" ng-if="M_AddEditBL.defaultBlList.IsDisclaimerforServiceJob">
+        					<textarea class="bp-input-text" ng-model="M_AddEditBL.defaultBlList.DisclaimerforServiceJob" placeholder="Add notes"></textarea>
+        				</div>
+        			</div>
+     				
+     				<div class="document-setting-details">
+        				<div class="bp-form header-text">
+                            <label class="h-text">Order deposit</label>
+        				</div>
+        				 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsSignatureforOrderDeposit" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Add space for signature</label>
+                		</div>
+                		 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsDisclaimerforOrderDeposit" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Disclaimer</label>
+                		</div>
+        				<div class="text-area-container bp-form" ng-if="M_AddEditBL.defaultBlList.IsDisclaimerforOrderDeposit">
+        					<textarea class="bp-input-text" ng-model="M_AddEditBL.defaultBlList.DisclaimerforOrderDeposit" placeholder="Add notes"></textarea>
+        				</div>
+        			</div>
+        			
+     				<div class="document-setting-details">
+        				<div class="bp-form header-text">
+                            <label class="h-text">Deal documents </label>
+        				</div>
+        				 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsSignatureforDealDocuments" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Add space for signature</label>
+                		</div>
+                		 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsDisclaimerforDealDocuments" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Disclaimer</label>
+                		</div>
+        				<div class="text-area-container bp-form" ng-if="M_AddEditBL.defaultBlList.IsDisclaimerforDealDocuments">
+        					<textarea class="bp-input-text" ng-model="M_AddEditBL.defaultBlList.DisclaimerforDealDocuments" placeholder="Add notes"></textarea>
+        				</div>
+        			</div>
+        			<div class="document-setting-details">
+        				<div class="bp-form header-text">
+        					<label>Receipts </label>
+        				</div>
+        				 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsSignatureforReceipt" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Add space for signature</label>
+                		</div>
+                		 <div class="bp-form">
+                    		<label class="bp-switch"  >
+	                      		<input type="checkbox" ng-model="M_AddEditBL.defaultBlList.IsDisclaimerforReceipt" />
+	                      		<div class="bp-slider round"></div>
+                   			</label>
+                   			<label class="field-title">Disclaimer</label>
+                		</div>
+        				<div class="text-area-container bp-form" ng-if="M_AddEditBL.defaultBlList.IsDisclaimerforReceipt">
+        					<textarea class="bp-input-text" ng-model="M_AddEditBL.defaultBlList.DisclaimerforReceipt" placeholder="Add notes"></textarea>
+        				</div>
+        			</div>
+     			
+     			
+     			
+     			</div>
+     			 <div class="cta-container">
+	                <a class="cancel" ng-click="F_AddEditBL.MoveToState('BrandingLocation')"><span>{{'cancel' | translate}} </span></a>
+	                <a class="button primary " ng-click="F_AddEditBL.saveBrandingLocation()"><span>{{M_AddEditBL.BrandingLocationId ? 'Save' : 'Create' }}</span></a>
+	            </div>
+     		</div>
+    	</div>	
+     
+     <img src = "{{M_AddEditBL.imagUrl}}" id = "dummyImage" style="display:none;"/>
+    
+     
+     
+     
+     </div>
+</apex:page>

@@ -1,0 +1,59 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="AutomatedPriceFileCtrl" sidebar="false" 
+	applyHtmlTag="false" applyBodyTag="false" contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('AutomatedPriceFileServices', ['$q', function ($q) {
+            return {
+	           	getAllSubscribedPriceFile : function() {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.getAllSubscribedPriceFile}'); 
+	         	},
+	         	getVendorMasterDetailsById : function(vendorMasterId) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.getVendorMasterDetailsById}', vendorMasterId); 
+	         	},
+	         	getPriceFileMappingByVendorMasterId : function(vendorMasterId) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.getPriceFileMappingByVendorMasterId}', vendorMasterId); 
+	         	},
+	         	savePriceFileMapping : function(priceFileMappingJson) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.savePriceFileMapping}', priceFileMappingJson); 
+	         	},
+	         	getPartCategories : function(vendorMasterId) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.getPartCategories}', vendorMasterId); 
+	         	},
+	         	skipUpdateForVendorMaster : function(vendorMasterId) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.skipUpdateForVendorMaster}', vendorMasterId); 
+	         	},
+	         	importFile : function(mappingJSON, records) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.importFile}', mappingJSON, records); 
+	         	},
+	         	getAWSConfigData : function(vendorMasterId, partnerVendorMasterName) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.getPriceFileLocationAndConfig}', vendorMasterId, partnerVendorMasterName); 
+	         	},
+	         	getLastErrorLogNumber : function() {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.getLastErrorLogNumber}'); 
+	         	},
+	         	createActivityHistory : function(VendorId) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.createActivityHistory}',VendorId); 
+	         	},
+	         	createFileReadErrorLog : function(errorJson) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.createFileReadErrorLog}', errorJson); 
+				 },
+		     	importSupersessionPart : function(ImportedPartIdList) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.importSupersessionPart}',ImportedPartIdList); 
+	         	},
+	         	updateVMSImportFlagPartnerOrg : function(vendorMasterId,partnerVendorMasterName) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.updateVMSImportFlagPartnerOrg}',vendorMasterId,partnerVendorMasterName); 
+	         	},
+	         	getAPFRecordProcessingCount : function() {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.getAPFRecordProcessingCount}'); 
+	         	},
+				queueAPFImport : function(vendorMasterId) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.queueAPFImport}',vendorMasterId); 
+	         	},
+				getLastImportResults : function(vendorMasterId) {
+            		return RemoteActionService($q, '{!$RemoteAction.AutomatedPriceFileCtrl.getLastImportResults}',vendorMasterId); 
+	         	}
+	       	}
+        }]);  
+        return Routing_AppJs_PK;
+    }); 
+</apex:page>

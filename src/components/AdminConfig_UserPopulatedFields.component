@@ -1,0 +1,175 @@
+<apex:component controller="GlobalController">
+    <div class="LoadingDiv" ng-show="AdminConfig.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="user-defined-fields">
+        <div class="settings_Header row">
+            <div class="col-lg-3 col-md-3">
+                <div class="fixedHeaderText bp-pointer-cursor" ng-click="AdminConfig.toogleSectionView('showUserDefinedFields');">
+                    <span class="headerlabel">
+                    <i class="fa fa-angle-down" ng-show="AdminConfig.toggleObj.showUserDefinedFields" ></i>
+                    <i class="fa fa-angle-right" ng-show="!AdminConfig.toggleObj.showUserDefinedFields" ></i>
+                    <span class="divider">|</span>
+                    <span class="T2">User populated fields on forms</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div id="user-defined-fields" ng-show="AdminConfig.toggleObj.showUserDefinedFields" class="user-defined-fields">
+            <div class="main_section row" >
+                <div class="form">
+                    <div class="row margin8">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'Select_a_form' | translate}}</label>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="searchInputArea feeSearchInputArea form_search_container" ng-class="{'showingOverlay' : AdminConfig.UserDefinedFields.isFormFocused}">
+                                <input type="text" class="searchInput" placeholder="{{ 'Select_a_form' | translate }}" id="form_search_container_input"
+                                    ng-focus="AdminConfig.UserDefinedFields.isFormFocused = true;"
+                                    ng-blur="AdminConfig.UserDefinedFields.isFormFocused = false;" 
+                                    ng-model="AdminConfig.UserDefinedFields.SelectedForm.FormName" readonly="readonly" />
+                                <i class="bp-icons bp-blue-font bp-font-14 downArrow stroke-5 size-unset" ng-click="AdminConfig.UserDefinedFields.isFormFocused = true;AdminConfig.setFocusOnInput('form_search_container_input', -1)">arrowDown</i>
+                                <div class="searchResultOverlay" id="autocompleteScrollDiv2_form">
+                                    <ul>
+                                        <li ng-repeat="formObj in AdminConfig.UserDefinedFields.ActiveFormsList"
+                                            ng-class="{'selected-row': $index == AdminConfig.UserDefinedFields.selectedFormIndex}" id="form_{{$index}}"
+                                            ng-mousedown="AdminConfig.UserDefinedFields.selectForm(formObj)">
+                                            <div class="fullName heading">{{formObj.Description}}</div>
+                                            <div class="fullName desc">{{formObj.FormName}}</div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <a ng-href="{{AdminConfig.UserDefinedFields.SelectedForm.FormAttachmentURL}}" target="_blank" 
+                                ng-class="{'bp-no-cursor': (AdminConfig.UserDefinedFields.SelectedForm.FormAttachmentURL == undefined || AdminConfig.UserDefinedFields.SelectedForm.FormAttachmentURL == null || AdminConfig.UserDefinedFields.SelectedForm.FormAttachmentURL == '')}">
+                                <button class="btn btn-default greenBtn"
+                                    ng-disabled="(AdminConfig.UserDefinedFields.SelectedForm.FormAttachmentURL == undefined || AdminConfig.UserDefinedFields.SelectedForm.FormAttachmentURL == null || AdminConfig.UserDefinedFields.SelectedForm.FormAttachmentURL == '')">
+                                    {{ 'View_form' | translate}}
+                                </button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row margin8 user-defined-table-container" ng-if="AdminConfig.UserDefinedFields.SelectedForm.UserDefinedFieldList.length > 0">
+                        <div class="col-md-2 margin8">
+                            <label>{{ 'User_populated_fields' | translate}}</label>
+                        </div>
+                        <div class="col-md-10 MR8 second-col">
+                            <div class="form table-responsive price-level-table-container">
+                                <div class="row margin8 MB0 ">
+                                    <table class="bp-editable-table price-level-table">
+                                        <col width="25%"  />
+                                        <col width="25%"  />
+                                        <col width="14%"  />
+                                        <col width="13%"  />
+                                        <col width="13%"  />
+                                        <col width="10%"  />
+                                        <thead>
+                                            <tr>
+                                                <th class="H300 bp-first-letter-capitalize line-height-medium">
+                                                    {{'Field_label' | translate}}
+                                                </th>
+                                                <th class="H300 bp-first-letter-capitalize line-height-medium">
+                                                    {{'Configuration_key' | translate}}
+                                                </th>
+                                                <th class="H300 bp-first-letter-capitalize line-height-medium">
+                                                    {{'Data_type' | translate}}
+                                                </th>
+                                                <th class="H300 line-height-medium">
+                                                    {{'X_Coordinate' | translate}}
+                                                </th>
+                                                <th class="H300 line-height-medium">
+                                                    {{'Y_Coordinate' | translate}}
+                                                </th>
+                                                <th class="H300 line-height-medium">
+                                                    {{'Page_number' | translate}}
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="fieldRec in AdminConfig.UserDefinedFields.SelectedForm.UserDefinedFieldList | orderBy: 'Order'" ng-init="tableRowIndex = $index">
+                                            <td>
+                                                <span>
+                                                    <input class="searchInput form-control inputValueText" ng-model="fieldRec.Label" ng-blur="AdminConfig.UserDefinedFields.blurActionFromLabel($index)" />
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    <input class="searchInput form-control inputValueText" ng-model="fieldRec.ConfigKey" ng-blur="AdminConfig.UserDefinedFields.blurActionFromLabel($index)" />
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    <select class="bp-input-text text-value-placement" ng-model="fieldRec.DataType" ng-change=""
+                                                        ng-options="dataType for dataType in AdminConfig.UserDefinedFields.DataTypesList">
+                                                    </select>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    <numbers-only
+                                                                class-value="searchInput form-control inputValueText"
+                                                                input-model-value="fieldRec.XCoordinate"
+                                                                include-negative="false"
+                                                                include-zero="false"
+                                                                place-holder-value=""
+                                                                include-blank="true"
+                                                                force-precision-length="false"
+                                                    />
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    <numbers-only
+                                                                class-value="searchInput form-control inputValueText"
+                                                                input-model-value="fieldRec.YCoordinate"
+                                                                include-negative="false"
+                                                                include-zero="false"
+                                                                place-holder-value=""
+                                                                include-blank="true"
+                                                                force-precision-length="false"
+                                                    />
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span>
+                                                    <numbers-only
+                                                                class-value="searchInput form-control inputValueText"
+                                                                input-model-value="fieldRec.PageNumber"
+                                                                include-negative="false"
+                                                                include-zero="false"
+                                                                place-holder-value=""
+                                                                include-blank="false"
+                                                                default-value="1"
+                                                                min-value="1"
+                                                                force-precision-length="false"
+                                                    />
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="otherTaskEntry bp-flex-grid-container MB20">
+                                    <div class="bp-grid-column createNewTask" ng-click="AdminConfig.UserDefinedFields.addNewLabel()">
+                                        <a class="H400"><i class="bp-icons bp-font-20 bp-cursor-pointer">addCircle</i>{{'Add_new_label' | translate}}</a>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="main_section row">
+                        <span>
+                        <button class="btn btn-default greenBtn pull-right margin8 text-uppercase" ng-disabled="AdminConfig.UserDefinedFields.SelectedForm == undefinded || AdminConfig.UserDefinedFields.SelectedForm.UserDefinedFieldList == undefined || AdminConfig.UserDefinedFields.SelectedForm.UserDefinedFieldList.length == 0"
+                            ng-click="AdminConfig.UserDefinedFields.saveUserDefinedFields();">{{ 'Save_changes' | translate}}</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</apex:component>

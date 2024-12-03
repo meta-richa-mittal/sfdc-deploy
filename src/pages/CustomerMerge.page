@@ -1,0 +1,142 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" sidebar="false" docType="html-5.0" controller="GlobalController">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+    <div class="LoadingDiv" ng-show="M_CM.isLoading">
+        <div class="loadingIconContainer">
+            <c:BPLoading />
+        </div>
+    </div>
+    <div class="customerMergePage">
+        <div class="content bp-wrapper-container">
+            <div class="bp-subHeader">
+                <div class="row container bp-top-header bp-tech-navigation-bar PB0">
+                    <section class="bp-breadcrumb-container">
+                        <nav class="bp-breadcrumb-nav">
+                            <ul>
+                                <li><a ng-click="F_CM.MoveToState('homePage');">Home</a></li>
+                                <li> <a class = "disable-link">{{'Other_tools' | translate}}</a></li>
+                                <li><a class="bp-breadcrumb-active">Merge customer</a></li>
+                            </ul>
+                        </nav>
+                    </section>
+                    <h1  class="col-lg-9 col-md-8 col-xs-12 bp-hasEyebrow M0 P0">
+                        Merge customer
+                    </h1>
+                </div>
+           </div>
+	    	<div class="pageContent">
+                <div class="keep-active-customer">
+                    <label class="keep-active-label">Select the customer you want to KEEP ACTIVE</label>
+                    <div class="keep-active-customer-card" ng-if="M_CM.customerToKeep">
+                        <div class="customer-name">
+                            <a ng-click="F_CM.openCustomerInNewTab(M_CM.customerToKeep.Id)">{{M_CM.customerToKeep.Name}} ({{M_CM.customerToKeep.AdditionalInfoObj.CustomerNumber}})</a>
+                        </div>
+                        <div class="customer-details">
+                            <div class="addressLine1">{{M_CM.customerToKeep.addressLine1}}</div>
+                            <div class="addressLine2">{{M_CM.customerToKeep.addressLine2}}</div>
+                            <div class="phone">
+                                <span>Ph:</span>
+                                <span>{{(M_CM.customerToKeep.AdditionalInfoObj.Phone) ? M_CM.customerToKeep.AdditionalInfoObj.Phone : '----------------'}}</span>
+                            </div>
+                            <div class="email">
+                                <span class="email-label">E:</span>
+                                <span>{{(M_CM.customerToKeep.AdditionalInfoObj.Email) ? M_CM.customerToKeep.AdditionalInfoObj.Email : '----------------'}}</span>
+                            </div>
+                        </div>
+                        <div class="button-section">
+                            <button ng-click="F_CM.setFocusOnInput('keepActiveCustomer')">Change customer</button>
+                        </div>
+                    </div>
+                    <div class="searchToAdd" ng-if="!M_CM.customerToKeep || M_CM.comingFrom == 'keepActiveCustomer' ">
+                        <bpda-search-to-add
+                            id="keepActiveCustomer"
+                            template-name="Customer" 
+                            section-name="Customer" 
+                            section-id="Customer" 
+                            entity-object-name="Customer"
+                            placeholder="Search to add"
+                            coming-from="keepActiveCustomer"
+                            ng-attr-available-filters= "{{F_CM.populateSTAFilters('staCustomer')}}"
+                            >
+                        </bpda-search-to-add>
+                    </div>
+                </div>
+                <div class="merge-customer" ng-if="M_CM.customerToKeep">
+                    <label class="keep-active-label">Select the customer you want to MERGE INTO {{M_CM.customerToKeep.Name}} ({{M_CM.customerToKeep.AdditionalInfoObj.CustomerNumber}})</label>
+                    <div class="keep-active-customer-card" ng-if="M_CM.customerToMerge">
+                        <div class="customer-name">
+                            <a ng-click="F_CM.openCustomerInNewTab(M_CM.customerToMerge.Id)">{{M_CM.customerToMerge.Name}} ({{M_CM.customerToMerge.AdditionalInfoObj.CustomerNumber}})</a>
+                        </div>
+                        <div class="customer-details">
+                            <div class="addressLine1">{{M_CM.customerToMerge.addressLine1}}</div>
+                            <div class="addressLine2">{{M_CM.customerToMerge.addressLine2}}</div>
+                            <div class="phone">
+                                <span>Ph:</span>
+                                <span>{{(M_CM.customerToMerge.AdditionalInfoObj.Phone) ? M_CM.customerToMerge.AdditionalInfoObj.Phone : '----------------'}}</span>
+                            </div>
+                            <div class="email">
+                                <span class="email-label">E:</span>
+                                <span>{{(M_CM.customerToMerge.AdditionalInfoObj.Email) ? M_CM.customerToMerge.AdditionalInfoObj.Email : '----------------'}}</span>
+                            </div>
+                        </div>
+                        <div class="button-section">
+                            <button ng-click="F_CM.setFocusOnInput('mergeCustomer')">Change customer</button>
+                        </div>
+                    </div>
+                    <div class="searchToAdd" ng-if="!M_CM.customerToMerge || M_CM.comingFrom == 'mergeCustomer'">
+                        <bpda-search-to-add
+                            id="mergeCustomer"
+                            template-name="Customer" 
+                            section-name="Customer" 
+                            section-id="Customer" 
+                            entity-object-name="Customer"
+                            placeholder="Search to add"
+                            coming-from="mergeCustomer"
+                            ng-attr-available-filters= "{{F_CM.populateSTAFilters('staCustomer')}}"
+                            >
+                        </bpda-search-to-add>
+                    </div>
+                </div>
+
+                <div class="record-section" ng-if="M_CM.customerToMerge.Id && M_CM.OpenARBalance == 0 && M_CM.customerRelatedRecordSummary">
+                    <label class="keep-active-label">The following records will be moved from {{M_CM.customerToMerge.AdditionalInfoObj.CustomerNumber}} to {{M_CM.customerToKeep.AdditionalInfoObj.CustomerNumber}} and then {{M_CM.customerToMerge.AdditionalInfoObj.CustomerNumber}} will be made inactive</label>
+                    <div class="record-list">
+                        <ul>
+                            <li ng-repeat="(key, value) in M_CM.customerRelatedRecordSummary">
+                                <span class="quantity">{{value}}</span>
+                                <span class="info-label">{{key}}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <button class="bp-btn bp-btn-normal bp-btn-small" ng-click="F_CM.openMergeCustomerConfirmationModal()">MERGE CUSTOMERS</button>
+                </div>
+
+                <div class="record-section" ng-if="M_CM.customerToMerge.Id && M_CM.OpenARBalance">
+                    <div class="standard-info-banner">
+                        <div class="fx-banner-container fx-orange-banner">
+                            <i class="bp-icons bp-font-18 bp-beer-font MT0">warningFilled</i>
+                            <div>
+                                <p>The customer <strong>{{M_CM.customerToMerge.Name}} ({{M_CM.customerToMerge.AdditionalInfoObj.CustomerNumber}})</strong> has an A/R balance of <strong class="bp-red-font">{{M_CM.OpenARBalance | currency}}</strong></p>
+                                <p>This <strong>must be paid </strong>before merging can be processed.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+	        </div>
+	    </div>
+    </div>
+    
+    <bp-ng-modal-window class="merge-customer-modal" id-val="mergeCustomerConfirmationModal" mobal-window-payload="M_CM.ModalWindowPayload" cancel-btn-action="M_CM.ModalWindowPayload.cancelBtnAction()" primary-btn-action="M_CM.ModalWindowPayload.primaryBtnAction(M_CM.customerToKeep.Id, true)">
+        <div class="modal-body-content">
+            <div>
+                <p class="modal-window-message-info" ng-bind-html="M_CM.ModalWindowPayload.label1"></p>
+            </div>
+            <div>
+                <p ng-bind-html="M_CM.ModalWindowPayload.label2"></p>
+            </div>
+            <div>
+                <p class="warning-label" ng-bind-html="M_CM.ModalWindowPayload.label3"></p>
+            </div>
+        </div>
+    </bp-ng-modal-window>
+</apex:page>

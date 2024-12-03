@@ -1,0 +1,57 @@
+<apex:component >
+<div class="pos-rel">
+	<div class="c-table-gradient modile-view-grid"></div>
+		<div class="c-table-container pos-rel c-scroll-table" id="filteredPartsTable">
+			<table class="c-table-respoinsive">
+				<col width="3%" />
+				<col width="37%" />
+				<col width="20%" />
+				<col width="15%" />
+				<col width="15%" />
+				<col width="15%" />
+				<thead>
+					<tr>
+						<th class="pos-rel select-all-checkbox-th"><bp-ng-check-box select-key="isCheckBoxSelected" value="M_WPM.selectAllCreateProductPart" selected-list="M_WPM.notLinkedPartsList" 
+							select-unselect-click="F_WPM.toggleCreateProductModalCheckBox()" class-value="M_WPM.checkboxClassName"
+							id-value="createProductSelectAll" disabled-value="M_WPM.notLinkedPartsList.length == 0"></bp-ng-check-box></th>
+						<th>Item/description</th>
+						<th>Vendor</th>
+						<th>Stock</th>
+						<th>Price</th>
+						<th></th>
+					</tr> 
+				</thead>
+				<tbody>
+					<tr ng-if="M_WPM.createProductPartList.length == 0 && !M_WPM.isSearchingParts && !M_WPM.isloadDummyState" class="no-record-found">
+						<td colspan="6">No part found.</td>
+					</tr>
+					<tr ng-repeat="partRec in M_WPM.createProductPartList" ng-if="M_WPM.createProductPartList.length > 0" ng-class="{'c-selected-row': partRec.isCheckBoxSelected}">
+						<td class="pos-rel select-checkbox-td">
+							<bp-ng-check-box value="partRec.isCheckBoxSelected" select-unselect-click="F_WPM.toggleCreateProductModalCheckBox($index)" 
+								id-value="createProduct{{$index}}" disabled-value="partRec.IsAlreadyLinkedPart"></bp-ng-check-box>
+						</td>
+						<td>
+							<a ng-click="F_WPM.openPageInNewTab('ViewPart', {'Id': partRec.Id})">{{::partRec.PartNumber}} - {{::partRec.PartDesc}}</a>
+						</td>
+						<td>{{::partRec.VendorName}}</td>
+						<td>{{::partRec.AvailableQty}}</td>
+						<td>{{::partRec.Price | currency}}</td>
+						<td>
+							<span ng-if="partRec.IsAlreadyLinkedPart">
+								<bp-ng-badge class-value="linked-badge" value="linked"></bp-ng-badge>
+							</span>
+						</td>
+					</tr>
+					<tr class="dummy-rec-opacity_{{$index}}" ng-repeat="rec in M_WPM.dummyRecJSON" ng-if="M_WPM.isloadDummyState">
+						<td class="dummy-rec dummy-checkbox dummy-animation"><span></span></td>
+						<td class="dummy-rec dummy-animation"><span></span></td>
+						<td class="dummy-rec dummy-animation"><span></span></td>
+						<td class="dummy-rec dummy-animation"><span></span></td>
+						<td class="dummy-rec dummy-animation"><span></span></td>
+						<td class="dummy-first-rec dummy-animation"><span></span></td>
+					</tr>
+				</tbody>
+			</table> 
+		</div>
+</div>
+</apex:component>

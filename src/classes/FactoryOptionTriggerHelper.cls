@@ -30,10 +30,8 @@ public without sharing class FactoryOptionTriggerHelper {
     		}
     		
     		factOptRec.Cost__c = factOptRec.Cost__c != null ? factOptRec.Cost__c.setScale(2, RoundingMode.HALF_UP) : 0;
-    		if(factOptRec.Cost__c < 0) throw new BlackpurlException('Cost must be greater than or equals to zero');
     		
     		factOptRec.Price__c = factOptRec.Price__c != null ? factOptRec.Price__c.setScale(2, RoundingMode.HALF_UP) : 0;
-    		if(factOptRec.Price__c < 0) throw new BlackpurlException('Price must be greater than or equals to zero');
     		
     		factOptCodeSet.add(factOptRec.Code__c);
     		

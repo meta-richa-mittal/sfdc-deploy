@@ -1,0 +1,1113 @@
+<apex:page standardStylesheets="false" showHeader="false" sidebar="false" controller="PreviewGridRecordsCtrl" readOnly="true">
+    <html ng-app="prevRecords">
+        <head>
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/angular.min.js" />
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/jsPDF.js"/>
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/jspdf.plugin.autotable.js" />
+            <apex:includeScript value="{!JSENCODE(Assests)}/Js/moment.min.js" />
+            <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=block" rel="stylesheet" />
+            <link rel="stylesheet" href="{!JSENCODE(Assests)}/web-font/dist/bp-icons.css" />
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@blackpurl/web-components@0.1.1-beta.12/dist/themes/light.css"/>
+            <script type="module" src="https://cdn.jsdelivr.net/npm/@blackpurl/web-components@0.1.1-beta.12/dist/index.js"></script>
+			<script type="module" src="{!JSENCODE(Assests)}/LIT/dist/index.js" />
+            <style>
+            	.bp-spinner {
+            		position: absolute;
+            		left: 50%;
+            		top: 50%;
+            	}
+            </style>
+        </head>
+        
+        <script type="text/javascript">
+            var MAX_RECORDS = 50000;
+            
+            function encodeString(inputString){
+                if(inputString == null) {
+                    return inputString;
+                }
+                var outputString = window.btoa(inputString);
+                return outputString;
+            }
+              
+            function decodeString(inputString) {
+                if (inputString == null) {
+                    return inputString;
+                }
+                try {
+                    var res = inputString.match('^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$');
+                } catch (ex) {}
+
+                if (res == null) {
+                    return inputString;
+                }
+                var outputString = decodeURIComponent(escape(window.atob(inputString)));
+                return outputString;
+            }
+            
+            function debug(logString){
+            }
+            
+            var PrevRecords = angular.module('prevRecords', []);
+            PrevRecords.filter('tel', function () {
+                return function (tel) {
+                    if (!tel) { return ''; }
+            
+                    var value = tel.toString().trim().replace(/^\+/, '');
+            
+                    if (value.match(/[^0-9]/)) {
+                        return tel;
+                    }
+            
+                    var country, city, number;
+            
+                    switch (value.length) {
+                        case 10: // +1PPP####### -> C (PPP) ###-####
+                            country = 1;
+                            city = value.slice(0, 3);
+                            number = value.slice(3);
+                            break;
+            
+                        case 11: // +CPPP####### -> CCC (PP) ###-####
+                            country = value[0];
+                            city = value.slice(1, 4);
+                            number = value.slice(4);
+                            break;
+            
+                        case 12: // +CCCPP####### -> CCC (PP) ###-####
+                            country = value.slice(0, 3);
+                            city = value.slice(3, 5);
+                            number = value.slice(5);
+                            break;
+            
+                        default:
+                            return tel;
+                    }
+            
+                    if (country == 1) {
+                        country = "";
+                    }
+            
+                    number = number.slice(0, 3) + '-' + number.slice(3);
+            
+                    return (country + " (" + city + ") " + number).trim();
+                };
+            });
+            
+            PrevRecords.controller('prevRecordsCtrl', function ($scope, PreviewRecordsService, $q) {
+                $scope.PreviewPage = {};
+                $scope.PreviewPage.filterId = "{!JSENCODE(URLENCODE($CurrentPage.parameters.filterId))}" ? "{!JSENCODE(URLENCODE($CurrentPage.parameters.filterId))}" : null;
+                $scope.PreviewPage.filterFormJson = {};
+                $scope.PreviewPage.SearchName = '';
+                $scope.PreviewPage.isLoading = true;
+                
+                // Some constants
+                $scope.PreviewPage.displayObjectTypeToNameMap = {1 : 'Customers',
+                                                                 2 : 'Vendors',
+                                                                 3 : 'Parts',
+                                                                 4 : 'Kits',
+                                                                 5 : 'Fees',
+                                                                 6 : 'Labor Codes',
+                                                                 7 : 'Users',
+                                                                 8 : 'Customer Orders',
+                                                                 9 : 'Customer Invoices',
+                                                                 10 : 'Vendor Orders',
+                                                                 11 : 'Vendor Receivings',
+                                                                 12 : 'Vendor Invoices',
+                                                                 13 : 'Item Categories',
+                                                                 14 : 'Price Levels',
+                                                                 15 : 'Sales Taxes',
+                                                                 16 : 'Sublets',
+                                                                 17 : 'Customer Payments',
+                                                                 18 : 'Service Jobs',
+                                                                 19 : 'Inventory Unit',
+                                                                 20 : 'Parts Needed',
+                                                                 21 : 'Part Inventory Valuation',
+                                                                 22 : 'Customer Units',
+                                                                 23 : 'Financing Product',
+                                                                 24 : 'Deal Product',
+                                                                 25 : 'Warranty Plan',
+                                                                 26 : 'Vendor Return',
+                                                                 27 : 'Other Product',
+                                                                 28 : 'Technician Hours',
+                                                                 29 : 'Payroll Hours',
+                                                                 30 : 'Technician Performance',
+                                                                 33 : 'Parts Order',
+                                                                 34 : 'AR Payments',
+                                                                 35 : 'Special Order',
+                                                                 36 : 'Parts',
+                                                                 37 : 'Order Unit'
+                                                                };  
+                
+                $scope.PreviewPage.gridData = [];
+                $scope.PreviewPage.exportData = [];
+                $scope.lastUniqueFieldValue = '';
+                
+                $scope.PreviewPage.Aging_PRD1 = '{!JSENCODE(prd1)}' + 'day-';
+                $scope.PreviewPage.Aging_PRD2 = '{!JSENCODE(prd2)}' + 'day-';
+                $scope.PreviewPage.Aging_PRD3 = '{!JSENCODE(prd3)}' + 'day-';
+                $scope.PreviewPage.Aging_PRD4 = '>' + '{!JSENCODE(prd4)}' + 'day-';
+    
+                $scope.PreviewPage.LabelChangeMap = {
+                    'PRD1 Qty' : $scope.PreviewPage.Aging_PRD1 + 'Qty',
+                    'PRD1 Cost' : $scope.PreviewPage.Aging_PRD1 + 'Cost',
+                    'PRD2 Qty' : $scope.PreviewPage.Aging_PRD2 + 'Qty',
+                    'PRD2 Cost' : $scope.PreviewPage.Aging_PRD2 + 'Cost',
+                    'PRD3 Qty' : $scope.PreviewPage.Aging_PRD3 + 'Qty',
+                    'PRD3 Cost' : $scope.PreviewPage.Aging_PRD3 + 'Cost',
+                    'PRD4 Qty' : $scope.PreviewPage.Aging_PRD4 + 'Qty',
+                    'PRD4 Cost' : $scope.PreviewPage.Aging_PRD4 + 'Cost'
+                };
+                
+                // Grouping models
+                $scope.PreviewPage.aggregateFieldNames = [];        // Used internally: field record key for aggragate fields (total value fields)
+                $scope.PreviewPage.gridGroupAggregateResult = {};   // Array will hold aggragate values with group values: [{"Active" : {"GroupName" : "Active", "Total_Price" : 200}}]
+                $scope.PreviewPage.gridGroupFieldValues = [];       // Array to hold values of group field like: Active, Inactive in case of status
+                $scope.PreviewPage.gridGroupedResult = {};          // Array will hold the records in grouped format: ["Active" : [{"Id":"asd", "Name" : "SN"}, {"Id":"asd2", "Name" : "SN2"}]]
+                $scope.PreviewPage.recordIdsIncluded = "";
+                $scope.PreviewPage.columnHeadersFormatted = [];
+                $scope.PreviewPage.DateFormat = "{!JSENCODE(dateFormat)}";
+                $scope.PreviewPage.SchedulingDateFormat = "{!JSENCODE(SchedulingDateFormat)}";
+                var formatNameToColumnsToShowMap = {
+                    'Summary Format': ['Type', 'Item', 'Description', 'Qty Sold', 'Total Revenue', 'Total Profit', 'Last Sale', 'Average Price', 'Average Profit', 'Category', 'Vendor','Part Type'],
+                    'Detailed Format': ['Type', 'Item', 'Description', 'Customer', 'Invoice', 'Qty Sold', 'Price', 'Revenue', 'Profit', 'Category', 'Vendor','Part Type']
+                };
+                
+                // Load grid data:
+                $scope.PreviewPage.loadGridData = function() {
+                    if($scope.PreviewPage.filterId != null && $scope.PreviewPage.filterId != "") {
+                        // Load filter JSON data
+                        $scope.PreviewPage.getFilterJSONData();
+                    }
+                }
+                
+                // Get the filter JSON data
+                $scope.PreviewPage.getFilterJSONData = function() {
+                    PreviewRecordsService.getFilterJSONData($scope.PreviewPage.filterId).then(function(successfulSearchResult) {
+                        debug(successfulSearchResult);
+                        if(successfulSearchResult != null) {
+                            $scope.PreviewPage.filterLabel = successfulSearchResult.FilterLabel;
+                            $scope.PreviewPage.filterGenerationDate = successfulSearchResult.FilterGenerationDate;
+                            $scope.PreviewPage.filterFormJson = JSON.parse(successfulSearchResult.FieldFilterJson);
+                            $scope.PreviewPage.objectsList = successfulSearchResult.ObjectList;
+                            $scope.PreviewPage.gridSortAttrs = JSON.parse(successfulSearchResult.SortJson).Sorting;
+                            $scope.PreviewPage.aggregateFieldNames = JSON.parse(successfulSearchResult.SummaryFieldsJSON);
+                            $scope.PreviewPage.ExportGroupField = successfulSearchResult.ExportGroupField;
+                            $scope.PreviewPage.IsIncludeInactiveRecords = $scope.PreviewPage.filterFormJson.IncludeInactiveRecords;
+                            if($scope.PreviewPage.ExportGroupField == null || $scope.PreviewPage.ExportGroupField == ''){
+                                $scope.PreviewPage.ExportGroupFieldLabel = '';
+                            }else{
+                                $scope.PreviewPage.ExportGroupFieldLabel = $scope.PreviewPage.ExportGroupField.replace('_',' ');
+                            }
+                            $scope.PreviewPage.columns = JSON.parse(successfulSearchResult.DisplayHiddenColumn);
+                            updateColumnNames();
+                            
+                            // Load grid data based on filters
+                            $scope.PreviewPage.gridData = [];
+                            var ObjectsList;
+                            if($scope.PreviewPage.filterFormJson.Type.Objects.length != 0){
+                                ObjectsList = angular.copy($scope.PreviewPage.filterFormJson.Type.Objects);
+                                for(var i=0; i<$scope.PreviewPage.filterFormJson.Type.Objects.length; i++) {
+                                    if($scope.PreviewPage.filterFormJson.Type.Objects[i] == 'Technician Performance') {
+                                        $scope.PreviewPage.SearchName = 'Technician Performance';
+                                        $scope.PreviewPage.filterLabel =  "Technician Performance";
+                                        break;
+                                    }
+                                }
+                            }else{
+                                ObjectsList = angular.copy($scope.PreviewPage.objectsList);
+                            }
+                            ObjectsList = ObjectsList.remove('Any');
+                            //ObjectsList = ['Parts'];
+                            $scope.PreviewPage.objectsReportingDataCall(ObjectsList);
+                        }
+                    }, function(errorSearchResult) {
+                        $scope.PreviewPage.filterList.FilterType = errorSearchResult;
+                        Notification.error("{!$Label.ExportGridRecords_PDF_An_error_occurred_please_try_again}");
+                    });
+                }
+
+                var updateColumnNames = function() {
+                    if($scope.PreviewPage.filterFormJson.Type.Objects.findIndex(objectName => objectName == 'Invoiced Items') != -1) {
+                        $scope.PreviewPage.columns.DisplayedColumns = $scope.PreviewPage.columns.DisplayedColumns.filter(function(colRec) {
+                            if(colRec.Label == 'Part Type' && $scope.PreviewPage.filterFormJson.InvoicedItem_Type != 'Part') {
+                                return false;
+                            }
+                            var tempList = [];
+                            if($scope.PreviewPage.filterFormJson.IsSummaryFormat) {
+                                tempList = formatNameToColumnsToShowMap['Summary Format'];
+                            } else {
+                                tempList = formatNameToColumnsToShowMap['Detailed Format'];
+                            }
+                            return (tempList.findIndex(colName => colName == colRec.Label)) != -1;
+                        });
+                    }
+                }
+                
+                // Method runs recursively to get data based on objects
+                $scope.PreviewPage.objectsReportingDataCall = function(objectsList) {
+                    if( objectsList.length != 0 ) {
+                        $scope.PreviewPage.getReportingData(objectsList[0], null, objectsList, null);
+                    } else {
+                        return;
+                    }
+                }
+                
+                var PartMovementData = [];
+                function getPartMovementActivityReportData(filterJsonStr, partIdSetStr) {
+                	var defer = $q.defer();
+                	PreviewRecordsService.getPartMovementActivityReportData(filterJsonStr, partIdSetStr).then(function(reportResult) {
+	                	if(reportResult[reportResult.RecordsVariableName]) {
+		                	for(var i=0; i<reportResult[reportResult.RecordsVariableName].length; i++){
+	                    		PartMovementData.push(reportResult[reportResult.RecordsVariableName][i]);
+	                    	}
+	                	}
+                    	defer.resolve();
+                    }, function(errorSearchResult) {
+                       Notification.error("Error occurred while fetching parts.");
+                       defer.reject("An error occurred, please try again");
+                   });
+                   return defer.promise;
+                }
+                
+                function getPartsWithNoActivity(filterJsonStr, lastRecordUniqueFieldValue, partIdSetStr, defer) {
+                	PreviewRecordsService.getPartMovementDataWithNoActivity(filterJsonStr, lastRecordUniqueFieldValue, partIdSetStr).then(function(reportResult) {
+                		if(reportResult) {
+	                        for(var i=0; i<reportResult.ResultData.length; i++) {
+	                        	PartMovementData.push(reportResult.ResultData[i]);
+	                        }
+	                		if(reportResult.IsProcessCompleted) {
+	                             defer.resolve();
+	                             return;
+	                        } else {
+	                        	return getPartsWithNoActivity(filterJsonStr, reportResult.LastRecordUniqueFieldValue, partIdSetStr, defer);
+	                        }
+                		}
+                    }, function(errorSearchResult) {
+                    	defer.reject();
+                        Notification.error("Error occurred while fetching the records.");
+                    });
+                }
+                function getPartMovementDataWithNoActivity(filterJsonStr, lastRecordUniqueFieldValue, partIdSetStr) {
+                	var defer = $q.defer();
+                	getPartsWithNoActivity(filterJsonStr, lastRecordUniqueFieldValue, partIdSetStr, defer);
+                    return defer.promise;
+                }
+                
+                function getPartFIFOReportingData() {
+               		var filterJsonStr = JSON.stringify($scope.PreviewPage.filterFormJson);
+                   	PreviewRecordsService.getPartIdsHavingActivity(filterJsonStr).then(function(partIdSetHavingActivity) {
+                        var viewsPromises = [];
+                        var partIdSet = [];
+                        var limitOfPartRecInOneCall = 100;
+                        if(partIdSetHavingActivity != null) {
+                            for(var i=0; i<partIdSetHavingActivity.length; i++) {
+                                partIdSet.push(partIdSetHavingActivity[i]);
+                                if(limitOfPartRecInOneCall == partIdSet.length || i == (partIdSetHavingActivity.length - 1)) {
+                                    viewsPromises.push(getPartMovementActivityReportData(filterJsonStr, JSON.stringify(partIdSet)));
+                                    partIdSet = [];
+                                }
+                            }
+                        }
+                        if($scope.PreviewPage.filterFormJson.IncludePartsWithoutActivity) {
+                            viewsPromises.push(getPartMovementDataWithNoActivity(filterJsonStr, null, JSON.stringify(partIdSetHavingActivity)));
+                        }
+                        return $q.all(viewsPromises).then(function(){
+                            $scope.PreviewPage.gridData = $scope.PreviewPage.gridData.concat(PartMovementData);
+                            sortingPartMovementRecords().then( function(success) {
+                                postProcessAfterSorting();
+                            }, function(error) {
+                            }); 
+                        });
+                        return true;
+                  }, function(errorSearchResult) {
+                      Notification.error("Error occurred while fetching the records.");
+                  });
+                }
+                
+                var InvoiceDetailReportData = [];
+                function getInvoiceDetailReportData(filterJsonStr) {
+                	var defer = $q.defer();
+                	PreviewRecordsService.getReportData(JSON.stringify(filterJsonStr), 'Customer Invoice Details', null, null).then(function(reportResult) {
+                        if(reportResult.ResultData[reportResult.ResultData.RecordsVariableName]) {
+		                	for(var i=0; i<reportResult.ResultData[reportResult.ResultData.RecordsVariableName].length; i++){
+	                    		InvoiceDetailReportData.push(reportResult.ResultData[reportResult.ResultData.RecordsVariableName][i]);
+	                    	}
+	                	}
+                    	defer.resolve();
+                    }, function(errorSearchResult) {
+                       Notification.error("Error occurred while fetching parts.");
+                       defer.reject("An error occurred, please try again");
+                   });
+                   return defer.promise;
+                }
+
+                function getCustomerInvoiceDetailsReportingData() {
+               		var filterJsonStr = $scope.PreviewPage.filterFormJson;
+                   	PreviewRecordsService.getSpecificDateRangeInvoiceIds(JSON.stringify(filterJsonStr)).then(function(invoiceIdList) {
+		                if(invoiceIdList != null && invoiceIdList.length > 0) {
+		                	var viewsPromises = [];
+		                	var invoiceIdSet = [];
+		                	var limitOfInvoiceRecInOneCall = 100;
+		                	for(var i=0; i<invoiceIdList.length; i++) {
+		                		invoiceIdSet.push(invoiceIdList[i]);
+		                		if(limitOfInvoiceRecInOneCall == invoiceIdSet.length || i == (invoiceIdList.length - 1)) {
+                                    filterJsonStr.Customer_Invoice_Detail_Invoice_Ids = invoiceIdSet;
+		                			viewsPromises.push(getInvoiceDetailReportData(filterJsonStr));
+                                    invoiceIdSet = [];
+		                		}
+		                	}
+                            
+		                	return $q.all(viewsPromises).then(function(){
+					        	$scope.PreviewPage.gridData = $scope.PreviewPage.gridData.concat(InvoiceDetailReportData);
+		                        sortCustomerInvoiceDetailsSearchedRecords().then( function(success) {
+                                    if($scope.PreviewPage.filterFormJson.isSummaryOnlyByInvoice) {
+                                        $scope.PreviewPage.gridData = createGroupingMap($scope.PreviewPage.gridData, 'Invoice_Number');
+                                    }
+                                    postProcessAfterSorting('CustomerInvoiceDetailRecords');
+                                }, function(error) {
+                                }); 
+	                        });
+	                        return true;
+	                    }
+                  }, function(errorSearchResult) {
+                      Notification.error("Error occurred while fetching the records.");
+                  });
+                }
+                
+                // Get the reporting grid data
+                $scope.PreviewPage.getReportingData = function(selectedObjName, uniqueValueFieldLastValue, ObjectsList, objAPINameToLastValueMap) {
+	                if(selectedObjName == 'Part FIFO') {
+	                	getPartFIFOReportingData();
+                    } else if(selectedObjName == 'Customer Invoice Details') {
+	                	getCustomerInvoiceDetailsReportingData();
+                    } else {
+                        PreviewRecordsService.getReportData(JSON.stringify($scope.PreviewPage.filterFormJson),
+                                                            selectedObjName,
+                                                            uniqueValueFieldLastValue,
+                                                            JSON.stringify(objAPINameToLastValueMap)
+                                                        ).then(function(reportResult) {
+
+                             var data = reportResult.ResultData[reportResult.ResultData.RecordsVariableName];
+                              if(reportResult.ResultData.RecordsVariableName == 'TaxDetailRecords') {
+                                PreviewRecordsService.getTaxDetailReportData(JSON.stringify($scope.PreviewPage.filterFormJson)).then(function(taxDetailReportResult) {
+                                        for(var k = 0; k < taxDetailReportResult.length; k++) {
+                                            data.push(taxDetailReportResult[k]);
+                                  }
+                                        for(i = 0; i < data.length; i++) {
+                                            data[i][data[i].Tax_Name + " (Taxable)"] = data[i].Taxable_Amount;
+                                            data[i][data[i].Tax_Name + " (Tax)"] = data[i].Tax_Amount; 
+                                            data[i][data[i].Tax_Name] = data[i].Non_Taxable_Amount;
+                              } 
+                              $scope.PreviewPage.gridData = $scope.PreviewPage.gridData.concat(data);
+                                        sortingTaxDetailsRecords().then( function(success) {
+                                            postProcessAfterSorting();
+                                        }, function(error) {
+                                        }); 
+                                }, function(errorSearchResult) {
+                                    Notification.error("Error occurred while fetching the records.");
+                                });
+                            } else {
+                                $scope.PreviewPage.gridData = $scope.PreviewPage.gridData.concat(data);
+                            if(!reportResult.IsProcessCompleted && $scope.PreviewPage.gridData.length < MAX_RECORDS && !(selectedObjName == 'Invoiced Items' && $scope.PreviewPage.filterFormJson.IsSummaryFormat)){
+                                $scope.PreviewPage.getReportingData(selectedObjName, reportResult.UniqueFieldName, ObjectsList, reportResult.ObjAPINameToLastValueMap);
+                            } else {
+                                if($scope.PreviewPage.gridData.length >= MAX_RECORDS){
+                                    $scope.PreviewPage.showcolumnsTotal = false;
+                                    ObjectsList = [];
+                                }
+
+                                if(ObjectsList.length > 1) {
+                                    ObjectsList.splice(0, 1);
+                                    $scope.PreviewPage.objectsReportingDataCall(ObjectsList);
+
+                                } else {
+                                    if(reportResult.ResultData.RecordsVariableName === 'PartMovementRecords') {
+                                        sortingPartMovementRecords().then( function(success) {
+                                            postProcessAfterSorting();
+                                        }, function(error) {
+                                        }); 
+                                    } else if(reportResult.ResultData.RecordsVariableName === 'CustomerInvoiceDetailRecords') {
+                                        sortCustomerInvoiceDetailsSearchedRecords().then( function(success) {
+                                            if($scope.PreviewPage.filterFormJson.isSummaryOnlyByInvoice) {
+	                                            $scope.PreviewPage.gridData = createGroupingMap($scope.PreviewPage.gridData, 'Invoice_Number');
+	                                        }
+                                            postProcessAfterSorting(reportResult.ResultData.RecordsVariableName);
+                                        }, function(error) {
+                                        }); 
+                                    } else {
+                                        postProcessAfterSorting();
+                                    }
+                                }
+                                }
+                            }
+                                return true;
+                        }, function(errorSearchResult) {
+                            // ERROR
+                            Notification.error("{!$Label.ExportGridRecords_PDF_An_error_occurred_please_try_again}");
+                        });
+                	}
+                }
+                function postProcessAfterSorting(recordName) {
+                    if($scope.PreviewPage.ExportGroupField != null && $scope.PreviewPage.ExportGroupField == 'Type'){
+                       angular.forEach($scope.PreviewPage.gridData, function(value, key) {
+                           value.Type = $scope.PreviewPage.displayObjectTypeToNameMap[value.Type];
+                       });
+                   }
+                   // Group records
+                   $scope.PreviewPage.groupRecords(recordName);
+                   
+                   // Sort headers
+                   $scope.PreviewPage.sortGroupedRecordHeader(); /* Added by richa #159 23/09/2016 */
+                   
+                   // Sort records
+                   $scope.PreviewPage.sortGroupedRecords();
+                   $scope.PreviewPage.cleanExportModel();
+                   $scope.PreviewPage.exportDataToPDF();
+                }
+                
+                function sortingPartMovementRecords() {
+                    var defer = $q.defer();
+                    defer.resolve($scope.PreviewPage.gridData.sort(function(a, b){
+                        if(a.Part_Number.toUpperCase() < b.Part_Number.toUpperCase()) return -1;
+                        if(a.Part_Number.toUpperCase() > b.Part_Number.toUpperCase()) return 1;
+                        return 0;
+                    }));
+                    return defer.promise;
+                }
+                
+                function sortingTaxDetailsRecords () {
+                    var defer = $q.defer();
+                    defer.resolve($scope.PreviewPage.gridData.sort(function(a, b){
+                        if(a.Transaction_Date.toUpperCase() < b.Transaction_Date.toUpperCase()) return -1;
+                        if(a.Transaction_Date.toUpperCase() > b.Transaction_Date.toUpperCase()) return 1;
+                        return 0;
+                    }));
+                    return defer.promise;
+                }
+                
+                function sortCustomerInvoiceDetailsSearchedRecords() {
+		        	var defer = $q.defer();
+		            defer.resolve($scope.PreviewPage.gridData.sort(function(a, b) {
+		            	a['Invoice_Number'] = (a['Invoice_Number'] == null || a['Invoice_Number'] == '') ? '' : a['Invoice_Number'];
+		            	b['Invoice_Number'] = (b['Invoice_Number'] == null || b['Invoice_Number'] == '') ? '' : b['Invoice_Number'];
+		                if(a['Invoice_Number'].toUpperCase() == b['Invoice_Number'].toUpperCase()) return 0;
+		                if(a['Invoice_Number'].toUpperCase() < b['Invoice_Number'].toUpperCase()) return 1;
+		                if(a['Invoice_Number'].toUpperCase() > b['Invoice_Number'].toUpperCase()) return -1;
+		            }));
+		        	
+		        	defer.resolve($scope.PreviewPage.gridData.sort(function(a, b) {
+		            	a['Item_Type'] = (a['Item_Type'] == null || a['Item_Type'] == '') ? '' : a['Item_Type'];
+		            	b['Item_Type'] = (b['Item_Type'] == null || b['Item_Type'] == '') ? '' : b['Item_Type'];
+		            	
+		            	if(itemTypeList[a['Item_Type']] < itemTypeList[b['Item_Type']]) return -1;
+	                	if(itemTypeList[a['Item_Type']] > itemTypeList[b['Item_Type']]) return 1;
+	                	return 0;
+		            }));
+		        	
+		        	defer.resolve($scope.PreviewPage.gridData.sort(function(a, b) {
+		                a['Invoice_Date'] = (a['Invoice_Date'] == null || a['Invoice_Date'] == '') ? '' : a['Invoice_Date'];
+		            	b['Invoice_Date'] = (b['Invoice_Date'] == null || b['Invoice_Date'] == '') ? '' : b['Invoice_Date'];
+		            	var dateA = moment(a['Invoice_Date'], $scope.PreviewPage.SchedulingDateFormat).toDate();
+		                var dateB = moment(b['Invoice_Date'], $scope.PreviewPage.SchedulingDateFormat).toDate();
+		                if(dateA < dateB) return 1;
+		                if(dateA > dateB) return -1;
+		                return 0;
+		            }));
+		            return defer.promise;
+		        }
+
+                function createGroupingMap(List, groupgVar) {
+                    var groupingMap = {};
+                    var commissionProfitMap = {};
+                    var isCOInvDetailReport = false;
+                    for(var k = 0; k < $scope.PreviewPage.filterFormJson.Type.Objects.length; k++) {
+                        if($scope.PreviewPage.filterFormJson.Type.Objects[k] == 'Customer Invoice Details') {
+                            isCOInvDetailReport = true;
+                            break;
+                        }
+                    }
+                    for(var i=0;i<List.length;i++) {
+                        if(!groupingMap[List[i][groupgVar]]) {
+                            groupingMap[List[i][groupgVar]] = List[i];
+                        } else {
+                            var totalsVarList = [];
+                            if(isCOInvDetailReport) totalsVarList = searchNameToTotalsVarMap['Customer Invoice Details'];
+                            for(var j=0;j<totalsVarList.length;j++) {
+                                groupingMap[List[i][groupgVar]][totalsVarList[j]] = groupingMap[List[i][groupgVar]][totalsVarList[j]] + List[i][totalsVarList[j]];
+                            }
+                        }
+                    }
+                    var updatedList = [];
+                    angular.forEach(groupingMap, function(value, key) {
+                        updatedList.push(groupingMap[key]);       	
+                    });
+                    return updatedList;
+                }
+		        
+		        var searchNameToTotalsVarMap = {
+		            "Customer Invoice Details" : [
+		                'Total_Price',
+		                'Total_Cost',
+		                'Labor_Sales',
+		                'Total_Profit',
+		                'Part_Sales',
+		                'Sublet_Sales',
+		                'Fee_Sales',
+		                'Supplies_Sales',
+		                'Unit_Base_Sales',
+		                'Unit_Dealer_Sales',
+		                'Unit_Factory_Sales',
+		                'Option_Fee_Sales',
+		                'Option_Labor_Sales',
+		                'Option_Part_Sales',
+		                'Option_Product_Sales',
+		                'Option_Sublet_Sales',
+		                'Option_Warranty_Sales',
+		                'Trade_ins',
+		                'Finance_Product_Sales',
+                        'Finance_Commission',
+                        'Sales_Commission'
+		            ]
+		        };
+		        
+		        var itemTypeList = {
+	                "Part": 1,
+	            	"Labor": 2,
+	            	"Sublet": 3,
+	            	"Fee": 4,
+	            	"Supplies": 5,
+	            	"Unit-Base": 6,
+	            	"Unit-Factory": 7,
+	            	"Unit-Dealer": 8,
+	            	"Option-Part": 9,
+	            	"Option-Labor": 10,
+	            	"Option-Sublet": 11,
+	            	"Option-Fee": 12,
+	            	"Option-Warranty": 13,
+	            	"Option-Product": 14,
+	            	"Trade-in": 15,
+	            	"Finance Product": 16
+	            };
+                
+                // Method to export data to PDF
+                $scope.PreviewPage.exportDataToPDF = function() {
+                    try {
+	                    var pdfDoc = jspdf.jsPDF('l', 'pt');
+                        pdfDoc.autoTable({
+                            columns: $scope.PreviewPage.columnHeadersFormatted,
+                            body: $scope.PreviewPage.exportData,
+	                        theme : 'striped',
+	                        margin : {
+	                            top : 60
+	                        },
+                            styles: { overflow: 'linebreak' },
+	                        willDrawPage : function (data) {
+	                            pdfDoc.text($scope.PreviewPage.filterLabel + ": " + $scope.PreviewPage.filterGenerationDate, 40, 30);     
+	                        },
+	                        didDrawPage : function (data) {
+	                            pdfDoc.text('Footer', 40, 800);
+	                        }
+	                    });
+	                    pdfDoc.save("Export.pdf");
+	                    pdfDoc = null;
+	                    setTimeout(function(){
+	                    $scope.PreviewPage.isLoading = false;
+	                        self.close();
+	                    }, 1000);
+                    } catch(e) {
+                        Notification.error("{!$Label.ExportGridRecords_PDF_An_error_occurred_please_try_again}");
+                    }
+                }
+                
+                // Method to clean all data models respective to Export format
+                $scope.PreviewPage.cleanExportModel = function() {
+                    $scope.PreviewPage.exportData = [];
+                    
+                    // Create Header row formatted data (JSPDF)
+                    angular.forEach($scope.PreviewPage.columns.DisplayedColumns, function(col, key) {
+                        if((col.RecordKey != 'Active' || $scope.PreviewPage.IsIncludeInactiveRecords) && 
+                                            (col.RecordKey != 'Type' || $scope.PreviewPage.SearchName != 'Technician Performance')) {
+                        var headerCol = {};
+                        if($scope.PreviewPage.LabelChangeMap[col.Label]) {
+                            headerCol["header"] = $scope.PreviewPage.LabelChangeMap[col.Label];
+                        } else {
+                            headerCol["header"] = col.Label;
+                        }
+                        headerCol["dataKey"] = col.RecordKey;
+                        
+                        $scope.PreviewPage.columnHeadersFormatted.push(headerCol);
+                        }
+                    });
+                    
+                    /*
+                    var headerRowObj = {};
+                    // Loop over displayed columns
+                    angular.forEach($scope.PreviewPage.columns.DisplayedColumns, function(col, key) {
+                        var colName = col.RecordKey;
+                        headerRowObj[colName] = col.Label;
+                    });
+                    $scope.PreviewPage.exportData.push(headerRowObj);
+                    */
+                    
+                    /* Start: Added by richa #159 26/09/2016 */
+                    try {
+                        var orderedGridGroupedResult = {};
+                        var dateFormatArray = $scope.PreviewPage.DateFormat.split("/");
+                        if((dateFormatArray[1].indexOf("mm") != -1)&&($scope.PreviewPage.ExportGroupField.indexOf('Modified')!= -1 || $scope.PreviewPage.ExportGroupField.indexOf('Created')!= -1  || $scope.PreviewPage.ExportGroupField.indexOf('Invoice_Date')!= -1 || $scope.PreviewPage.ExportGroupField.indexOf('Last Counted')!= -1
+                                    || $scope.PreviewPage.ExportGroupField.indexOf('Last Sold')!= -1 || $scope.PreviewPage.ExportGroupField.indexOf('Last Stocked')!= -1  
+                                    || $scope.PreviewPage.ExportGroupField.indexOf('Stocked')!= -1 )){
+                            Object.keys($scope.PreviewPage.gridGroupedResult).sort(
+                            function(a,b){var aa = (a!= null ?  a.split('/').reverse().join(): ''),bb =(b!=null ? b.split('/').reverse().join() : ''); 
+                            return aa<bb ? 1 : (aa > bb ? -1 :0 )}
+                            ).forEach(function(key) {
+                                orderedGridGroupedResult[key] = $scope.PreviewPage.gridGroupedResult[key];
+                            });
+                        } else {
+                            if($scope.PreviewPage.filterFormJson.Type.Objects.length > 0 && sortReportList.includes($scope.PreviewPage.filterFormJson.Type.Objects[0])) {
+                                $scope.PreviewPage.gridGroupFieldValues.forEach(function(key) {
+                                    orderedGridGroupedResult[key] = $scope.PreviewPage.gridGroupedResult[key];
+                                });
+                            } else {
+                                Object.keys($scope.PreviewPage.gridGroupedResult).sort().forEach(function(key) {
+                                    orderedGridGroupedResult[key] = $scope.PreviewPage.gridGroupedResult[key];
+                                });
+                            }
+                        }
+                        $scope.PreviewPage.gridGroupedResult = orderedGridGroupedResult;
+                    } catch(err) {
+                        debug(err);
+                    }
+                    /* End: Added by richa #159 26/09/2016 */
+                    
+                    angular.forEach($scope.PreviewPage.gridGroupedResult, function(value, groupKey) {
+                        /* Start: Added by richa #159 01/10/2016 */
+                        if(groupKey.toUpperCase() == "All".toUpperCase()) {
+                            value.splice(0, 1);
+                        }
+                        /* End: Added by richa #159 01/10/2016 */
+                    
+                        // Key results looping
+                        angular.forEach(value, function(groupedValues, key) {
+                            var exportRecObj = {};
+                            // Loop over displayed columns
+                            angular.forEach($scope.PreviewPage.columns.DisplayedColumns, function(col, key) {
+                                var colName = col.RecordKey;
+                                exportRecObj[colName] = (Object.keys(groupedValues).length == 1 && key == 0) ? groupedValues.Type : groupedValues[colName];
+                                if(!isNaN(exportRecObj[colName]) && (col.Type == 'Number' || col.Type == 'Currency' || col.Type == 'Dynamic Currency')){
+                                    exportRecObj[colName] = (col.Type == 'Currency' || col.Type == 'Dynamic Currency') ? '$' + parseFloat(exportRecObj[colName]).toFixed(2) : parseFloat(exportRecObj[colName]).toFixed(2);
+                                }
+                                exportRecObj[colName] = (exportRecObj[colName] == 'null' || exportRecObj[colName] == null) ? '' : exportRecObj[colName];
+                            });
+                            
+                            $scope.PreviewPage.exportData.push(exportRecObj);
+                        });
+                        
+                        // Loop over displayed columns
+                        var exportRecObj = {};
+                        var exportRecObjEmpty = {};
+                        
+
+                        angular.forEach($scope.PreviewPage.columns.DisplayedColumns, function(col, key) {
+                            var colName = col.RecordKey;
+                            if($scope.PreviewPage.filterFormJson.Type.Objects.length == 0 || $scope.PreviewPage.filterFormJson.Type.Objects[0] != 'Tax Detail') {
+                            exportRecObj[colName] = $scope.PreviewPage.gridGroupAggregateResult[groupKey][colName];
+                            } else if(colName == "Taxable_Amount") {
+                                exportRecObj[colName] = $scope.PreviewPage.gridGroupAggregateResult[groupKey][groupKey + " (Taxable)"];
+                            } else if(colName == "Tax_Amount"){
+                                exportRecObj[colName] = $scope.PreviewPage.gridGroupAggregateResult[groupKey][groupKey + " (Tax)"];
+                            } else if(colName == "Non_Taxable_Amount") {
+                                exportRecObj[colName] = $scope.PreviewPage.gridGroupAggregateResult[groupKey][groupKey];
+                            }
+                            exportRecObjEmpty[colName] = '';
+                            if(!isNaN(exportRecObj[colName]) && (col.Type == 'Number' || col.Type == 'Currency' || col.Type == 'Dynamic Currency')){
+                                exportRecObj[colName] = (col.Type == 'Currency' || col.Type == 'Dynamic Currency') ? '$' + parseFloat(exportRecObj[colName]).toFixed(2) : parseFloat(exportRecObj[colName]).toFixed(2);
+                            }
+                            exportRecObj[colName] = (exportRecObj[colName] == 'null' || exportRecObj[colName] == null) ? '' : exportRecObj[colName];
+                        });
+                        $scope.PreviewPage.exportData.push(exportRecObj);
+                        $scope.PreviewPage.exportData.push(exportRecObjEmpty);
+                    });
+                }
+                
+                // Method to group records
+                $scope.PreviewPage.groupRecords = function(recordName) {
+                    angular.forEach($scope.PreviewPage.gridData, function(value, key) {
+                        var obj = value;
+                        
+                        // Grouping data set funtionality:
+                        if($scope.PreviewPage.ExportGroupField != null && $scope.PreviewPage.ExportGroupField != "") {
+                            var obj1Id = value.Id;
+                            var groupedFieldName = $scope.PreviewPage.ExportGroupField;
+                            //if($scope.PreviewPage.recordIdsIncluded.indexOf(obj1Id) == -1) {
+                                $scope.PreviewPage.recordIdsIncluded += ' ' + obj1Id;
+                                if($scope.PreviewPage.gridGroupAggregateResult[obj[groupedFieldName]] == undefined) {
+                                    $scope.PreviewPage.gridGroupFieldValues.push(obj[groupedFieldName]);
+                                    $scope.PreviewPage.gridGroupAggregateResult[obj[groupedFieldName]] = {};
+                                }
+                                angular.forEach($scope.PreviewPage.aggregateFieldNames.visible, function(value, key) {
+                                    if($scope.PreviewPage.gridGroupAggregateResult[obj[groupedFieldName]][value.RecordKey] == null) {
+                                        $scope.PreviewPage.gridGroupAggregateResult[obj[groupedFieldName]][value.RecordKey] = 0;
+                                    }
+                                    if(!obj[value.RecordKey] || isNaN(obj[value.RecordKey])) {
+                                        obj[value.RecordKey] = 0;
+                                    }
+                                    $scope.PreviewPage.gridGroupAggregateResult[obj[groupedFieldName]][value.RecordKey] += obj[value.RecordKey];
+                                });
+                                $scope.PreviewPage.gridGroupAggregateResult[obj[groupedFieldName]]["GroupName"] = obj[groupedFieldName];
+                                
+                                // Push records as per grouping
+                                if($scope.PreviewPage.gridGroupedResult[obj[groupedFieldName]] == undefined) {
+                                    $scope.PreviewPage.gridGroupedResult[obj[groupedFieldName]] = [];
+                                }
+                                groupedFieldName = obj[groupedFieldName];
+                            //}
+                        } else {
+                            var obj1Id = value.Id;
+                            groupedFieldName = 'All';
+                            //if($scope.PreviewPage.recordIdsIncluded.indexOf(obj1Id) == -1) {
+                                $scope.PreviewPage.recordIdsIncluded += ' ' + obj1Id;
+                                
+                                if($scope.PreviewPage.gridGroupAggregateResult[groupedFieldName] == undefined) {
+                                    $scope.PreviewPage.gridGroupFieldValues.push(groupedFieldName);
+                                    $scope.PreviewPage.gridGroupAggregateResult[groupedFieldName] = {};
+                                }
+                                angular.forEach($scope.PreviewPage.aggregateFieldNames.visible, function(value, key) {
+                                    if($scope.PreviewPage.gridGroupAggregateResult[groupedFieldName][value.RecordKey] == null || $scope.PreviewPage.gridGroupAggregateResult[groupedFieldName][value.RecordKey] == undefined ) {
+                                        $scope.PreviewPage.gridGroupAggregateResult[groupedFieldName][value.RecordKey] = 0;
+                                    }
+                                    if(!obj[value.RecordKey] || isNaN(obj[value.RecordKey])) {
+                                        obj[value.RecordKey] = 0;
+                                    }
+                                    $scope.PreviewPage.gridGroupAggregateResult[groupedFieldName][value.RecordKey] += obj[value.RecordKey];
+                                });
+                                $scope.PreviewPage.gridGroupAggregateResult[groupedFieldName]["GroupName"] = groupedFieldName;
+                                
+                                // Push records as per grouping
+                                if($scope.PreviewPage.gridGroupedResult[groupedFieldName] == undefined) {
+                                    $scope.PreviewPage.gridGroupedResult[groupedFieldName] = [];
+                                }
+                            //}
+                        }
+                        
+                        // Update Type field value as per object type number
+                        if(obj.Type != null && ($scope.PreviewPage.ExportGroupField == null || $scope.PreviewPage.ExportGroupField != 'Type')) {
+                            obj.Type = $scope.PreviewPage.displayObjectTypeToNameMap[obj.Type];
+                        }
+                        $scope.PreviewPage.gridGroupedResult[groupedFieldName].push(obj);
+                    });
+                }
+                
+                // Method to sort grouped records individually
+                $scope.PreviewPage.sortGroupedRecords = function() {
+                    angular.forEach($scope.PreviewPage.gridGroupFieldValues, function(value, key) {
+                        $scope.PreviewPage.gridGroupedResult[value].sort($scope.dynamicSortMultiple($scope.PreviewPage.gridSortAttrs));
+                        $scope.PreviewPage.gridGroupedResult[value].splice(0, 0, {Type : $scope.PreviewPage.ExportGroupFieldLabel + ': ' + value});
+                    });
+                }
+                
+                /* Start: Added by richa #159 23/09/2016 */
+                // Method to sort grouped record headers
+                $scope.PreviewPage.sortGroupedRecordHeader = function() {
+                    if($scope.PreviewPage.filterFormJson.Type.Objects.length > 0 && sortReportList.includes($scope.PreviewPage.filterFormJson.Type.Objects[0])) {
+                        $scope.PreviewPage.gridGroupFieldValues = customSort($scope.PreviewPage.gridGroupFieldValues);
+                    } else {
+                        $scope.PreviewPage.gridGroupFieldValues.sort();
+                    }
+                }
+                /* End: Added by richa #159 23/09/2016 */
+                
+                // Delete raw current filter data for preview purpose
+                $scope.PreviewPage.deleteRawFilterData = function() {
+                    PreviewRecordsService.deleteRawFilterData($scope.PreviewPage.filterId).then(function(successfulSearchResult) {
+                        
+                    });
+                }
+
+                var sortReportList = ['Payroll Hours'];
+                var customSort = function(listToSort) {
+                    return listToSort.sort(function (val1, val2) {
+                        if(val1 == null && val2 != null) return 1;
+                        if(val1 != null && val2 == null) return -1;
+                        if(val1 == null && val2 == null) return 1;
+                        if(val1.toUpperCase() < val2.toUpperCase()) return -1;
+                        if(val1.toUpperCase() > val2.toUpperCase()) return 1;
+                        return 0;
+                    });
+                }
+                
+                $scope.dynamicSort = function(propertyObject) {
+                    var recordKey = propertyObject.ExportSort;
+                    var keyIndex = $scope.PreviewPage.columns.DisplayedColumns.findIndex(colRec => propertyObject.ExportSort == colRec.Label);
+                    if(keyIndex != -1 && $scope.PreviewPage.objectsList.length > 0 && sortReportList.includes($scope.PreviewPage.filterFormJson.Type.Objects[0])) {
+                        recordKey = $scope.PreviewPage.columns.DisplayedColumns[keyIndex].RecordKey;
+                    }
+                    return function (obj1,obj2) {
+                        if(propertyObject.Type == "Number" || propertyObject.Type == "Currency" || propertyObject.Type == "Icon") {
+                            var obj1Val = parseFloat(obj1[recordKey]); /* Changed by richa FieldName -> ExportSort #159 23/09/2016 */
+                            var obj2Val = parseFloat(obj2[recordKey]); /* Changed by richa FieldName -> ExportSort #159 23/09/2016 */
+                            
+                            if(propertyObject.SortDirection == 'DESC'){
+                                obj1Val = isNaN(obj1Val) ? -1 : obj1Val;
+                                obj2Val = isNaN(obj2Val) ? -1 : obj2Val;
+                                
+                                return (obj1Val < obj2Val) ? 1
+                                        : (obj1Val > obj2Val) ? -1 : 0; 
+                            }else{
+                                obj1Val = isNaN(obj1Val) ? Number.MAX_VALUE : obj1Val;
+                                obj2Val = isNaN(obj2Val) ? Number.MAX_VALUE : obj2Val;
+                                
+                                return (obj1Val < obj2Val) ? -1
+                                        : (obj1Val > obj2Val) ? 1 : 0;
+                            }
+                        } else if(propertyObject.Type == "Date") {
+                            var dateFormatArray = $scope.PreviewPage.DateFormat.split("/");
+                            if(dateFormatArray[1].indexOf("mm") != -1){
+                            
+                                var obj1Val = obj1[recordKey]!= null ? obj1[recordKey].split('/').reverse().join() : '';
+                                var obj2Val =  obj2[recordKey] != null ? obj2[recordKey].split('/').reverse().join() : ''; 
+                                if(propertyObject.SortDirection == 'DESC'){
+                                    return obj1Val>obj2Val ? -1 : (obj1Val < obj2Val ? 1 :0 )
+                                    
+                                }else{
+                                    return obj1Val<obj2Val ? -1 : (obj1Val > obj2Val ? 1 :0 )
+                                }
+                            }else{
+                                var obj1Val = new Date(obj1[recordKey]);
+                                var obj2Val = new Date(obj2[recordKey]);
+                                
+                                if(propertyObject.SortDirection == 'DESC'){
+                                    obj1Val = isNaN(obj1Val) ? -1 : obj1Val;
+                                    obj2Val = isNaN(obj2Val) ? -1 : obj2Val;
+                                    
+                                    return (obj1Val < obj2Val) ? 1 
+                                            : (obj1Val > obj2Val) ? -1 : 0; 
+                                }else{
+                                    obj1Val = isNaN(obj1Val) ? Number.MAX_VALUE : obj1Val;
+                                    obj2Val = isNaN(obj2Val) ? Number.MAX_VALUE : obj2Val;
+                                    
+                                    return (obj1Val < obj2Val) ? -1 
+                                            : (obj1Val > obj2Val) ? 1 : 0;
+                                }
+                            }
+                        } else {
+                            var obj1Val = (obj1[recordKey]) ? obj1[recordKey].toString().toLowerCase() : obj1[recordKey]; /* Changed by richa FieldName -> ExportSort #159 23/09/2016 */
+                            var obj2Val = (obj2[recordKey]) ? obj2[recordKey].toString().toLowerCase() : obj2[recordKey]; /* Changed by richa FieldName -> ExportSort #159 23/09/2016 */
+                            if(propertyObject.SortDirection == 'DESC'){
+                                return (obj1Val == null || obj1Val == '') ? 1
+                                        : ((obj2Val == null || obj2Val == '') ? -1
+                                        : ((obj1Val < obj2Val) ? 1
+                                        : ((obj1Val > obj2Val) ? -1 : 0)
+        
+                                        ));
+                            }else{
+                                return (obj1Val == null || obj1Val == '') ? -1
+                                        : ((obj2Val == null || obj2Val == '') ? 1
+                                        : ((obj1Val < obj2Val) ? -1
+                                        : ((obj1Val > obj2Val) ? 1 : 0)
+        
+                                        ));
+                            }
+                        }
+                    }
+                }
+                
+                $scope.dynamicSortMultiple = function() {
+                    /*
+                     * save the arguments object as it will be overwritten
+                     * note that arguments object is an array-like object
+                     * consisting of the names of the properties to sort by
+                     */
+                    var props = arguments[0];
+                    return function (obj1, obj2) {
+                        var i = 0, result = 0, numberOfProperties = props.length;
+                        /* try getting a different result from 0 (equal)
+                         * as long as we have extra properties to compare
+                         */
+                        while(result === 0 && i < numberOfProperties) {
+                            result = $scope.dynamicSort(props[i])(obj1, obj2);
+                            i++;
+                        }
+                        return result;
+                    }
+                }
+            });
+            
+            // Service Starts   
+            PrevRecords.service("PreviewRecordsService", function ($q) {
+                // Get the report data based on filters
+            this.getTaxDetailReportData = function(filterJSON)
+                {   
+                    filterJSON = encodeString(filterJSON);
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.PreviewGridRecordsCtrl.getTaxDetailReportData}', filterJSON,
+                        function (result, event) {
+                           if (event.type == 'exception') {
+                                deferred.reject(event.message);
+                            } else {
+                                var gridData = decodeString(result);
+                                deferred.resolve(JSON.parse(gridData));
+                            }
+                        }, {
+                            escape : true
+                    });
+                    return deferred.promise;
+                }
+                // Get the report data based on filters
+                this.getReportData = function(filterJSON, selectedObjName, uniqueValueFieldLastValue, objAPINameToLastValue)
+                {   
+                    filterJSON = encodeString(filterJSON);
+                    selectedObjName = encodeString(selectedObjName);
+                    uniqueValueFieldLastValue = encodeString(uniqueValueFieldLastValue);
+                    objAPINameToLastValue = encodeString(objAPINameToLastValue);
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.PreviewGridRecordsCtrl.getReportData}', filterJSON, selectedObjName, uniqueValueFieldLastValue, objAPINameToLastValue,
+                        function (result, event) {
+                           if (event.type == 'exception') {
+                                deferred.reject(event.message);
+                            } else {
+                                var gridData = decodeString(result);
+                                deferred.resolve(JSON.parse(gridData));
+                            }
+                        }, {
+                            escape : true,
+                            buffer: false,
+                            timeout: 120000
+                    });
+                    return deferred.promise;
+                }
+                this.getPartIdsHavingActivity = function(filterJSON)
+                {   
+                    filterJSON = encodeString(filterJSON);
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.PreviewGridRecordsCtrl.getPartIdsHavingActivity}', filterJSON,
+                        function (result, event) {
+                           if (event.type == 'exception') {
+                                deferred.reject(event.message);
+                            } else {
+                                var gridData = decodeString(result);
+                                deferred.resolve(JSON.parse(gridData));
+                            }
+                        }, {
+                            escape : true
+                    });
+                    return deferred.promise;
+                }
+                
+                this.getSpecificDateRangeInvoiceIds = function(filterJSON)
+                {   
+                    filterJSON = encodeString(filterJSON);
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.PreviewGridRecordsCtrl.getSpecificDateRangeInvoiceIds}', filterJSON,
+                        function (result, event) {
+                           if (event.type == 'exception') {
+                                deferred.reject(event.message);
+                            } else {
+                                var gridData = decodeString(result);
+                                deferred.resolve(JSON.parse(gridData));
+                            }
+                        }, {
+                            escape : true
+                    });
+                    return deferred.promise;
+                }
+
+                this.getPartMovementDataWithNoActivity = function(filterJSON, lastRecordUniqueFieldValue, partIdSetStr)
+                {   
+                    filterJSON = encodeString(filterJSON);
+                    lastRecordUniqueFieldValue = encodeString(lastRecordUniqueFieldValue);
+                    partIdSetStr = encodeString(partIdSetStr);
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.PreviewGridRecordsCtrl.getPartMovementDataWithNoActivity}', filterJSON, lastRecordUniqueFieldValue, partIdSetStr,
+                        function (result, event) {
+                           if (event.type == 'exception') {
+                                deferred.reject(event.message);
+                            } else {
+                                var gridData = decodeString(result);
+                                deferred.resolve(JSON.parse(gridData));
+                            }
+                        }, {
+                            escape : true,
+                            buffer: false,
+                            timeout: 120000
+                    });
+                    return deferred.promise;
+                }
+                
+                this.getPartMovementActivityReportData = function(filterJSON, partIdSetStr)
+                {   
+                    filterJSON = encodeString(filterJSON);
+                    partIdSetStr = encodeString(partIdSetStr);
+                    var deferred = $q.defer();
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.PreviewGridRecordsCtrl.getPartMovementActivityReportData}', filterJSON, partIdSetStr,
+                        function (result, event) {
+                           if (event.type == 'exception') {
+                                deferred.reject(event.message);
+                            } else {
+                                var gridData = decodeString(result);
+                                deferred.resolve(JSON.parse(gridData));
+                            }
+                        }, {
+                            escape : true,
+                            buffer: false,
+                            timeout: 120000
+                    });
+                    return deferred.promise;
+                }
+                // Get the filter data for preview records display
+                this.getFilterJSONData = function (filterId) {
+                    filterId = encodeString(filterId);
+                    var deferred = $q.defer();
+                    // make AJAX request to the remote service
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.PreviewGridRecordsCtrl.getFilterJSONData }', filterId,
+                        function (result, event) {
+                        if (event.type == 'exception') {
+                            deferred.reject(event.message);
+                        } else {
+                            var filterData = decodeString(result);
+                            deferred.resolve(JSON.parse(filterData));
+                        }
+                    }, {
+                        escape : true
+                    });
+                    return deferred.promise;
+                }
+                
+                // Get the filter data for preview records display
+                this.deleteRawFilterData = function (filterId) {
+                    filterId = encodeString(filterId);
+                    var deferred = $q.defer();
+                    // make AJAX request to the remote service
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.PreviewGridRecordsCtrl.deleteRawFilterData }', filterId,
+                        function (result, event) {
+                        if (event.type == 'exception') {
+                            deferred.reject(event.message);
+                        } else {
+                            var filterData = decodeString(result);
+                            deferred.resolve(filterData);
+                        }
+                    }, {
+                        escape : true
+                    });
+                    return deferred.promise;
+                }
+            });
+        </script>
+        
+        <body ng-controller="prevRecordsCtrl" ng-init="PreviewPage.loadGridData();">
+        	<div class="LoadingDiv" ng-show="PreviewPage.isLoading">
+            <div class="loadingIconContainer">
+                <c:BPLoading />
+            </div>
+        </div>
+        </body>
+    </html>
+</apex:page>

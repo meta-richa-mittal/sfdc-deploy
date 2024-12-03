@@ -39,7 +39,6 @@ public without sharing class CustomerOrderWrapper {
             }
             
             this.DepositList = new List<CODeposit>(); 
-            coDepositsList = sortCODeposit(coDepositsList);
 	        for(CO_Deposit__c coDeposit  : coDepositsList) {
 	            this.DepositList.add(new CODeposit(coDeposit));
 	        }
@@ -92,12 +91,33 @@ public without sharing class CustomerOrderWrapper {
         public String MerchandiseTransactionTypeLabel;
         public String ShopifyId;
         public String ShopifyUrl;
+        public String SpecialOrderStatus;
+        public Boolean IsArchived;
+        public Boolean IsOverrideTax;
+        public Boolean IsTaxBasedOnCustomerAddress;
+        public String ApplicableTaxId;
+        public String OverrideTaxApplicableOn;
+        public String CustomerContactId;
+        public String CustomerShippingAddressId;
+        public List<ServiceOrderWrapper.ServiceNotes> MerchandiseNotesForCustomer;
+        public Decimal MerchPartsBulkDiscountPct;
+        public Decimal MerchFeesBulkDiscountPct;
+        public Decimal MerchPartsBulkDiscountPctCopy;
+        public Decimal MerchFeesBulkDiscountPctCopy;
         
         public COHeader() {
             this.Level = 1;
         }
         public COHeader(Integer level) {
             this.Level = level;
+        }
+
+        public void setCOTotals(CO_Header__c coHeaderObj) {
+            this.OrderTotal = (coHeaderObj.Order_Total__c != null) ? coHeaderObj.Order_Total__c : 0;
+            this.InvoicedAmount = (coHeaderObj.Invoiced_Amount__c != null) ? coHeaderObj.Invoiced_Amount__c : 0;
+            this.UninvoicedAmount = (coHeaderObj.Uninvoiced_Amount__c != null) ? coHeaderObj.Uninvoiced_Amount__c : 0;
+            this.TotalPayments = (coHeaderObj.Total_Payment__c != null) ? coHeaderObj.Total_Payment__c : 0;
+            this.TotalBalanceDue = this.InvoicedAmount - this.TotalPayments;
         }
 
         public COHeader(CO_Header__c coHeaderObj) {
@@ -116,8 +136,8 @@ public without sharing class CustomerOrderWrapper {
             this.CustomerStoreCredit = 0;
             this.CreatedDate = (coHeaderObj.CreatedDate != null) ? BPUtility.getFormatedDateTime(datetime.newInstance(coHeaderObj.CreatedDate.year(), 
         																					coHeaderObj.CreatedDate.month(), coHeaderObj.CreatedDate.day())) : '' ;
-        	this.ModifiedDate = (coHeaderObj.LastModifiedDate != null) ? BPUtility.getFormatedDateTime(datetime.newInstance(coHeaderObj.LastModifiedDate.year(), 
-        																					coHeaderObj.LastModifiedDate.month(), coHeaderObj.LastModifiedDate.day())) : '' ;
+        	Datetime lastModifiedDate = BPUtility.getLastModifiedDate(coHeaderObj);
+            this.ModifiedDate = (lastModifiedDate != null) ? BPUtility.getFormatedDateTime(datetime.newInstance(lastModifiedDate.year(), lastModifiedDate.month(), lastModifiedDate.day())) : '' ;
             if(coHeaderObj.Customer__r.Total_Store_Credit__c != null){
                 this.CustomerStoreCredit = coHeaderObj.Customer__r.Total_Store_Credit__c;
             }
@@ -141,6 +161,22 @@ public without sharing class CustomerOrderWrapper {
                 this.ShopifyId = coHeaderObj.Shopify_ID__c;
                 this.ShopifyUrl = coHeaderObj.Shopify_URL__c;
             }
+            if(!coHeaderObj.CO_Section_Details__r.isEmpty()) {
+                this.SpecialOrderStatus = coHeaderObj.CO_Section_Details__r[0].Special_Order_Status__c;
+            }
+            if(coHeaderObj.Is_Override_Merch_Tax__c) {
+                this.IsOverrideTax = coHeaderObj.Is_Override_Merch_Tax__c;
+                this.ApplicableTaxId = coHeaderObj.Merch_Applicable_Tax__c;
+                this.OverrideTaxApplicableOn = coHeaderObj.Override_Merch_Tax_Applicable_On__c;
+            }
+            this.IsArchived = coHeaderObj.Is_Archived__c;
+            this.IsTaxBasedOnCustomerAddress = coHeaderObj.Is_Tax_Based_On_Customer_Address__c;
+            this.CustomerContactId = coHeaderObj.Customer_Contact__c;
+            this.CustomerShippingAddressId = coHeaderObj.Customer_Shipping_Address__c;
+            this.MerchandiseNotesForCustomer = (coHeaderObj.Merchandise_Notes_For_Customer__c != null) ?  ServiceJobService.getServiceNotesList(coHeaderObj.Merchandise_Notes_For_Customer__c.split('\n')) : new List<ServiceOrderWrapper.ServiceNotes>();
+            this.MerchPartsBulkDiscountPctCopy = this.MerchPartsBulkDiscountPct = (coHeaderObj.Parts_Bulk_Discount_Percent__c != null) ? coHeaderObj.Parts_Bulk_Discount_Percent__c : 0;
+            this.MerchFeesBulkDiscountPctCopy = this.MerchFeesBulkDiscountPct = (coHeaderObj.Fees_Bulk_Discount_Percent__c != null) ? coHeaderObj.Fees_Bulk_Discount_Percent__c : 0;
+    
         }
         
         /**
@@ -163,6 +199,7 @@ public without sharing class CustomerOrderWrapper {
                                                             'Invoiced_Amount__c',
                                                             'Total_Payment__c',
                                                             'LastModifiedDate',
+                                                            'Last_Modified_Date__c',
                                                             'Total_Balance_Due__c',
 	                                                        'Merchandise_Commit_Order_controls__c',
 	                                                        'Merchandise_Transaction_Type__c',
@@ -171,7 +208,17 @@ public without sharing class CustomerOrderWrapper {
                                                             'Transaction_Type__r.Code_Label__c',
                                                             'Shopify_ID__c',
                                                             'Shopify_URL__c',
-                                                            'Account_Type__r.Id'
+                                                            'Account_Type__r.Id',
+                                                            'Is_Override_Merch_Tax__c',
+                                                            'Merch_Applicable_Tax__c',
+                                                            'Override_Merch_Tax_Applicable_On__c',
+                                                            'Is_Archived__c',
+                                                            'Is_Tax_Based_On_Customer_Address__c',
+                                                            'Merchandise_Notes_For_Customer__c', 
+                                                            'Parts_Bulk_Discount_Percent__c',
+                                                            'Fees_Bulk_Discount_Percent__c',
+                                                            'Customer_Contact__c',
+                                                            'Customer_Shipping_Address__c'
                                                             };
                                                             
             List<String> coHeaderFieldListLevel2 = new List<String>{ 'Customer__r.Total_Store_Credit__c',
@@ -220,6 +267,8 @@ public without sharing class CustomerOrderWrapper {
         public String CustomerPostal ;
         public String CustomerState ;
         public String CustomerCountry;
+        public String AddressLine1;
+        public String AddressLine2;
         
         public String CustomerShippingAddress ;
         public String CustomerShippingAddress2 ;
@@ -234,6 +283,7 @@ public without sharing class CustomerOrderWrapper {
        	public String CustomerDOB;
        	public Boolean IsShippingAddressExist;
         public String Notes;
+        public Boolean IsChargeOnAccountRestricted;
            
        	
         
@@ -274,6 +324,19 @@ public without sharing class CustomerOrderWrapper {
                 CustomerPostal      = customerCardInfoRec.BillingPostalCode;
                 CustomerState      = customerCardInfoRec.BillingState;
                 CustomerCountry = customerCardInfoRec.BillingCountry;
+                
+                List<String> addressPartList = new List<String>();
+                if(String.isNotBlank(this.CustomerAddress)) addressPartList.add(this.CustomerAddress);
+                if(String.isNotBlank(this.CustomerAddress2)) addressPartList.add(this.CustomerAddress2);
+                this.AddressLine1 = String.join(addressPartList, ', ');
+
+                addressPartList = new List<String>();
+                if(String.isNotBlank(this.CustomerCityProv)) addressPartList.add(this.CustomerCityProv);
+                if(String.isNotBlank(customerCardInfoRec.Billing_County_Parish__c)) addressPartList.add(customerCardInfoRec.Billing_County_Parish__c);
+                if(String.isNotBlank(CustomerState)) addressPartList.add(CustomerState);
+                if(String.isNotBlank(this.CustomerCountry)) addressPartList.add(this.CustomerCountry);
+                if(String.isNotBlank(this.CustomerPostal)) addressPartList.add(this.CustomerPostal);
+                this.AddressLine2 = String.join(addressPartList, ', ');
                 
                 //Shipping Street
                 String shippingStreet;
@@ -344,7 +407,7 @@ public without sharing class CustomerOrderWrapper {
 	            this.CustomerDriverLicenceNumber = (customerCardInfoRec.Drivers_License__c != null) ? customerCardInfoRec.Drivers_License__c : '';
 	            this.CustomerDOB = (customerCardInfoRec.Birth_Date__c != null) ? BPUtility.getFormatedDateTime(datetime.newInstance(customerCardInfoRec.Birth_Date__c.year(), customerCardInfoRec.Birth_Date__c.month(),customerCardInfoRec.Birth_Date__c.day())): '';
                 this.Notes = (customerCardInfoRec.Notes__c == null) ? '' : customerCardInfoRec.Notes__c;
-                
+                this.IsChargeOnAccountRestricted = (GeneralConfiguration.getConfigurations().Is_Charge_On_Account_Restricted__c && !customerCardInfoRec.Allow_Charge_On_Account__c) ? true : false;
             }else {
             	this.PriceLevelName = defaultPriceLevelInfo != null ? defaultPriceLevelInfo.Name__c : '';
                 this.ExemptionTaxName = '';
@@ -392,7 +455,9 @@ public without sharing class CustomerOrderWrapper {
              							'ShippingState', 
              							'ShippingPostalCode',
                                         'ShippingCountry',
-                                        'Notes__c'
+                                        'Notes__c',
+                                        'Allow_Charge_On_Account__c',
+                                        'Billing_County_Parish__c'
                                     };
         }
     }
@@ -416,27 +481,28 @@ public without sharing class CustomerOrderWrapper {
         public Decimal TotalSublet;
         public Decimal TotalShopSupplies;
         public String COStatus;
+
+        public CheckoutWrapper() {
+        }
         
         public CheckoutWrapper(List<CO_Invoice_Item__c> coInvItemList, List<CO_Invoice_Payment__c> coInvPaymentList, String invHeaderId,
                                List<PrintCustomerOrderInvoiceCtrl.TaxDetail> taxDetail, CO_Invoice_Header__c coInvoiceHeaderRec, List<CO_Deposit__c> coDepositsList) {
-            for(CO_Invoice_Item__c coInvRec : coInvItemList) {
-                InvoiceItemList = (InvoiceItemList != null) ? InvoiceItemList : new List<COInvoiceItem_V2>();
-                if((coInvRec.Service_Order_Header__c != null && (coInvRec.Service_Order_Header__r.Deal__c != null ||
-		                	coInvRec.Service_Order_Header__r.Transaction_Type__r.Type__c == 'Internal' || coInvRec.Service_Order_Header__r.Transaction_Type__r.Type__c == 'Stock Unit')) || 
-		                	(coInvRec.CO_Line_Item__c != null && coInvRec.CO_Line_Item__r.Deal__c != null) || 
-		                	(coInvRec.CO_Kit_Header__c != null && coInvRec.CO_Kit_Header__r.Deal__c != null)) {
-            		continue;
-            	}
-                InvoiceItemList.add(new COInvoiceItem_V2(coInvRec));
-            }
-            for(CO_Invoice_Payment__c coPaymentRec : coInvPaymentList) {
-                InvoicePaymentList = (InvoicePaymentList != null) ? InvoicePaymentList : new List<COInvoicePayment>();
-                COInvoicePayment invPaymentRec = new COInvoicePayment(coPaymentRec);
-                InvoicePaymentList.add(invPaymentRec); 
-            }
-            this.ActiveInvoiceHeaderId = invHeaderId;
-            this.TaxDetails = taxDetail;
             
+            populateCoInvoiceItemList(coInvItemList);
+
+            populateTaxDetail(taxDetail);
+            populateCheckoutTotals(coInvoiceHeaderRec);
+            
+            populatePayments(coInvPaymentList);
+	        populateDeposits(coDepositsList);
+        }
+        
+        public void populateTaxDetail(List<PrintCustomerOrderInvoiceCtrl.TaxDetail> taxDetail) {
+        	this.TaxDetails = taxDetail;
+        }
+        
+        public void populateCheckoutTotals(CO_Invoice_Header__c coInvoiceHeaderRec) {
+        	this.ActiveInvoiceHeaderId = coInvoiceHeaderRec.Id;
             this.TotalPart = coInvoiceHeaderRec.Part_Total__c;
             this.TotalFee = coInvoiceHeaderRec.Fee_Total__c;
             this.TotalLabor = coInvoiceHeaderRec.Labour_Total__c;
@@ -453,12 +519,34 @@ public without sharing class CustomerOrderWrapper {
 	        	this.ChangeDue = -1 * this.BalanceDue;
 	        	this.BalanceDue = 0;
 	        }
-	        
-	        this.DepositList = new List<CODeposit>(); 
-            coDepositsList = sortCODeposit(coDepositsList);
+        }
+        
+        public void populateDeposits(List<CO_Deposit__c> coDepositsList) {
+        	this.DepositList = new List<CODeposit>(); 
 	        for(CO_Deposit__c coDeposit  : coDepositsList) {
 	            this.DepositList.add(new CODeposit(coDeposit));
 	        }
+        }
+        
+        public void populatePayments(List<CO_Invoice_Payment__c> coInvPaymentList) {
+        	this.InvoicePaymentList = new List<COInvoicePayment>();
+        	for(CO_Invoice_Payment__c coPaymentRec : coInvPaymentList) {
+                this.InvoicePaymentList.add(new COInvoicePayment(coPaymentRec)); 
+            }
+        }
+
+
+        public void populateCoInvoiceItemList(List<CO_Invoice_Item__c> coInvItemList) {
+        	this.InvoiceItemList = new List<COInvoiceItem_V2>();
+        	for(CO_Invoice_Item__c coInvRec : coInvItemList) {
+                if((coInvRec.Service_Order_Header__c != null && (coInvRec.Service_Order_Header__r.Deal__c != null ||
+		                	coInvRec.Service_Order_Header__r.Transaction_Type__r.Type__c == 'Internal' || coInvRec.Service_Order_Header__r.Transaction_Type__r.Type__c == 'Stock Unit')) || 
+		                	(coInvRec.CO_Line_Item__c != null && coInvRec.CO_Line_Item__r.Deal__c != null) || 
+		                	(coInvRec.CO_Kit_Header__c != null && coInvRec.CO_Kit_Header__r.Deal__c != null)) {
+            		continue;
+            	}
+                this.InvoiceItemList.add(new COInvoiceItem_V2(coInvRec));
+            }
         }
     }
     
@@ -479,6 +567,7 @@ public without sharing class CustomerOrderWrapper {
         public Boolean IsFixedKitHeaderCO {get; set;}
         public Decimal TaxAmount {get; set;}
         public String DealId {get; set;}
+        public String UUID;
     	
     	public COKitHeader(CO_Kit_Header__c coKitHeaderRec, List<CO_Line_Item__c> coliList, Boolean hasChild) {
     		this.hasChildren = hasChild;
@@ -491,6 +580,7 @@ public without sharing class CustomerOrderWrapper {
 			this.CanItSplit = (coKitHeaderRec.Can_Split__c == null) ? false : coKitHeaderRec.Can_Split__c;
 			this.ActualKitPrice = (coKitHeaderRec.Actual_Kit_Price__c != null) ? coKitHeaderRec.Actual_Kit_Price__c.setScale(2, RoundingMode.HALF_UP) : 0.00;
             this.DealId = coKitHeaderRec.Deal__c;
+            this.UUID = (coKitHeaderRec != null && coKitHeaderRec.Id != null) ? coKitHeaderRec.UUID__c : (coliList.size() > 0 ? coliList[0].UUID__c : null);
     		this.COLIList = new List<COLIWrapper>();
     		
     		for(CO_Line_Item__c coliRec : coliList) {
@@ -498,27 +588,6 @@ public without sharing class CustomerOrderWrapper {
     		}
     		this.IsFixedKitHeaderCO = coKitHeaderRec.CO_Fixed_KitHeader__c;
     	}
-    }
-    
-    public static List<CO_Deposit__c> sortCODeposit(List<CO_Deposit__c> coDepositList) {
-    	Map<Id, Co_Deposit__c> coDepositIdToCoDepositRecMap = new Map<Id, CO_Deposit__c>();
-    	for(Co_Deposit__c coDepositRec : coDepositList) {
-    		coDepositIdToCoDepositRecMap.put(coDepositRec.Id, coDepositRec);
-    	}
-    	
-    	Set<Id> coDepositIdSet = new Set<Id>();
-    	List<CO_Deposit__c> coDepositSortedList = new List<CO_Deposit__c>();
-    	for(Co_Deposit__c coDepositRec : coDepositList) {
-    		if(!coDepositIdSet.contains(coDepositRec.Id)){
-    			coDepositIdSet.add(coDepositRec.Id);
-    			coDepositSortedList.add(coDepositRec);
-    			if(coDepositRec.Reverse_Link__c != null && coDepositIdToCoDepositRecMap.containsKey(coDepositRec.Reverse_Link__c)) {
-    				coDepositIdSet.add(coDepositRec.Reverse_Link__c);
-    				coDepositSortedList.add(coDepositIdToCoDepositRecMap.get(coDepositRec.Reverse_Link__c));
-    			}
-    		}
-    	}
-    	return coDepositSortedList;
     }
     
     public static List<CO_Invoice_Payment__c> sortCOPayment(List<CO_Invoice_Payment__c> coPaymentList) {
@@ -599,5 +668,15 @@ public without sharing class CustomerOrderWrapper {
             systemDefaultPriceLevelName = defaultPriceLevelList[0].Name__c;
         }  
         return systemDefaultPriceLevelName;
+    }
+
+    public class LineItemWrapper {
+        public String EntityId;
+        public String UUID;
+
+        public LineItemWrapper(String entityId, String UUID) {
+            this.EntityId = entityId;
+            this.UUID = UUID;
+        }
     }
 }

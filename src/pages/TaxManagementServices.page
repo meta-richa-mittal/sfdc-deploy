@@ -1,0 +1,41 @@
+<apex:page standardStylesheets="false" showChat="false" showHeader="false" controller="TaxManagementCtrl" sidebar="false" 
+    applyHtmlTag="false" applyBodyTag="false" contentType="application/javascript">
+
+    define(['Routing_AppJs_PK'], function (Routing_AppJs_PK) {
+        Routing_AppJs_PK.factory('TaxManagementServices', ['$q', function ($q) {
+            return {
+                getAllTaxRates : function() {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.getAllTaxRates}');
+                },
+                getTaxCategories : function() {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.getTaxCategories}');
+                },
+                saveTaxRate : function(taxRateJSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.saveTaxRate}',taxRateJSONString);
+                },
+                 deleteTaxRate : function(taxRateId) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.deleteTaxRate}',taxRateId);
+                },
+                getAllTaxCodes: function() {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.getAllTaxCodes}');
+                },
+                 saveTaxCode : function(taxCodeJSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.saveTaxCode}',taxCodeJSONString);
+                },
+                 assignTaxRates : function(taxCodeJSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.assignTaxRates}',taxCodeJSONString);
+                },
+                deleteTaxCode : function(taxCodeId) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.deleteTaxCode}',taxCodeId);
+                },
+                getTaxRatesAndCodes : function(filterJSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.getTaxRatesAndCodes}', filterJSONString);
+                },
+                getTaxRatesAndCodesCount : function(filterJSONString) {
+                    return RemoteActionService($q, '{!$RemoteAction.TaxManagementCtrl.getTaxRatesAndCodesCount}', filterJSONString);
+                }
+            };
+        }]);  
+        return Routing_AppJs_PK;  
+    });
+</apex:page>

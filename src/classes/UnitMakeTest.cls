@@ -29,7 +29,10 @@ private class UnitMakeTest {
      * @return: 
     **/
 	
-    
+    @testsetup
+    private static void setup(){
+    	TestDataFactory.disableFLSChecks();
+    }
     static testMethod void UnitMake() 
     {	
     	Unit_Make__c UnitMake1 = TestUtil.createUnitMake(true, 'lit', 'AAA', true);

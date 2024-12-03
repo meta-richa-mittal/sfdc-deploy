@@ -8,6 +8,7 @@
 public without sharing class UnitPricingCtrlTest {
     @testSetup
     private static void setup() {
+        TestDataFactory.disableFLSChecks();
         Unit_Make__c unitMakeRec = TestUtil.createUnitMake(true, 'AssignedUnitPricingMake', 'tes', true);
         Unit_Make__c unitMakeRec1 = TestUtil.createUnitMake(false, 'UnassignedUnitPricingMakeName', 'tes', true);
         Unit_Model__c unitModelRec = TestUtil.createUnitModel(true, 'unitModelName', 'tes', true, unitMakeRec.Id);
@@ -100,8 +101,13 @@ public without sharing class UnitPricingCtrlTest {
     @isTest
     private static void getModelPricingAndOptionsDetailsTest() {
         List<Unit_Model__c> unitModelList = [SELECT Id, Name__c FROM Unit_Model__c LIMIT 1]; 
+        UnitPricingService.UnitSubmodelFilterWrapper filterObj = new UnitPricingService.UnitSubmodelFilterWrapper();
+        filterObj.StartIndex = 0;
+        filterObj.RecordCount = 20;
+        filterObj.ModelId = unitModelList[0].Id;
+
         Test.startTest();
-        String result = BPUtility.getDecodedString(UnitPricingCtrl.getModelPricingAndOptionsDetails(BPUtility.getEncodedString(unitModelList[0].Id)));
+        String result = BPUtility.getDecodedString(UnitPricingCtrl.getModelPricingAndOptionsDetails(BPUtility.getEncodedString(System.JSON.serialize(filterObj))));
         FactoryOptionModelWrapper modelPricingWrapper = (FactoryOptionModelWrapper) System.JSON.deserialize(result, FactoryOptionModelWrapper.class);
         Test.stopTest();
         system.assertEquals('unitModelName', modelPricingWrapper.ModelName);

@@ -39,13 +39,28 @@ public without sharing class TaxCalculation {
         String pricingField = getPricingFieldByPLBaseValueField(priceLevel_baseValueField);
         
         for(CO_Line_Item__c COlineItem : COLineItemRecords) {
+            if(COlineItem.Part__c == null && COTriggerHelper.isRetainItemPrices) {
+                continue;
+            }
             if(COlineItem.Part__c != null) {
         		Decimal appTaxRate;
-	            if(partIdToPartRecordMap.get(COlineItem.Part__c).get(pricingField) == null) {
+	            if(!pricingField.containsIgnoreCase('Average_Cost__c') && partIdToPartRecordMap.get(COlineItem.Part__c).get(pricingField) == null) {
 	                partIdToPartRecordMap.get(COlineItem.Part__c).put(pricingField, 0);
 	                COlineItem.Retail__c = 0;
 	            } else {
-	                Decimal baseValue = Decimal.valueOf(String.valueOf(partIdToPartRecordMap.get(coLineItem.Part__c).get(pricingField)));
+                    Decimal baseValue;
+                    if(pricingField.containsIgnoreCase('Average_Cost__c') && (partIdToPartRecordMap.get(coLineItem.Part__c).Average_Cost__c == null || partIdToPartRecordMap.get(coLineItem.Part__c).Average_Cost__c == 0)) {
+                        baseValue = partIdToPartRecordMap.get(coLineItem.Part__c).Last_Cost__c != null ? partIdToPartRecordMap.get(coLineItem.Part__c).Last_Cost__c : 0;
+                    } else {
+                        baseValue = Decimal.valueOf(String.valueOf(partIdToPartRecordMap.get(coLineItem.Part__c).get(pricingField)));
+                    }
+                    if(isTaxIncludingPricing && ((COTriggerHelper.isRecalculateCOPLAndTax && COTriggerHelper.isResetPricing) || COTriggerHelper.isRetainItemPrices)) {
+                        if(priceLevel_discountMarkup == 0 && !COST_FIELDS_SET.contains(pricingField)) {
+                            COlineItem.Price_When_Tax_Included__c = baseValue.setScale(2, RoundingMode.HALF_UP);
+                        } else {
+                            COlineItem.Price_When_Tax_Included__c = null;
+                        }
+                    }
 	                if(COlineItem.CO_Kit_Header__c != null || COlineItem.Kit_Header_Line_Item__c != null) {
 	                    COlineItem.Retail__c = baseValue;
 	                } else {
@@ -66,7 +81,11 @@ public without sharing class TaxCalculation {
 	            	COlineItem.Price__c = price;
 	            	COlineItem.Price_When_Tax_Included__c = null;
 	            }
-	            
+
+	            if(partIdToPartRecordMap.get(coLineItem.Part__c).get(PART_PRICE_FIELD_API_NAME) != null) {
+                    COlineItem.Actual_Retail_Price__c = Decimal.valueOf(String.valueOf(partIdToPartRecordMap.get(coLineItem.Part__c).get(PART_PRICE_FIELD_API_NAME)));
+                }
+
             } else if(COlineItem.Fee__c != null && feeIdToFeeRecordMap.containsKey(COlineItem.Fee__c)) {
                 COlineItem.Price_When_Tax_Included__c = null;
 	            COlineItem.Retail__c = ((coLineItem.Price__c != null) ? coLineItem.Price__c : 0).setScale(2, RoundingMode.HALF_UP);
@@ -112,14 +131,20 @@ public without sharing class TaxCalculation {
         String pricingField = getPricingFieldByPLBaseValueField(priceLevel_baseValueField);
         
         if(coLineItem.Part__c != null) {
-            if(partIdToPartRecordMap.get(coLineItem.Part__c).get(pricingField) == null) {
+            if(!pricingField.containsIgnoreCase('Average_Cost__c') && partIdToPartRecordMap.get(coLineItem.Part__c).get(pricingField) == null) {
                 partIdToPartRecordMap.get(coLineItem.Part__c).put(pricingField, 0);
                 COlineItem.Retail__c = 0;
             } else {
-                Decimal baseValue = Decimal.valueOf(String.valueOf(partIdToPartRecordMap.get(coLineItem.Part__c).get(pricingField)));
+                Decimal baseValue;
+                if(pricingField.containsIgnoreCase('Average_Cost__c') && (partIdToPartRecordMap.get(coLineItem.Part__c).Average_Cost__c == null || partIdToPartRecordMap.get(coLineItem.Part__c).Average_Cost__c == 0)) {
+                    baseValue = partIdToPartRecordMap.get(coLineItem.Part__c).Last_Cost__c != null ? partIdToPartRecordMap.get(coLineItem.Part__c).Last_Cost__c : 0;
+                } else {
+                    baseValue = Decimal.valueOf(String.valueOf(partIdToPartRecordMap.get(coLineItem.Part__c).get(pricingField)));
+                }
+                
                 if(trigger.isInsert && isTaxIncludingPricing) {
                     if(priceLevel_discountMarkup == 0 && !COST_FIELDS_SET.contains(pricingField)) {
-                        COlineItem.Price_When_Tax_Included__c = baseValue;
+                        COlineItem.Price_When_Tax_Included__c = baseValue.setScale(2, RoundingMode.HALF_UP);
                     } else {
                         COlineItem.Price_When_Tax_Included__c = null;
                     }
@@ -139,7 +164,7 @@ public without sharing class TaxCalculation {
                 }
             }        
             if(trigger.isInsert && partIdToPartRecordMap.get(coLineItem.Part__c).get(PART_PRICE_FIELD_API_NAME) != null) {
-                COlineItem.Actual_Retail_Price__c = Decimal.valueOf(String.valueOf(partIdToPartRecordMap.get(coLineItem.Part__c).get(PART_PRICE_FIELD_API_NAME)));
+                COlineItem.Actual_Retail_Price__c = Decimal.valueOf(String.valueOf(partIdToPartRecordMap.get(coLineItem.Part__c).get(PART_PRICE_FIELD_API_NAME))).setScale(2, RoundingMode.HALF_UP);
             }
             
         } else if(COlineItem.Fee__c != null) {
@@ -260,125 +285,6 @@ public without sharing class TaxCalculation {
         return coLineItemToUpdate;
     }
     
-    public static List<CO_Line_Item__c> salesTaxCalculation2(List<Id> salesTaxIdList, Map<Id, Set<Id>> coHeaderIdToSalesTaxItemIdsMap, List<CO_Line_Item__c> coLineItemList) {
-        return salesTaxCalculation2(salesTaxIdList, coHeaderIdToSalesTaxItemIdsMap, coLineItemList, new Map<Id, Set<Id>>());
-    }
-
-    public static List<CO_Line_Item__c> salesTaxCalculation2(List<Id> salesTaxIdList, Map<Id, Set<Id>> coHeaderIdToSalesTaxItemIdsMap, 
-                                            List<CO_Line_Item__c> coLineItemList, Map<Id, Set<Id>> soHeaderIdToSalesTaxItemIdsMap) {
-        if(AccessControl.ifObjectFieldIsAccessible('Applicable_Taxes__c') == false) { throw new BlackPurlException(Constants.OBJIECT_NOT_ACCESSIBLE); }
-        List<Applicable_Taxes__c> applicableTaxList = TaxManagementSOQLUtil.getApplicableTaxListBySalesTaxIdList(salesTaxIdList);
-        
-        Map<Id, List<Applicable_Taxes__c>> salesTaxIdToAppTaxRecordsMap = new Map<Id, List<Applicable_Taxes__c>>();
-        
-        for(Applicable_Taxes__c appTax : applicableTaxList) {
-            List<Applicable_Taxes__c> appTaxRecordList = new List<Applicable_Taxes__c>();
-            if(salesTaxIdToAppTaxRecordsMap.containsKey(appTax.Sales_Tax__c)) {
-                appTaxRecordList = salesTaxIdToAppTaxRecordsMap.get(appTax.Sales_Tax__c);
-            } 
-            appTaxRecordList.add(appTax);
-            salesTaxIdToAppTaxRecordsMap.put(appTax.Sales_Tax__c, appTaxRecordList);
-        }
-        
-        Map<Id, Decimal> salesTaxIdToTaxRateMap = new Map<Id, Decimal>();
-        for(Id salesTaxId : salesTaxIdToAppTaxRecordsMap.keyset()) {
-            Decimal salesTaxRate = 0;
-            for(Applicable_Taxes__c appTax : salesTaxIdToAppTaxRecordsMap.get(salesTaxId)) {
-                salesTaxRate += appTax.Sales_Tax_Item__r.Rate__c;
-            }
-            salesTaxIdToTaxRateMap.put(salesTaxId, salesTaxRate);
-        }
-        
-        List<Sobject> coLineItemToUpdate = new List<Sobject>();
-        List<Individual_Tax__c> individualTaxToInsert = new List<Individual_Tax__c>();
-        Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
-        for(CO_Line_Item__c coLineItemRec : coLineItemList) {
-            Id salesTaxId;
-            Boolean isInternalTaxLI = false;
-            if(COLineItemTriggerHelper.isColiTaxable(coLineItemRec, null, null)) {
-            	if((coLineItemRec.Deal__c != null) || (coLineItemRec.Service_Order_Line_Item__c != null && coLineItemRec.Service_Order_Line_Item__r.Service_Order_Header__r.Job_Type__c == 'Internal')) {
-	                salesTaxId = GeneralConfiguration.getDefaultSalesTaxOnInternalService();
-	                isInternalTaxLI = true;
-	            }
-	            
-	            if(String.isBlank(salesTaxId)) {
-	                if(coLineItemRec.Part__r.Applicable_Tax__c != null) {
-	                    salesTaxId = coLineItemRec.Part__r.Applicable_Tax__c;
-	                } else if(coLineItemRec.Fee__r.Applicable_Tax__c != null) {
-	                    salesTaxId = coLineItemRec.Fee__r.Applicable_Tax__c;
-	                } 
-	            }
-            }
-            if(salesTaxId == null || String.isNotBlank(coLineItemRec.Deal__c)) {
-                if(isTaxIncludingPricing && coLineItemRec.Price__c != null) {
-                    coLineItemRec.Price_When_Tax_Included__c = coLineItemRec.Price__c;
-                    coLineItemToUpdate.add(coLineItemRec);
-                }
-                continue;
-            }
-            
-            Decimal exemptionRate = 0;
-            if(salesTaxIdToAppTaxRecordsMap.containsKey(salesTaxId)) {
-                for(Applicable_Taxes__c appTax : salesTaxIdToAppTaxRecordsMap.get(salesTaxId)) {
-                    if(coLineItemRec.Service_Order_Line_Item__r.Service_Order_Header__r.Provider__c != null && 
-                            soHeaderIdToSalesTaxItemIdsMap.containsKey(coLineItemRec.Service_Order_Line_Item__r.Service_Order_Header__c) &&
-                            soHeaderIdToSalesTaxItemIdsMap.get(coLineItemRec.Service_Order_Line_Item__r.Service_Order_Header__c).contains(appTax.Sales_Tax_Item__c)) {
-                        exemptionRate += appTax.Sales_Tax_Item__r.Rate__c;
-                    
-                    } else if((coLineItemRec.Service_Order_Line_Item__c == null || 
-                        (coLineItemRec.Service_Order_Line_Item__r.Service_Order_Header__r.Job_Type__c != 'Internal' && coLineItemRec.Service_Order_Line_Item__r.Service_Order_Header__r.Provider__c == null)) 
-                        && coLineItemRec.CO_Header__r.Customer__c != null 
-                        && coHeaderIdToSalesTaxItemIdsMap.containsKey(coLineItemRec.CO_Header__c) 
-                        && coHeaderIdToSalesTaxItemIdsMap.get(coLineItemRec.CO_Header__c).contains(appTax.Sales_Tax_Item__c)) {
-                        exemptionRate += appTax.Sales_Tax_Item__r.Rate__c;
-                    }  
-                    else { // Individual sales Taxes
-                        if(coLineItemRec.Deal__c == null) {
-                            Individual_Tax__c individualTaxRec = new Individual_Tax__c();
-                            individualTaxRec.CO_Line_Item__c = coLineItemRec.Id;
-                            if(coLineItemRec.Service_Order_Line_Item__c != null) {
-                                individualTaxRec.Service_Order_Line_Item__c = coLineItemRec.Service_Order_Line_Item__c;
-                            }
-                            individualTaxRec.Sales_Tax_Item__c = appTax.Sales_Tax_Item__c;
-                            if(!TaxCalculation.IsEnhancedTaxCalculationApplicable || appTax.Sales_Tax_Item__r.Rate_Type__c == TaxManagementService.FIXED_RATE) {
-	                    		individualTaxRec.Tax_Rate__c = appTax.Sales_Tax_Item__r.Rate__c;
-	                    	} else {
-	                    		Decimal qty = coLineItemRec.Qty__c != null ? coLineItemRec.Qty__c : 1;
-	            				Decimal price = coLineItemRec.Price__c != null ? coLineItemRec.Price__c : 0;
-	            	
-	                    		Decimal taxableAmount = (qty * price);
-	                    		individualTaxRec.Enhanced_Tax_Amount__c = TaxCalculation.getEnhancedTaxAmount(taxableAmount, appTax.Sales_Tax_Item__r);
-	                    	}
-                            individualTaxToInsert.add(individualTaxRec);
-                        }
-                    } 
-                }
-            }
-            Decimal rate = 0;
-            if(salesTaxIdToTaxRateMap.containsKey(salesTaxId)) {
-                rate = salesTaxIdToTaxRateMap.get(salesTaxId);
-            }
-            if(coLineItemRec.Deal__c == null) {
-                coLineItemRec.Tax__c = (rate - exemptionRate);
-            } else {
-                coLineItemRec.Tax__c = 0;
-            }
-            if(isTaxIncludingPricing) {
-                if(coLineItemRec.Type__c == Constants.SHOP_SUPPLY) {
-                    coLineItemRec.Price_When_Tax_Included__c = (coLineItemRec.Price__c + (coLineItemRec.Price__c * rate / 100).setScale(2, RoundingMode.HALF_UP));
-                    coLineItemRec.Price__c = (coLineItemRec.Price_When_Tax_Included__c / (1 + coLineItemRec.Tax__c / 100).setScale(2, RoundingMode.HALF_UP));
-                } else if(coLineItemRec.Price__c != null && (isInternalTaxLI || coLineItemRec.Price_When_Tax_Included__c == null || exemptionRate != 0)) {
-                    coLineItemRec.Price_When_Tax_Included__c = (coLineItemRec.Price__c + (coLineItemRec.Price__c * coLineItemRec.Tax__c / 100).setScale(2, RoundingMode.HALF_UP));
-                }
-            }
-            coLineItemToUpdate.add(coLineItemRec);
-        }
-        if(individualTaxToInsert.size() > 0) {
-            DMLUtility.insertSobjectList('Individual_Tax__c', individualTaxToInsert);
-        }
-        return coLineItemToUpdate;
-    }
-    
     public static void setTotalForMerchSection(String coHeaderId) {
         CO_Header__c coHeaderRec = populateOrderTotal(coHeaderId, true);
     }
@@ -389,7 +295,7 @@ public without sharing class TaxCalculation {
     	}
     	List<CO_Header__c> coHeaderList = [select Id,
                                             (select Qty__c, Price__c, Price_When_Tax_Included__c, Tax_Amount__c from CO_Line_Items__r where Is_In_Merch_Section__c = true AND Closed_CO_Invoice_link__c = null),
-                                            (select Total__c from Service_Order_Headers__r where Work_Status__c != 'Invoiced' AND Deal__c = null),
+                                            (select Total__c from Service_Order_Headers__r where SO_Status__c != 'Invoiced' AND Deal__c = null),
                                             (select F_I_Total__c, F_I_Tax_Total__c, Type__c, Subtotal__c from Deals__r where Status__c != 'Invoiced'),
                                             (select Total__c, SalesTax_Total__c, Deductible_Total__c 
                                                             from CO_Invoice_Headers__r 
@@ -416,9 +322,9 @@ public without sharing class TaxCalculation {
 	            }
             }
             
-            List<Individual_Tax__c> individualTaxList = [select Taxable_Amount__c, Tax_Rate__c,
-                                                            Enhanced_Tax_Amount__c, Sales_Tax_Item__r.Name__c,
-                                                            Form_Label__c, Applicable_Tax__c, List_Tax_items_on_forms__c, 
+            List<Individual_Tax__c> individualTaxList = [select Deal__c, Taxable_Amount_for_Section_Header__c, Deal__r.CO_Header__c, Taxable_Amount__c, Tax_Rate__c,
+                                                            Enhanced_Tax_Amount__c, Sales_Tax_Item__r.Name__c, SO_Payment_Role__c, SO_Payment_Role__r.Applicable_Tax_Name__c,
+                                                            Form_Label__c, Applicable_Tax__c,List_Tax_items_on_forms__c,
                                                             CO_Line_Item__r.CO_Header__c, Service_Order_Line_Item__r.Service_Order_Header__r.CO_Header__c,
                                                             Option_Fee__r.Deal__r.CO_Header__c, Deal_Unit_Price_Cost__r.Deal_Item__r.Deal__r.CO_Header__c, 
                                                             F_I_Product__r.Deal_Finance__r.Deal__r.CO_Header__c, Deal_Item__r.Deal__r.CO_Header__c, Deal_Item__r.Type__c 
@@ -428,11 +334,14 @@ public without sharing class TaxCalculation {
                                                             OR Option_Fee__r.Deal__c IN: dealIds
                                                             OR Deal_Unit_Price_Cost__r.Deal_Item__r.Deal__c IN: dealIds
                                                             OR F_I_Product__r.Deal_Finance__r.Deal__c IN: dealIds
-                                                            OR (Deal_Item__r.Deal__c IN: dealIds AND Deal_Item__r.Type__c = 'Trade In')];
+                                                            OR (Deal_Item__r.Deal__c IN: dealIds AND Deal_Item__r.Type__c = 'Trade In')
+                                                            OR (Deal__c IN: dealIds)];
                                                             
             for(Individual_Tax__c individualTaxRec: individualTaxList) {
             	Id coHeaderId;
-            	if(individualTaxRec.CO_Line_Item__c != null) {
+            	if(individualTaxRec.Deal__c != null) {
+            		coHeaderId = individualTaxRec.Deal__r.CO_Header__c;
+            	} else if(individualTaxRec.CO_Line_Item__c != null) {
             		coHeaderId = individualTaxRec.CO_Line_Item__r.CO_Header__c;
             	} else if(individualTaxRec.Service_Order_Line_Item__c != null) {
             		coHeaderId = individualTaxRec.Service_Order_Line_Item__r.Service_Order_Header__r.CO_Header__c;
@@ -488,13 +397,11 @@ public without sharing class TaxCalculation {
                                                                 AND (Checkout_Type__c = 'Customer' OR Checkout_Type__c = 'Third-Party' OR Checkout_Type__c = 'Internal')];
         
         Decimal invoicedTotal = 0;
-        Decimal deductibleTotal = 0;
-        for(CO_Invoice_Header__c COIH : coInvoiceHeaderList){
-            deductibleTotal += (COIH.Deductible_Total__c != null ? COIH.Deductible_Total__c : 0);
+        
+        for(CO_Invoice_Header__c COIH : coInvoiceHeaderList) {
             invoicedTotal += (COIH.Total__c != null ? COIH.Total__c : 0);
         }
-        
-        Decimal nonInvoicedTotal = getNonInvoicedAmount(coHeaderId) - deductibleTotal;
+        Decimal nonInvoicedTotal = getNonInvoicedAmount(coHeaderId);
         
         CO_Header__c coHeaderRec = new CO_Header__c(Id = coHeaderId, Invoiced_Amount__c = invoicedTotal, Uninvoiced_Amount__c = nonInvoicedTotal);
         if(isUpdate) {
@@ -555,7 +462,7 @@ public without sharing class TaxCalculation {
     private static Decimal getNonInvoicedAmount(String coHeaderId) {
         List<CO_Header__c> coHeaderList = [select Id,
                                             (select Qty__c, Price__c, Price_When_Tax_Included__c, Tax_Amount__c from CO_Line_Items__r where Is_In_Merch_Section__c = true AND Closed_CO_Invoice_link__c = null),
-                                            (select Total__c from Service_Order_Headers__r where Work_Status__c != 'Invoiced' AND Deal__c = null),
+                                            (select Total__c, Transaction_Type__r.Type__c from Service_Order_Headers__r where SO_Status__c != 'Invoiced' AND Deal__c = null),
                                             (select F_I_Total__c, F_I_Tax_Total__c, Type__c, Subtotal__c from Deals__r where Status__c != 'Invoiced')
                                          from CO_Header__c
                                          where Id = :coHeaderId];
@@ -566,6 +473,7 @@ public without sharing class TaxCalculation {
         Set<Id> dealIds = new Set<Id>();
         Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
         Decimal nonInvoicedTotal = 0;
+        List<String> thirdPartySOHeaderIdList = new List<String>();
         
         if(!isTaxIncludingPricing) {
             for(CO_Header__c coHeader : coHeaderList) {
@@ -575,6 +483,9 @@ public without sharing class TaxCalculation {
                 }
                 for(Service_Order_Header__c soHeader : coHeader.Service_Order_Headers__r){
                     serviceOrderHeaderIds.add(soHeader.Id);
+                    if(soHeader.Transaction_Type__r.Type__c == 'Third-Party') {
+                        thirdPartySOHeaderIdList.add(soHeader.Id);
+                    }
                     subTotal += (soHeader.Total__c != null ? soHeader.Total__c : 0);
                 }
                 for(Deal__c dealRec : coHeader.Deals__r) {
@@ -586,15 +497,16 @@ public without sharing class TaxCalculation {
                 }
             }
         
-            List<Individual_Tax__c> individualTaxList = [select Taxable_Amount__c, Tax_Rate__c, Enhanced_Tax_Amount__c, Sales_Tax_Item__r.Name__c, 
-                                                            Form_Label__c, Applicable_Tax__c, List_Tax_items_on_forms__c 
+            List<Individual_Tax__c> individualTaxList = [select Taxable_Amount__c, Tax_Rate__c, Enhanced_Tax_Amount__c, Sales_Tax_Item__r.Name__c, SO_Payment_Role__r.Applicable_Tax_Name__c,
+                                                            Form_Label__c, List_Tax_items_on_forms__c, Applicable_Tax__c, Deal__c, Taxable_Amount_for_Section_Header__c, SO_Payment_Role__c
                                                         from Individual_Tax__c
                                                         where CO_Line_Item__c IN :coLineItemIds
                                                             OR Service_Order_Line_Item__r.Service_Order_Header__c IN :serviceOrderHeaderIds
                                                             OR Option_Fee__r.Deal__c IN: dealIds
                                                             OR Deal_Unit_Price_Cost__r.Deal_Item__r.Deal__c IN: dealIds
                                                             OR F_I_Product__r.Deal_Finance__r.Deal__c IN: dealIds
-                                                            OR (Deal_Item__r.Deal__c IN: dealIds AND Deal_Item__r.Type__c = 'Trade In')];
+                                                            OR (Deal_Item__r.Deal__c IN: dealIds AND Deal_Item__r.Type__c = 'Trade In')
+                                                            OR (Deal__c IN: dealIds)];
             
             Map<String, Decimal> salesTaxNameToTaxValue = getTaxAmountWithFormLabel(individualTaxList);
             
@@ -611,6 +523,9 @@ public without sharing class TaxCalculation {
                 }
                 for(Service_Order_Header__c soHeaderRec : coHeader.Service_Order_Headers__r) {
                     subTotal += (soHeaderRec.Total__c != null) ? soHeaderRec.Total__c : 0;
+                    if(soHeaderRec.Transaction_Type__r.Type__c == 'Third-Party') {
+                        thirdPartySOHeaderIdList.add(soHeaderRec.Id);
+                    }
                 }
                 for(Deal__c dealRec : coHeader.Deals__r) {
                     subTotal += (dealRec.Subtotal__c != null) ? dealRec.Subtotal__c : 0;
@@ -622,434 +537,202 @@ public without sharing class TaxCalculation {
             }
             nonInvoicedTotal = subTotal;
         }
-        return nonInvoicedTotal.setScale(2, RoundingMode.HALF_UP);
-    } 
-    
-    private static Decimal getCOLISubTotal(List<CO_Line_Item__c> coLineItemList) {
-        Decimal subTotal = 0;
-        for(CO_Line_Item__c coLineItemRec : coLineItemList) {
-            subTotal += ((coLineItemRec.Qty__c != null ? coLineItemRec.Qty__c : 0) * (coLineItemRec.Price__c != null ? coLineItemRec.Price__c : 0));
-        }
-        return subTotal.setScale(2, RoundingMode.HALF_UP);
-    }
-    
-    private static Decimal getSOLISubTotal(List<Service_Order_Line_Item__c> serviceOrderLineItems) {
-        Decimal subTotal = 0;
-        for(Service_Order_Line_Item__c soli : serviceOrderLineItems) {
-            subTotal += ((soli.Qty_Needed__c != null ? soli.Qty_Needed__c : 0) * (soli.Kit_Price__c != null ? soli.Kit_Price__c : 0));
-        }
-        return subTotal.setScale(2, RoundingMode.HALF_UP);
-    }
-    
-    public static Decimal getTaxAmountFromCOLIList(List<CO_Line_Item__c> coLineItemList){
-        List<Individual_Tax__c> individualItemsList = getApplicableTaxListFromCOLIList(coLineItemList);
-        Map<String, Decimal> taxItemToTaxRateMap = getIndividualtaxRateMap(individualItemsList);
-        Map<String, Decimal> taxItemToTaxAmountMap = getTaxableAmountMap(individualItemsList);
-        return calculateTaxableAmount(taxItemToTaxRateMap, taxItemToTaxAmountMap);
-    }
-    
-    private static Decimal getTaxAmountFromSOLIList(List<Service_Order_Line_Item__c> serviceOrderLineItems){
-        List<Individual_Tax__c> individualItemsList = getApplicableTaxListFromSOLIList(serviceOrderLineItems);
-        Map<String, Decimal> taxItemToTaxRateMap = getIndividualtaxRateMap(individualItemsList);
-        Map<String, Decimal> taxItemToTaxAmountMap = getTaxableAmountMap(individualItemsList);
-        return calculateTaxableAmount(taxItemToTaxRateMap, taxItemToTaxAmountMap);
-    }
-    
-    public static List<Individual_Tax__c> getApplicableTaxListFromCOLIList(List<CO_Line_Item__c> coLineItemList) {
-        return getApplicableTaxList(coLineItemList);
-    }
-    
-    public static List<Individual_Tax__c> getApplicableTaxListFromSOLIList(List<Service_Order_Line_Item__c> serviceOrderLineItems) {
-        return getApplicableTaxList(serviceOrderLineItems);
-    }
-    
-    public static List<Individual_Tax__c> getApplicableTaxList(List<Sobject> sobjectList) {
-        List<Individual_Tax__c> individualItemsList = new List<Individual_Tax__c>();
-        for(sObject sobjRec : sobjectList){
-            for(sObject taxItem : sobjRec.getSobjects('Individual_Taxes__r')){
-                individualItemsList.add((Individual_Tax__c)taxItem);
-            }
-        }
-        return individualItemsList;
-    }
-
-    public static Map<String, Decimal> getIndividualtaxRateMap(List<Individual_Tax__c> individualTaxList){
-        Map<String, Set<Decimal>> taxItemToTaxRateSetMap = new Map<String, Set<Decimal>>();
-        for(Individual_Tax__c taxItem : individualTaxList) {
-            if(!taxItemToTaxRateSetMap.containsKey(taxItem.Sales_Tax_Item__r.Name__c)) {
-                taxItemToTaxRateSetMap.put(taxItem.Sales_Tax_Item__r.Name__c, new Set<Decimal>());
-            }
-            if(taxItem.Tax_Rate__c != null) {
-                taxItemToTaxRateSetMap.get(taxItem.Sales_Tax_Item__r.Name__c).add(taxItem.Tax_Rate__c);
-            } else if(IsEnhancedTaxCalculationApplicable && taxItem.Enhanced_Tax_Amount__c != null) {
-            	taxItemToTaxRateSetMap.get(taxItem.Sales_Tax_Item__r.Name__c).add(0);
-            }
-        }
         
-        Map<String, Decimal> taxItemToTaxRateMap = new Map<String, Decimal>();
-        for(String taxItemName : taxItemToTaxRateSetMap.keySet()) {
-            for(Decimal taxRate : taxItemToTaxRateSetMap.get(taxItemName)) {
-                taxItemToTaxRateMap.put(TaxUtility.getFormattedSalesTaxItemName(taxItemName, taxRate), taxRate);   // Ex. HST^&&^1 -> 1%,  HST^&&^5 -> 5%
+        List<SO_Payment_Role__c> soPaymentRolesList = new List<SO_Payment_Role__c>();
+        if(!thirdPartySOHeaderIdList.isEmpty()) {
+            soPaymentRolesList = [SELECT Total_Amount__c, Tax_Amount__c FROM SO_Payment_Role__c WHERE Status__c = 'Invoiced' AND RecordType.DeveloperName='Deductible' AND Service_Order_Header__c IN: thirdPartySOHeaderIdList];
+        }
+
+        for(SO_Payment_Role__c soPaymentRec: soPaymentRolesList) {
+            nonInvoicedTotal -= (soPaymentRec.Total_Amount__c != null ? soPaymentRec.Total_Amount__c : 0);
+            if(!isTaxIncludingPricing) {
+                nonInvoicedTotal -= (soPaymentRec.Tax_Amount__c != null ? soPaymentRec.Tax_Amount__c : 0);
             }
         }
-        return taxItemToTaxRateMap;
-    }
-    
-    // Added by RM(Discussed with TK): Copy created for this function in AccountingCustomerInvoice for trade in taxable amount. If any changes required here please add those in copy as well.
-    public static Map<String, Decimal> getTaxableAmountMap(List<Individual_Tax__c> individualTaxList) {
-        Map<String, Decimal> taxItemToTaxAmountMap = new Map<String, Decimal>();
-        String formattedSTIName;
-        for(Individual_Tax__c taxItem : individualTaxList){
-            formattedSTIName = TaxUtility.getFormattedSalesTaxItemName(taxItem.Sales_Tax_Item__r.Name__c, taxItem.Tax_Rate__c);
-            if(!taxItemToTaxAmountMap.containsKey(formattedSTIName)){
-                taxItemToTaxAmountMap.put(formattedSTIName, 0);
-            }
-            taxItemToTaxAmountMap.put(formattedSTIName, taxItemToTaxAmountMap.get(formattedSTIName) + taxItem.Taxable_Amount__c);
-        }
-        return taxItemToTaxAmountMap;
-    }
-    
-    private static Decimal calculateTaxableAmount(Map<String, Decimal> taxItemToTaxRateMap, Map<String, Decimal> taxItemToTaxAmountMap){
-        Decimal taxAmount = 0;
-        for(String taxName : taxItemToTaxRateMap.keySet()){
-            taxAmount += (((taxItemToTaxRateMap.get(taxName) * taxItemToTaxAmountMap.get(taxName)) / 100).setScale(2, RoundingMode.HALF_UP));
-        }
-        return taxAmount;
+        return nonInvoicedTotal.setScale(2, RoundingMode.HALF_UP);
     }
     
     public static Boolean isInvoiced = true;
-    // Added by TK --- To get TaxAmount when needed to show with form Label.
+
     public static Map<String, Decimal> getTaxAmountWithFormLabel(List<Individual_Tax__c> individualTaxList) {
-        Map<String, Decimal> taxItemToTaxRateMap = getIndividualtaxRateMap(individualTaxList);
-        Map<String, Map<String, Decimal>> appTaxNameToTaxItemNameToTaxableAmountMap = new Map<String, Map<String, Decimal>>();
-        Map<String, Decimal> salesTaxNameToTaxValue = new Map<String, Decimal>();  // The Map which is to be return after calculation.
-        Map<String, Boolean> appTaxNameToListFormFlagMap = new Map<String, Boolean>();
-        Map<String, String> appTaxNameToAppTaxFormLabelMap = new Map<String, String>();
-        Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
-        Map<String, Map<String, Decimal>> appTaxNameToTaxItemNameToEnhTaxAmountMap = new Map<String, Map<String, Decimal>>();
-        
-        String formattedSTIName;
-        for(Individual_Tax__c taxItem : individualTaxList) {
-            formattedSTIName = TaxUtility.getFormattedSalesTaxItemName(taxItem.Sales_Tax_Item__r.Name__c, taxItem.Tax_Rate__c);
-        	if(IsEnhancedTaxCalculationApplicable && taxItem.Enhanced_Tax_Amount__c != null) {
-        		if(!appTaxNameToTaxItemNameToEnhTaxAmountMap.containsKey(taxItem.Applicable_Tax__c)) {
-                    appTaxNameToTaxItemNameToEnhTaxAmountMap.put(taxItem.Applicable_Tax__c, new Map<String, Decimal>());
-                }
-                Map<String, Decimal> taxNameToEnhTaxAmountMap = appTaxNameToTaxItemNameToEnhTaxAmountMap.get(taxItem.Applicable_Tax__c);
-                if(!taxNameToEnhTaxAmountMap.containsKey(taxItem.Sales_Tax_Item__r.Name__c)){
-                    taxNameToEnhTaxAmountMap.put(taxItem.Sales_Tax_Item__r.Name__c, 0);
-                }
-        		taxNameToEnhTaxAmountMap.put(taxItem.Sales_Tax_Item__r.Name__c, taxNameToEnhTaxAmountMap.get(taxItem.Sales_Tax_Item__r.Name__c) +  + taxItem.Enhanced_Tax_Amount__c);
-        	} else if(String.isNotBlank(taxItem.Applicable_Tax__c)) {
-                if(!appTaxNameToTaxItemNameToTaxableAmountMap.containsKey(taxItem.Applicable_Tax__c)) {
-                    appTaxNameToTaxItemNameToTaxableAmountMap.put(taxItem.Applicable_Tax__c, new Map<String, Decimal>());
-                }
-                Map<String, Decimal> taxNameToAmountMap = appTaxNameToTaxItemNameToTaxableAmountMap.get(taxItem.Applicable_Tax__c);
-                if(!taxNameToAmountMap.containsKey(formattedSTIName)){
-                    taxNameToAmountMap.put(formattedSTIName, 0);
-                }
-                Decimal taxableAmount = 0;
-                if(!isTaxIncludingPricing) {
-                    taxableAmount = (isInvoiced ? taxItem.Taxable_Amount__c : taxItem.Taxable_Amount_To_Invoice__c);   //Tax amount before invoice - when coli is in multiple status
-                } else {
-                    taxableAmount = (isInvoiced ? taxItem.Tax_Amount__c : taxItem.Tax_Amount_To_Invoice__c);   //Tax amount before invoice - when coli is in multiple status
-                }
-                taxNameToAmountMap.put(formattedSTIName, taxNameToAmountMap.get(formattedSTIName) + taxableAmount);
-            }  
-            appTaxNameToListFormFlagMap.put(taxItem.Applicable_Tax__c, taxItem.List_Tax_items_on_forms__c);
-            appTaxNameToAppTaxFormLabelMap.put(taxItem.Applicable_Tax__c, taxItem.Form_Label__c);
-        }
-        
-        // Iteration for Form label type Individual Items.
-        Map<String, Map<String, Decimal>> appTaxNameToTaxItemNameToTaxAmountMap = new Map<String, Map<String, Decimal>>();
-        Decimal taxAmount = 0;
-        for(String appTaxName : appTaxNameToTaxItemNameToTaxableAmountMap.keySet()) {
-            Map<String, Decimal> taxNameToTaxAmountMap = new Map<String, Decimal>();
-            for(String taxItemName : appTaxNameToTaxItemNameToTaxableAmountMap.get(appTaxName).keyset()) {
-                taxAmount = 0;
-                if(taxItemToTaxRateMap.containsKey(taxItemName)) {
-                    if(!isTaxIncludingPricing) {
-                        taxAmount += (taxItemToTaxRateMap.get(taxItemName) * appTaxNameToTaxItemNameToTaxableAmountMap.get(appTaxName).get(taxItemName) / 100).setScale(2, RoundingMode.HALF_UP);
-                    } else {
-                        taxAmount += appTaxNameToTaxItemNameToTaxableAmountMap.get(appTaxName).get(taxItemName).setScale(2, RoundingMode.HALF_UP);
-                    }
-                }
-                taxItemName = TaxUtility.getExtractedSTINameFromFormattedName(taxItemName);
-                if(taxNameToTaxAmountMap.containsKey(taxItemName)) {
-                    taxNameToTaxAmountMap.put(taxItemName, taxNameToTaxAmountMap.get(taxItemName) + taxAmount);
-                } else {
-                    taxNameToTaxAmountMap.put(taxItemName, taxAmount);
-                }
-            }
-            appTaxNameToTaxItemNameToTaxAmountMap.put(appTaxName, taxNameToTaxAmountMap);
-        }
-        
-        for(String appTaxName : appTaxNameToTaxItemNameToEnhTaxAmountMap.keySet()) {
-            Map<String, Decimal> taxNameToTaxAmountMap = new Map<String, Decimal>();
-            if(appTaxNameToTaxItemNameToTaxAmountMap.containsKey(appTaxName)) {
-            	taxNameToTaxAmountMap = appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName);
-            }
-            for(String taxItemName : appTaxNameToTaxItemNameToEnhTaxAmountMap.get(appTaxName).keyset()) {
-                taxAmount = appTaxNameToTaxItemNameToEnhTaxAmountMap.get(appTaxName).get(taxItemName);
-                taxNameToTaxAmountMap.put(taxItemName, taxAmount);
-            }
-            appTaxNameToTaxItemNameToTaxAmountMap.put(appTaxName, taxNameToTaxAmountMap);
-        }
-        
-        
-        //system.assert(false, appTaxNameToTaxItemNameToTaxAmountMap);
-        
-        List<Sales_Tax_Item__c> salesTaxItemList = [select Forms_Label__c, Name__c from Sales_Tax_Item__c where Name__c IN: taxItemToTaxRateMap.keySet()];
-        Map<String, String> salesTaxNameToSalesTaxFormLabelMap = new Map<String, String>();
-        for(Sales_Tax_Item__c salesTaxRec: salesTaxItemList) {
-            if(!salesTaxNameToSalesTaxFormLabelMap.containsKey(salesTaxRec.Name__c)) {
-                salesTaxNameToSalesTaxFormLabelMap.put(salesTaxRec.Name__c, salesTaxRec.Forms_Label__c);
-            }
-        }
-        
-        // for creating taxable Map
-        Decimal appTaxAmount = 0;
-        for(String appTaxName : appTaxNameToTaxItemNameToTaxAmountMap.keySet()) {
-            if(appTaxNameToListFormFlagMap.containsKey(appTaxName) && !appTaxNameToListFormFlagMap.get(appTaxName)) {
-                appTaxAmount = 0;
-                for(String taxItemName : appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).keySet()) {
-                    appTaxAmount += appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).get(taxItemName);
-                }
-                // Logic to replace sales Tax Item name with Form Label.
-                if(appTaxNameToAppTaxFormLabelMap.containsKey(appTaxName)) {
-                    appTaxName = appTaxNameToAppTaxFormLabelMap.get(appTaxName);
-                }
-                if(!salesTaxNameToTaxValue.containsKey(appTaxName)) {
-                    salesTaxNameToTaxValue.put(appTaxName, 0);
-                }
-                salesTaxNameToTaxValue.put(appTaxName, (salesTaxNameToTaxValue.get(appTaxName) + appTaxAmount));
-            } else {
-                for(String taxItemName : appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).keySet()) {
-                    appTaxAmount = appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).get(taxItemName);
-                    
-                    // Logic to replace sales Tax Item name with Form Label.
-                    if(salesTaxNameToSalesTaxFormLabelMap.containsKey(taxItemName)) {
-                        taxItemName = salesTaxNameToSalesTaxFormLabelMap.get(taxItemName);
-                    }
-                    if(!salesTaxNameToTaxValue.containsKey(taxItemName)) {
-                        salesTaxNameToTaxValue.put(taxItemName, 0);
-                    }
-                    salesTaxNameToTaxValue.put(taxItemName, (salesTaxNameToTaxValue.get(taxItemName) + appTaxAmount));
-                }
-            }
-        }
-        return salesTaxNameToTaxValue;
+        return getFormLabelToTaxAmountMap(individualTaxList, '', true);
+    }
+
+    public static Map<String, Decimal> getTaxAmountWithIndividualFormLabel(List<Individual_Tax__c> individualTaxList, Boolean showTaxDetails) {
+        return getFormLabelToTaxAmountMap(individualTaxList, '', true, showTaxDetails);
+    }
+
+    // Added by TK --- To get TaxAmount when needed to show with form Label.
+    public static Map<String, Decimal> getTaxAmountWithFormLabel(List<Individual_Tax__c> individualTaxList, String invoiceType) {
+        return getFormLabelToTaxAmountMap(individualTaxList, invoiceType, true);
     }
     
     // Overrided getTaxAmountWithFormLabel for avoiding querying of salesTaxItemList in for loop when this function is called for bulk records
     public static Map<String, Decimal> getTaxAmountWithFormLabel(List<Individual_Tax__c> individualTaxList, List<Sales_Tax_Item__c> salesTaxItemList) {
-        Map<String, Decimal> taxItemToTaxRateMap = getIndividualtaxRateMap(individualTaxList);
-        Map<String, Map<String, Decimal>> appTaxNameToTaxItemNameToTaxableAmountMap = new Map<String, Map<String, Decimal>>();
-        Map<String, Decimal> salesTaxNameToTaxValue = new Map<String, Decimal>();  // The Map which is to be return after calculation.
-        Map<String, Boolean> appTaxNameToListFormFlagMap = new Map<String, Boolean>();
-        Map<String, String> appTaxNameToAppTaxFormLabelMap = new Map<String, String>();
-        Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
-        Map<String, Map<String, Decimal>> appTaxNameToTaxItemNameToEnhTaxAmountMap = new Map<String, Map<String, Decimal>>();
-        
-        String formattedSTIName;
+        return getFormLabelToTaxAmountMap(individualTaxList, '', false);
+    }
+
+    private static Map<String, Decimal> getFormLabelToTaxAmountMap(List<Individual_Tax__c> individualTaxList, String invoiceType, Boolean handleSOPaymentRole) {
+        return TaxCalculation.getFormLabelToTaxAmountMap(individualTaxList, invoiceType, handleSOPaymentRole, false);
+    }
+
+    public static Map<String, Decimal> getFormLabelToTaxAmountMap(List<Individual_Tax__c> individualTaxList, String invoiceType, Boolean handleSOPaymentRole, Boolean showTaxDetails) {
+        Map<String, Individual_Tax__c> taxItemIdToIndTaxRecMap = new Map<String, Individual_Tax__c>();
+        for(Individual_Tax__c indTaxRec: individualTaxList) {
+            Decimal taxRate = indTaxRec.Tax_Rate__c != null ? indTaxRec.Tax_Rate__c : 0;
+            taxItemIdToIndTaxRecMap.put(TaxUtility.getFormattedSalesTaxItemName(indTaxRec.Sales_Tax_Item__c, taxRate), indTaxRec);
+        }
+        Map<String, Decimal> taxItemIdToTaxAmountMap = getTaxItemIdToTaxAmountMap(individualTaxList, 
+        getTaxFormattedNameToTaxRateMap(individualTaxList), invoiceType, handleSOPaymentRole);
+
+        Map<String, Decimal> taxLabelToTaxAmtMap = new Map<String, Decimal>();  // The Map which is to be return after calculation.
+        for(String taxItemId : taxItemIdToTaxAmountMap.keySet()) {
+            String taxLabel = taxItemIdToIndTaxRecMap.get(taxItemId).Form_Label__c;
+            if(showTaxDetails != null && showTaxDetails) {
+                if(taxItemIdToIndTaxRecMap.get(taxItemId).Sales_Tax_Item__r.Is_Automated__c) {
+                    taxLabel = taxItemIdToIndTaxRecMap.get(taxItemId).Sales_Tax_Item_Name__c;
+                } else if(taxItemIdToIndTaxRecMap.get(taxItemId).Sales_Tax_Item__c != null && String.isNotBlank(taxItemIdToIndTaxRecMap.get(taxItemId).Sales_Tax_Item__r.Forms_Label__c)) {
+                    taxLabel = taxItemIdToIndTaxRecMap.get(taxItemId).Sales_Tax_Item__r.Forms_Label__c;
+                }
+            }
+
+            if(!GeneralConfiguration.getConfigurations().Group_Individual_Taxes_On_Sales__c || (showTaxDetails != null && showTaxDetails)) {
+                Decimal taxRate = TaxUtility.getExtractedTaxRateFromFormattedName(taxItemId);
+                if((taxRate == null || taxRate == 0) && taxItemIdToIndTaxRecMap.get(taxItemId).Tax_Rate__c != null && taxItemIdToIndTaxRecMap.get(taxItemId).Tax_Rate__c != 0) {
+                    taxRate = taxItemIdToIndTaxRecMap.get(taxItemId).Tax_Rate__c;
+                }
+                if(taxRate != null && taxRate != 0) {
+                    taxLabel += ' - ' + taxRate.stripTrailingZeros().toPlainString() + '%';
+                }
+            }
+            if(!taxLabelToTaxAmtMap.containsKey(taxLabel)) {
+                taxLabelToTaxAmtMap.put(taxLabel, taxItemIdToTaxAmountMap.get(taxItemId));
+            } else {
+                taxLabelToTaxAmtMap.put(taxLabel, taxLabelToTaxAmtMap.get(taxLabel) + taxItemIdToTaxAmountMap.get(taxItemId));
+            }
+        }
+        return taxLabelToTaxAmtMap;
+    }
+
+    private static Map<String, Decimal> getTaxFormattedNameToTaxRateMap(List<Individual_Tax__c> individualTaxList){
+        Map<String, Decimal> taxItemToTaxRateMap = new Map<String, Decimal>();
         for(Individual_Tax__c taxItem : individualTaxList) {
-            formattedSTIName = TaxUtility.getFormattedSalesTaxItemName(taxItem.Sales_Tax_Item__r.Name__c, taxItem.Tax_Rate__c);
+            Decimal taxRate = taxItem.Tax_Rate__c != null ? taxItem.Tax_Rate__c : 0;
+            taxItemToTaxRateMap.put(TaxUtility.getFormattedSalesTaxItemName(taxItem.Sales_Tax_Item__c, taxRate), taxRate);
+        }
+        return taxItemToTaxRateMap;
+    }
+
+    private static Map<String, Decimal> getTaxItemIdToTaxAmountMap(List<Individual_Tax__c> individualTaxList, Map<String, Decimal> taxFormattedNameToTaxRateMap, 
+    String invoiceType, Boolean handleSOPaymentRole) {
+        List<Id> soPaymentRolesIdList = new List<Id>();
+        Map<Id, SO_Payment_Role__c> soPaymentRoleIdToRecMap = new Map<Id, SO_Payment_Role__c>();
+        if(handleSOPaymentRole != null && handleSOPaymentRole) {
+            for(Individual_Tax__c taxItem : individualTaxList) {
+                if(taxItem.SO_Payment_Role__c != null) soPaymentRolesIdList.add(taxItem.SO_Payment_Role__c);
+            }
+            if(!soPaymentRolesIdList.isEmpty()) {
+                soPaymentRoleIdToRecMap = new Map<Id, SO_Payment_Role__c>([SELECT Id, Total_Amount__c, Tax_Amount__c, Tax__c FROM SO_Payment_Role__c WHERE Id IN :soPaymentRolesIdList]);
+            }
+        }
+        
+        Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
+        Map<String, Decimal> taxFormattedNameToTaxableAmountMap = new Map<String, Decimal>();
+        Map<String, Decimal> taxIdToEnhTaxAmountMap = new Map<String, Decimal>();
+        
+        for(Individual_Tax__c taxItem : individualTaxList) {
+            Decimal taxRate = taxItem.Tax_Rate__c != null ? taxItem.Tax_Rate__c : 0;
+            String formattedSTIName = TaxUtility.getFormattedSalesTaxItemName(taxItem.Sales_Tax_Item__c, taxRate);
         	if(IsEnhancedTaxCalculationApplicable && taxItem.Enhanced_Tax_Amount__c != null) {
-        		if(!appTaxNameToTaxItemNameToEnhTaxAmountMap.containsKey(taxItem.Applicable_Tax__c)) {
-                    appTaxNameToTaxItemNameToEnhTaxAmountMap.put(taxItem.Applicable_Tax__c, new Map<String, Decimal>());
+                if(!taxIdToEnhTaxAmountMap.containsKey(formattedSTIName)){
+                    taxIdToEnhTaxAmountMap.put(formattedSTIName, 0);
                 }
-                Map<String, Decimal> taxNameToEnhTaxAmountMap = appTaxNameToTaxItemNameToEnhTaxAmountMap.get(taxItem.Applicable_Tax__c);
-                if(!taxNameToEnhTaxAmountMap.containsKey(taxItem.Sales_Tax_Item__r.Name__c)){
-                    taxNameToEnhTaxAmountMap.put(taxItem.Sales_Tax_Item__r.Name__c, 0);
-                }
-        		taxNameToEnhTaxAmountMap.put(taxItem.Sales_Tax_Item__r.Name__c, taxNameToEnhTaxAmountMap.get(taxItem.Sales_Tax_Item__r.Name__c) +  + taxItem.Enhanced_Tax_Amount__c);
-        	} else if(String.isNotBlank(taxItem.Applicable_Tax__c)) {
-                if(!appTaxNameToTaxItemNameToTaxableAmountMap.containsKey(taxItem.Applicable_Tax__c)) {
-                    appTaxNameToTaxItemNameToTaxableAmountMap.put(taxItem.Applicable_Tax__c, new Map<String, Decimal>());
-                }
-                Map<String, Decimal> taxNameToAmountMap = appTaxNameToTaxItemNameToTaxableAmountMap.get(taxItem.Applicable_Tax__c);
-                if(!taxNameToAmountMap.containsKey(formattedSTIName)){
-                    taxNameToAmountMap.put(formattedSTIName, 0);
+                Decimal enhTaxAmount = (String.isNotBlank(invoiceType) && invoiceType == 'Third-Party' && taxItem.SO_Payment_Role__c != null) ? taxItem.Enhanced_Tax_Amount__c*-1 : taxItem.Enhanced_Tax_Amount__c;
+        		taxIdToEnhTaxAmountMap.put(formattedSTIName, taxIdToEnhTaxAmountMap.get(formattedSTIName) + enhTaxAmount);
+        	} else if(String.isNotBlank(formattedSTIName)) {
+                if(!taxFormattedNameToTaxableAmountMap.containsKey(formattedSTIName)){
+                    taxFormattedNameToTaxableAmountMap.put(formattedSTIName, 0);
                 }
                 Decimal taxableAmount = 0;
-                /*if(taxItem.CO_Line_Item__c != null) {
-                    if(taxItem.CO_Line_Item__r.Closed_CO_Invoice_link__c != null) {
-                        isInvoiced = true;
+                if(handleSOPaymentRole != null && handleSOPaymentRole && taxItem.SO_Payment_Role__c != null) {
+                    if(!isTaxIncludingPricing) {
+                        taxableAmount = soPaymentRoleIdToRecMap.get(taxItem.SO_Payment_Role__c).Total_Amount__c;
+                    } else if(soPaymentRoleIdToRecMap.get(taxItem.SO_Payment_Role__c).Tax__c != 0) {
+                        taxableAmount = (soPaymentRoleIdToRecMap.get(taxItem.SO_Payment_Role__c).Tax_Amount__c*(taxItem.Tax_Rate__c/soPaymentRoleIdToRecMap.get(taxItem.SO_Payment_Role__c).Tax__c)).setScale(2, RoundingMode.HALF_UP);
+                    }
+                    if(String.isNotBlank(invoiceType) && invoiceType == 'Third-Party') {
+                        taxableAmount *= -1;
+                    }
+                } else {
+                    if(!isTaxIncludingPricing) {
+                        if(taxItem.Deal__c != null) {
+                            taxableAmount = taxItem.Taxable_Amount_for_Section_Header__c;
+                        } else {
+                            taxableAmount = (isInvoiced ? taxItem.Taxable_Amount__c : taxItem.Taxable_Amount_To_Invoice__c);   //Tax amount before invoice - when coli is in multiple status
+                        }
                     } else {
-                        isInvoiced = false;
+                        taxableAmount = (isInvoiced ? taxItem.Tax_Amount__c : taxItem.Tax_Amount_To_Invoice__c);   //Tax amount before invoice - when coli is in multiple status
                     }
                 }
-                if(!isTaxIncludingPricing) {
-                    taxableAmount = (isInvoiced ? taxItem.Taxable_Amount__c : taxItem.Taxable_Amount_To_Invoice__c);   //Tax amount before invoice - when coli is in multiple status
-                } else {
-                    taxableAmount = (isInvoiced ? taxItem.Tax_Amount__c : taxItem.Tax_Amount_To_Invoice__c);   //Tax amount before invoice - when coli is in multiple status
-                }*/
-                if(!isTaxIncludingPricing) {
-                    taxableAmount = taxItem.Taxable_Amount__c;
-                } else {
-                    taxableAmount = taxItem.Tax_Amount__c;
-                }
-                taxNameToAmountMap.put(formattedSTIName, taxNameToAmountMap.get(formattedSTIName) + taxableAmount);
-            }  
-            appTaxNameToListFormFlagMap.put(taxItem.Applicable_Tax__c, taxItem.List_Tax_items_on_forms__c);
-            appTaxNameToAppTaxFormLabelMap.put(taxItem.Applicable_Tax__c, taxItem.Form_Label__c);
+                taxFormattedNameToTaxableAmountMap.put(formattedSTIName, taxFormattedNameToTaxableAmountMap.get(formattedSTIName) + taxableAmount);
+            }
         }
         
         // Iteration for Form label type Individual Items.
-        Map<String, Map<String, Decimal>> appTaxNameToTaxItemNameToTaxAmountMap = new Map<String, Map<String, Decimal>>();
-        Decimal taxAmount = 0;
-        for(String appTaxName : appTaxNameToTaxItemNameToTaxableAmountMap.keySet()) {
-            Map<String, Decimal> taxNameToTaxAmountMap = new Map<String, Decimal>();
-            for(String taxItemName : appTaxNameToTaxItemNameToTaxableAmountMap.get(appTaxName).keyset()) {
-                taxAmount = 0;
-                if(taxItemToTaxRateMap.containsKey(taxItemName)) {
-                    if(!isTaxIncludingPricing) {
-                        taxAmount += (taxItemToTaxRateMap.get(taxItemName) * appTaxNameToTaxItemNameToTaxableAmountMap.get(appTaxName).get(taxItemName) / 100).setScale(2, RoundingMode.HALF_UP);
-                    } else {
-                        taxAmount += appTaxNameToTaxItemNameToTaxableAmountMap.get(appTaxName).get(taxItemName).setScale(2, RoundingMode.HALF_UP);
-                    }
-                }
-                taxItemName = TaxUtility.getExtractedSTINameFromFormattedName(taxItemName);
-                if(taxNameToTaxAmountMap.containsKey(taxItemName)) {
-                    taxNameToTaxAmountMap.put(taxItemName, taxNameToTaxAmountMap.get(taxItemName) + taxAmount);
-                } else {
-                    taxNameToTaxAmountMap.put(taxItemName, taxAmount);
-                }
-            }
-            appTaxNameToTaxItemNameToTaxAmountMap.put(appTaxName, taxNameToTaxAmountMap);
-        }
-        
-        for(String appTaxName : appTaxNameToTaxItemNameToEnhTaxAmountMap.keySet()) {
-            Map<String, Decimal> taxNameToTaxAmountMap = new Map<String, Decimal>();
-            if(appTaxNameToTaxItemNameToTaxAmountMap.containsKey(appTaxName)) {
-            	taxNameToTaxAmountMap = appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName);
-            }
-            for(String taxItemName : appTaxNameToTaxItemNameToEnhTaxAmountMap.get(appTaxName).keyset()) {
-                taxAmount = appTaxNameToTaxItemNameToEnhTaxAmountMap.get(appTaxName).get(taxItemName);
-                taxNameToTaxAmountMap.put(taxItemName, taxAmount);
-            }
-            appTaxNameToTaxItemNameToTaxAmountMap.put(appTaxName, taxNameToTaxAmountMap);
-        }
-        
-        
-        //system.assert(false, appTaxNameToTaxItemNameToTaxAmountMap);
-        
-        Map<String, String> salesTaxNameToSalesTaxFormLabelMap = new Map<String, String>();
-        for(Sales_Tax_Item__c salesTaxRec: salesTaxItemList) {
-            if(!salesTaxNameToSalesTaxFormLabelMap.containsKey(salesTaxRec.Name__c)) {
-                salesTaxNameToSalesTaxFormLabelMap.put(salesTaxRec.Name__c, salesTaxRec.Forms_Label__c);
-            }
-        }
-        
-        // for creating taxable Map
-        Decimal appTaxAmount = 0;
-        for(String appTaxName : appTaxNameToTaxItemNameToTaxAmountMap.keySet()) {
-            if(appTaxNameToListFormFlagMap.containsKey(appTaxName) && !appTaxNameToListFormFlagMap.get(appTaxName)) {
-                appTaxAmount = 0;
-                for(String taxItemName : appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).keySet()) {
-                    appTaxAmount += appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).get(taxItemName);
-                }
-                // Logic to replace sales Tax Item name with Form Label.
-                if(appTaxNameToAppTaxFormLabelMap.containsKey(appTaxName)) {
-                    appTaxName = appTaxNameToAppTaxFormLabelMap.get(appTaxName);
-                }
-                if(!salesTaxNameToTaxValue.containsKey(appTaxName)) {
-                    salesTaxNameToTaxValue.put(appTaxName, 0);
-                }
-                salesTaxNameToTaxValue.put(appTaxName, (salesTaxNameToTaxValue.get(appTaxName) + appTaxAmount));
-            } else {
-                for(String taxItemName : appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).keySet()) {
-                    appTaxAmount = appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).get(taxItemName);
-                    
-                    // Logic to replace sales Tax Item name with Form Label.
-                    if(salesTaxNameToSalesTaxFormLabelMap.containsKey(taxItemName)) {
-                        taxItemName = salesTaxNameToSalesTaxFormLabelMap.get(taxItemName);
-                    }
-                    if(!salesTaxNameToTaxValue.containsKey(taxItemName)) {
-                        salesTaxNameToTaxValue.put(taxItemName, 0);
-                    }
-                    salesTaxNameToTaxValue.put(taxItemName, (salesTaxNameToTaxValue.get(taxItemName) + appTaxAmount));
-                }
-            }
-        }
-        return salesTaxNameToTaxValue;
-    }
-    
-    public static Map<String, Decimal> getTaxAmount(List<Individual_Tax__c> individualTaxList) {
-        Map<String, Decimal> taxItemToTaxRateMap = getIndividualtaxRateMap(individualTaxList);
-        Map<String, Map<String, Decimal>> appTaxNameToTaxItemNameToTaxableAmountMap = new Map<String, Map<String, Decimal>>();
-        Map<String, Map<String, Decimal>> appTaxNameToTaxItemNameToEnhTaxAmountMap = new Map<String, Map<String, Decimal>>();
-        Map<String, Decimal> salesTaxNameToTaxValue = new Map<String, Decimal>();  // The Map which is to be return after calculation.
-        Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();
-        String formattedSalesTaxItemName;
-        for(Individual_Tax__c taxItem : individualTaxList) {
-            if(String.isNotBlank(taxItem.Applicable_Tax__c)) {
-                if(!appTaxNameToTaxItemNameToTaxableAmountMap.containsKey(taxItem.Applicable_Tax__c)) {
-                    appTaxNameToTaxItemNameToTaxableAmountMap.put(taxItem.Applicable_Tax__c, new Map<String, Decimal>());
-                }
-                Map<String, Decimal> taxNameToAmountMap = appTaxNameToTaxItemNameToTaxableAmountMap.get(taxItem.Applicable_Tax__c);
-                formattedSalesTaxItemName = TaxUtility.getFormattedSalesTaxItemName(taxItem.Sales_Tax_Item__r.Name__c, taxItem.Tax_Rate__c);
-                if(!taxNameToAmountMap.containsKey(formattedSalesTaxItemName)){
-                    taxNameToAmountMap.put(formattedSalesTaxItemName, 0);
-                }
+        Map<String, Decimal> taxIdToTaxAmountMap = new Map<String, Decimal>();
+        for(String taxFormtName : taxFormattedNameToTaxableAmountMap.keySet()) {
+            Decimal taxAmount = 0;
+            if(taxFormattedNameToTaxRateMap.containsKey(taxFormtName) && taxFormattedNameToTaxRateMap.get(taxFormtName) != null) {
                 if(!isTaxIncludingPricing) {
-                    if(taxItem.Enhanced_Tax_Amount__c == null) {
-                        taxNameToAmountMap.put(formattedSalesTaxItemName, taxNameToAmountMap.get(formattedSalesTaxItemName) + taxItem.Taxable_Amount__c);
-                    } else {
-                        if(!appTaxNameToTaxItemNameToEnhTaxAmountMap.containsKey(taxItem.Applicable_Tax__c)) {
-		                    appTaxNameToTaxItemNameToEnhTaxAmountMap.put(taxItem.Applicable_Tax__c, new Map<String, Decimal>());
-		                }
-		                Map<String, Decimal> taxNameToEnhTaxAmountMap = appTaxNameToTaxItemNameToEnhTaxAmountMap.get(taxItem.Applicable_Tax__c);
-		                if(!taxNameToEnhTaxAmountMap.containsKey(formattedSalesTaxItemName)){
-		                    taxNameToEnhTaxAmountMap.put(formattedSalesTaxItemName, 0);
-		                }
-		                taxNameToEnhTaxAmountMap.put(formattedSalesTaxItemName, taxNameToEnhTaxAmountMap.get(formattedSalesTaxItemName) + taxItem.Enhanced_Tax_Amount__c);
-                    }
+                    taxAmount += (taxFormattedNameToTaxRateMap.get(taxFormtName) * taxFormattedNameToTaxableAmountMap.get(taxFormtName) / 100).setScale(2, RoundingMode.HALF_UP);
                 } else {
-                    taxNameToAmountMap.put(formattedSalesTaxItemName, taxNameToAmountMap.get(formattedSalesTaxItemName) + taxItem.Tax_Amount__c);
+                    taxAmount += taxFormattedNameToTaxableAmountMap.get(taxFormtName).setScale(2, RoundingMode.HALF_UP);
                 }
-            } 
-        }
-        system.debug(' == appTaxNameToTaxItemNameToTaxableAmountMap ==  ' + appTaxNameToTaxItemNameToTaxableAmountMap);
-        
-        // Iteration for Form label type Individual Items.
-        Map<String, Map<String, Decimal>> appTaxNameToTaxItemNameToTaxAmountMap = new Map<String, Map<String, Decimal>>();
-        Decimal taxAmount = 0;
-        for(String appTaxName : appTaxNameToTaxItemNameToTaxableAmountMap.keySet()) {
-            Map<String, Decimal> taxNameToTaxAmountMap = new Map<String, Decimal>();
-            for(String taxItemName : appTaxNameToTaxItemNameToTaxableAmountMap.get(appTaxName).keyset()) {
-                taxAmount = 0;
-                if(TaxCalculation.IsEnhancedTaxCalculationApplicable && appTaxNameToTaxItemNameToEnhTaxAmountMap.containsKey(appTaxName) && 
-                                        appTaxNameToTaxItemNameToEnhTaxAmountMap.get(appTaxName).containsKey(taxItemName)) {
-                            taxAmount += appTaxNameToTaxItemNameToEnhTaxAmountMap.get(appTaxName).get(taxItemName);
-                } else if(taxItemToTaxRateMap.containsKey(taxItemName)) {
-                    if(!isTaxIncludingPricing) {
-                        taxAmount += (taxItemToTaxRateMap.get(taxItemName) * appTaxNameToTaxItemNameToTaxableAmountMap.get(appTaxName).get(taxItemName) / 100).setScale(2, RoundingMode.HALF_UP);
-                    } else {
-                        taxAmount += appTaxNameToTaxItemNameToTaxableAmountMap.get(appTaxName).get(taxItemName).setScale(2, RoundingMode.HALF_UP);
-                    }
-                }
-                taxNameToTaxAmountMap.put(taxItemName, taxAmount);
             }
-            appTaxNameToTaxItemNameToTaxAmountMap.put(appTaxName, taxNameToTaxAmountMap);
-        }
-        system.debug(' == appTaxNameToTaxItemNameToTaxAmountMap ==  ' + appTaxNameToTaxItemNameToTaxAmountMap);
-        
-        // for creating taxable Map
-        Decimal appTaxAmount = 0;
-        for(String appTaxName : appTaxNameToTaxItemNameToTaxAmountMap.keySet()) {
-            for(String taxItemName : appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).keySet()) { // {dinesh -> {HST^&&^1% -> 186, HST^&&^2% -> 372}}
-                appTaxAmount = appTaxNameToTaxItemNameToTaxAmountMap.get(appTaxName).get(taxItemName);
-                taxItemName = TaxUtility.getExtractedSTINameFromFormattedName(taxItemName);
-                if(!salesTaxNameToTaxValue.containsKey(taxItemName)) {
-                    salesTaxNameToTaxValue.put(taxItemName, 0);
+            if(taxAmount != null && taxAmount != 0) {
+                if(taxIdToTaxAmountMap.containsKey(taxFormtName)) {
+                    taxIdToTaxAmountMap.put(taxFormtName, taxIdToTaxAmountMap.get(taxFormtName) + taxAmount);
+                } else {
+                    taxIdToTaxAmountMap.put(taxFormtName, taxAmount);
                 }
-                salesTaxNameToTaxValue.put(taxItemName, (salesTaxNameToTaxValue.get(taxItemName) + appTaxAmount)); 
             }
         }
-        return salesTaxNameToTaxValue; // {HST -> 538}
+        
+        for(String taxId : taxIdToEnhTaxAmountMap.keySet()) {
+            Decimal taxAmount = taxIdToEnhTaxAmountMap.get(taxId);
+            if(taxAmount != null && taxAmount != 0) {
+                if(taxIdToTaxAmountMap.containsKey(taxId)) {
+                    taxIdToTaxAmountMap.put(taxId, taxIdToTaxAmountMap.get(taxId) + taxAmount);
+                } else {
+                    taxIdToTaxAmountMap.put(taxId, taxAmount);
+                }
+            }
+        }
+
+        return taxIdToTaxAmountMap;
     }
-    
+
+    //Used in calculate section wise tax amount in merch and service sections
+    public static Decimal getTaxAmount(List<Individual_Tax__c> individualTaxList) {
+        Decimal totalTaxAmount = 0;
+        if(!GeneralConfiguration.getTaxIncludingPricing()) {
+            Map<String, Decimal> taxItemIdToTaxAmountMap = getTaxItemIdToTaxAmountMap(individualTaxList, getTaxFormattedNameToTaxRateMap(individualTaxList), '', false);
+            for(Decimal taxAmt : taxItemIdToTaxAmountMap.values()) {
+                totalTaxAmount += (taxAmt != null ? taxAmt : 0);
+            }
+        }
+        return totalTaxAmount;
+    }
+
+    public static Decimal getTaxAmount_V2(List<Individual_Tax__c> individualTaxList) {
+        Decimal totalTaxAmount = 0;
+        Map<String, Decimal> taxItemIdToTaxAmountMap = getTaxItemIdToTaxAmountMap(individualTaxList, getTaxFormattedNameToTaxRateMap(individualTaxList), '', false);
+        for(Decimal taxAmt : taxItemIdToTaxAmountMap.values()) {
+            totalTaxAmount += (taxAmt != null ? taxAmt : 0);
+        }
+        return totalTaxAmount;
+    }
+
     public class TaxDetail{
         public String TaxName;
         public Decimal TaxAmount;
@@ -1082,86 +765,26 @@ public without sharing class TaxCalculation {
         }
         return coHeaderIdToSalesTaxItemIdsMap;
     }
-    
-    public static Decimal getEnhancedTaxAmount(Decimal taxableAmount, Sales_Tax_Item__c stiRec) {
-    	Boolean isTaxableAmountNegative = taxableAmount < 0 ? true : false;
-    	taxableAmount = (taxableAmount != null ? (taxableAmount < 0 ? taxableAmount * -1 : taxableAmount) : 0).setScale(2, RoundingMode.HALF_UP);
-    	
-    	Decimal enhancedTaxAmount;
-    	if(IsEnhancedTaxCalculationApplicable) {
-    		if(taxableAmount == 0) {
-    			enhancedTaxAmount = 0;
-    		} else {
-	    		if(stiRec.Rate_Type__c == TaxManagementService.ESCALATING_RATE) {
-	    			enhancedTaxAmount = getEscalatingTaxAmount(taxableAmount, stiRec);
-	    		} else if(stiRec.Rate_Type__c == TaxManagementService.TIERED_RATE) {
-	    			enhancedTaxAmount = getTieredTaxAmount(taxableAmount, stiRec);
-	    		}
-	
-	    		enhancedTaxAmount = checkMinAndMaxTaxableAmount(enhancedTaxAmount, stiRec);
-	    		enhancedTaxAmount = enhancedTaxAmount != null ? enhancedTaxAmount.setScale(2, RoundingMode.HALF_UP) : 0;
-    		}
-    	}
-    	if(isTaxableAmountNegative) {
-    		enhancedTaxAmount = enhancedTaxAmount * -1;
-    	}
-    	return enhancedTaxAmount;
-    }
-    
-    private static Decimal getEscalatingTaxAmount(Decimal taxableAmount, Sales_Tax_Item__c stiRec) {
-    	taxableAmount = (taxableAmount != null ? (taxableAmount < 0 ? (taxableAmount * -1) : taxableAmount) : 0).setScale(2, RoundingMode.HALF_UP);
-    	
-    	Decimal applicableTaxPercent;
-    	if(stiRec.Max_Taxable_Amount_Tier_1__c == null || taxableAmount <= stiRec.Max_Taxable_Amount_Tier_1__c) {
-			applicableTaxPercent = stiRec.Tax_Rate_Tier_1__c;
-		} else if(stiRec.Max_Taxable_Amount_Tier_2__c == null || taxableAmount <= stiRec.Max_Taxable_Amount_Tier_2__c) {
-			applicableTaxPercent = stiRec.Tax_Rate_Tier_2__c;
-		} else {
-			applicableTaxPercent = stiRec.Tax_Rate_Tier_3__c;
-		}
-    	
-    	applicableTaxPercent = (applicableTaxPercent != null ? applicableTaxPercent : 0);
-    	Decimal enhancedTaxAmount = (taxableAmount * applicableTaxPercent / 100).setScale(2, RoundingMode.HALF_UP);
-		return enhancedTaxAmount;
-    }
-    
-    private static Decimal getTieredTaxAmount(Decimal taxableAmount, Sales_Tax_Item__c stiRec) {
-    	taxableAmount = (taxableAmount != null ? (taxableAmount < 0 ? (taxableAmount * -1) : taxableAmount) : 0).setScale(2, RoundingMode.HALF_UP);
-    	
-    	Decimal tier1TaxableAmount = 0;
-    	Decimal tier2TaxableAmount = 0;
-    	Decimal tier3TaxableAmount = 0;
-    	
-		if(stiRec.Max_Taxable_Amount_Tier_1__c == null || taxableAmount <= stiRec.Max_Taxable_Amount_Tier_1__c) {
-			tier1TaxableAmount = taxableAmount;
-		} else if(stiRec.Max_Taxable_Amount_Tier_2__c == null || taxableAmount <= stiRec.Max_Taxable_Amount_Tier_2__c) {
-			tier1TaxableAmount = stiRec.Max_Taxable_Amount_Tier_1__c;
-			tier2TaxableAmount = taxableAmount - stiRec.Max_Taxable_Amount_Tier_1__c;
-		} else {
-			tier1TaxableAmount = stiRec.Max_Taxable_Amount_Tier_1__c;
-			tier2TaxableAmount = stiRec.Max_Taxable_Amount_Tier_2__c - stiRec.Max_Taxable_Amount_Tier_1__c;
-			tier3TaxableAmount = taxableAmount - stiRec.Max_Taxable_Amount_Tier_2__c;
-		}
-		
-		stiRec.Tax_Rate_Tier_1__c = stiRec.Tax_Rate_Tier_1__c != null ? stiRec.Tax_Rate_Tier_1__c : 0;
-    	stiRec.Tax_Rate_Tier_2__c = stiRec.Tax_Rate_Tier_2__c != null ? stiRec.Tax_Rate_Tier_2__c : 0;
-    	stiRec.Tax_Rate_Tier_3__c = stiRec.Tax_Rate_Tier_3__c != null ? stiRec.Tax_Rate_Tier_3__c : 0;
-    	
-		Decimal enhancedTaxAmount = ((tier1TaxableAmount * stiRec.Tax_Rate_Tier_1__c) / 100).setScale(2, RoundingMode.HALF_UP);
-		enhancedTaxAmount += ((tier2TaxableAmount * stiRec.Tax_Rate_Tier_2__c) / 100).setScale(2, RoundingMode.HALF_UP);
-		enhancedTaxAmount += ((tier3TaxableAmount * stiRec.Tax_Rate_Tier_3__c) / 100).setScale(2, RoundingMode.HALF_UP);
-		
-		return enhancedTaxAmount.setScale(2, RoundingMode.HALF_UP);
-    }
-    
-    private static Decimal checkMinAndMaxTaxableAmount(Decimal enhancedTaxAmount, Sales_Tax_Item__c stiRec) {
-    	stiRec.Minimum_Tax_Amount__c = stiRec.Minimum_Tax_Amount__c != null ? stiRec.Minimum_Tax_Amount__c : 0;
-    	
-		if(enhancedTaxAmount < stiRec.Minimum_Tax_Amount__c) {
-			enhancedTaxAmount = stiRec.Minimum_Tax_Amount__c;
-		} else if(stiRec.Maximum_Tax_Amount__c != null && enhancedTaxAmount > stiRec.Maximum_Tax_Amount__c) {
-			enhancedTaxAmount = stiRec.Maximum_Tax_Amount__c;
-		}
-		return enhancedTaxAmount;
+
+    public static List<Individual_Tax__c> getConditionalIndividualTaxList(List<CO_Line_Item__c> coliList, 
+                            List<CO_Kit_Header__c> coKitHeadersList, List<Service_Order_Header__c> soHeaderList, List<Deal__c> dealList) {
+        List<Id> coliIds = new List<Id>();
+        List<Id> cokhIds = new List<Id>();
+        Set<Id> soIds = new Set<Id>();
+        List<Id> dealIds = new List<Id>();
+        for(CO_Line_Item__c coli : coliList) {
+            coliIds.add(coli.Id);
+        }
+        for(CO_Kit_Header__c cokh : coKitHeadersList) {
+            cokhIds.add(cokh.Id);
+        }
+        for(Service_Order_Header__c soRec : soHeaderList) {
+            soIds.add(soRec.Id);
+        }
+        for(Deal__c dealRec : dealList) {
+            dealIds.add(dealRec.Id);
+        }   
+        Boolean isTaxIncludingPricing = GeneralConfiguration.getTaxIncludingPricing();      
+        return COService.getConditionalIndividualTaxList(isTaxIncludingPricing, TaxCalculation.isInvoiced, coliIds, cokhIds, soIds, dealIds);
     }
 }

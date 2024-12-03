@@ -1,0 +1,31 @@
+<apex:component controller="GlobalController">
+    <apex:attribute name="showInfoBanner" type="boolean" description=""/>
+    <apex:attribute name="iconName" type="string" description=""/>
+    <apex:attribute name="bannerInfo1" type="string" description=""/>
+    <apex:attribute name="bannerInfo2" type="string" description=""/>
+
+    <apex:outputPanel rendered="{!!showInfoBanner}">
+        <div class="fx-banner-container fx-orange-banner ">
+            <i class="bp-icons bp-font-18 bp-beer-font MT0">warningFilled</i>
+            <div>
+                <span>
+                    <b>For foreign vendors the values shown on ALL vendor orders, vendor receivings, vendor invoices and order units
+                        will be in the currency of the vendor.</b>
+                </span>
+                <p>The inventory resulting from them will be converted to the local currency based on the FX code selected.</p>
+            </div>
+        </div>
+    </apex:outputPanel>
+    
+    <apex:outputPanel rendered="{!showInfoBanner}">
+        <div class="standard-info-banner">
+            <div class="c-sub-heading banner-container cyan-banner">
+                <i class="bp-icons bp-font-18 bp-cyan-font">{!if(iconName != null, iconName, 'info')}</i>
+                <div>
+                    <p>{!bannerInfo1}</p>
+                    <p class="bp-MT5">{!bannerInfo2}</p>
+                </div>
+            </div>
+        </div>
+    </apex:outputPanel>
+</apex:component>
