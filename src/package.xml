@@ -54,10 +54,6 @@
         <name>CustomTab</name>
     </types>
     <types>
-        <members>Admin</members>
-        <name>Profile</name>
-    </types>
-    <types>
         <members>*</members>
         <name>StaticResource</name>
     </types>
